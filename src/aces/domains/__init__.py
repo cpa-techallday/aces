@@ -1,7 +1,8 @@
 """Domain design models.  Register a model here to make it reachable from the CLI."""
 from .hx import TwoFluidTPMS
+from .radar import PhasedArrayRadar
 
-MODELS = {TwoFluidTPMS.id: TwoFluidTPMS}
+MODELS = {TwoFluidTPMS.id: TwoFluidTPMS, PhasedArrayRadar.id: PhasedArrayRadar}
 
 
 def get(domain: str):
