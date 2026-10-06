@@ -8,6 +8,8 @@ the previous gate passes.
 - [x] Core engine: specs, design-model contract, NSGA-II search, evidence ledger, simlab export
 - [x] First domain model on the fast tier: two-fluid TPMS heat exchangers
 - [x] Manufacturing routes; formgen imported as the robotic lattice and printed formwork generator
+- [x] ARC-1 rod-lattice chassis study imported (`studies/arc1_chassis`)
+- [ ] Wire the ARC-1 rod lattice as an ACES route (spec, L/d and FEA checks, evidence); reuse its Pynite frame FEA for formgen lattices
 - [ ] Structural check for formgen lattices (beam FEA of the strut graph under wind and handling loads)
 - [ ] `aces calibrate`: fit `hx.*` factors from simlab CFD results with provenance and valid ranges
 - [ ] First CFD calibration set: periodic gyroid, diamond and primitive samples over Re and t/a on the rig

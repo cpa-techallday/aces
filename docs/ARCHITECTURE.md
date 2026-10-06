@@ -28,7 +28,7 @@ domain supports, or it is refused.
 | `polymer_extrusion` | FFF/FDM (on-site Raise3D) | available | `hx.two_fluid` | as `lpbf`; polymer properties come from the spec |
 | `robotic_lattice_extrusion` | Robotic spatial printing (HC10DTP cell) | available | `form.lattice` (formgen) | every strut sequenced, no islands, scale-model minimum feature |
 | `printed_formwork` | Lattice formwork for foam fill and sprayed concrete/render | available | `form.lattice` (formgen) | as above; fill and finish are outside ACES |
-| `arc_lattice_rod_welding` | Rod placement + stud-welded nodes (ARC-1 study) | planned | none | none yet |
+| `arc_lattice_rod_welding` | Rod placement + stud-welded nodes (ARC-1) | study | `studies/arc1_chassis` | rod buckling L/d rule, frame FEA, build plan (not yet from a spec) |
 | `cnc_machining` | Subtractive | planned | none | none yet |
 | `casting` | Sand or investment, printed patterns | planned | none | none yet |
 

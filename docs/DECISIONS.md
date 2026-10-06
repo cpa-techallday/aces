@@ -5,6 +5,7 @@ an old one.
 
 | # | Date | Decision | By | Why |
 | --- | --- | --- | --- | --- |
+| D15 | 2026-10-06 | The ARC-1 arc-lattice chassis study is imported as `studies/arc1_chassis` (scripts, params, Fusion envelope; outputs regenerate). Its route `arc_lattice_rod_welding` has status `study` until it runs from an ACES spec with evidence. | Aaron ("yes import it too") | |
 | D14 | 2026-10-06 | The ACES copy of formgen (`src/formgen`, `fusion_addin/`) is the one to develop. The standalone `C:\Users\shedm\formgen` folder stays untouched until the Fusion add-in is repointed. | Proposed (Claude); Aaron to confirm | Two copies drift |
 | D13 | 2026-10-06 | formgen is imported into ACES as the generator for the `robotic_lattice_extrusion` and `printed_formwork` routes. The ACES route requires sourced density and fails on unsequenced struts or islands. | Aaron ("add the formgen and associated files") | |
 | D12 | 2026-10-06 | Manufacturing is a first-class route, not a free-text field. Specs must name an available route their domain supports. Conventional routes (CNC, casting) are listed as planned. | Aaron ("not every process needs to be 3D printed") | |

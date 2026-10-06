@@ -32,6 +32,13 @@ formgen = [
     "shapely>=2.0",
     "pillow>=10.0",
 ]
+# design studies under studies/ (ARC-1 rod-lattice chassis)
+studies = [
+    "PyNiteFEA>=0.0.94",
+    "matplotlib>=3.7",
+    "trimesh>=4.0",
+    "rtree>=1.0",
+]
 
 [project.scripts]
 aces = "aces.cli:main"

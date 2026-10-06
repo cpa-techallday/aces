@@ -22,7 +22,8 @@ spec.yaml -> design model (encoded engineering logic) -> NSGA-II search on the f
 | First domain: two-fluid TPMS heat-exchanger core (`hx.two_fluid`): gyroid, diamond, primitive | Working on the fast tier; **uncalibrated** |
 | TPMS geometry: porosity, wetted area, hydraulic diameter measured on the level set; STL export | Working; mid-surface areas within 0.4 % of literature |
 | Manufacturability: measured minimum wall, channel neck (passable sphere), isolated pockets, cells across | Working; precomputed table checked against live measurement |
-| Manufacturing routes (`aces processes`): LPBF, polymer extrusion, robotic lattice, printed formwork; CNC and casting planned | Working |
+| Manufacturing routes (`aces processes`): LPBF, polymer extrusion, robotic lattice, printed formwork; rod-lattice welding as a study; CNC and casting planned | Working |
+| ARC-1 robotic arc-lattice chassis study (rod placement + stud-welded nodes, Pynite FEA, build plan) | Imported as `studies/arc1_chassis`; regenerates from `cad/params.json` |
 | formgen (Fusion forms to robot-printed lattices, JBI jobs, scale models) as the `form.lattice` route | Imported and tested; see [docs/FORMGEN.md](docs/FORMGEN.md) |
 | Calibration loop from simlab CFD and rig tests | Registry and plumbing only; no fitted factors yet |
 | Agent-authored design logic (Author / Judge agents) | Not started |
@@ -34,7 +35,7 @@ factors stay at 1.0, and are listed on every report, until CFD or test data repl
 
 ```bash
 pip install -e .[dev]
-python -m pytest                       # 77 tests: textbook checks, geometry, safety guards, formgen route, end to end
+python -m pytest                       # 79 tests: textbook checks, geometry, safety guards, formgen route, ARC-1 study, end to end
 
 cp specs/templates/hx_two_fluid.yaml my_job.yaml   # fill every null from the customer requirement
 aces check my_job.yaml                 # lists anything missing
@@ -75,6 +76,7 @@ src/formgen/        formgen package (load, remesh, lattice, sequence, export, sc
 fusion_addin/       formgen Fusion 360 add-in
 tools/windows/      install / formgen / formgen-studio launchers
 examples/formgen/   demo facade panel
+studies/            design studies (arc1_chassis: robotic rod-lattice chassis)
 scripts/            build_tpms_table.py (regenerates the measured manufacturability table)
 specs/templates/    spec templates (nulls, units in comments)
 docs/               architecture, decisions, licence register, roadmap

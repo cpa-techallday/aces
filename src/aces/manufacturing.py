@@ -2,9 +2,9 @@
 
 Not every part is printed, and not every print is metal powder bed.  A design
 model declares which routes it can generate for, and each route declares what ACES
-checks and what it outputs.  Routes marked ``planned`` are named so specs and
-roadmaps can refer to them, but ACES has no generator or checks for them yet and
-will refuse them in a spec.
+checks and what it outputs.  ``study`` routes have working code in ``studies/``
+that is not yet wired to an ACES spec and evidence record; ``planned`` routes have
+no code yet.  Specs may only name ``available`` routes.
 """
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ class Process:
     id: str
     name: str
     family: str  # additive | robotic_spatial | formwork | subtractive | formative | joining
-    status: str  # available | planned
+    status: str  # available | study | planned
     domains: tuple[str, ...]  # design models / generators that target this route
     checks: tuple[str, ...]  # what ACES verifies for this route
     outputs: tuple[str, ...]
@@ -59,9 +59,11 @@ PROCESSES: dict[str, Process] = {
         ),
         Process(
             "arc_lattice_rod_welding", "Robotic rod placement with stud-welded nodes (ARC-1 chassis study)",
-            "joining", "planned", (),
-            (), (),
-            "Exists as the separate arc-lattice-chassis study; not yet a generator in ACES.",
+            "joining", "study", ("studies/arc1_chassis",),
+            ("rod buckling L/d rule", "frame FEA (Pynite)", "node and rod counts", "build plan and cell time"),
+            ("rod list", "lattice STL", "build plan", "Fusion build scripts"),
+            "Code in studies/arc1_chassis, driven by cad/params.json; not yet an ACES spec route. "
+            "Fatigue of welded nodes is unassessed and joint efficiency is assumed (study section 11).",
         ),
         Process("cnc_machining", "CNC machining", "subtractive", "planned", (), (), (),
                 "Needs machinable geometry families (e.g. plate-fin, milled channels) and tool-access checks."),

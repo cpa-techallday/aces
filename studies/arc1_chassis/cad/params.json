@@ -1,0 +1,145 @@
+{
+  "_comment": "ARC-1 :: robotic arc-lattice racing chassis. Single parametric source of truth. Regenerate everything from this file.",
+  "rev": "A",
+  "project": "ARC-1",
+  "units": "mm",
+
+  "process": {
+    "name": "Nodal Arc Lattice Deposition (NALD)",
+    "rod_diameter_mm": 2.4,
+    "rod_material": "316L stainless (phase 1) | Ti-6Al-4V (phase 2, chambered)",
+    "joining": "WAAM-deposited node ball + drawn-arc / capacitor-discharge rod insertion",
+    "node_ball_dia_mm": 7.0,
+    "_node_ball_note": "2.9x rod dia. Must swallow the rod ends of every incident strut and leave a fillet. Sized DOWN from 9.0: at 5,619 nodes a 9 mm ball was 17.2 kg, a third of the whole structure. Node mass is the single biggest lever in this process.",
+
+    "slenderness_limit": 80.0,
+    "_slenderness_note": "KL/r <= 80 keeps struts at the inelastic/Euler transition. With K=0.8 and r=d/4 this gives L/d = 25 exactly.",
+    "effective_length_factor_K": 0.8,
+    "_K_note": "Welded node ball is neither pinned (1.0) nor fixed (0.5). 0.8 is the conservative frame value.",
+
+    "strut_len_target_mm": 60.0,
+    "strut_len_max_mm": 60.0,
+    "strut_len_min_mm": 18.0,
+    "_len_min_note": "7.5x rod dia. Below this two node balls merge and the joint is a blob, not a truss.",
+
+    "node_valence_max": 12,
+    "weld_access_angle_min_deg": 25.0,
+    "_access_note": "Minimum included angle between any two struts at a node. Below this the torch/gripper cannot reach the second rod without fouling the first.",
+
+    "node_efficiency_bare": 0.60,
+    "node_efficiency_collared": 0.95,
+    "_efficiency_note": "Fraction of parent-rod capacity developed by the joint. Bare = single arc insertion. Collared = plus a wrapped WAAM fillet pass.",
+
+    "arc_cycle_s": 1.4,
+    "rod_place_cycle_s": 6.5,
+    "node_ball_deposit_s": 3.0
+  },
+
+  "material": {
+    "name": "316L weld metal",
+    "E_MPa": 193000.0,
+    "G_MPa": 77000.0,
+    "poisson": 0.27,
+    "density_g_cm3": 8.0,
+    "yield_MPa": 290.0,
+    "ultimate_MPa": 560.0
+  },
+
+  "robot": {
+    "model": "Yaskawa HC10DTP",
+    "reach_mm": 1200.0,
+    "payload_kg": 10.0,
+    "stand_height_mm": 500.0,
+    "usable_build_cube_mm": 650.0,
+    "_cube_note": "Reach is 1200 mm but torch attitude freedom collapses near full extension. 650 mm cube per station keeps +/-40 deg of tool tilt everywhere."
+  },
+
+  "vehicle": {
+    "class": "single-seat formula / sports prototype",
+    "wheelbase_mm": 1700.0,
+    "track_front_mm": 1250.0,
+    "track_rear_mm": 1200.0,
+    "front_axle_x_mm": 600.0,
+    "rear_axle_x_mm": 2300.0,
+    "target_mass_kg": 230.0,
+    "driver_mass_kg": 80.0
+  },
+
+  "envelope": {
+    "_comment": "Chassis outer surface as lofted stations. x = 0 at nose tip, +x rearward, +z up, y lateral (half-width given). superellipse exponent n shapes the section: 2 = ellipse, 4 = rounded rectangle.",
+    "stations": [
+      { "x":    0.0, "half_width":  60.0, "height":  90.0, "z_floor":  85.0, "n": 2.6, "label": "nose tip" },
+      { "x":  250.0, "half_width": 175.0, "height": 180.0, "z_floor":  62.0, "n": 3.0, "label": "front bulkhead / attenuator" },
+      { "x":  550.0, "half_width": 250.0, "height": 290.0, "z_floor":  45.0, "n": 3.4, "label": "front suspension / pedal box" },
+      { "x":  900.0, "half_width": 292.0, "height": 420.0, "z_floor":  40.0, "n": 3.8, "label": "front roll hoop / dash bulkhead" },
+      { "x": 1250.0, "half_width": 310.0, "height": 430.0, "z_floor":  40.0, "n": 4.0, "label": "cockpit mid" },
+      { "x": 1600.0, "half_width": 305.0, "height": 465.0, "z_floor":  45.0, "n": 3.8, "label": "main roll hoop / seat back" },
+      { "x": 1950.0, "half_width": 280.0, "height": 385.0, "z_floor":  60.0, "n": 3.4, "label": "engine / battery bay front" },
+      { "x": 2300.0, "half_width": 250.0, "height": 330.0, "z_floor":  70.0, "n": 3.2, "label": "rear suspension" },
+      { "x": 2600.0, "half_width": 210.0, "height": 290.0, "z_floor":  85.0, "n": 3.0, "label": "rear bulkhead" }
+    ],
+    "section_points": 56
+  },
+
+  "cockpit": {
+    "_comment": "Open trough cut downward through the tub between the two hoops.",
+    "x_front": 905.0,
+    "x_rear": 1640.0,
+    "half_width": 218.0,
+    "corner_radius": 110.0,
+    "floor_z": 120.0,
+    "_floor_note": "Cut stops here so a 60 mm lattice floor plus seat pan survives beneath the driver."
+  },
+
+  "lattice": {
+    "mode": "panel",
+    "core_thickness_mm": 60.0,
+    "_thickness_note": "Sandwich core depth. Equal to strut length so web diagonals sit near 45-55 deg - the efficient shear angle.",
+    "target_edge_mm": 60.0,
+    "grades": {
+      "A": { "name": "high stress",  "keep_web": 1.00, "keep_inner": 1.00, "note": "bulkheads, hoop feet, suspension pickups" },
+      "B": { "name": "primary",      "keep_web": 1.00, "keep_inner": 1.00, "note": "floor, lower sides, engine bay" },
+      "C": { "name": "low stress",   "keep_web": 0.50, "keep_inner": 0.60, "note": "nose cone, upper bodywork skin" }
+    }
+  },
+
+  "hard_points": {
+    "_comment": "Suspension pickups and hoop feet. Lattice is locally densified to grade A within cluster_radius and the load is spread over every node inside it.",
+    "cluster_radius_mm": 90.0,
+    "points": [
+      { "id": "FLA_U_F", "xyz": [ 520.0,  238.0, 300.0], "note": "front upper-arm front" },
+      { "id": "FLA_L_F", "xyz": [ 520.0,  238.0, 110.0], "note": "front lower-arm front" },
+      { "id": "FUA_U_R", "xyz": [ 690.0,  262.0, 305.0], "note": "front upper-arm rear" },
+      { "id": "FLA_L_R", "xyz": [ 690.0,  262.0, 110.0], "note": "front lower-arm rear" },
+      { "id": "RLA_U_F", "xyz": [2210.0,  254.0, 300.0], "note": "rear upper-arm front" },
+      { "id": "RLA_L_F", "xyz": [2210.0,  254.0, 130.0], "note": "rear lower-arm front" },
+      { "id": "RUA_U_R", "xyz": [2380.0,  234.0, 298.0], "note": "rear upper-arm rear" },
+      { "id": "RLA_L_R", "xyz": [2380.0,  234.0, 130.0], "note": "rear lower-arm rear" }
+    ],
+    "_placement_note": "y sits just inside the lofted envelope at that x so pickup links stay short. A station ring is forced at every pickup x.",
+    "pickup_links": 4,
+    "_link_note": "4 links, one per fore/aft x up/down quadrant around the pickup, so any load direction resolves axially instead of into link bending.",
+    "mirror_y": true
+  },
+
+  "load_cases": {
+    "_comment": "Applied at hard points unless stated. g = 9.81. Sprung mass 230 kg + 80 kg driver.",
+    "torsion": { "torque_Nm": 1000.0, "note": "equal and opposite vertical couple across the front track, rear restrained. Reported as Nm/deg." },
+    "bump_3g": { "g": 3.0, "note": "vertical 3g through all four corners" },
+    "brake_1p5g": { "g": 1.5, "note": "longitudinal 1.5g rearward reaction at the front pickups" },
+    "cornering_2g": { "g": 2.0, "note": "lateral 2g, load transferred to the outboard pickups" }
+  },
+
+  "modules": {
+    "_comment": "Build segmentation. Each module must fit the robot usable build cube.",
+    "count": 4,
+    "split_x_mm": [650.0, 1300.0, 1950.0],
+    "joint": "flanged node-ring, 8 x M8 through-bolt into deposited boss"
+  },
+
+  "output": {
+    "dir": "out",
+    "demo_module_index": 1,
+    "_demo_note": "Which module gets built as real Fusion B-rep solids. The rest stay wireframe - a full B-rep of ~20k struts will not survive Fusion."
+  }
+}
