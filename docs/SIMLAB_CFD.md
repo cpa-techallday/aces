@@ -103,7 +103,31 @@ A constant factor cannot represent this. `aces calibrate` therefore tries a powe
 `value × (1 + (Re/Re_onset)^n)`, and keeps the simplest that fits. On that sweep, the onset form leaves a
 residual of 0.010 (sd of log) for friction and 0.002 for Nusselt.
 
-## Rig hand-off (server agent)
+## On the rig (2026-10-07)
+
+- **Image:** `aces-cfd:0.1` was built on the rig, offline, from `gendesign:0.3` and two wheels
+  (`docker/aces-cfd.offline.Dockerfile`, `scripts/rig/install_aces_cfd.sh`). Image id `sha256:c95bff6e9d76…`.
+  The CPU self-test passes there.
+- **Registry:** `aces-tpms-periodic` is in `/opt/simlab-runtime/simlab/solvers.json` and in the workstation copy:
+  - `scripts/rig/register_solver.py` backed up each file first and added only the new key;
+  - `scripts/rig/check_registry.sh` confirmed that no other key changed;
+  - `simlab solvers` lists it.
+  - The validation record holds the workstation GPU numbers. It says the rig GPU run is pending.
+- **Specs:** in `/opt/simlab-runtime/cases/aces/` (copies in `specs/simlab/`), all parsed by `simlab validate`:
+  - `aces-cfd-validation`
+  - `aces-cfd-resolution`
+  - `aces-cal-air-01`
+- **Not run yet:** the rig is in mode `general-flagship`, so the simulation pool is empty and every card holds LLM
+  weights. In a `sim-lab` mode, run these in order:
+
+```bash
+docker exec -w /work simlab-queue-1 python -m simlab enqueue cases/aces/aces-cfd-validation.yaml --docker
+docker exec -w /work simlab-queue-1 python -m simlab enqueue cases/aces/aces-cfd-resolution.yaml --docker
+# after storage is sorted (docs/WORKFLOW.md section B):
+docker exec -w /work simlab-queue-1 python -m simlab enqueue cases/aces/aces-cal-air-01.yaml --docker
+```
+
+## Building and registering from scratch
 
 The image is built on the workstation and shipped, like every simlab image:
 

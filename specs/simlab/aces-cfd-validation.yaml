@@ -1,0 +1,28 @@
+id: aces-cfd-validation
+project: ACES-calibration
+owner: aaron
+physics: cfd
+solver: aces-tpms-periodic
+description: Registry validation of aces-tpms-periodic against exact fully developed duct results.
+hypothesis: The periodic LBM solver reproduces exact laminar fRe and Nu_H1 within 1 % at this resolution.
+expected: square duct fRe 56.91 / Nu 3.608; plane channel fRe 96 / Nu 8.235
+rd_activity: ACES fast-tier calibration of TPMS heat-exchanger cores
+company: carbon
+params:
+  n: 24
+outputs:
+- fRe_err_pct
+- Nu_err_pct
+resources:
+  precision: float64
+  vram_gb: 0.6
+tags:
+  kind: validation
+  system: hx
+  origin: aces
+sweep:
+  validate:
+  - square_duct
+  - plane_channel
+geometry:
+  source: parametric

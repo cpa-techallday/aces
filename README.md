@@ -26,6 +26,7 @@ spec.yaml -> design model (encoded engineering logic) -> NSGA-II search on the f
 | ARC-1 robotic arc-lattice chassis (rod placement + stud-welded nodes) | `studies/arc1_chassis`, runnable as the `rod.lattice` route (`aces rod`) |
 | Structural check of strut lattices (Pynite linear static: stress, Euler buckling, deflection) | Working; optional `structure` block in form.lattice specs |
 | Calibration from CFD/rig measurements (`aces calibrate`) | Working; constant, power-law or inertial-onset factors; refuses thin or scattered data |
+| Next 50 steps, shared by the agents working on ACES | [docs/WORKFLOW.md](docs/WORKFLOW.md) |
 | Calibration CFD (`aces cfd-sample`, `cfd-campaign`, `cfd-collect`; simlab solver `aces-tpms-periodic`) | Validated against exact duct results; rig image recipe ready, awaiting the rig ([docs/SIMLAB_CFD.md](docs/SIMLAB_CFD.md)) |
 | MCP server for Mission Control agents (`aces-mcp`, read/submit/full tiers, audit log) | Working (stdio) |
 | formgen (Fusion forms to robot-printed lattices, JBI jobs, scale models) as the `form.lattice` route | Imported and tested; see [docs/FORMGEN.md](docs/FORMGEN.md) |
