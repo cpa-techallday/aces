@@ -12,6 +12,7 @@
   aces cfd-collect EXP_DIR --out M.json     measurement rows from a finished simlab campaign
   aces processes                            manufacturing routes and what ACES checks for each
   aces cost PART.yaml                       route suggestions + per-unit cost at different scales
+  aces compliance collect|validate|index    ISO 27001 evidence package (API-first, ledger-chained)
   aces ledger verify PATH                   check the evidence hash chain
 """
 from __future__ import annotations
@@ -25,7 +26,7 @@ from pathlib import Path
 
 import yaml
 
-from . import costing, evidence, manufacturing, search, simlab, spec
+from . import compliance, costing, evidence, manufacturing, search, simlab, spec
 from .domains import get as get_model
 from .domains.form import route as form_route
 from .domains.rod import route as rod_route
@@ -578,6 +579,60 @@ def cmd_ledger(args) -> int:
     return 0 if ok else 1
 
 
+# ----------------------------------------------------------------------------- ISO 27001 compliance
+
+def cmd_compliance(args) -> int:
+    if args.action == "validate":
+        findings = compliance.validate(args.dir)
+        bad = [f for f in findings if f.level != "ok"]
+        for f in findings:
+            if f.level == "ok" and not args.verbose:
+                continue
+            print(f"{f.level.upper():<8} {f.control:<7} {f.detail}")
+        print(f"\n{len(bad)} gap(s)/stale item(s)" if bad else "No gaps: package is complete and current.")
+        return 1 if bad else 0
+    if args.action == "index":
+        out = Path(args.dir) / "INDEX.md"
+        if out.exists():
+            print(f"{out} exists; remove it or validate instead")
+            return 2
+        _safe_write(out, compliance.index(args.dir))
+        print(f"Wrote {out}")
+        return 0
+    # collect
+    collectors = []
+    if args.repo:
+        collectors += compliance.github_collectors(args.repo)
+    if args.with_aces:
+        collectors += compliance.aces_collectors(args.ledger)
+    if not collectors:
+        print("nothing to collect: pass --repo owner/name and/or --with-aces")
+        return 2
+    manifest = compliance.collect(args.dir, collectors, dry_run=args.dry_run)
+    ok = [r for r in manifest["results"] if r["ok"] and r.get("sha256")]
+    failed = [r for r in manifest["results"] if not r["ok"]]
+    for r in manifest["results"]:
+        state = "ok" if r["ok"] and r.get("sha256") else ("skip" if r["ok"] else "FAILED")
+        print(f"{state:<7} {r['control']:<8} {r['name']}" + (f" ({r['error']})" if r.get("error") and not r["ok"] else ""))
+    if not args.dry_run:
+        rec = evidence.make_record(
+            kind="aces.compliance_collection",
+            spec={"company": spec.COMPANY, "project": "iso27001-evidence", "owner": args.owner,
+                  "rd_activity": "n/a", "hypothesis": "n/a (compliance evidence collection)"},
+            model_id="aces.compliance", model_version="0.1",
+            inputs={"repo": args.repo, "with_aces": args.with_aces},
+            observations={"files": [{"file": r["file"], "control": r["control"], "sha256": r["sha256"]}
+                                    for r in ok],
+                          "failed": [{"name": r["name"], "error": r["error"]} for r in failed]},
+            calibration={}, artifacts={"manifest": Path(manifest["manifest_file"])},
+        )
+        written = evidence.Ledger(args.ledger).append(rec)
+        print(f"\n{len(ok)} file(s) collected, {len(failed)} failed. "
+              f"Ledger: {args.ledger} ({written['record_hash'][:12]})")
+    return 1 if failed else 0
+
+
+
 
 # ----------------------------------------------------------------------------- calibration CFD
 
@@ -820,6 +875,17 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("action", choices=("verify",))
     s.add_argument("path", nargs="?", default=str(DEFAULT_LEDGER))
     s.set_defaults(fn=cmd_ledger)
+
+    s = sub.add_parser("compliance", help="ISO 27001 evidence collection (API-first, ledger-chained)")
+    s.add_argument("action", choices=("collect", "validate", "index"))
+    s.add_argument("dir", help="evidence directory (collect/validate/index target)")
+    s.add_argument("--repo", help="GitHub repo as owner/name; enables the repo collectors")
+    s.add_argument("--with-aces", action="store_true", help="also collect ACES ledger evidence")
+    s.add_argument("--dry-run", action="store_true", help="list what would be collected, write nothing")
+    s.add_argument("--owner", default="aaron")
+    s.add_argument("--verbose", action="store_true", help="validate: show ok controls too")
+    s.add_argument("--ledger", default=str(DEFAULT_LEDGER))
+    s.set_defaults(fn=cmd_compliance)
     return ap
 
 
