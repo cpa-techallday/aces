@@ -16,6 +16,7 @@ the previous gate passes.
 - [x] Calibration CFD solver `aces-tpms-periodic` (FP64 periodic LBM, flow + H1 heat transfer), validated
 - [ ] Ship the `aces-cfd` image to the rig, register the solver with the rig's validation record (server agent)
 - [ ] First CFD calibration set: periodic gyroid, diamond and primitive samples over Re and t/a on the rig
+- [ ] Interpolated (Bouzidi) walls in `aces.cfd` to remove staircase noise; fused GPU kernel if rig timings need it
 - [ ] Multigrid FP64 voxel FEA in simlab (runtime repo), for structural checks of printed cores
 - [x] `aces-mcp` tools so Mission Control agents can drive runs (stdio)
 - [x] ARC-1 rod-by-rod check; rev B params pass it (0.93) for 5 kg more lattice

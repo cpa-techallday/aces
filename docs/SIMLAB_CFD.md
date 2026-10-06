@@ -65,15 +65,23 @@ The ACES test suite also checks three more properties:
 
 ## Resolution: use n ≥ 96 on the rig
 
-This was measured for a gyroid with t/a = 0.10, at Re 19.6, in air:
+This was measured for a gyroid with t/a = 0.10, at Re 19.6, in air. The n = 48 run was on the workstation GPU in
+the `aces-cfd` image.
 
 | n (voxels per cell) | friction ratio | Nu_H1 |
 | --- | --- | --- |
 | 24 | 3.483 | 5.619 |
 | 32 | 3.611 | 5.526 |
+| 48 | 3.429 | 5.417 |
 
-Richardson extrapolation puts the friction ratio near 3.77. At n = 24–32 the error is 4–8 %, so these runs are
-for development only. Calibration runs use n = 96; each case declares about 4 GB of device memory (measured peak with a 1.5x margin).
+Nusselt falls steadily with resolution. The friction ratio does not converge monotonically, because the walls are
+voxel staircases: the effective wall position moves by up to half a voxel as n changes, and the wall is only 2–5
+voxels thick here. Treat results at n ≤ 48 as ±5 %, for development only. Calibration runs use n = 96; each case
+declares about 4 GB of device memory (measured peak with a 1.5x margin). The first rig campaign should also run
+one case at n = 64, 96 and 128 to bound the discretisation error.
+
+Interpolated walls (Bouzidi), using the level set's distance along each link, would remove the staircase noise.
+They are the next solver improvement.
 
 Run time on the rig is not measured yet. The time to reach a steady state scales with Dh²/ν in lattice units, so
 the high-Re cases take longest: at n = 96 and Re 300 that is several hundred thousand steps. Cases default to
