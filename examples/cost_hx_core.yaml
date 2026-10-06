@@ -1,1 +1,13 @@
-PLACEHOLDER_EXAMPLE
+# Example part profile for `aces cost`: a small LPBF aluminium HX core,
+# the kind of part an hx.two_fluid pareto entry describes.
+part:
+  name: hx-core-demo
+  envelope_m: [0.15, 0.10, 0.08]
+  volume_m3: 0.00045        # solid volume only
+  mass_kg: 1.2
+  min_feature_m: 0.0008
+  max_temp_C: 180
+  pressure_bar: 15
+  tolerance_mm: 0.2
+  complex_internal: true
+  application: industrial   # industrial | aerospace | defence (QA allowance)

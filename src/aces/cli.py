@@ -11,6 +11,7 @@
   aces cfd-campaign --out EXP.yaml ...      simlab experiment: a sweep of calibration samples for the rig
   aces cfd-collect EXP_DIR --out M.json     measurement rows from a finished simlab campaign
   aces processes                            manufacturing routes and what ACES checks for each
+  aces cost PART.yaml                       route suggestions + per-unit cost at different scales
   aces ledger verify PATH                   check the evidence hash chain
 """
 from __future__ import annotations
@@ -24,7 +25,7 @@ from pathlib import Path
 
 import yaml
 
-from . import evidence, manufacturing, search, simlab, spec
+from . import costing, evidence, manufacturing, search, simlab, spec
 from .domains import get as get_model
 from .domains.form import route as form_route
 from .domains.rod import route as rod_route
@@ -240,6 +241,103 @@ def cmd_processes(args) -> int:
         if p.notes:
             print(f"{'':<26} note:    {p.notes}")
     return 0
+
+
+def _cost_part(args) -> costing.PartProfile | None:
+    """Part profile from --from-run (a pareto entry) or the YAML part block."""
+    if args.from_run:
+        run_dir = Path(args.from_run)
+        pareto_path = run_dir / "pareto.json"
+        if not pareto_path.exists():
+            print(f"{pareto_path} not found; --from-run needs the output directory of `aces design`.")
+            return None
+        pareto = json.loads(pareto_path.read_text())
+        if not pareto:
+            print("No designs in that run's pareto.json.")
+            return None
+        if not 0 <= args.rank < len(pareto):
+            print(f"--rank must be 0..{len(pareto) - 1}")
+            return None
+        return costing.PartProfile.from_pareto(pareto[args.rank], name=f"{run_dir.name}-rank{args.rank}")
+    data = yaml.safe_load(Path(args.part).read_text()) or {}
+    try:
+        return costing.PartProfile.from_dict(data.get("part") or data)
+    except (KeyError, TypeError, ValueError) as e:
+        print(f"part profile is incomplete or invalid: {e}")
+        return None
+
+
+def cmd_cost(args) -> int:
+    if not args.from_run and not args.part:
+        print("give a part profile YAML, or --from-run DIR to cost a design-run pareto entry")
+        return 2
+    part = _cost_part(args)
+    if part is None:
+        return 2
+    quantities = tuple(sorted({max(1, q) for q in args.quantities}))
+    mats = tuple(args.materials) if args.materials else None
+    print(f"Part: {part.name}  envelope {tuple(round(x, 3) for x in part.envelope_m)} m, "
+          f"{part.mass_kg:.2f} kg, min feature {part.min_feature_m * 1e3:.2f} mm "
+          f"(profile from: {part.source})")
+    print(f"Cost rates are baseline assumptions (AUD 2026); calibrate to real quotes before quoting customers.\n")
+
+    sug = costing.suggest(part, args.quantity, preferred_materials=mats)
+    feasible = [s for s in sug if s.feasible]
+    print(f"## Route suggestion at qty {args.quantity}")
+    for s in feasible[: args.top]:
+        print(f"  {s.process}/{s.material}: {s.reasons[0]}")
+    if not feasible:
+        print("  no feasible route at this quantity with the given part limits")
+    excluded = [s for s in sug if not s.feasible]
+    if excluded and args.verbose:
+        print("\n## Excluded (the DFM feedback)")
+        seen = set()
+        for s in excluded:
+            key = (s.process, s.reasons[0])
+            if key in seen:
+                continue
+            seen.add(key)
+            print(f"  {s.process}: {s.reasons[0]}")
+
+    pairs = tuple((s.process, s.material) for s in feasible[: args.top])
+    if not pairs:
+        return 1
+    co = costing.crossovers(part, pairs, quantities)
+    print("\n## Unit cost by quantity (AUD/part, central estimate)")
+    header = "| route | " + " | ".join(f"{q:,}" for q in co["quantities"]) + " |"
+    print(header)
+    print("| --- | " + " | ".join("---:" for _ in co["quantities"]) + " |")
+    for route, vals in co["curves"].items():
+        print(f"| {route} | " + " | ".join(f"{v:,.0f}" for v in vals) + " |")
+    print("\n## Crossover points")
+    for l in co["leaders"]:
+        print(f"  qty {l['quantity']:>6,}: cheapest is {l['cheapest']} at A${l['unit_aud']:,.0f}/part")
+
+    if args.out:
+        out = Path(args.out)
+        if out.exists() or out.is_symlink():
+            print(f"\n{out} exists; choose a new file")
+            return 2
+        report = {
+            "kind": "aces.cost_estimate",
+            "part": {"name": part.name, "envelope_m": part.envelope_m, "volume_m3": part.volume_m3,
+                     "mass_kg": part.mass_kg, "min_feature_m": part.min_feature_m,
+                     "application": part.application, "source": part.source},
+            "quantity_target": args.quantity,
+            "suggestions": [{"process": s.process, "material": s.material, "feasible": s.feasible,
+                             "unit_aud": s.unit_aud_at_target, "reasons": list(s.reasons)} for s in sug],
+            "crossovers": co,
+            "detail": {
+                f"{e.process}/{e.material}@{e.quantity}": {
+                    "unit_aud": e.unit_aud, "unit_low_aud": e.unit_low_aud, "unit_high_aud": e.unit_high_aud,
+                    "batch_aud": e.batch_aud, "breakdown": e.breakdown, "assumptions": list(e.assumptions)}
+                for pid, mid in pairs for e in costing.curve(part, pid, mid, quantities)},
+            "disclaimer": ("Baseline assumption rates with wide uncertainty bands. Not a quote. "
+                           "Calibrate material/machine rates to supplier quotes before customer use."),
+        }
+        _safe_write(out, json.dumps(report, indent=2))
+        print(f"\nWrote {out}")
+    return 0 if feasible else 1
 
 
 def _form_report(spec_d: dict, res: dict, record_hash: str, req=None) -> str:
@@ -702,6 +800,21 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser("processes", help="list manufacturing routes")
     s.set_defaults(fn=cmd_processes)
+
+    s = sub.add_parser("cost", help="manufacturing route suggestion + unit cost across quantities")
+    s.add_argument("part", nargs="?", help="YAML part profile (see aces.costing.PartProfile)")
+    s.add_argument("--from-run", help="output directory of `aces design`; cost a pareto entry instead")
+    s.add_argument("--rank", type=int, default=0, help="pareto rank to cost with --from-run")
+    s.add_argument("--quantity", type=int, default=10, help="target quantity for the route suggestion")
+    s.add_argument("--quantities", type=int, nargs="+",
+                   default=[1, 5, 10, 25, 50, 100, 250, 500, 1_000, 5_000, 10_000],
+                   help="quantities for the cost curves")
+    s.add_argument("--materials", nargs="+", choices=sorted(costing.MATERIALS),
+                   help="restrict candidate materials")
+    s.add_argument("--top", type=int, default=4, help="how many routes to curve and report")
+    s.add_argument("--verbose", action="store_true", help="list excluded routes and why")
+    s.add_argument("--out", help="write the full estimate as JSON (new file only)")
+    s.set_defaults(fn=cmd_cost)
 
     s = sub.add_parser("ledger", help="evidence ledger tools")
     s.add_argument("action", choices=("verify",))
