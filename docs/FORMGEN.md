@@ -15,7 +15,10 @@
 > The ACES route requires the material density from a named datasheet. formgen's own CLI and Studio
 > still default to 1.10 g/cm3 (ABS-CF estimate) and 1.24 g/cm3 filament for scale models; treat
 > those as placeholders. A run fails the route if any strut cannot be sequenced or islands stay
-> separate. No structural check is run yet.
+> separate. Add a `structure` block to the spec for a static check of the lattice (Pynite).
+>
+> **This is the copy to develop** (decision D21). The standalone `C:\Users\shedm\formgen` folder is
+> kept unchanged for reference and carries a `MOVED_TO_ACES.md` note.
 
 ![demo panel](img/formgen_preview_panel.png)
 
@@ -138,10 +141,12 @@ the GUI and the Fusion button can never drift apart.
 
 `fusion_addin/Formgen/` is a proper add-in (button + dialog), not a script:
 
-1. Fusion 360 → **UTILITIES → Scripts and Add-Ins** (Shift+S) → **Add-Ins** tab
-2. green **+** → pick `C:\Users\shedm\aces\fusion_addin\Formgen`
-3. **Run**, and tick *Run on Startup*
-4. Select a body → **Solid → Create → formgen lattice**
+1. Run `tools\windows\install.cmd` once (creates the repo `.venv` the add-in shells out to), then
+   `tools\windows\install-fusion-addin.cmd`. It links Fusion's AddIns folder to this checkout with a
+   junction, so the add-in always runs the code in the repo.
+2. Restart Fusion, or open **UTILITIES → Scripts and Add-Ins** (Shift+S) → **Add-Ins** tab → *Formgen* →
+   **Run**. The manifest sets *Run on Startup*.
+3. Select a body → **Solid → Create → formgen lattice**
 
 It exports the body itself and shells out to the repo venv, so it does not need
 the socket bridge. It finds the project via `FORMGEN_HOME`, its own location (the ACES checkout),

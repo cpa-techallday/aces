@@ -18,10 +18,27 @@
 >   tension capacity. `fea.py` now measures the sign convention at start-up. Corrected peak
 >   utilisation: rev A 1.85 (was 1.67), rotary 1.51 with 8 members over 1.0 (was 1.39). Mass and
 >   torsional stiffness are unchanged.
-> - **Weakest rod (2026-10-06, ACES rod route).** The frame FEA uses the capacity of a 60 mm rod (992 N).
->   `micro.py` gives rods up to 85.6 mm long (5,172 over the 60 mm target), and the weakest carries 661 N.
->   Scaling the peak utilisation by 992/661 gives a conservative bound of 2.77 for rev A. Clearing it
->   needs member forces mapped onto individual rods.
+> - **Rod-by-rod check and rev B (2026-10-06, ACES).** `scripts/rodcheck.py` maps the frame FEA forces of
+>   every member onto its chords, battens and diagonals and checks each rod at its own length. It also
+>   checks the bending-compression chord of members in net tension, which `fea.py` checked against the
+>   tension capacity. Rev A: **1.68**, in 90 chord rods of the 6 links at the four supported lower front
+>   pickups (2 g cornering; the links work in bending). The lacing peaks at 0.91 and does not fail.
+>   `cad/params_revB.json` adds a second link per quadrant at `FLA_L_F` and `RLA_L_F` (and mirrors) and
+>   uses 52 mm pickup booms. Bigger booms alone do not work: at 52 mm with one link per quadrant the
+>   chords still reach 1.37 and the diagonals fail.
+>
+>   | | rev A | rev B |
+>   |---|---|---|
+>   | Rod-by-rod max utilisation | 1.68 (90 rods over) | **0.93** (none over) |
+>   | Frame check, nominal 60 mm rods | 1.85 | 0.95 |
+>   | Torsional stiffness | 2,284 Nm/deg | **2,790 Nm/deg** |
+>   | Lattice mass | 42.4 kg | 47.4 kg |
+>   | Machined hubs | 318 | 322 |
+>   | Rods needing a fixture | 2,615 | 3,940 |
+>   | Single-robot build | 46.7 h | 49.4 h |
+>
+>   Run either through ACES: `aces rod SPEC --out DIR` with `params: params_revB.json`. Rev A's own numbers
+>   below are unchanged.
 
 A single-seat formula/prototype chassis designed to be built by a 6-axis robot
 placing discrete 2.4 mm filler rods and arc-welding each junction, exactly as

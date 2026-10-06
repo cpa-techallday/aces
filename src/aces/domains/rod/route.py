@@ -6,9 +6,10 @@ reproducible from its own copy), runs the requested stages with the chosen param
 file, then checks the outputs against the study's own process limits:
 
   problems (route not buildable as designed, or not checked)
-    - frame FEA utilisation above the spec's limit
-    - the same utilisation rescaled to the weakest rod's own capacity (micro.py
-      sizes each rod from its own length; the frame FEA uses the nominal length)
+    - rod-by-rod utilisation above the spec's limit (rodcheck.py: the frame FEA forces
+      mapped onto every chord, batten and diagonal, each against its own length)
+    - without rodcheck.py in the stages: frame FEA utilisation above the limit, and the
+      same utilisation rescaled to the weakest rod's capacity (a conservative bound)
     - rods shorter than the process minimum (node balls merge)
     - a requested stage that fails or times out
     - a check whose output is missing (a run never passes by skipping a check)
@@ -33,7 +34,8 @@ from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, field_validato
 from ... import manufacturing
 
 DOMAIN = "rod.lattice"
-DEFAULT_STAGES = ["process.py", "boom.py", "frame.py --dump", "micro.py --mesh", "buildplan.py", "budget.py"]
+DEFAULT_STAGES = ["process.py", "boom.py", "frame.py --dump", "micro.py --mesh", "rodcheck.py", "buildplan.py",
+                  "budget.py"]
 
 
 class RodRequirements(BaseModel):
@@ -172,9 +174,6 @@ def run(req: RodRequirements, out_dir: str | Path, spec_dir: str | Path, log=pri
         fr = raw["result"]
         summary["frame"] = {k: fr.get(k) for k in ("nodes", "members", "frame_mass_kg", "torsion_Nm_per_deg",
                                                    "capacity_comp_N", "max_utilisation", "over_unity")}
-        if fr["max_utilisation"] > req.max_utilisation:
-            problems.append(f"frame FEA utilisation {fr['max_utilisation']:.2f} > {req.max_utilisation:g} "
-                            f"({fr.get('over_unity')} member(s) over unity)")
     else:
         problems.append("frame check not run: arc1_frame.json is missing or has no max_utilisation "
                         "(structural utilisation unknown)")
@@ -188,10 +187,28 @@ def run(req: RodRequirements, out_dir: str | Path, spec_dir: str | Path, log=pri
     else:
         problems.append("rod check not run: micro_stats.json is missing (rod lengths and capacities unknown)")
 
-    # The frame FEA divides member force by the capacity of a NOMINAL-length rod.  micro.py sizes each rod
-    # from its own length, so the weakest rod can carry less.  Rescale conservatively (as if the weakest
-    # rod sat in the most loaded member) and report it; clearing it needs a per-rod force map.
-    if fr is not None and ms is not None:
+    rc = _read_json(res_dir / "rod_check.json", problems)
+    if not (isinstance(rc, dict) and isinstance(rc.get("max_utilisation"), (int, float))):
+        rc = None
+    if rc is not None:
+        summary["rod_check"] = {k: rc.get(k) for k in ("rods", "max_utilisation", "over_unity",
+                                                       "members_with_rods_over_unity", "by_kind")}
+        if rc["max_utilisation"] > req.max_utilisation:
+            w = (rc.get("worst") or [{}])[0]
+            problems.append(f"rod-by-rod utilisation {rc['max_utilisation']:.2f} > {req.max_utilisation:g} "
+                            f"({rc.get('over_unity')} rod(s) in {rc.get('members_with_rods_over_unity')} member(s); "
+                            f"worst: {w.get('kind')} of a {w.get('class')} boom in {w.get('case')})")
+        if fr is not None and fr["max_utilisation"] > req.max_utilisation:
+            warnings.append(f"frame FEA utilisation with nominal 60 mm rods is {fr['max_utilisation']:.2f}; the "
+                            f"rod-by-rod check ({rc['max_utilisation']:.2f}) uses each rod's own length and governs")
+    elif fr is not None and fr["max_utilisation"] > req.max_utilisation:
+        problems.append(f"frame FEA utilisation {fr['max_utilisation']:.2f} > {req.max_utilisation:g} "
+                        f"({fr.get('over_unity')} member(s) over unity)")
+
+    # Without rodcheck.py: the frame FEA divides member force by the capacity of a NOMINAL-length rod, and
+    # micro.py sizes each rod from its own length, so the weakest rod can carry less.  Rescale conservatively
+    # (as if the weakest rod sat in the most loaded member) and report it.
+    if rc is None and fr is not None and ms is not None:
         pc = fr.get("capacity_comp_N")
         if pc is None:
             rules = _read_json(res_dir / "process_rules.json", problems)
@@ -206,8 +223,8 @@ def run(req: RodRequirements, out_dir: str | Path, spec_dir: str | Path, log=pri
             summary["frame"]["utilisation_weakest_rod"] = u_adj
             if cmin < pc and u_adj > req.max_utilisation:
                 problems.append(f"utilisation rescaled to the weakest rod's capacity ({cmin:.0f} N vs nominal "
-                                f"{pc:.0f} N) is {u_adj:.2f} > {req.max_utilisation:g} (conservative bound; a "
-                                f"per-rod force map is needed to clear it)")
+                                f"{pc:.0f} N) is {u_adj:.2f} > {req.max_utilisation:g} (conservative bound; add "
+                                f"rodcheck.py to the stages for the rod-by-rod check)")
 
     if ms is not None:
         if ms.get("nodes_need_hub"):
@@ -226,8 +243,12 @@ def run(req: RodRequirements, out_dir: str | Path, spec_dir: str | Path, log=pri
         if lo is not None and (short := int((lengths < lo - tol).sum())):
             problems.append(f"{short} rod(s) shorter than the {lo:g} mm process minimum")
         if hi is not None and (long_ := int((lengths > hi + tol).sum())):
-            warnings.append(f"{long_} rod(s) longer than the {hi:g} mm target maximum (lower capacity; "
-                            f"check against the L/d rule)")
+            if rc is not None:
+                warnings.append(f"{long_} rod(s) longer than the {hi:g} mm bay (battens and diagonals, by the boom "
+                                f"geometry); each is checked at its own length in the rod-by-rod check")
+            else:
+                warnings.append(f"{long_} rod(s) longer than the {hi:g} mm target maximum (lower capacity; "
+                                f"check against the L/d rule)")
 
     bp = _read_json(res_dir / "buildplan.json", problems)
     if isinstance(bp, dict):
@@ -239,7 +260,7 @@ def run(req: RodRequirements, out_dir: str | Path, spec_dir: str | Path, log=pri
 
     artifacts = {"stages_log": str(out / "stages.log")}
     for name in ("process_rules.json", "boom_calibration.json", "arc1_frame.json", "micro_stats.json",
-                 "buildplan.json", "arc1_lattice.stl"):
+                 "rod_check.json", "buildplan.json", "arc1_lattice.stl"):
         if (res_dir / name).exists():
             artifacts[name] = str(res_dir / name)
     artifacts["params"] = str(work / "cad" / req.params)

@@ -102,6 +102,7 @@ def cmd_check(args) -> int:
 def _rod_report(spec_d: dict, res: dict, record_hash: str, req) -> str:
     sm = res["summary"]
     fr, mi, rl, bd = sm.get("frame", {}), sm.get("micro", {}), sm.get("rod_length_mm", {}), sm.get("build", {})
+    rc = sm.get("rod_check", {})
     lines = [
         f"# ACES rod-lattice run: {spec_d['project']}",
         "",
@@ -117,7 +118,10 @@ def _rod_report(spec_d: dict, res: dict, record_hash: str, req) -> str:
     rows = [
         ("Stages run", ", ".join(f"{st['stage']} ({'ok' if st['exit'] == 0 else 'FAILED'})" for st in res["stages"])),
         ("Macro frame nodes / members", f"{fr.get('nodes')} / {fr.get('members')}" if fr else None),
-        ("Frame FEA max utilisation", f"{fr.get('max_utilisation')} ({fr.get('over_unity')} over 1.0)" if fr else None),
+        ("Frame FEA max utilisation (nominal 60 mm rods)",
+         f"{fr.get('max_utilisation')} ({fr.get('over_unity')} over 1.0)" if fr else None),
+        ("Rod-by-rod max utilisation (governs)",
+         f"{rc.get('max_utilisation')} ({rc.get('over_unity')} of {rc.get('rods')} rods over 1.0)" if rc else None),
         ("Torsional stiffness", f"{fr.get('torsion_Nm_per_deg')} Nm/deg" if fr else None),
         ("Rods / nodes", f"{mi.get('rods')} / {mi.get('nodes')}" if mi else None),
         ("Rod length", f"{rl.get('min'):.1f}-{rl.get('max'):.1f} mm (limits {rl.get('limit_min')}-{rl.get('limit_max')})" if rl else None),
@@ -133,7 +137,9 @@ def _rod_report(spec_d: dict, res: dict, record_hash: str, req) -> str:
         lines += ["## Warnings", ""] + [f"- {w}" for w in res["warnings"]] + [""]
     lines += ["## Not checked", "",
               "Fatigue of welded nodes, measured joint efficiency, and weld-induced distortion. These need coupon "
-              "tests before a build (study section 11)."]
+              "tests before a build (study section 11). The rod-by-rod check combines each member's extreme axial "
+              "force, moment, shear and torque as if they coincide, and checks lacing in compression either way; "
+              "it does not model joint flexibility or local buckling of a node ball."]
     return "\n".join(lines) + "\n"
 
 

@@ -119,9 +119,11 @@ ARC-1 study's own check was found (peak utilisation 1.85, not 1.67).
 Not checked, and listed on every result: global (system) buckling, dynamic response and fatigue, joint and
 weld strength, shear deformation, and loads between nodes.
 
-For the rod route, the frame FEA uses the capacity of a nominal-length rod. ACES also rescales the peak
-utilisation to the weakest rod's own capacity. For ARC-1 rev A that bound is 2.77: the weakest rod carries
-661 N against 992 N nominal. Clearing it needs a per-rod force map.
+For the rod route, the study's frame FEA checks each boom's chords against a nominal 60 mm rod.
+`rodcheck.py` maps each member's forces onto every chord, batten and diagonal and checks each rod at its own
+length; that check governs the route. ARC-1 rev A fails it at 1.68, in the links at the loaded lower front
+pickups. Rev B (`params_revB.json`: a second link per quadrant there, 52 mm pickup booms) passes at 0.93 and
+is 22 % stiffer in torsion, for 5 kg more lattice.
 
 ## The learning loop
 

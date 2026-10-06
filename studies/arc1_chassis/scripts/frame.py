@@ -44,6 +44,21 @@ CLASS_R = {
     "side_x":    24.0,
 }
 
+# Optional overrides from params (added for ACES design studies; rev A sets none, so it is unchanged):
+#   "frame": {"class_R_mm": {"pickup": 40.0},
+#             "pickup_links_per_quadrant": 2}                      every hard point
+#             "pickup_links_per_quadrant": {"FLA_L_F": 2, "default": 1}   per hard point (mirrors follow)
+FRAME_OPT = P.get("frame", {})
+CLASS_R.update({k: float(v) for k, v in FRAME_OPT.get("class_R_mm", {}).items()})
+_PL = FRAME_OPT.get("pickup_links_per_quadrant", 1)
+
+
+def pickup_links(hp_id: str) -> int:
+    if not isinstance(_PL, dict):
+        return int(_PL)
+    base = hp_id[:-2] if hp_id.endswith("_M") else hp_id
+    return int(_PL.get(hp_id, _PL.get(base, _PL.get("default", 1))))
+
 # Rings are forced at every suspension pickup x: a pickup that does not land on
 # a ring can only hang off the frame in bending, which is what the first
 # analysis showed (12x over capacity, 642 N.m of link moment).
@@ -152,7 +167,9 @@ class Frame:
 def build() -> Frame:
     env, ck, hp = P["envelope"], P["cockpit"], P["hard_points"]
     f = Frame()
-    inset = max(CLASS_R.values()) + 6.0
+    # booms inside the envelope set the inset; pickup links run outboard to the hard points, so a
+    # bigger pickup boom must not shrink the tub (rev A: 34 mm either way)
+    inset = max(v for k, v in CLASS_R.items() if k != "pickup" and not isinstance(v, dict)) + 6.0
 
     # ---- station rings ---------------------------------------------
     stations = frame_stations()
@@ -309,16 +326,14 @@ def build() -> Frame:
         # four non-coplanar links resolve any load direction axially
         for sx in (-1, 1):
             for sz in (-1, 1):
-                best, bd = None, 1e18
+                ranked = []
                 for k in cand:
                     dx = node_arr[k][0] - xyz[0]
                     dz = node_arr[k][2] - xyz[2]
                     if dx * sx <= 25.0 or dz * sz <= 25.0:
                         continue
-                    d = float(np.linalg.norm(node_arr[k] - xyz))
-                    if d < bd:
-                        best, bd = k, d
-                if best is not None:
+                    ranked.append((float(np.linalg.norm(node_arr[k] - xyz)), k))
+                for _, best in sorted(ranked)[:pickup_links(p["id"])]:
                     f.member(hid, int(best), "pickup")
 
     return f, hard

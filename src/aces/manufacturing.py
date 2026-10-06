@@ -60,7 +60,7 @@ PROCESSES: dict[str, Process] = {
         Process(
             "arc_lattice_rod_welding", "Robotic rod placement with stud-welded nodes (ARC-1 chassis study)",
             "joining", "available", ("rod.lattice",),
-            ("frame FEA utilisation", "utilisation rescaled to the weakest rod's capacity",
+            ("rod-by-rod utilisation (frame forces on every chord, batten and diagonal at its own length)",
              "rod length against process min/max", "node valence and weld access (hubs)",
              "build sequence (fixtures)"),
             ("rod list", "lattice STL", "build plan", "Fusion build scripts"),

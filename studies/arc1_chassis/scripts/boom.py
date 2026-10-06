@@ -225,7 +225,8 @@ def main():
 
     print("\n--- torsion calibration (real rods, Pynite) ---")
     out = {}
-    for R in (25, 30, 35, 40):
+    # 45-60 added 2026-10-06 (ACES) so larger booms interpolate instead of clamping at R=40
+    for R in (25, 30, 35, 40, 45, 50, 55, 60):
         c = calibrate_J(R)
         b = Boom(R)
         ratio = c["J_eq_mm4"] / b.J_solid_equiv

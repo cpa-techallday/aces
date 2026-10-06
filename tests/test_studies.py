@@ -173,3 +173,47 @@ def test_rod_stage_timeout_log_is_text(tmp_path):
     route.run(_req(study_dir=str(study), stages=["s.py"], stage_timeout_s=2), tmp_path / "run", tmp_path,
               log=lambda *_: None)
     assert "b'" not in (tmp_path / "run" / "stages.log").read_text()
+
+
+def _rod_spec(tmp_path, params="params.json", stages=None):
+    d = json.loads(json.dumps(ROD_SPEC))
+    d["requirements"]["params"] = params
+    d["requirements"]["stages"] = stages or ["process.py", "boom.py", "frame.py --dump", "micro.py", "rodcheck.py"]
+    sp = tmp_path / f"spec_{params}.yaml"
+    sp.write_text(yaml.safe_dump(d))
+    return sp
+
+
+def test_rod_by_rod_check_governs_rev_a(tmp_path):
+    pytest.importorskip("Pynite")
+    ledger = tmp_path / "ledger.jsonl"
+    assert main(["rod", str(_rod_spec(tmp_path)), "--out", str(tmp_path / "a"), "--ledger", str(ledger)]) == 1
+    obs = evidence.Ledger(ledger).records()[-1]["observations"]
+    rc = obs["summary"]["rod_check"]
+    # rev A: the bending-compression chords of the loaded lower pickup links fail; the lacing does not
+    assert 1.5 < rc["max_utilisation"] < 1.9
+    assert rc["by_kind"]["diagonal"]["over"] == 0 and rc["by_kind"]["batten"]["over"] == 0
+    assert any(p.startswith("rod-by-rod utilisation") and "pickup" in p for p in obs["problems"])
+    assert not any("rescaled to the weakest rod" in p for p in obs["problems"])  # the bound is replaced
+
+
+def test_rev_b_passes_the_rod_route(tmp_path):
+    pytest.importorskip("Pynite")
+    ledger = tmp_path / "ledger.jsonl"
+    rc_ = main(["rod", str(_rod_spec(tmp_path, "params_revB.json")), "--out", str(tmp_path / "b"),
+                "--ledger", str(ledger)])
+    obs = evidence.Ledger(ledger).records()[-1]["observations"]
+    assert rc_ == 0, obs["problems"]
+    assert obs["summary"]["params_rev"] == "B"
+    assert obs["summary"]["rod_check"]["max_utilisation"] <= 1.0
+    assert obs["summary"]["frame"]["max_utilisation"] <= 1.0
+
+
+def test_rev_a_geometry_is_unchanged_by_the_frame_overrides():
+    """frame.py gained optional overrides for rev B; rev A must build the same frame as before."""
+    out = subprocess.run([sys.executable, "-c",
+                          "import frame; f, h = frame.build(); "
+                          "print(len(f.nodes), len(f.members), sum(1 for m in f.members if m[2] == 'pickup'))"],
+                         cwd=STUDY / "scripts", capture_output=True, text=True, timeout=120)
+    assert out.returncode == 0, out.stderr[-1000:]
+    assert out.stdout.split() == ["107", "356", "52"]
