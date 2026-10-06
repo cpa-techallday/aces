@@ -65,23 +65,28 @@ The ACES test suite also checks three more properties:
 
 ## Resolution: use n ≥ 96 on the rig
 
-This was measured for a gyroid with t/a = 0.10, at Re 19.6, in air. The n = 48 run was on the workstation GPU in
-the `aces-cfd` image.
+This was measured for a gyroid with t/a = 0.10, at Re 19.6, in air. The n = 48 and 64 runs were on the
+workstation GPU in the `aces-cfd` image (64 took 390 s there; the workstation runs FP64 at 1/64 rate).
 
 | n (voxels per cell) | friction ratio | Nu_H1 |
 | --- | --- | --- |
 | 24 | 3.483 | 5.619 |
 | 32 | 3.611 | 5.526 |
-| 48 | 3.429 | 5.417 |
+| 48 | 3.4292 | 5.417 |
+| 64 | 3.4293 | 5.389 |
 
-Nusselt falls steadily with resolution. The friction ratio does not converge monotonically, because the walls are
-voxel staircases: the effective wall position moves by up to half a voxel as n changes, and the wall is only 2–5
-voxels thick here. Treat results at n ≤ 48 as ±5 %, for development only. Calibration runs use n = 96; each case
-declares about 4 GB of device memory (measured peak with a 1.5x margin). The first rig campaign should also run
-one case at n = 64, 96 and 128 to bound the discretisation error.
+- **Friction:** settles from n = 48. The two finest grids agree to 0.003 %.
+- **Nusselt:** converges at second order. Extrapolating from 48 and 64 puts the n = 64 value about 0.7 % high.
+- **Coarse grids:** below about 5 voxels across the wall, the voxel staircase moves the effective wall by up to
+  half a voxel. The friction ratio then wanders by ±5 % (24 and 32 above), so treat those grids as development
+  only.
 
-Interpolated walls (Bouzidi), using the level set's distance along each link, would remove the staircase noise.
-They are the next solver improvement.
+Calibration runs use n = 96, which gives at least 7 voxels across a t/a = 0.08 wall. Each case declares about
+4 GB of device memory (measured peak with a 1.5x margin). The first rig campaign should still run one case at
+n = 64, 96 and 128 to bound the error on the rig.
+
+Interpolated walls (Bouzidi), using the level set's distance along each link, would remove the staircase noise
+and allow coarser, faster grids. They are the next solver improvement.
 
 Run time on the rig is not measured yet. The time to reach a steady state scales with Dh²/ν in lattice units, so
 the high-Re cases take longest: at n = 96 and Re 300 that is several hundred thousand steps. Cases default to
