@@ -13,6 +13,10 @@ update it and the evidence ledger can hash it:
     {"hx.gyroid.nusselt": {"value": 1.9, "sources": ["simlab:<run-id>"],
                            "valid_range": {"reynolds": [50, 1500], "wall_ratio": [0.05, 0.15]},
                            "fitted_on": "2026-11-02"}}
+
+A factor may vary with Reynolds number (``Factor.at``: a power law, or an inertial onset
+value * (1 + (Re / re_ref) ** n)) when calibration data show a trend a constant cannot
+represent; it is never used outside its fitted Re range without a warning.
 """
 from __future__ import annotations
 
@@ -29,10 +33,34 @@ class Factor:
     valid_range: dict[str, tuple[float, float]] = field(default_factory=dict)
     fitted_on: str = ""  # ISO date
     basis: str = ""  # what the factor multiplies and how it was fitted
+    re_exponent: float = 0.0
+    re_ref: float = 0.0
+    form: str = ""  # "" / "constant", "power" or "onset"; see ``at``
 
     @property
     def calibrated(self) -> bool:
         return bool(self.sources)
+
+    @property
+    def kind(self) -> str:
+        if self.form:
+            return self.form
+        return "power" if self.re_exponent != 0.0 else "constant"
+
+    def at(self, re: float) -> float:
+        """The factor at Reynolds number ``re``.
+
+        constant  value
+        power     value * (Re / re_ref) ** re_exponent
+        onset     value * (1 + (Re / re_ref) ** re_exponent): ``value`` is the low-Re (creeping-flow)
+                  ratio and ``re_ref`` the Re at which inertia has doubled it (Forchheimer-like)
+        """
+        k, r = self.kind, max(re, 1e-12)
+        if k == "power":
+            return self.value * (r / self.re_ref) ** self.re_exponent
+        if k == "onset":
+            return self.value * (1.0 + (r / self.re_ref) ** self.re_exponent)
+        return self.value
 
     def out_of_range(self, **conditions: float) -> list[str]:
         """Names of conditions that fall outside the fitted range."""
@@ -50,6 +78,13 @@ def _validate(f: Factor) -> Factor:
         raise ValueError(f"calibration factor {f.key!r} has no provenance (sources); refusing to use it")
     if not f.value > 0:
         raise ValueError(f"calibration factor {f.key!r} must be positive, got {f.value}")
+    if f.kind not in ("constant", "power", "onset"):
+        raise ValueError(f"calibration factor {f.key!r} has unknown form {f.form!r}")
+    if f.kind != "constant":
+        if not f.re_ref > 0:
+            raise ValueError(f"calibration factor {f.key!r} has an Re exponent but no positive re_ref")
+        if "reynolds" not in f.valid_range:
+            raise ValueError(f"calibration factor {f.key!r} varies with Re but has no fitted Re range")
     return f
 
 
@@ -71,7 +106,9 @@ class Registry:
         for k, v in raw.items():
             vr = {name: (float(lo), float(hi)) for name, (lo, hi) in (v.get("valid_range") or {}).items()}
             factors[k] = Factor(key=k, value=float(v.get("value", 1.0)), sources=tuple(v.get("sources", ())),
-                                valid_range=vr, fitted_on=v.get("fitted_on", ""), basis=v.get("basis", ""))
+                                valid_range=vr, fitted_on=v.get("fitted_on", ""), basis=v.get("basis", ""),
+                                re_exponent=float(v.get("re_exponent", 0.0)), re_ref=float(v.get("re_ref", 0.0)),
+                                form=v.get("form", ""))
         return cls(factors, p)
 
     def get(self, key: str) -> Factor:

@@ -54,10 +54,11 @@ licence that allows commercial, closed-source distribution and defence use.
 | Tool | Licence | Note |
 | --- | --- | --- |
 | PyFR | BSD-3-Clause | compressible CFD |
-| XLB | Apache-2.0 | lattice-Boltzmann (planned) |
+| XLB | Apache-2.0 | lattice-Boltzmann (planned; ACES now has its own periodic LBM for calibration samples) |
 | OpenFOAM | GPL-3.0 | separate process only |
 | CalculiX | GPL-2.0 | separate process only |
 | NVIDIA PhysicsNeMo, Warp | Apache-2.0 | surrogates, differentiable kernels |
+| CuPy | MIT | GPU arrays for `aces.cfd` inside the `aces-cfd` image (from simlab's gendesign base); optional, numpy otherwise |
 
 ## Planned
 

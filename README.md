@@ -25,7 +25,8 @@ spec.yaml -> design model (encoded engineering logic) -> NSGA-II search on the f
 | Manufacturing routes (`aces processes`): LPBF, polymer extrusion, robotic lattice, printed formwork, rod-lattice welding; CNC and casting planned | Working |
 | ARC-1 robotic arc-lattice chassis (rod placement + stud-welded nodes) | `studies/arc1_chassis`, runnable as the `rod.lattice` route (`aces rod`) |
 | Structural check of strut lattices (Pynite linear static: stress, Euler buckling, deflection) | Working; optional `structure` block in form.lattice specs |
-| Calibration from CFD/rig measurements (`aces calibrate`) | Working; refuses fits with too few points or too much scatter |
+| Calibration from CFD/rig measurements (`aces calibrate`) | Working; constant, power-law or inertial-onset factors; refuses thin or scattered data |
+| Calibration CFD (`aces cfd-sample`, `cfd-campaign`, `cfd-collect`; simlab solver `aces-tpms-periodic`) | Validated against exact duct results; rig image recipe ready, awaiting the rig ([docs/SIMLAB_CFD.md](docs/SIMLAB_CFD.md)) |
 | MCP server for Mission Control agents (`aces-mcp`, read/submit/full tiers, audit log) | Working (stdio) |
 | formgen (Fusion forms to robot-printed lattices, JBI jobs, scale models) as the `form.lattice` route | Imported and tested; see [docs/FORMGEN.md](docs/FORMGEN.md) |
 | Agent-authored design logic (Author / Judge agents) | Not started |
@@ -37,7 +38,7 @@ factors stay at 1.0, and are listed on every report, until CFD or test data repl
 
 ```bash
 pip install -e .[dev]
-python -m pytest                       # 147 tests: textbook and hand checks, geometry, safety guards, routes, structures, calibration, MCP
+python -m pytest                       # 165 tests: textbook and hand checks, geometry, safety guards, routes, structures, calibration, MCP
 
 cp specs/templates/hx_two_fluid.yaml my_job.yaml   # fill every null from the customer requirement
 aces check my_job.yaml                 # lists anything missing
@@ -66,6 +67,9 @@ aces rod job.yaml --out runs/arc1
 Calibration and agents:
 
 ```bash
+aces cfd-sample --tpms gyroid --wall-ratio 0.1 --cell-m 0.004 --fluid Air --T 320 --p 2e5 --re 20 --out s.json
+aces cfd-campaign --id aces-cal-air-01 --out aces-cal-air-01.yaml   # simlab sweep for the rig
+aces cfd-collect out/exp/aces-cal-air-01 --out cal.json            # measurement rows from the rig
 aces calibrate measurements.csv --registry calibration.json --project P --owner O --rd-activity A
 pip install -e .[mcp] && ACES_MCP_POLICY=submit aces-mcp      # stdio MCP server for agents
 ```

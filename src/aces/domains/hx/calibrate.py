@@ -20,7 +20,10 @@ Dh and porosity are measured on the level set at the model's resolution (64 by
 default), which is recorded in each factor's basis.
 
 A constant factor is fitted as the geometric mean of the ratios, one value per
-operating condition (repeated rows of a condition are averaged first).  Rules:
+operating condition (repeated rows of a condition are averaged first).  When the ratios
+trend with Reynolds number (inertia in a tortuous core does that), a power law
+value * (Re / re_ref) ** b is fitted instead, if it brings the scatter within the limit.
+Rules:
   * points where the baseline correlation is outside its validity (the 2300-3000
     transition blend, or above the turbulent fit's range) are excluded and listed;
   * ``min_points`` counts distinct operating conditions, so repeated rows of one
@@ -43,6 +46,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, field_validator
 
 from ... import correlations as corr
@@ -140,6 +144,55 @@ def _fit(ratios: list[float]) -> tuple[float, float]:
     return math.exp(mean), sd
 
 
+def _fit_power(re: list[float], ratios: list[float]) -> tuple[float, float, float, float] | None:
+    """ratio = value * (Re / re_ref) ** b by least squares in logs.
+
+    Returns (value, b, re_ref, residual sd with n - 2 degrees of freedom), or None with fewer than
+    three distinct Re or less than a 1.5x spread in Re.
+    """
+    xs = [math.log(r) for r in re]
+    if len({round(x, 6) for x in xs}) < 3 or max(re) / min(re) < 1.5:
+        return None
+    ys = [math.log(r) for r in ratios]
+    n = len(xs)
+    mx, my = sum(xs) / n, sum(ys) / n
+    sxx = sum((x - mx) ** 2 for x in xs)
+    b = sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / sxx
+    res = [y - (my + b * (x - mx)) for x, y in zip(xs, ys)]
+    sd = math.sqrt(sum(r * r for r in res) / (n - 2)) if n > 2 else 0.0
+    return math.exp(my), b, math.exp(mx), sd
+
+
+def _fit_onset(re: list[float], ratios: list[float]) -> tuple[float, float, float, float] | None:
+    """ratio = value * (1 + (Re / re_onset) ** n): flat in creeping flow, rising once inertia matters.
+
+    Least squares in logs; returns (value, n, re_onset, residual sd with n_points - 3 degrees of
+    freedom), or None with fewer than four distinct Re.
+    """
+    from scipy.optimize import least_squares
+
+    if len({round(math.log(r), 6) for r in re}) < 4:
+        return None
+    x = np.log(np.asarray(re, float))
+    y = np.log(np.asarray(ratios, float))
+
+    def resid(q):
+        la, lrc, n = q
+        return y - (la + np.log1p(np.exp(n * (x - lrc))))
+
+    lo, hi = float(x.min()), float(x.max())
+    best = None
+    for lrc0 in np.linspace(lo, hi, 5):
+        r = least_squares(resid, [float(y.min()), lrc0, 1.0],
+                          bounds=([-10.0, lo - math.log(10.0), 0.3], [10.0, hi + math.log(10.0), 4.0]))
+        if best is None or r.cost < best.cost:
+            best = r
+    dof = len(x) - 3
+    sd = math.sqrt(float((best.fun ** 2).sum()) / dof) if dof > 0 else 0.0
+    la, lrc, n = best.x
+    return math.exp(la), float(n), math.exp(lrc), sd
+
+
 def fit(
     measurements: list[Measurement],
     *,
@@ -177,24 +230,45 @@ def fit(
             for p in use:
                 groups.setdefault(p.condition, []).append(p)
             per_condition = [math.exp(sum(math.log(getattr(p, attr)) for p in g) / len(g)) for g in groups.values()]
+            re_condition = [math.exp(sum(math.log(p.re) for p in g) / len(g)) for g in groups.values()]
             value, sd = _fit(per_condition)
+            exponent, re_ref, form = 0.0, 0.0, "constant"
             regimes = sorted({getattr(p, regime_attr) for p in use})
             row.update({"value": value, "scatter_sd_log": sd, "regimes": regimes,
                         "reynolds": (min(p.re for p in use), max(p.re for p in use)),
                         "wall_ratio": (min(p.m.wall_ratio for p in use), max(p.m.wall_ratio for p in use))})
             if sd > max_scatter:
-                refused.append(f"hx.{kind}.{key}: ratios scatter {sd:.2f} (sd of log) > {max_scatter:g}; a constant "
-                               f"factor does not represent them. Narrow the range or fit a Re-dependent form.")
-                summary.append({**row, "status": "refused: scatter"})
-                continue
+                # simplest Re form that represents the data: power law, then inertial onset
+                tried = []
+                for name, fn in (("power", _fit_power), ("onset", _fit_onset)):
+                    q = fn(re_condition, per_condition)
+                    tried.append((name, q))
+                    if q is not None and q[3] <= max_scatter:
+                        value, exponent, re_ref, sd_q = q
+                        form = name
+                        row.update({"value": value, "re_exponent": exponent, "re_ref": re_ref,
+                                    f"scatter_sd_log_{name}": sd_q})
+                        break
+                else:
+                    extra = "".join(f"; {n} in Re leaves {q[3]:.2f}" if q is not None
+                                    else f"; too few distinct Re for {n}" for n, q in tried)
+                    refused.append(f"hx.{kind}.{key}: ratios scatter {sd:.2f} (sd of log) > {max_scatter:g}{extra}. "
+                                   f"Narrow the range (Re, t/a) or add conditions.")
+                    summary.append({**row, "status": "refused: scatter"})
+                    continue
+            row["form"] = form
             sources = tuple(sorted({p.m.source for p in use}))
             vr = {"reynolds": row["reynolds"], "wall_ratio": row["wall_ratio"]}
             if key == "nusselt":
                 vr["prandtl"] = (min(p.pr for p in use), max(p.pr for p in use))
-            basis = (f"{qty} baseline x factor; geometric mean of {len(use)} ratio(s) over {conditions} condition(s); "
+            how = {"constant": "geometric mean",
+                   "power": f"power law in Re (exponent {exponent:.3f} about Re {re_ref:.3g})",
+                   "onset": f"inertial onset in Re (x (1 + (Re/{re_ref:.3g})^{exponent:.2f}))"}[form]
+            basis = (f"{qty} baseline x factor; {how} of {len(use)} ratio(s) over {conditions} condition(s); "
                      f"{'/'.join(regimes)} baseline; level-set resolution {resolution}; "
                      + ("Nu baseline " + boundary if key == "nusselt" else "dpdx per metre of core length"))
-            factors.append(Factor(f"hx.{kind}.{key}", value, sources, vr, today, basis))
+            factors.append(Factor(f"hx.{kind}.{key}", value, sources, vr, today, basis, exponent, re_ref,
+                                  "" if form == "constant" else form))
             summary.append({**row, "status": "fitted"})
             if key == "friction":
                 factors.append(Factor(f"hx.{kind}.tortuosity", 1.0, sources, vr, today,

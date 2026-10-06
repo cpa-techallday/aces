@@ -173,8 +173,8 @@ class TwoFluidTPMS:
                 re = st.rho * u * s["dh_m"] / st.mu
                 nu = corr.nusselt(re, st.pr, req.thermal_boundary)
                 ff = corr.friction_factor_darcy(re)
-                h = nu.value * f_nu.value * st.k / s["dh_m"]
-                dp = ff.value * f_f.value * (f_tau.value * L / s["dh_m"]) * 0.5 * st.rho * u * u
+                h = nu.value * f_nu.at(re) * st.k / s["dh_m"]
+                dp = ff.value * f_f.at(re) * (f_tau.at(re) * L / s["dh_m"]) * 0.5 * st.rho * u * u
                 res[name] = {"state": st, "u": u, "re": re, "nu": nu, "f": ff, "h": h, "dp": dp,
                              "C": stream.mass_flow_kg_s * st.cp}
             A_m = 0.5 * (sides["hot"]["area_m2"] + sides["cold"]["area_m2"])

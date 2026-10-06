@@ -12,10 +12,13 @@ the previous gate passes.
 - [x] ARC-1 rod lattice wired as the `rod.lattice` route (spec, checks, evidence)
 - [x] Structural check for strut lattices (Pynite), used by the formgen route
 - [x] `aces calibrate`: fit `hx.*` factors from measurements with provenance and valid ranges
-- [ ] simlab result adapter: read the rig's `results.json` straight into the calibration measurement format
+- [x] simlab result adapter: `aces cfd-collect` reads a finished campaign straight into the calibration format
+- [x] Calibration CFD solver `aces-tpms-periodic` (FP64 periodic LBM, flow + H1 heat transfer), validated
+- [ ] Ship the `aces-cfd` image to the rig, register the solver with the rig's validation record (server agent)
 - [ ] First CFD calibration set: periodic gyroid, diamond and primitive samples over Re and t/a on the rig
 - [ ] Multigrid FP64 voxel FEA in simlab (runtime repo), for structural checks of printed cores
 - [x] `aces-mcp` tools so Mission Control agents can drive runs (stdio)
+- [x] ARC-1 rod-by-rod check; rev B params pass it (0.93) for 5 kg more lattice
 - [ ] `aces-mcp` over HTTP on the LAN with bearer tokens, matching simlab-mcp
 
 **Gate 1:** the calibrated hx model predicts held-out CFD pressure drop and Nusselt number within ±10 %.

@@ -7,6 +7,9 @@
   aces form SPEC.yaml --out DIR             formgen lattice route (robot cell / printed formwork)
   aces rod SPEC.yaml --out DIR              rod-lattice route (ARC-1 process: placed rods, welded nodes)
   aces calibrate MEAS.csv --registry R.json  fit hx factors from CFD/test measurements
+  aces cfd-sample --tpms gyroid ...         one periodic CFD calibration sample (lattice Boltzmann, FP64)
+  aces cfd-campaign --out EXP.yaml ...      simlab experiment: a sweep of calibration samples for the rig
+  aces cfd-collect EXP_DIR --out M.json     measurement rows from a finished simlab campaign
   aces processes                            manufacturing routes and what ACES checks for each
   aces ledger verify PATH                   check the evidence hash chain
 """
@@ -193,6 +196,10 @@ def cmd_calibrate(args) -> int:
         return 2
     for row in summary:
         val = f"{row['value']:.4f}" if "value" in row else "-"
+        if row.get("form") == "power":
+            val += f" x (Re/{row['re_ref']:.3g})^{row['re_exponent']:.3f}"
+        elif row.get("form") == "onset":
+            val += f" x (1 + (Re/{row['re_ref']:.3g})^{row['re_exponent']:.2f})"
         sc = f"{row['scatter_sd_log']:.3f}" if "scatter_sd_log" in row else "-"
         print(f"{row['key']:<26} points {row['points']:>3}  conditions {row['conditions']:>3}  value {val:>8}  "
               f"scatter {sc:>6}  {row['status']}")
@@ -472,6 +479,119 @@ def cmd_ledger(args) -> int:
     return 0 if ok else 1
 
 
+
+# ----------------------------------------------------------------------------- calibration CFD
+
+def cmd_cfd_sample(args) -> int:
+    from .cfd import lbm, periodic
+
+    out = Path(args.out)
+    if out.exists() or out.is_symlink():
+        print(f"{out} exists; choose a new file")
+        return 2
+    s = periodic.Sample(tpms=args.tpms, wall_ratio=args.wall_ratio, cell_m=args.cell_m, fluid=args.fluid,
+                        T_K=args.T, p_Pa=args.p, re_target=args.re, n=args.n, thermal=not args.no_thermal,
+                        source=args.source)
+    try:
+        r = periodic.run(s, xp=lbm.backend(prefer_gpu=args.gpu), log=print)
+    except ValueError as e:
+        print(e)
+        return 2
+    _safe_write(out, json.dumps(periodic.as_dict(r), indent=2, default=float))
+    d = r.diagnostics
+    print(f"Re {d.get('re_achieved', float('nan')):.4g}  Mach {d.get('mach', float('nan')):.3f}  "
+          f"Nu_H1 {d.get('nusselt_h1', float('nan')):.4g}  ({d.get('wall_s')} s)")
+    for p in r.problems:
+        print(f"NOT A MEASUREMENT: {p}")
+    for n in r.notes:
+        print(f"NOTE: {n}")
+    print(f"Wrote {out}")
+    return 0 if r.measurement is not None else 1
+
+
+def cfd_vram_gb(n: int) -> float:
+    """Device memory for one sample: D3Q19 populations x3, D3Q7 x3, masks and fields, FP64, 2x margin."""
+    nodes = n ** 3
+    return round(max(2.0, 2.0 * nodes * 8 * (19 * 3 + 7 * 3 + 30) / 1e9), 1)
+
+
+def cmd_cfd_campaign(args) -> int:
+    out = Path(args.out)
+    if out.exists() or out.is_symlink():
+        print(f"{out} exists; choose a new file")
+        return 2
+    if args.validation:
+        params = {"n": args.n}
+        sweep = {"validate": ["square_duct", "plane_channel"]}
+        desc = "Registry validation of aces-tpms-periodic against exact fully developed duct results."
+        hyp = "The periodic LBM solver reproduces exact laminar fRe and Nu_H1 within 1 % at this resolution."
+        expected = "square duct fRe 56.91 / Nu 3.608; plane channel fRe 96 / Nu 8.235"
+        outputs = ["fRe_err_pct", "Nu_err_pct"]
+    else:
+        for k in args.tpms:
+            if k not in tpms.KINDS:
+                print(f"unknown TPMS {k!r}")
+                return 2
+        params = {"cell_m": args.cell_m, "fluid": args.fluid, "T_K": args.T, "p_Pa": args.p, "n": args.n,
+                  "thermal": not args.no_thermal}
+        sweep = {"tpms": list(args.tpms), "wall_ratio": list(args.wall_ratio), "re": list(args.re)}
+        desc = (f"ACES calibration samples: periodic {', '.join(args.tpms)} unit cells, t/a {args.wall_ratio}, "
+                f"Re {args.re}, {args.fluid} at {args.T:g} K, {args.n} voxels per cell.")
+        hyp = ("Pressure drop and H1 heat transfer of TPMS cores differ from the straight-duct baselines by a factor "
+               "that is constant enough over this range to calibrate the fast tier.")
+        expected = "dpdx and h per case; fitted with `aces calibrate --boundary uniform_heat_flux`."
+        outputs = ["re_achieved", "dpdx_Pa_m", "mass_flux_kg_m2s", "h_W_m2K", "nusselt_h1", "mach"]
+    exp = simlab.experiment(
+        exp_id=args.id, project=args.project, owner=args.owner, rd_activity=args.rd_activity, physics="cfd",
+        solver="aces-tpms-periodic", description=desc, hypothesis=hyp, expected=expected, geometry_ref=None,
+        params=params, outputs=outputs, vram_gb=cfd_vram_gb(args.n), sweep=sweep, system="hx",
+        kind="validation" if args.validation else "calibration")
+    exp["geometry"] = {"source": "parametric"}
+    simlab.write(exp, out)
+    n_cases = 1
+    for v in sweep.values():
+        n_cases *= len(v)
+    print(f"Wrote {out}: {n_cases} case(s), {exp['resources']['vram_gb']} GB each. "
+          f"Run `simlab validate` on the rig before submitting.")
+    return 0
+
+
+def cmd_cfd_collect(args) -> int:
+    root = Path(args.exp_dir)
+    if not root.is_dir():
+        print(f"{root} is not a simlab experiment folder")
+        return 2
+    out = Path(args.out)
+    if out.exists() or out.is_symlink():
+        print(f"{out} exists; choose a new file")
+        return 2
+    rows, skipped = [], []
+    for case in sorted(p for p in root.iterdir() if p.is_dir()):
+        status_p, meas_p = case / "status.json", case / "measurement.json"
+        status = json.loads(status_p.read_text()).get("status") if status_p.exists() else None
+        if status != "FINISHED":
+            skipped.append(f"{case.name}: status {status}")
+            continue
+        if not meas_p.exists():
+            res = json.loads((case / "results.json").read_text()) if (case / "results.json").exists() else {}
+            skipped.append(f"{case.name}: not a measurement ({res.get('problems') or 'no measurement.json'})")
+            continue
+        m = json.loads(meas_p.read_text())
+        if not (case / "evidence.json").exists():
+            skipped.append(f"{case.name}: no evidence.json; not citable")
+            continue
+        rows.append(m)
+    from .domains.hx import calibrate as hxcal
+
+    for i, m in enumerate(rows):  # same schema check `aces calibrate` applies
+        hxcal.Measurement.model_validate(m)
+    _safe_write(out, json.dumps(rows, indent=2))
+    print(f"{len(rows)} measurement(s) -> {out}")
+    for s in skipped:
+        print(f"SKIPPED {s}")
+    return 0 if rows else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="aces", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -536,6 +656,44 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--rd-activity", required=True)
     s.add_argument("--ledger", default=str(DEFAULT_LEDGER))
     s.set_defaults(fn=cmd_calibrate)
+
+    s = sub.add_parser("cfd-sample", help="one periodic CFD calibration sample (FP64 lattice Boltzmann)")
+    s.add_argument("--tpms", choices=tpms.KINDS, required=True)
+    s.add_argument("--wall-ratio", type=float, required=True)
+    s.add_argument("--cell-m", type=float, required=True)
+    s.add_argument("--fluid", required=True, help="CoolProp fluid name")
+    s.add_argument("--T", type=float, required=True, help="temperature, K")
+    s.add_argument("--p", type=float, required=True, help="pressure, Pa")
+    s.add_argument("--re", type=float, required=True, help="target Reynolds number (ACES definition)")
+    s.add_argument("--n", type=int, default=32, help="voxels per cell edge")
+    s.add_argument("--no-thermal", action="store_true")
+    s.add_argument("--gpu", action="store_true", help="use CuPy when a GPU is available")
+    s.add_argument("--source", default="local:cfd-sample", help="provenance id recorded in the measurement")
+    s.add_argument("--out", required=True)
+    s.set_defaults(fn=cmd_cfd_sample)
+
+    s = sub.add_parser("cfd-campaign", help="simlab experiment for a sweep of calibration samples")
+    s.add_argument("--id", required=True, help="simlab experiment id (filename-safe)")
+    s.add_argument("--tpms", nargs="+", default=list(tpms.KINDS))
+    s.add_argument("--wall-ratio", nargs="+", type=float, default=[0.08, 0.12, 0.16])
+    s.add_argument("--re", nargs="+", type=float, default=[10, 30, 100, 300])
+    s.add_argument("--cell-m", type=float, default=0.004)
+    s.add_argument("--fluid", default="Air")
+    s.add_argument("--T", type=float, default=320.0)
+    s.add_argument("--p", type=float, default=2e5)
+    s.add_argument("--n", type=int, default=96)
+    s.add_argument("--no-thermal", action="store_true")
+    s.add_argument("--validation", action="store_true", help="the duct validation cases instead of samples")
+    s.add_argument("--project", default="ACES-calibration")
+    s.add_argument("--owner", default="aaron")
+    s.add_argument("--rd-activity", default="ACES fast-tier calibration of TPMS heat-exchanger cores")
+    s.add_argument("--out", required=True)
+    s.set_defaults(fn=cmd_cfd_campaign)
+
+    s = sub.add_parser("cfd-collect", help="measurement rows from a finished simlab calibration campaign")
+    s.add_argument("exp_dir", help="simlab experiment output folder (one subfolder per case)")
+    s.add_argument("--out", required=True)
+    s.set_defaults(fn=cmd_cfd_collect)
 
     s = sub.add_parser("processes", help="list manufacturing routes")
     s.set_defaults(fn=cmd_processes)

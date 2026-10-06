@@ -199,3 +199,49 @@ def test_nusselt_factor_records_prandtl_range_and_warns_for_another_fluid(spec_d
     params = {"tpms": "gyroid", "cell_m": 0.004, "wall_ratio": 0.1, "length_m": 0.1, "width_m": 0.06, "height_m": 0.06}
     ev = TwoFluidTPMS(registry=reg).evaluate(params, req)
     assert any("prandtl" in w for w in ev.warnings)
+
+
+def test_a_trend_in_re_is_fitted_as_a_power_law(tmp_path):
+    rows = []
+    for i, G in enumerate((20.0, 60.0, 150.0, 400.0)):
+        r = dict(_synthetic_rows()[1], source=f"test:power:{i}", mass_flux_kg_m2s=G)
+        pt = hxcal.reduce(hxcal.Measurement.model_validate(r), "uniform_wall_temperature")
+        # rescale dpdx so the friction ratio is exactly 2.0 * (Re / 100) ** 0.3
+        r["dpdx_Pa_m"] *= 2.0 * (pt.re / 100.0) ** 0.3 / pt.f_ratio
+        rows.append(r)
+    factors, summary, refused = hxcal.fit([hxcal.Measurement.model_validate(r) for r in rows])
+    fr = next(f for f in factors if f.key == "hx.gyroid.friction")
+    assert fr.re_exponent == pytest.approx(0.3, abs=1e-6)
+    assert fr.at(100.0) == pytest.approx(2.0, rel=1e-6)
+    assert "power law" in fr.basis
+    reg = Registry()
+    for f in factors:
+        reg.set(f)
+    reg.save(tmp_path / "r.json")
+    back = Registry.load(tmp_path / "r.json").get("hx.gyroid.friction")  # the exponent survives the JSON
+    assert back.re_exponent == pytest.approx(0.3, abs=1e-9) and back.re_ref == pytest.approx(fr.re_ref)
+
+
+def test_power_law_needs_a_fitted_re_range():
+    with pytest.raises(ValueError, match="Re range"):
+        Registry().set(Factor("hx.gyroid.friction", 2.0, ("test",), {}, "", "", 0.3, 100.0))
+
+
+def test_inertial_onset_is_fitted_when_a_power_law_cannot_follow_it(tmp_path):
+    """Creeping flow is flat in Re and inertia then lifts the ratio: the shape LBM samples of a gyroid show."""
+    rows = []
+    for i, G in enumerate((0.5, 2.0, 8.0, 30.0, 120.0, 400.0)):
+        r = dict(_synthetic_rows()[1], source=f"test:onset:{i}", mass_flux_kg_m2s=G)
+        pt = hxcal.reduce(hxcal.Measurement.model_validate(r), "uniform_wall_temperature")
+        r["dpdx_Pa_m"] *= 3.0 * (1 + (pt.re / 40.0) ** 1.3) / pt.f_ratio
+        rows.append(r)
+    factors, summary, refused = hxcal.fit([hxcal.Measurement.model_validate(r) for r in rows])
+    fr = next(f for f in factors if f.key == "hx.gyroid.friction")
+    assert fr.kind == "onset"
+    assert fr.value == pytest.approx(3.0, rel=1e-4) and fr.re_ref == pytest.approx(40.0, rel=1e-3)
+    assert fr.at(100.0) == pytest.approx(3.0 * (1 + 2.5 ** 1.3), rel=1e-4)
+    reg = Registry()
+    for f in factors:
+        reg.set(f)
+    reg.save(tmp_path / "r.json")
+    assert Registry.load(tmp_path / "r.json").get("hx.gyroid.friction").kind == "onset"

@@ -127,11 +127,16 @@ is 22 % stiffer in torsion, for 5 kg more lattice.
 
 ## The learning loop
 
-1. `aces export-simlab` writes periodic fluid samples of shortlisted cores.
-2. simlab runs CFD on them: XLB lattice-Boltzmann for pressure gradient, conjugate heat transfer for Nusselt.
-3. `aces calibrate` turns those results into factors with `sources`
+1. `aces cfd-campaign` writes a simlab sweep of periodic unit-cell samples (TPMS × t/a × Re) for the rig's
+   `aces-tpms-periodic` solver. That solver is ACES's own FP64 lattice-Boltzmann method (`aces.cfd`), validated
+   against exact duct results; see [SIMLAB_CFD.md](SIMLAB_CFD.md). `aces export-simlab` still exports the
+   geometry of shortlisted cores for other solvers.
+2. simlab runs one case per GPU. Each case writes a measurement row: dpdx, mass flux and H1 heat transfer
+   coefficient, on the design model's own definitions.
+3. `aces cfd-collect` gathers the finished, citable rows. `aces calibrate` turns them into factors with `sources`
    (simlab run ids) and `valid_range` (Re, t/a, and Pr for Nusselt). It averages repeats of one operating
    condition first and needs 3 distinct conditions. It leaves out points where the baseline is not valid (the
-   2300–3000 transition). It refuses a constant when the sample standard deviation of log(ratio) exceeds 0.15.
+   2300–3000 transition). When the sample standard deviation of log(ratio) exceeds 0.15 it tries a power law in
+   Re, then an inertial-onset form, and refuses if neither fits.
 4. The next design run is calibrated. Factors used outside their fitted range raise warnings.
 5. Rig test results enter the same registry with test ids as sources.
