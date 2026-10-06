@@ -43,6 +43,9 @@ from . import health
 
 TIMEOUT_DEFAULT = 300
 TIMEOUT_MAX = 3600
+# Workstation tier VRAM budget: the RTX PRO 4000 Blackwell carries 24 GB and shares
+# the card with the FP32 dev/preview lanes, so Isaac jobs are capped at 20 GB.
+VRAM_CAP_GB = 20.0
 
 GATE_REJECT = "gate_rejected"
 ENV_ERROR = "environment_error"
@@ -149,6 +152,12 @@ class Adapter:
             raise GateRejected(f"timeout_seconds {timeout} exceeds the {TIMEOUT_MAX}s hard cap")
         if timeout > TIMEOUT_DEFAULT and not case.get("allow_extended_limits"):
             raise GateRejected("timeout_seconds > 300 needs allow_extended_limits: true (user-approved)")
+        vram_gb = float(case.get("vram_gb", 8.0))
+        if vram_gb > VRAM_CAP_GB:
+            raise GateRejected(
+                f"vram_gb {vram_gb} exceeds the {VRAM_CAP_GB:.0f} GB workstation cap "
+                "(RTX PRO 4000 Blackwell 24 GB, shared with dev/preview lanes)"
+            )
 
         env = health.health(deep=True, timeout_seconds=timeout)
         if not env["ok"]:

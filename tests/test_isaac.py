@@ -47,6 +47,11 @@ def test_timeout_limits():
         adapter.Adapter().run({"timeout_seconds": 600}, None, "x")
 
 
+def test_vram_cap():
+    with pytest.raises(adapter.GateRejected, match="VRAM|vram"):
+        adapter.Adapter().run({"vram_gb": 24.0}, None, "x")
+
+
 # ------------------------------------------------------------------- physics reference
 
 def test_free_fall_time():

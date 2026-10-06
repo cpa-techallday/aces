@@ -30,15 +30,18 @@ jobs do not lease rig GPUs.
 
 Reported honestly, per the probe discipline:
 
-- **GPU layer: failing from agent shells.** `nvidia-smi` returns "Failed to
-  initialize NVML: Unknown Error" from both Git Bash and PowerShell in the
-  automation context, and no PowerShell/WMI path is exposed there. The RTX PRO
-  4000 is proven by the platform's own benchmarks (FP32 lanes, LTX renders), so
-  this is a session-visibility issue, not missing hardware — but the deep probe
-  is the arbiter and has not run.
+- **GPU: RTX PRO 4000 Blackwell, 24 GB — confirmed present and assigned to this
+  tier (owner, 2026-10-07).** The probe's NVML call fails from agent shells
+  ("Failed to initialize NVML: Unknown Error" from both Git Bash and PowerShell
+  in the automation context) — a session-visibility issue, not missing hardware:
+  the card is proven by the platform's own benchmarks and the LTX renders. The
+  deep probe remains the arbiter and has not run. **VRAM budget for the tier:
+  ≤ 20 GB per Isaac job** (leave 4 GB headroom for the display driver and the
+  FP32 dev/preview lanes sharing the card); scenes are headless, so 24 GB is
+  well above Isaac Sim's 8 GB minimum.
 - **Install layer: not found.** No `ISAAC_SIM_PATH`, nothing under
   `~/isaacsim`, `~/IsaacSim`, `C:\isaacsim`, `C:\isaac-sim`, or
-  `%LOCALAPPDATA%\ov\pkg\isaac-sim-*`.
+  `%LOCALAPPDATA%\ov\pkg\isaac-sim-*`. **This is the one real blocker.**
 
 Until both pass, `aces-isaac-scene` raises `environment_error` with the official
 guidance instead of running. To provision: install Isaac Sim 5.0+ workstation
