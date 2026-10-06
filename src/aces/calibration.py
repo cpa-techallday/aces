@@ -28,6 +28,7 @@ class Factor:
     sources: tuple[str, ...] = field(default_factory=tuple)  # simlab run ids, test ids
     valid_range: dict[str, tuple[float, float]] = field(default_factory=dict)
     fitted_on: str = ""  # ISO date
+    basis: str = ""  # what the factor multiplies and how it was fitted
 
     @property
     def calibrated(self) -> bool:
@@ -70,7 +71,7 @@ class Registry:
         for k, v in raw.items():
             vr = {name: (float(lo), float(hi)) for name, (lo, hi) in (v.get("valid_range") or {}).items()}
             factors[k] = Factor(key=k, value=float(v.get("value", 1.0)), sources=tuple(v.get("sources", ())),
-                                valid_range=vr, fitted_on=v.get("fitted_on", ""))
+                                valid_range=vr, fitted_on=v.get("fitted_on", ""), basis=v.get("basis", ""))
         return cls(factors, p)
 
     def get(self, key: str) -> Factor:

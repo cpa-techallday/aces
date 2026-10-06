@@ -32,10 +32,16 @@ licence that allows commercial, closed-source distribution and defence use.
 
 | Package | Licence | Use |
 | --- | --- | --- |
-| PyNiteFEA | MIT | frame FEA in the ARC-1 study |
+| PyNiteFEA | MIT | frame FEA in the ARC-1 study and `aces.structures` |
 | matplotlib | Matplotlib licence (PSF-style, permissive) | plots |
 | rtree | MIT | spatial index for trimesh queries |
 | trimesh | MIT | meshes |
+
+## MCP server (extra `[mcp]`)
+
+| Package | Licence | Use |
+| --- | --- | --- |
+| mcp (Model Context Protocol Python SDK) | MIT | `aces-mcp` stdio server |
 
 ## Development
 

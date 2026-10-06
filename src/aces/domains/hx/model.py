@@ -83,7 +83,7 @@ class HXRequirements(BaseModel):
     material: Material
     manufacturing: Manufacturing
     tpms_types: list[Literal["gyroid", "diamond", "primitive"]] = Field(default_factory=lambda: list(tpms.KINDS))
-    calibration_file: str | None = None
+    calibration_file: str | None = Field(None, min_length=1, description="registry JSON, relative to the spec")
     # Laminar baseline: uniform wall temperature (Nu 3.66) is the conservative default;
     # uniform heat flux (Nu 4.36) is closer for balanced counterflow but 19 % higher.
     thermal_boundary: Literal["uniform_wall_temperature", "uniform_heat_flux"] = "uniform_wall_temperature"
@@ -211,9 +211,17 @@ class TwoFluidTPMS:
             if "twophase" in (ph_in, ph_out) or (ph_in != ph_out and "unknown" not in (ph_in, ph_out)):
                 phase_change = 1.0
                 warnings.append(f"{name}: phase change ({ph_in} -> {ph_out}); single-phase model invalid")
+            if f_nu.calibrated and f_nu.basis and req.thermal_boundary not in f_nu.basis:
+                warnings.append(f"{f_nu.key} was fitted against a different thermal boundary than "
+                                f"{req.thermal_boundary}")
+            for fac in (f_nu, f_f):
+                if (fac.calibrated and "level-set resolution" in fac.basis
+                        and f"level-set resolution {self.resolution};" not in fac.basis + ";"):
+                    warnings.append(f"{fac.key} was fitted with Dh and porosity measured at a different level-set "
+                                    f"resolution than this model ({self.resolution})")
             for fac in (f_nu, f_f, f_tau):
                 if fac.calibrated:
-                    for msg in fac.out_of_range(reynolds=r["re"], wall_ratio=ratio):
+                    for msg in fac.out_of_range(reynolds=r["re"], wall_ratio=ratio, prandtl=r["state"].pr):
                         warnings.append(f"{fac.key} used outside its fitted range: {msg}")
         warnings = list(dict.fromkeys(warnings))
 

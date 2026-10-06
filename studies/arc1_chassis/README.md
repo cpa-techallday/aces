@@ -2,8 +2,9 @@
 
 > **In ACES.** Imported from `C:\Users\shedm\arc-lattice-chassis` on 2026-10-06 as a design study. It is
 > the reference for the `arc_lattice_rod_welding` manufacturing route: robot-placed filler rods with
-> stud-welded nodes. It is not yet wired to an ACES spec or evidence record (`aces processes` lists the
-> route as `study`).
+> stud-welded nodes. It runs as the `rod.lattice` route from an ACES spec
+> (`specs/templates/rod_lattice.yaml`, `aces rod SPEC --out DIR`), which works on a copy of this folder,
+> checks the outputs and writes an evidence record.
 >
 > - Run from this folder: `pip install -e ../..[studies]`, then follow the regeneration order in section 10.
 >   All results land in `out/`, which git does not track; regenerate rather than commit them.
@@ -12,6 +13,15 @@
 > - The `fusion_*.py` scripts run inside Fusion 360 (Scripts and Add-Ins), not from a terminal.
 > - Materials, joint efficiencies and costs below are the study's own figures. Section 11 lists what
 >   is assumed rather than measured.
+> - **Correction (2026-10-06).** PyNiteFEA 3.2 reports compression as a *positive* axial force. `fea.py`
+>   assumed the opposite, so compressed members were checked against the (higher) collared-joint
+>   tension capacity. `fea.py` now measures the sign convention at start-up. Corrected peak
+>   utilisation: rev A 1.85 (was 1.67), rotary 1.51 with 8 members over 1.0 (was 1.39). Mass and
+>   torsional stiffness are unchanged.
+> - **Weakest rod (2026-10-06, ACES rod route).** The frame FEA uses the capacity of a 60 mm rod (992 N).
+>   `micro.py` gives rods up to 85.6 mm long (5,172 over the 60 mm target), and the weakest carries 661 N.
+>   Scaling the peak utilisation by 992/661 gives a conservative bound of 2.77 for rev A. Clearing it
+>   needs member forces mapped onto individual rods.
 
 A single-seat formula/prototype chassis designed to be built by a 6-axis robot
 placing discrete 2.4 mm filler rods and arc-welding each junction, exactly as
@@ -105,7 +115,7 @@ only **10–14 %** of a closed section with the same bending inertia. Assuming
 | Micro lattice | **5,603 nodes, 16,273 rods, 950 m of 2.4 mm rod** |
 | Chassis mass | **42.4 kg** (34.4 kg rod + 8.1 kg node balls) |
 | Torsional stiffness | **2,284 Nm/deg** |
-| Max member utilisation | 1.67 — and all 6 over-unity members are pickup brackets, not lattice |
+| Max member utilisation | **1.85** (1.67 before the 2026-10-06 sign fix) — all 6 over-unity members are pickup brackets, not lattice |
 | Load cases | 3 g bump, 1.5 g braking, 2 g cornering, 1,000 Nm torsion rig |
 
 Loads are **distributed inertial mass reacted at the four tyres**, not point
@@ -408,7 +418,7 @@ electric motor it is 6× the mass and 13× the volume.
 | Chassis mass | 42.4 kg | **45.0 kg** | +2.6 |
 | Torsional stiffness | 2,284 Nm/deg | **2,224 Nm/deg** | −60 (−2.6 %) |
 | Rods | 16,273 | 17,208 | +935 |
-| Max member utilisation | 1.67 | **1.39** | better |
+| Max member utilisation | 1.85 | **1.51** (8 members over 1.0) | better (both corrected 2026-10-06; were 1.67 / 1.39) |
 | Engine bay clear box | 276×384×216 | **432×408×360** | +150 % volume |
 | Robot-weldable nodes | 94.3 % | 95.0 % | — |
 

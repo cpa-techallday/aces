@@ -201,3 +201,55 @@ def test_export_refuses_edited_results(tmp_path, spec_dict):
     pareto[0]["params"]["cell_m"] *= 0.5
     (run / "pareto.json").write_text(json.dumps(pareto))
     assert main(["export-simlab", str(run), "--solver", "s", "--vram-gb", "4", "--cells", "1"]) == 2
+
+
+# ----------------------------------------------------------------------------- run folders
+
+def test_design_refuses_to_overwrite_a_finished_run(tmp_path, spec_dict, capsys):
+    ledger = tmp_path / "ledger.jsonl"
+    out = _run(tmp_path, spec_dict, "projR", ledger)
+    before = (out / "run.json").read_text()
+    n = len(evidence.Ledger(ledger).records())
+    assert main(["design", str(tmp_path / "projR.yaml"), "--out", str(out), "--ledger", str(ledger)]) == 2
+    assert "already holds a finished run" in capsys.readouterr().out
+    assert (out / "run.json").read_text() == before
+    assert len(evidence.Ledger(ledger).records()) == n  # nothing appended
+
+
+def test_run_files_are_not_written_through_symlinks(tmp_path):
+    from aces.cli import _safe_write
+    target = tmp_path / "elsewhere.txt"
+    target.write_text("keep")
+    link = tmp_path / "report.md"
+    link.symlink_to(target)
+    with pytest.raises(PermissionError):
+        _safe_write(link, "overwrite")
+    assert target.read_text() == "keep"
+
+
+def test_calibration_file_is_relative_to_the_spec(tmp_path, spec_dict, monkeypatch):
+    from aces.cli import _load
+    d = tmp_path / "specs"
+    d.mkdir()
+    Registry({"hx.gyroid.friction": Factor("hx.gyroid.friction", 3.0, ("simlab:t",))}).save(d / "cal.json")
+    spec_dict["requirements"]["calibration_file"] = "cal.json"
+    (d / "s.yaml").write_text(yaml.safe_dump(spec_dict))
+    monkeypatch.chdir(tmp_path)  # a CWD-relative lookup would miss the file
+    _, _, req, model_cls = _load(str(d / "s.yaml"))
+    assert req.calibration_file == str((d / "cal.json").resolve())
+    assert model_cls().registry(req).get("hx.gyroid.friction").value == 3.0
+
+
+def test_empty_calibration_file_is_a_spec_error(spec_dict):
+    spec_dict["requirements"]["calibration_file"] = ""
+    with pytest.raises(spec.SpecError):
+        spec.parse(spec_dict, HXRequirements)
+
+
+def test_export_refuses_symlinked_run_files(tmp_path, spec_dict):
+    run = _run(tmp_path, spec_dict, "projL", tmp_path / "ledger.jsonl")
+    elsewhere = tmp_path / "elsewhere.yaml"
+    elsewhere.write_text("keep")
+    (run / "simlab_rank0_fluid_a.yaml").symlink_to(elsewhere)
+    assert main(["export-simlab", str(run), "--solver", "s", "--vram-gb", "4", "--cells", "1"]) == 2
+    assert elsewhere.read_text() == "keep"

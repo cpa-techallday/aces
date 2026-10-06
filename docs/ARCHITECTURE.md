@@ -9,12 +9,12 @@ sovereign on-prem operation.
 | # | Stage | Where | Status in v0.1 |
 | --- | --- | --- | --- |
 | 1 | Performance spec | `aces.spec` + `specs/templates/` | Done: envelope + per-domain requirements, missing fields listed |
-| 2 | Agent layer (Author, Optimiser, Judge) | Mission Control agents, through simlab-mcp | Not started; the CLI is the first interface |
+| 2 | Agent layer (Author, Optimiser, Judge) | Mission Control agents, through `aces-mcp` and simlab-mcp | `aces-mcp` done (read/submit/full); agent roles not started |
 | 3 | Design logic + geometry kernel | `aces.domains.*` (encoded rules) + numerical level sets | `hx.two_fluid` done; PicoGK/OpenVDB kernel to come for full parts |
 | 4 | Multi-fidelity physics | Tier 1 `aces.correlations` / `aces.fluids`; Tier 2 surrogates (simlab-ml); Tier 3 simlab solvers | Tier 1 done; tiers 2 and 3 reached through simlab |
 | 5 | Build | DfAM checks in each model; slicing and print partners outside ACES | Wall, neck, pockets, cell count checked for hx |
 | 6 | Test | Rig and partner test data | Not started |
-| 7 | Data lake + learning loop | `aces.evidence` ledger + `aces.calibration` registry | Plumbing done; no fitted factors yet |
+| 7 | Data lake + learning loop | `aces.evidence` ledger + `aces.calibration` registry + `aces calibrate` | Fitting works; awaiting the first CFD calibration set |
 
 ## Manufacturing routes
 
@@ -26,9 +26,9 @@ domain supports, or it is refused.
 | --- | --- | --- | --- | --- |
 | `lpbf` | Metal powder-bed fusion | available | `hx.two_fluid` | measured minimum wall, channel neck, isolated pockets, envelope |
 | `polymer_extrusion` | FFF/FDM (on-site Raise3D) | available | `hx.two_fluid` | as `lpbf`; polymer properties come from the spec |
-| `robotic_lattice_extrusion` | Robotic spatial printing (HC10DTP cell) | available | `form.lattice` (formgen) | every strut sequenced, no islands, scale-model minimum feature |
+| `robotic_lattice_extrusion` | Robotic spatial printing (HC10DTP cell) | available | `form.lattice` (formgen) | every strut sequenced, no islands, scale-model minimum feature, optional Pynite structural check |
 | `printed_formwork` | Lattice formwork for foam fill and sprayed concrete/render | available | `form.lattice` (formgen) | as above; fill and finish are outside ACES |
-| `arc_lattice_rod_welding` | Rod placement + stud-welded nodes (ARC-1) | study | `studies/arc1_chassis` | rod buckling L/d rule, frame FEA, build plan (not yet from a spec) |
+| `arc_lattice_rod_welding` | Rod placement + stud-welded nodes (ARC-1) | available | `rod.lattice` (runs `studies/arc1_chassis`) | frame FEA utilisation, rod length limits, hubs, fixtures |
 | `cnc_machining` | Subtractive | planned | none | none yet |
 | `casting` | Sand or investment, printed patterns | planned | none | none yet |
 
@@ -95,11 +95,41 @@ chambers or motor cooling jackets, is one new package under `aces/domains/` plus
 What it does not model, stated on every result: headers and manifolds, maldistribution, entrance effects, wall
 roughness, axial conduction, and compressibility at large pressure drop.
 
-## The learning loop (to build next)
+## Structural check for lattices
+
+`aces.structures.frame` builds a Pynite model of any strut graph. Each strut is a solid round rod of the bead
+or rod diameter, and the joints are rigid. Load cases come from the spec, already factored by the engineer:
+
+- self-weight as a multiple of g;
+- a uniform pressure on the projected area of the loaded skin, shared by tributary area so the total does not
+  depend on how finely the skin is meshed (the area is the convex hull, so openings count as loaded);
+- point loads, snapped to the nearest node within a tolerance or refused.
+
+Per strut and load case it checks:
+
+- combined axial, bending and torsional stress (von Mises) against strength / material factor;
+- column capacity, the lower of Euler and Johnson's parabola, so short struts are not credited with elastic
+  buckling loads above yield;
+- bending in compressed struts amplified by 1 / (1 − N/N_euler) (P-delta);
+- deflection against the spec's limit, and reactions that must balance the applied load.
+
+Pynite's axial sign convention is measured at start-up rather than assumed. That is how a sign error in the
+ARC-1 study's own check was found (peak utilisation 1.85, not 1.67).
+
+Not checked, and listed on every result: global (system) buckling, dynamic response and fatigue, joint and
+weld strength, shear deformation, and loads between nodes.
+
+For the rod route, the frame FEA uses the capacity of a nominal-length rod. ACES also rescales the peak
+utilisation to the weakest rod's own capacity. For ARC-1 rev A that bound is 2.77: the weakest rod carries
+661 N against 992 N nominal. Clearing it needs a per-rod force map.
+
+## The learning loop
 
 1. `aces export-simlab` writes periodic fluid samples of shortlisted cores.
 2. simlab runs CFD on them: XLB lattice-Boltzmann for pressure gradient, conjugate heat transfer for Nusselt.
-3. A fitting step, `aces calibrate` (planned), turns those results into factors with `sources`
-   (simlab run ids) and `valid_range` (Re, t/a).
+3. `aces calibrate` turns those results into factors with `sources`
+   (simlab run ids) and `valid_range` (Re, t/a, and Pr for Nusselt). It averages repeats of one operating
+   condition first and needs 3 distinct conditions. It leaves out points where the baseline is not valid (the
+   2300–3000 transition). It refuses a constant when the sample standard deviation of log(ratio) exceeds 0.15.
 4. The next design run is calibrated. Factors used outside their fitted range raise warnings.
 5. Rig test results enter the same registry with test ids as sources.

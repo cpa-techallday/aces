@@ -59,11 +59,13 @@ PROCESSES: dict[str, Process] = {
         ),
         Process(
             "arc_lattice_rod_welding", "Robotic rod placement with stud-welded nodes (ARC-1 chassis study)",
-            "joining", "study", ("studies/arc1_chassis",),
-            ("rod buckling L/d rule", "frame FEA (Pynite)", "node and rod counts", "build plan and cell time"),
+            "joining", "available", ("rod.lattice",),
+            ("frame FEA utilisation", "utilisation rescaled to the weakest rod's capacity",
+             "rod length against process min/max", "node valence and weld access (hubs)",
+             "build sequence (fixtures)"),
             ("rod list", "lattice STL", "build plan", "Fusion build scripts"),
-            "Code in studies/arc1_chassis, driven by cad/params.json; not yet an ACES spec route. "
-            "Fatigue of welded nodes is unassessed and joint efficiency is assumed (study section 11).",
+            "Runs the study in studies/arc1_chassis from its params. Fatigue of welded nodes is unassessed "
+            "and joint efficiency is assumed (study section 11).",
         ),
         Process("cnc_machining", "CNC machining", "subtractive", "planned", (), (), (),
                 "Needs machinable geometry families (e.g. plate-fin, milled channels) and tool-access checks."),

@@ -28,6 +28,24 @@ OUT = ROOT / P["output"]["dir"]
 G_ACC = 9.81
 
 
+def _compression_sign() -> float:
+    """+1 if Pynite reports compression as positive axial force (measured, not assumed)."""
+    m = FEModel3D()
+    m.add_material("s", 200000.0, 77000.0, 0.3, 7.85e-9)
+    m.add_section("r", 100.0, 1000.0, 1000.0, 2000.0)
+    m.add_node("A", 0, 0, 0)
+    m.add_node("B", 1000, 0, 0)
+    m.add_member("M", "A", "B", "s", "r")
+    m.def_support("A", True, True, True, True, True, True)
+    m.add_node_load("B", "FX", -1000.0, "C")
+    m.add_load_combo("C", {"C": 1.0})
+    m.analyze_linear(check_statics=False)
+    return 1.0 if m.members["M"].max_axial("C") > 0 else -1.0
+
+
+_CSIGN = _compression_sign()
+
+
 def J_for(R: float) -> float:
     cal = json.loads((OUT / "boom_calibration.json").read_text())
     xs = np.array(sorted(float(k) for k in cal))
@@ -174,7 +192,11 @@ def utilisation(models, f, class_R):
                     max(abs(mm.max_moment("My", cb)), abs(mm.min_moment("My", cb))),
                     max(abs(mm.max_moment("Mz", cb)), abs(mm.min_moment("Mz", cb))))
                 chord = N / 3.0 + Mr / (1.5 * R)
-                cap = Pc if nmin < -1e-6 else Pt
+                # Compression check uses Pynite's measured sign convention: PyNiteFEA 3.2
+                # reports compression as POSITIVE, so the original `nmin < 0` test picked
+                # tension members (fixed 2026-10-06, see aces.structures.frame).
+                comp = max(_CSIGN * nmax, _CSIGN * nmin) > 1e-6
+                cap = Pc if comp else Pt
                 u = chord / cap
                 if u > ub:
                     ub, best = u, (cb, N, Mr, chord)

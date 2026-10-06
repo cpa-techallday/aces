@@ -9,12 +9,14 @@ the previous gate passes.
 - [x] First domain model on the fast tier: two-fluid TPMS heat exchangers
 - [x] Manufacturing routes; formgen imported as the robotic lattice and printed formwork generator
 - [x] ARC-1 rod-lattice chassis study imported (`studies/arc1_chassis`)
-- [ ] Wire the ARC-1 rod lattice as an ACES route (spec, L/d and FEA checks, evidence); reuse its Pynite frame FEA for formgen lattices
-- [ ] Structural check for formgen lattices (beam FEA of the strut graph under wind and handling loads)
-- [ ] `aces calibrate`: fit `hx.*` factors from simlab CFD results with provenance and valid ranges
+- [x] ARC-1 rod lattice wired as the `rod.lattice` route (spec, checks, evidence)
+- [x] Structural check for strut lattices (Pynite), used by the formgen route
+- [x] `aces calibrate`: fit `hx.*` factors from measurements with provenance and valid ranges
+- [ ] simlab result adapter: read the rig's `results.json` straight into the calibration measurement format
 - [ ] First CFD calibration set: periodic gyroid, diamond and primitive samples over Re and t/a on the rig
 - [ ] Multigrid FP64 voxel FEA in simlab (runtime repo), for structural checks of printed cores
-- [ ] simlab-mcp tools for ACES (`aces_design`, `aces_export`) so Mission Control agents can drive runs
+- [x] `aces-mcp` tools so Mission Control agents can drive runs (stdio)
+- [ ] `aces-mcp` over HTTP on the LAN with bearer tokens, matching simlab-mcp
 
 **Gate 1:** the calibrated hx model predicts held-out CFD pressure drop and Nusselt number within ±10 %.
 

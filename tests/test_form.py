@@ -78,4 +78,4 @@ def test_form_run_end_to_end(tmp_path):
     for art in rec["artifacts"].values():
         assert evidence.file_sha256(art["path"]) == art["sha256"]
     report = (tmp_path / "run" / "report.md").read_text()
-    assert "MotoSim" in report and "No structural check" in report
+    assert "MotoSim" in report and "No structural check was requested" in report

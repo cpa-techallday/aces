@@ -31,6 +31,7 @@ formgen = [
     "networkx>=3.0",
     "shapely>=2.0",
     "pillow>=10.0",
+    "PyNiteFEA>=1.0",  # structural check (aces.structures)
 ]
 # design studies under studies/ (ARC-1 rod-lattice chassis)
 studies = [
@@ -40,8 +41,12 @@ studies = [
     "rtree>=1.0",
 ]
 
+# MCP server for Mission Control agents (mcp 1.x FastMCP or 2.x MCPServer)
+mcp = ["mcp>=1.10"]
+
 [project.scripts]
 aces = "aces.cli:main"
+aces-mcp = "aces.mcp_server:main"
 formgen = "formgen.cli:main"
 
 [tool.setuptools.packages.find]
