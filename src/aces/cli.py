@@ -12,6 +12,7 @@
   aces cfd-collect EXP_DIR --out M.json     measurement rows from a finished simlab campaign
   aces processes                            manufacturing routes and what ACES checks for each
   aces ledger verify PATH                   check the evidence hash chain
+  aces isaac-health [--deep]                layered Isaac Sim probe (GPU / install / SimulationApp)
 """
 from __future__ import annotations
 
@@ -480,6 +481,34 @@ def cmd_ledger(args) -> int:
     return 0 if ok else 1
 
 
+def cmd_isaac_health(args) -> int:
+    """Layered Isaac Sim probe; prints structured JSON and a one-line verdict."""
+    from .isaac import health as isaac_health
+
+    rep = isaac_health.health(deep=args.deep, timeout_seconds=args.timeout)
+    gpu = rep["layers"]["gpu"]
+    if gpu["ok"]:
+        names = ", ".join(f"{g['name']} (driver {g['driver']})" for g in gpu["gpus"])
+        print(f"GPU:     OK — {names}")
+    else:
+        print(f"GPU:     FAIL — {gpu.get('detail', '')} {gpu.get('guidance', '')}")
+    inst = rep["layers"]["install"]
+    if inst["ok"]:
+        print(f"Install: OK — {inst['root']}")
+    else:
+        print(f"Install: FAIL — {inst['error']['message']}")
+    if "deep" in rep["layers"]:
+        deep = rep["layers"]["deep"]
+        if deep.get("skipped"):
+            print("Deep:    skipped (a prerequisite layer failed)")
+        elif deep["ok"]:
+            print(f"Deep:    OK — SimulationApp booted, Isaac Sim {deep.get('version', '?')}")
+        else:
+            print(f"Deep:    FAIL — {deep['error'].get('message', '')}")
+    print(json.dumps(rep, indent=1))
+    return 0 if rep["ok"] else 1
+
+
 
 # ----------------------------------------------------------------------------- calibration CFD
 
@@ -707,6 +736,11 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("action", choices=("verify",))
     s.add_argument("path", nargs="?", default=str(DEFAULT_LEDGER))
     s.set_defaults(fn=cmd_ledger)
+
+    s = sub.add_parser("isaac-health", help="layered Isaac Sim probe (GPU / install / SimulationApp)")
+    s.add_argument("--deep", action="store_true", help="also boot a minimal headless SimulationApp")
+    s.add_argument("--timeout", type=int, default=300, help="deep-probe wall clock, seconds")
+    s.set_defaults(fn=cmd_isaac_health)
     return ap
 
 
