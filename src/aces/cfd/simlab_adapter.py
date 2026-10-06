@@ -60,7 +60,11 @@ class Adapter:
         precision = getattr(getattr(spec, "resources", None), "precision", "float64")
         if precision != "float64":
             raise ValueError("aces-tpms-periodic runs in float64 only (simlab verification rule)")
-        xp = lbm.backend(prefer_gpu=not case.get("cpu", False))
+        want_cpu = bool(case.get("cpu", False))
+        xp = lbm.backend(prefer_gpu=not want_cpu)
+        if xp is np and not want_cpu:
+            raise RuntimeError("no CUDA device visible to CuPy; refusing to run a rig case on the CPU "
+                               "(set cpu: true in the case to force it)")
         device = "cuda" if xp is not np else "cpu"
         t0 = time.time()
         if case.get("validate"):

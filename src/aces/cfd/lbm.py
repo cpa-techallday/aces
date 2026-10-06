@@ -88,13 +88,15 @@ class FlowResult:
         return self.u_max * math.sqrt(3.0)
 
 
-def solve_flow(fluid, nu: float, force: float, *, xp=np, tol: float = 1e-10, check_every: int = 200,
-               max_steps: int = 400_000, f0=None) -> tuple[FlowResult, object]:
+def solve_flow(fluid, nu: float, force: float, *, xp=np, tol: float = 1e-10, field_tol: float = 1e-8,
+               check_every: int = 200, max_steps: int = 400_000, f0=None) -> tuple[FlowResult, object]:
     """Steady periodic flow through ``fluid`` (bool array) under body force ``force`` along +x.
 
-    Converged when the mean velocity changes by less than ``tol`` (relative) per step, averaged
-    over ``check_every`` steps.  Returns the result and the final populations (to warm-start a
-    neighbouring case).
+    Converged when, per step and averaged over ``check_every`` steps, the mean velocity changes by
+    less than ``tol`` (relative) AND no velocity component anywhere changes by more than
+    ``field_tol`` of the peak speed: a flux that has settled while the field still moves (an
+    unsteady flow) is not a steady state.  Returns the result and the final populations (to
+    warm-start a neighbouring case).
     """
     if not 0.0 < nu:
         raise ValueError("viscosity must be positive")
@@ -150,10 +152,14 @@ def solve_flow(fluid, nu: float, force: float, *, xp=np, tol: float = 1e-10, che
             hist.append((steps, U))
             if not math.isfinite(U):
                 break
-            if prev is not None and abs(U) > 0 and abs(U - prev) / abs(U) < tol * check_every:
-                converged = True
-                break
-            prev = U
+            cur = xp.stack([ux, uy, uz])
+            if prev is not None and abs(U) > 0 and abs(U - prev[0]) / abs(U) < tol * check_every:
+                peak = float(_asnp(xp, xp.abs(cur).max()))
+                change = float(_asnp(xp, xp.abs(cur - prev[1]).max()))
+                if peak > 0 and change / peak < field_tol * check_every:
+                    converged = True
+                    break
+            prev = (U, cur)
     umag = xp.sqrt(ux * ux + uy * uy + uz * uz)
     u = xp.stack([ux, uy, uz])
     ui = float(_asnp(xp, ux.sum())) / nfl
@@ -233,10 +239,13 @@ def solve_scalar(fluid, u, alpha: float, gamma: float = 1e-3, *, xp=np, tol: flo
             hist.append((steps, tb))
             if not math.isfinite(tb):
                 break
-            if prev is not None and abs(tb) > 0 and abs(tb - prev) / abs(tb) < tol * check_every:
-                converged = True
-                break
-            prev = tb
+            if prev is not None and abs(tb) > 0 and abs(tb - prev[0]) / abs(tb) < tol * check_every:
+                peak = float(_asnp(xp, xp.abs(th).max()))
+                change = float(_asnp(xp, xp.abs(th - prev[1]).max()))
+                if peak > 0 and change / peak < 1e-8 * check_every:
+                    converged = True
+                    break
+            prev = (tb, th * fl)
     th = (g.sum(axis=0) + 0.5 * q) * fl
     tb = float(_asnp(xp, (ut[0] * th).sum())) / ux_sum
     return ScalarResult(theta=th, steps=steps, converged=converged, theta_bulk=tb, alpha=alpha, gamma=gamma,

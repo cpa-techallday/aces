@@ -152,3 +152,64 @@ def test_cfd_collect_keeps_only_finished_citable_measurements(tmp_path):
     rows = json.loads(out.read_text())
     assert [r["source"] for r in rows] == ["simlab:exp:c000"]
     assert hxcal.load(out)[0].h_W_m2K == 120.0  # readable by `aces calibrate`
+
+
+def test_a_settled_flux_with_a_moving_field_is_not_steady():
+    """A shear wave decays slowly while the mean flux stays constant: not a steady state."""
+    nx, U, A, nu = 64, 0.05, 1e-2, 0.002
+    k = 2 * math.pi / nx
+    x = np.arange(nx)
+    ux = np.full((nx, 1, 1), U)
+    uy = (A * np.sin(k * x)).reshape(nx, 1, 1)
+    c = lbm.C19.astype(float)
+    cu = c[:, 0].reshape(19, 1, 1, 1) * ux + c[:, 1].reshape(19, 1, 1, 1) * uy
+    f0 = lbm.W19.reshape(19, 1, 1, 1) * (1 + 3 * cu + 4.5 * cu * cu - 1.5 * (ux * ux + uy * uy))
+    r, _ = lbm.solve_flow(np.ones((nx, 1, 1), bool), nu, 0.0, f0=f0, max_steps=1000, check_every=100)
+    assert not r.converged
+
+
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")  # the stub drives the force far off on purpose
+def test_secant_reports_the_force_it_solved(monkeypatch):
+    """If the target Re is never reached, dpdx must come from the last field solved, not an untried force."""
+    used = []
+    real = lbm.solve_flow
+
+    def fake(fl, nu, g, **kw):
+        used.append(g)
+        r, f = real(fl, nu, g, **{**kw, "max_steps": 300})
+        r.converged = True
+        r.u_superficial = 1e-4  # Re stuck regardless of the force
+        return r, f
+
+    monkeypatch.setattr(lbm, "solve_flow", fake)
+    r = periodic.run(periodic.Sample("gyroid", 0.15, 0.004, "Air", 320.0, 2e5, re_target=5.0, n=16, thermal=False))
+    assert r.diagnostics["force_lattice"] == used[-1]
+
+
+def test_simlab_adapter_never_falls_back_to_the_cpu_silently(tmp_path, monkeypatch):
+    class Spec:
+        id = "x"
+
+        class resources:
+            precision = "float64"
+
+    monkeypatch.setattr(lbm, "backend", lambda prefer_gpu=False: np)
+    case = {"tpms": "gyroid", "wall_ratio": 0.15, "cell_m": 0.004, "fluid": "Air", "T_K": 320.0, "p_Pa": 2e5,
+            "re": 5.0, "n": 16}
+    with pytest.raises(RuntimeError, match="CUDA"):
+        Adapter().run(case, Spec, str(tmp_path))
+
+
+def test_cfd_collect_takes_provenance_from_the_run_folder(tmp_path):
+    exp = tmp_path / "aces-cal-x"
+    row = {"source": "simlab:other:c999", "tpms": "gyroid", "cell_m": 0.004, "wall_ratio": 0.1, "fluid": "Air",
+           "T_K": 320.0, "p_Pa": 2e5, "mass_flux_kg_m2s": 1.0, "dpdx_Pa_m": 50.0, "h_W_m2K": None}
+    for name, r in (("c000", row), ("c001", dict(row, wall_ratio=1.5))):  # c001 is not a valid row
+        d = exp / name
+        d.mkdir(parents=True)
+        (d / "status.json").write_text(json.dumps({"status": "FINISHED"}))
+        (d / "evidence.json").write_text("{}")
+        (d / "measurement.json").write_text(json.dumps(r))
+    out = tmp_path / "m.json"
+    assert main(["cfd-collect", str(exp), "--out", str(out)]) == 0
+    assert [r["source"] for r in json.loads(out.read_text())] == ["simlab:aces-cal-x:c000"]

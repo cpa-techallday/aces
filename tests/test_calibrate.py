@@ -245,3 +245,12 @@ def test_inertial_onset_is_fitted_when_a_power_law_cannot_follow_it(tmp_path):
         reg.set(f)
     reg.save(tmp_path / "r.json")
     assert Registry.load(tmp_path / "r.json").get("hx.gyroid.friction").kind == "onset"
+
+
+def test_two_re_levels_cannot_carry_a_re_dependent_fit():
+    """Achieved Re scatters around each target; two levels must not pass for many."""
+    re = [10.0, 10.2, 9.9, 100.0, 103.0, 98.0]
+    assert hxcal._re_levels(re) == 2
+    assert hxcal._fit_power(re, [2.0, 2.1, 1.9, 3.0, 3.1, 2.9]) is None
+    assert hxcal._fit_onset(re, [2.0, 2.1, 1.9, 3.0, 3.1, 2.9]) is None
+    assert hxcal._re_levels([1, 5, 20, 60]) == 4

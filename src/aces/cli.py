@@ -200,7 +200,8 @@ def cmd_calibrate(args) -> int:
             val += f" x (Re/{row['re_ref']:.3g})^{row['re_exponent']:.3f}"
         elif row.get("form") == "onset":
             val += f" x (1 + (Re/{row['re_ref']:.3g})^{row['re_exponent']:.2f})"
-        sc = f"{row['scatter_sd_log']:.3f}" if "scatter_sd_log" in row else "-"
+        key = f"scatter_sd_log_{row['form']}" if row.get("form") in ("power", "onset") else "scatter_sd_log"
+        sc = f"{row[key]:.3f}" if key in row else "-"
         print(f"{row['key']:<26} points {row['points']:>3}  conditions {row['conditions']:>3}  value {val:>8}  "
               f"scatter {sc:>6}  {row['status']}")
         for x in row.get("excluded", []):
@@ -510,9 +511,9 @@ def cmd_cfd_sample(args) -> int:
 
 
 def cfd_vram_gb(n: int) -> float:
-    """Device memory for one sample: D3Q19 populations x3, D3Q7 x3, masks and fields, FP64, 2x margin."""
-    nodes = n ** 3
-    return round(max(2.0, 2.0 * nodes * 8 * (19 * 3 + 7 * 3 + 30) / 1e9), 1)
+    """Device memory for one sample, from the measured peak of solve_flow plus the warm-start copy
+    (about 330 FP64 values per node), with a 1.5x margin and 0.5 GB for the CuPy pool."""
+    return round(1.5 * n ** 3 * 330 * 8 / 1e9 + 0.5, 1)
 
 
 def cmd_cfd_campaign(args) -> int:
@@ -557,6 +558,8 @@ def cmd_cfd_campaign(args) -> int:
 
 
 def cmd_cfd_collect(args) -> int:
+    from .domains.hx import calibrate as hxcal
+
     root = Path(args.exp_dir)
     if not root.is_dir():
         print(f"{root} is not a simlab experiment folder")
@@ -576,15 +579,17 @@ def cmd_cfd_collect(args) -> int:
             res = json.loads((case / "results.json").read_text()) if (case / "results.json").exists() else {}
             skipped.append(f"{case.name}: not a measurement ({res.get('problems') or 'no measurement.json'})")
             continue
-        m = json.loads(meas_p.read_text())
         if not (case / "evidence.json").exists():
             skipped.append(f"{case.name}: no evidence.json; not citable")
             continue
+        m = json.loads(meas_p.read_text())
+        m["source"] = f"simlab:{root.name}:{case.name}"  # the run folder is the provenance, whatever the row says
+        try:
+            hxcal.Measurement.model_validate(m)  # the same schema check `aces calibrate` applies
+        except Exception as e:  # pydantic ValidationError
+            skipped.append(f"{case.name}: invalid measurement row ({str(e).splitlines()[0]})")
+            continue
         rows.append(m)
-    from .domains.hx import calibrate as hxcal
-
-    for i, m in enumerate(rows):  # same schema check `aces calibrate` applies
-        hxcal.Measurement.model_validate(m)
     _safe_write(out, json.dumps(rows, indent=2))
     print(f"{len(rows)} measurement(s) -> {out}")
     for s in skipped:

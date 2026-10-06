@@ -73,7 +73,7 @@ This was measured for a gyroid with t/a = 0.10, at Re 19.6, in air:
 | 32 | 3.611 | 5.526 |
 
 Richardson extrapolation puts the friction ratio near 3.77. At n = 24–32 the error is 4–8 %, so these runs are
-for development only. Calibration runs use n = 96, about 2 GB of device memory per case.
+for development only. Calibration runs use n = 96; each case declares about 4 GB of device memory (measured peak with a 1.5x margin).
 
 Run time on the rig is not measured yet. The time to reach a steady state scales with Dh²/ν in lattice units, so
 the high-Re cases take longest: at n = 96 and Re 300 that is several hundred thousand steps. Cases default to

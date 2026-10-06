@@ -121,21 +121,21 @@ def run(s: Sample, *, xp=np, max_steps: int = 400_000, log=None) -> SampleResult
     g = 64.0 / s.re_target * 0.5 * u_t * u_t / dh
     f0, hist = None, []
     for it in range(8):
+        if it:  # next force from the last two solves (secant), or proportionally after the first
+            if len(hist) >= 2 and hist[-1][1] != hist[-2][1]:
+                (g1, r1, *_), (g2, r2, *_) = hist[-2], hist[-1]
+                g_new = g2 + (s.re_target - r2) * (g2 - g1) / (r2 - r1)
+                g = g_new if g_new > 0 else g2 * s.re_target / r2
+            else:
+                g = hist[-1][0] * s.re_target / hist[-1][1]
         fr, f0 = lbm.solve_flow(fl, nu, g, xp=xp, f0=f0, max_steps=max_steps)
         re = re_of(fr)
         hist.append((g, re, fr.steps, fr.converged))
         if log:
             log(f"  flow it {it}: g={g:.4e} Re={re:.4g} steps={fr.steps} converged={fr.converged}")
-        if not fr.converged or not math.isfinite(re):
+        if not fr.converged or not math.isfinite(re) or abs(re - s.re_target) / s.re_target < s.re_tolerance:
             break
-        if abs(re - s.re_target) / s.re_target < s.re_tolerance:
-            break
-        if len(hist) >= 2 and hist[-1][1] != hist[-2][1]:
-            (g1, r1, *_), (g2, r2, *_) = hist[-2], hist[-1]
-            g_new = g2 + (s.re_target - r2) * (g2 - g1) / (r2 - r1)
-            g = g_new if g_new > 0 else g2 * s.re_target / r2
-        else:
-            g = g * s.re_target / re
+    g = hist[-1][0]  # the force of the field we report, never an untried update
     diag.update({"flow_iterations": hist, "flow_steps": sum(h[2] for h in hist), "flow_converged": fr.converged,
                  "re_achieved": re, "mach": fr.mach, "u_superficial_lattice": fr.u_superficial,
                  "force_lattice": g})

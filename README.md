@@ -38,7 +38,7 @@ factors stay at 1.0, and are listed on every report, until CFD or test data repl
 
 ```bash
 pip install -e .[dev]
-python -m pytest                       # 165 tests: textbook and hand checks, geometry, safety guards, routes, structures, calibration, MCP
+python -m pytest                       # 170 tests: textbook and hand checks, geometry, safety guards, routes, structures, calibration, MCP
 
 cp specs/templates/hx_two_fluid.yaml my_job.yaml   # fill every null from the customer requirement
 aces check my_job.yaml                 # lists anything missing

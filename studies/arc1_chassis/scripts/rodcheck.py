@@ -28,7 +28,8 @@ diagonal d = hypot(b, s), enclosed area A = 3*sqrt(3)/4 * R^2):
 Forces use each member's extreme N, M, V and T along its length, combined as if
 they acted at the same section and in the worst direction: conservative. The
 sign of lacing forces is not resolved, so every batten and diagonal is checked
-in compression. Chords are checked in both senses.
+in compression. Chords are checked in both senses. Where booms meet, micro.py
+merges coincident rods; a merged rod carries the sum of its members' demands.
 
 Capacities (from params, as process.py):
   compression  min(Johnson/Euler of the rod's own length, collared joint)
@@ -156,9 +157,10 @@ def check(f, class_R, demands, mnodes, rods) -> dict:
             else:  # batten
                 c = t = d["face"][0]
                 case = d["face"][1]
-            if max(c / c_cap, t / t_cap) > max(comp / c_cap, tens / t_cap):
-                gov = (k, case)
-            comp, tens = max(comp, c), max(tens, t)
+            if gov is None or max(c / c_cap, t / t_cap) > gov[2]:
+                gov = (k, case, max(c / c_cap, t / t_cap))
+            # a rod merged from several booms carries all their forces; add the magnitudes (conservative)
+            comp, tens = comp + c, tens + t
         u = max(comp / c_cap, tens / t_cap)
         per_rod.append((u, L, r["kind"], r["cls"], comp, tens, c_cap, gov))
 
@@ -195,6 +197,7 @@ def check(f, class_R, demands, mnodes, rods) -> dict:
             "lacing force sign not resolved: battens and diagonals checked in compression",
             "face shear (2/3)V + T b / 2A for a 3-chord boom; diagonal S d/b; batten S",
             "pickup and other links are rod booms as micro.py builds them",
+            "a rod shared by several booms carries the sum of their demand magnitudes",
         ],
     }
 

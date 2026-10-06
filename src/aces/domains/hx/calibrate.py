@@ -144,6 +144,18 @@ def _fit(ratios: list[float]) -> tuple[float, float]:
     return math.exp(mean), sd
 
 
+def _re_levels(re: list[float], spread: float = 1.25) -> int:
+    """Number of distinct Re levels: values within ``spread`` of the level's lowest count as one.
+
+    Achieved Re scatters a few percent around each target, so raw distinct values would let two
+    levels pass for many."""
+    levels, lo = 0, None
+    for r in sorted(re):
+        if lo is None or r > lo * spread:
+            levels, lo = levels + 1, r
+    return levels
+
+
 def _fit_power(re: list[float], ratios: list[float]) -> tuple[float, float, float, float] | None:
     """ratio = value * (Re / re_ref) ** b by least squares in logs.
 
@@ -151,7 +163,7 @@ def _fit_power(re: list[float], ratios: list[float]) -> tuple[float, float, floa
     three distinct Re or less than a 1.5x spread in Re.
     """
     xs = [math.log(r) for r in re]
-    if len({round(x, 6) for x in xs}) < 3 or max(re) / min(re) < 1.5:
+    if _re_levels(re) < 3:
         return None
     ys = [math.log(r) for r in ratios]
     n = len(xs)
@@ -171,7 +183,7 @@ def _fit_onset(re: list[float], ratios: list[float]) -> tuple[float, float, floa
     """
     from scipy.optimize import least_squares
 
-    if len({round(math.log(r), 6) for r in re}) < 4:
+    if _re_levels(re) < 4:
         return None
     x = np.log(np.asarray(re, float))
     y = np.log(np.asarray(ratios, float))
