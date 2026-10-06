@@ -1,0 +1,1498 @@
+{
+ "generated_utc": "2026-10-06T03:57:11+00:00",
+ "method": "aces.domains.hx.tpms.measure_manufacturability",
+ "resolution": 48,
+ "kinds": {
+  "gyroid": [
+   {
+    "kind": "gyroid",
+    "ratio": 0.03,
+    "wall_min_over_a": 0.029882399308495226,
+    "wall_mean_over_a": 0.02989711629743181,
+    "neck_over_a": [
+     0.3744379362752917,
+     0.3744379362752917
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.04,
+    "wall_min_over_a": 0.039722758665680896,
+    "wall_mean_over_a": 0.039757333797321145,
+    "neck_over_a": [
+     0.3655658195706902,
+     0.3655658195706902
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.05,
+    "wall_min_over_a": 0.04946226388216018,
+    "wall_mean_over_a": 0.0495290311301073,
+    "neck_over_a": [
+     0.3587451763974186,
+     0.3587451763974186
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.06,
+    "wall_min_over_a": 0.059078570645302524,
+    "wall_mean_over_a": 0.0591923730418512,
+    "neck_over_a": [
+     0.3447704138147688,
+     0.3447704138147688
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.07,
+    "wall_min_over_a": 0.06855109027586878,
+    "wall_mean_over_a": 0.06872893872821491,
+    "neck_over_a": [
+     0.3375915717299456,
+     0.3375915717299456
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.08,
+    "wall_min_over_a": 0.0778611976876855,
+    "wall_mean_over_a": 0.07812189876884425,
+    "neck_over_a": [
+     0.33269755045572913,
+     0.33269755045572913
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.09,
+    "wall_min_over_a": 0.08699237718991934,
+    "wall_mean_over_a": 0.08735614516532335,
+    "neck_over_a": [
+     0.31765406246939015,
+     0.31765406246939015
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.1,
+    "wall_min_over_a": 0.09593030677177014,
+    "wall_mean_over_a": 0.09641837422724807,
+    "neck_over_a": [
+     0.31508561318827194,
+     0.31508561318827194
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.11,
+    "wall_min_over_a": 0.10466288425121453,
+    "wall_mean_over_a": 0.10529712418340902,
+    "neck_over_a": [
+     0.3045767720169538,
+     0.3045767720169538
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.12,
+    "wall_min_over_a": 0.11318020105361937,
+    "wall_mean_over_a": 0.11398277115793527,
+    "neck_over_a": [
+     0.2937227496098391,
+     0.2937227496098391
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.13,
+    "wall_min_over_a": 0.12147447100002316,
+    "wall_mean_over_a": 0.12246748845067516,
+    "neck_over_a": [
+     0.2853469816947965,
+     0.2853469816947965
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.14,
+    "wall_min_over_a": 0.1295399223845452,
+    "wall_mean_over_a": 0.13074517491418464,
+    "neck_over_a": [
+     0.2824931619590854,
+     0.2824931619590854
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.15,
+    "wall_min_over_a": 0.13737266192212705,
+    "wall_mean_over_a": 0.13881135859657515,
+    "neck_over_a": [
+     0.2678296877166094,
+     0.2678296877166094
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.16,
+    "wall_min_over_a": 0.1449705186784268,
+    "wall_mean_over_a": 0.14666308183569285,
+    "neck_over_a": [
+     0.2586662439453014,
+     0.2586662439453014
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.17,
+    "wall_min_over_a": 0.1523328760042787,
+    "wall_mean_over_a": 0.1542987736585946,
+    "neck_over_a": [
+     0.25237714962176555,
+     0.25237714962176555
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.18,
+    "wall_min_over_a": 0.15946049773134285,
+    "wall_mean_over_a": 0.16171811481163745,
+    "neck_over_a": [
+     0.24595734165658614,
+     0.24595734165658614
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.19,
+    "wall_min_over_a": 0.16635535467416046,
+    "wall_mean_over_a": 0.16892190003948496,
+    "neck_over_a": [
+     0.24595859098518816,
+     0.24595859098518816
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.2,
+    "wall_min_over_a": 0.17302045578137037,
+    "wall_mean_over_a": 0.17591190148344027,
+    "neck_over_a": [
+     0.23601701902084196,
+     0.23601701902084196
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.21,
+    "wall_min_over_a": 0.17945968743693078,
+    "wall_mean_over_a": 0.18269073627334487,
+    "neck_over_a": [
+     0.22915843529528068,
+     0.22915843529528068
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.22,
+    "wall_min_over_a": 0.18567766335047775,
+    "wall_mean_over_a": 0.18926174066584897,
+    "neck_over_a": [
+     0.21850870778856404,
+     0.21850870778856404
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.23,
+    "wall_min_over_a": 0.1916795866424218,
+    "wall_mean_over_a": 0.19562885239350578,
+    "neck_over_a": [
+     0.21485341420653173,
+     0.21485341420653173
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.24,
+    "wall_min_over_a": 0.19747112506628037,
+    "wall_mean_over_a": 0.201796502301455,
+    "neck_over_a": [
+     0.20354715983072916,
+     0.20354715983072916
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.25,
+    "wall_min_over_a": 0.20305829956196247,
+    "wall_mean_over_a": 0.2077695158613264,
+    "neck_over_a": [
+     0.2035424121116746,
+     0.2035424121116746
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.26,
+    "wall_min_over_a": 0.20844738590903578,
+    "wall_mean_over_a": 0.2135530247379571,
+    "neck_over_a": [
+     0.19566827815943752,
+     0.19566827815943752
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.27,
+    "wall_min_over_a": 0.21364482905901966,
+    "wall_mean_over_a": 0.21915238827442227,
+    "neck_over_a": [
+     0.19161333721404014,
+     0.19161333721404014
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.28,
+    "wall_min_over_a": 0.21865716946870095,
+    "wall_mean_over_a": 0.22457312453451214,
+    "neck_over_a": [
+     0.18327966381208455,
+     0.18327966381208455
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.29,
+    "wall_min_over_a": 0.22349098013248292,
+    "wall_mean_over_a": 0.22982085036302935,
+    "neck_over_a": [
+     0.18327966381208455,
+     0.18327966381208455
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.3,
+    "wall_min_over_a": 0.2281528139580041,
+    "wall_mean_over_a": 0.23490122982925143,
+    "neck_over_a": [
+     0.17459691822766463,
+     0.17459691822766463
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.31,
+    "wall_min_over_a": 0.2326491598552093,
+    "wall_mean_over_a": 0.23981993034697827,
+    "neck_over_a": [
+     0.17459589177299087,
+     0.17459589177299087
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.32,
+    "wall_min_over_a": 0.23698640695214274,
+    "wall_mean_over_a": 0.24458258574808933,
+    "neck_over_a": [
+     0.17009980091893553,
+     0.17009980091893553
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.33,
+    "wall_min_over_a": 0.24117081577610228,
+    "wall_mean_over_a": 0.24919476558391032,
+    "neck_over_a": [
+     0.16077785227737623,
+     0.16077785227737623
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.34,
+    "wall_min_over_a": 0.24520849550329146,
+    "wall_mean_over_a": 0.2536619499526169,
+    "neck_over_a": [
+     0.1559313988780097,
+     0.1559313988780097
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "gyroid",
+    "ratio": 0.35,
+    "wall_min_over_a": 0.24910538663156329,
+    "wall_mean_over_a": 0.2579895091867239,
+    "neck_over_a": [
+     0.15095867862186949,
+     0.15095867862186949
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   }
+  ],
+  "diamond": [
+   {
+    "kind": "diamond",
+    "ratio": 0.03,
+    "wall_min_over_a": 0.02982421705406159,
+    "wall_mean_over_a": 0.02985497363325962,
+    "neck_over_a": [
+     0.27081324321521466,
+     0.27081324321521466
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.04,
+    "wall_min_over_a": 0.039586700927466155,
+    "wall_mean_over_a": 0.03965879229169904,
+    "neck_over_a": [
+     0.2586610229240916,
+     0.2586610229240916
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.05,
+    "wall_min_over_a": 0.04920105852652343,
+    "wall_mean_over_a": 0.049339871888485376,
+    "neck_over_a": [
+     0.25238767056863837,
+     0.25238767056863837
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.06,
+    "wall_min_over_a": 0.058636458143591884,
+    "wall_mean_over_a": 0.05887225548334036,
+    "neck_over_a": [
+     0.2459513346354166,
+     0.2459513346354166
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.07,
+    "wall_min_over_a": 0.06786570521630347,
+    "wall_mean_over_a": 0.06823278028478565,
+    "neck_over_a": [
+     0.23601247810196238,
+     0.23601247810196238
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.08,
+    "wall_min_over_a": 0.07686553765833379,
+    "wall_mean_over_a": 0.07740132322269655,
+    "neck_over_a": [
+     0.22566112058399038,
+     0.22566112058399038
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.09,
+    "wall_min_over_a": 0.08561675497423857,
+    "wall_mean_over_a": 0.08636092410834487,
+    "neck_over_a": [
+     0.21851853667629903,
+     0.21851853667629903
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.1,
+    "wall_min_over_a": 0.09410419631749391,
+    "wall_mean_over_a": 0.09509779617697803,
+    "neck_over_a": [
+     0.21486162851991533,
+     0.21486162851991533
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.11,
+    "wall_min_over_a": 0.10231659052148462,
+    "wall_mean_over_a": 0.10360123958168599,
+    "neck_over_a": [
+     0.20353967558376698,
+     0.20353967558376698
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.12,
+    "wall_min_over_a": 0.11024630562588572,
+    "wall_mean_over_a": 0.11186347680198554,
+    "neck_over_a": [
+     0.19161712144539092,
+     0.19161712144539092
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.13,
+    "wall_min_over_a": 0.11788902636151763,
+    "wall_mean_over_a": 0.11987943008686903,
+    "neck_over_a": [
+     0.18328422516215856,
+     0.18328422516215856
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.14,
+    "wall_min_over_a": 0.12524338687025016,
+    "wall_mean_over_a": 0.12764646041287447,
+    "neck_over_a": [
+     0.18328422516215856,
+     0.18328422516215856
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.15,
+    "wall_min_over_a": 0.13231058252044023,
+    "wall_mean_over_a": 0.13516408545951003,
+    "neck_over_a": [
+     0.17008974762793325,
+     0.17008974762793325
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.16,
+    "wall_min_over_a": 0.13909398075938229,
+    "wall_mean_over_a": 0.14243369137942957,
+    "neck_over_a": [
+     0.17008974762793325,
+     0.17008974762793325
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.17,
+    "wall_min_over_a": 0.14559874600172046,
+    "wall_mean_over_a": 0.14945825006672836,
+    "neck_over_a": [
+     0.16078674036071763,
+     0.16078674036071763
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.18,
+    "wall_min_over_a": 0.15183148944005365,
+    "wall_mean_over_a": 0.15624205059195276,
+    "neck_over_a": [
+     0.15095055704456303,
+     0.15095055704456303
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.19,
+    "wall_min_over_a": 0.15779995089676235,
+    "wall_mean_over_a": 0.16279045072001003,
+    "neck_over_a": [
+     0.15096272965727883,
+     0.15096272965727883
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.2,
+    "wall_min_over_a": 0.1635127159208059,
+    "wall_mean_over_a": 0.16910965206003106,
+    "neck_over_a": [
+     0.1350532743452572,
+     0.1350532743452572
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.21,
+    "wall_min_over_a": 0.16897896973975002,
+    "wall_mean_over_a": 0.17520650048228142,
+    "neck_over_a": [
+     0.1350532743452572,
+     0.1350532743452572
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.22,
+    "wall_min_over_a": 0.1742082869745791,
+    "wall_mean_over_a": 0.18108831200884035,
+    "neck_over_a": [
+     0.12938319573665083,
+     0.12938319573665083
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.23,
+    "wall_min_over_a": 0.1792104551615194,
+    "wall_mean_over_a": 0.18676272331799434,
+    "neck_over_a": [
+     0.12938319573665083,
+     0.12938319573665083
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.24,
+    "wall_min_over_a": 0.18399532920867206,
+    "wall_mean_over_a": 0.19223756529513342,
+    "neck_over_a": [
+     0.11735697608455244,
+     0.11735697608455244
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.25,
+    "wall_min_over_a": 0.18857271368615325,
+    "wall_mean_over_a": 0.19752075767575838,
+    "neck_over_a": [
+     0.11735697608455244,
+     0.11735697608455244
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.26,
+    "wall_min_over_a": 0.1929522691797465,
+    "wall_mean_over_a": 0.20262022256960227,
+    "neck_over_a": [
+     0.11735488401693524,
+     0.11735488401693524
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.27,
+    "wall_min_over_a": 0.1971434398368001,
+    "wall_mean_over_a": 0.20754381464856025,
+    "neck_over_a": [
+     0.10416261232091785,
+     0.10416261232091785
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.28,
+    "wall_min_over_a": 0.20115539842098956,
+    "wall_mean_over_a": 0.21229926581604844,
+    "neck_over_a": [
+     0.10416261232091785,
+     0.10416261232091785
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.29,
+    "wall_min_over_a": 0.2049970065485686,
+    "wall_mean_over_a": 0.2168941423029646,
+    "neck_over_a": [
+     0.09701356838403763,
+     0.09701356838403763
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.3,
+    "wall_min_over_a": 0.20867678719572721,
+    "wall_mean_over_a": 0.22133581232599908,
+    "neck_over_a": [
+     0.09701356838403763,
+     0.09701356838403763
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.31,
+    "wall_min_over_a": 0.21220290712360296,
+    "wall_mean_over_a": 0.2256314226251598,
+    "neck_over_a": [
+     0.09701356838403763,
+     0.09701356838403763
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.32,
+    "wall_min_over_a": 0.21558316755294804,
+    "wall_mean_over_a": 0.2297878823799854,
+    "neck_over_a": [
+     0.08122557892112545,
+     0.08122557892112545
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.33,
+    "wall_min_over_a": 0.218825001468882,
+    "wall_mean_over_a": 0.23381185323700393,
+    "neck_over_a": [
+     0.08122557892112545,
+     0.08122557892112545
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.34,
+    "wall_min_over_a": 0.221935475666076,
+    "wall_mean_over_a": 0.23770974430869987,
+    "neck_over_a": [
+     0.08122557892112545,
+     0.08122557892112545
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "diamond",
+    "ratio": 0.35,
+    "wall_min_over_a": 0.22492129692807789,
+    "wall_mean_over_a": 0.2414877112311115,
+    "neck_over_a": [
+     0.08122557892112545,
+     0.08122557892112545
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   }
+  ],
+  "primitive": [
+   {
+    "kind": "primitive",
+    "ratio": 0.03,
+    "wall_min_over_a": 0.029911643986590207,
+    "wall_mean_over_a": 0.029969095956256527,
+    "neck_over_a": [
+     0.39582152016168143,
+     0.39582152016168143
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.04,
+    "wall_min_over_a": 0.03979142114892603,
+    "wall_mean_over_a": 0.03992691824744891,
+    "neck_over_a": [
+     0.3915999888465604,
+     0.3915999888465604
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.05,
+    "wall_min_over_a": 0.049594749272800984,
+    "wall_mean_over_a": 0.049857692008194336,
+    "neck_over_a": [
+     0.3895165028440069,
+     0.3895165028440069
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.06,
+    "wall_min_over_a": 0.05930416340567171,
+    "wall_mean_over_a": 0.05975499220463647,
+    "neck_over_a": [
+     0.3722294619692527,
+     0.3722294619692527
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.07,
+    "wall_min_over_a": 0.06890322818700226,
+    "wall_mean_over_a": 0.06961261024379654,
+    "neck_over_a": [
+     0.363313803936645,
+     0.363313803936645
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.08,
+    "wall_min_over_a": 0.0783766798451543,
+    "wall_mean_over_a": 0.07942458937469632,
+    "neck_over_a": [
+     0.363313803936645,
+     0.363313803936645
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.09,
+    "wall_min_over_a": 0.08771053875423968,
+    "wall_mean_over_a": 0.08918525627555564,
+    "neck_over_a": [
+     0.3518341867588668,
+     0.3518341867588668
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.1,
+    "wall_min_over_a": 0.09689219161868096,
+    "wall_mean_over_a": 0.09888924854708389,
+    "neck_over_a": [
+     0.33269732914317734,
+     0.33269732914317734
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.11,
+    "wall_min_over_a": 0.1059104435043409,
+    "wall_mean_over_a": 0.10853153796655904,
+    "neck_over_a": [
+     0.33269856215280685,
+     0.33269856215280685
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.12,
+    "wall_min_over_a": 0.11475554101914168,
+    "wall_mean_over_a": 0.11810744946842325,
+    "neck_over_a": [
+     0.33269856215280685,
+     0.33269856215280685
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.13,
+    "wall_min_over_a": 0.12341916892584413,
+    "wall_mean_over_a": 0.12761267593146047,
+    "neck_over_a": [
+     0.3150792302073226,
+     0.3150792302073226
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.14,
+    "wall_min_over_a": 0.13189442294463516,
+    "wall_mean_over_a": 0.13704328894830492,
+    "neck_over_a": [
+     0.30456643643823117,
+     0.30456643643823117
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.15,
+    "wall_min_over_a": 0.14017576223239303,
+    "wall_mean_over_a": 0.14639574582798223,
+    "neck_over_a": [
+     0.30456643643823117,
+     0.30456643643823117
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.16,
+    "wall_min_over_a": 0.1482589450180531,
+    "wall_mean_over_a": 0.15566689315287535,
+    "neck_over_a": [
+     0.2964623041130111,
+     0.2964623041130111
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.17,
+    "wall_min_over_a": 0.1561409510252998,
+    "wall_mean_over_a": 0.16485396725434878,
+    "neck_over_a": [
+     0.27962401376466345,
+     0.27962401376466345
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.18,
+    "wall_min_over_a": 0.16381989422254262,
+    "wall_mean_over_a": 0.17395459199732224,
+    "neck_over_a": [
+     0.27377870025761925,
+     0.27377870025761925
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.19,
+    "wall_min_over_a": 0.17129492910206318,
+    "wall_mean_over_a": 0.1829667743019171,
+    "neck_over_a": [
+     0.27375749196217586,
+     0.27375749196217586
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.2,
+    "wall_min_over_a": 0.17856615353375666,
+    "wall_mean_over_a": 0.19188889780589724,
+    "neck_over_a": [
+     0.27375749196217586,
+     0.27375749196217586
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.21,
+    "wall_min_over_a": 0.18563451054040345,
+    "wall_mean_over_a": 0.20071971510742767,
+    "neck_over_a": [
+     0.2586533196519096,
+     0.2586533196519096
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.22,
+    "wall_min_over_a": 0.19250169133394956,
+    "wall_mean_over_a": 0.20945833898561,
+    "neck_over_a": [
+     0.24594711844962094,
+     0.24594711844962094
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.23,
+    "wall_min_over_a": 0.19917004122212528,
+    "wall_mean_over_a": 0.21810423301731013,
+    "neck_over_a": [
+     0.24594711844962094,
+     0.24594711844962094
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.24,
+    "wall_min_over_a": 0.20564246986806395,
+    "wall_mean_over_a": 0.22665720196450967,
+    "neck_over_a": [
+     0.2426859537760416,
+     0.2426859537760416
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.25,
+    "wall_min_over_a": 0.21192236661445346,
+    "wall_mean_over_a": 0.23511738233299276,
+    "neck_over_a": [
+     0.24266590641489275,
+     0.24266590641489275
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.26,
+    "wall_min_over_a": 0.21801352190412585,
+    "wall_mean_over_a": 0.24348523346142534,
+    "neck_over_a": [
+     0.24266590641489275,
+     0.24266590641489275
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.27,
+    "wall_min_over_a": 0.22392005498427903,
+    "wall_mean_over_a": 0.2517615295224361,
+    "neck_over_a": [
+     0.2148468897058902,
+     0.2148468897058902
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.28,
+    "wall_min_over_a": 0.22964634796604522,
+    "wall_mean_over_a": 0.2599473528330564,
+    "neck_over_a": [
+     0.2148428507694631,
+     0.2148428507694631
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.29,
+    "wall_min_over_a": 0.2351969866119325,
+    "wall_mean_over_a": 0.2680440888521267,
+    "neck_over_a": [
+     0.2148428507694631,
+     0.2148428507694631
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.3,
+    "wall_min_over_a": 0.24057670726440847,
+    "wall_mean_over_a": 0.27605342334506994,
+    "neck_over_a": [
+     0.20354658260283462,
+     0.20354658260283462
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.31,
+    "wall_min_over_a": 0.24579035000316793,
+    "wall_mean_over_a": 0.2839773421892084,
+    "neck_over_a": [
+     0.2035210092337433,
+     0.2035210092337433
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.32,
+    "wall_min_over_a": 0.2508428174257279,
+    "wall_mean_over_a": 0.29181813442419235,
+    "neck_over_a": [
+     0.18748361542032238,
+     0.18748361542032238
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.33,
+    "wall_min_over_a": 0.25573903881479043,
+    "wall_mean_over_a": 0.299578399260712,
+    "neck_over_a": [
+     0.18748361542032238,
+     0.18748361542032238
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.34,
+    "wall_min_over_a": 0.26048393939062964,
+    "wall_mean_over_a": 0.3072610579292763,
+    "neck_over_a": [
+     0.1874921325350422,
+     0.1874921325350422
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   },
+   {
+    "kind": "primitive",
+    "ratio": 0.35,
+    "wall_min_over_a": 0.2650824138987809,
+    "wall_mean_over_a": 0.3148693715085285,
+    "neck_over_a": [
+     0.1874921325350422,
+     0.1874921325350422
+    ],
+    "isolated_fraction": [
+     0.0,
+     0.0
+    ],
+    "resolution": 48
+   }
+  ]
+ }
+}
