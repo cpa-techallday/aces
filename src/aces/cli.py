@@ -4,6 +4,8 @@
   aces design SPEC.yaml --out DIR           search, report, evidence record
   aces sample --tpms gyroid --cell-m ...    STL of a periodic TPMS block
   aces export-simlab DIR --rank 0 ...       geometry + simlab experiment for verification
+  aces form SPEC.yaml --out DIR             formgen lattice route (robot cell / printed formwork)
+  aces processes                            manufacturing routes and what ACES checks for each
   aces ledger verify PATH                   check the evidence hash chain
 """
 from __future__ import annotations
@@ -15,8 +17,9 @@ from pathlib import Path
 
 import yaml
 
-from . import evidence, search, simlab, spec
+from . import evidence, manufacturing, search, simlab, spec
 from .domains import get as get_model
+from .domains.form import route as form_route
 from .domains.hx import tpms
 from .report import hx_report
 
@@ -32,12 +35,103 @@ def _load(path: str):
 
 def cmd_check(args) -> int:
     try:
+        data = yaml.safe_load(Path(args.spec).read_text()) or {}
+        if data.get("domain") == form_route.DOMAIN:
+            env, _ = spec.parse(data, form_route.FormRequirements)
+            print(f"OK: {env.domain} spec for project {env.project!r} is complete (formgen route).")
+            return 0
         _, env, _, model_cls = _load(args.spec)
     except (spec.SpecError, KeyError, ValueError) as e:
         print(e)
         return 2
     print(f"OK: {env.domain} spec for project {env.project!r} is complete ({model_cls.id} {model_cls.version}).")
     return 0
+
+
+def cmd_processes(args) -> int:
+    for p in manufacturing.PROCESSES.values():
+        print(f"{p.id:<26} {p.status:<10} {p.name}")
+        if p.domains:
+            print(f"{'':<26} domains: {', '.join(p.domains)}")
+        if p.checks:
+            print(f"{'':<26} checks:  {'; '.join(p.checks)}")
+        if p.notes:
+            print(f"{'':<26} note:    {p.notes}")
+    return 0
+
+
+def _form_report(spec_d: dict, res: dict, record_hash: str) -> str:
+    r = res["report"]
+    st, est = r.get("stats", {}), r.get("estimate", {})
+    seq = r.get("sequence", {})
+    lines = [
+        f"# ACES form run: {spec_d['project']}",
+        "",
+        f"- Route: `{spec_d['requirements']['process']}` via formgen ({spec_d['requirements']['mode']} mode)",
+        f"- Company: {spec_d['company']} - R&D activity: {spec_d['rd_activity']}",
+        f"- Hypothesis: {spec_d['hypothesis']}",
+        f"- Evidence record: `{record_hash}`",
+        "",
+        "| Quantity | Value |",
+        "| --- | --- |",
+        f"| Nodes / struts | {st.get('nodes')} / {st.get('struts')} |",
+        f"| Total strut length | {float(st.get('total_length_m') or 0):.1f} m |",
+        f"| Printable steps / unreachable struts | {seq.get('printable_steps')} / {seq.get('unreachable_struts')} |",
+        f"| Material (density from: {spec_d['requirements']['material']['source']}) | {est.get('material_mass_kg')} kg |",
+        f"| Print time (at the spec's speed) | {est.get('total_time_h')} h |",
+        "",
+    ]
+    if res["problems"]:
+        lines += ["## Problems (route not buildable as generated)", ""] + [f"- {p}" for p in res["problems"]] + [""]
+    if res["warnings"]:
+        lines += ["## Warnings from formgen", ""] + [f"- {w}" for w in res["warnings"]] + [""]
+    lines += [
+        "## Before running the cell",
+        "",
+        "JBI jobs are stubs. Set the TOOL file and user frame on the pendant and verify every job in "
+        "MotoSim EG VRC before the robot moves. No structural check has been run on this lattice.",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def cmd_form(args) -> int:
+    spec_path = Path(args.spec)
+    data = yaml.safe_load(spec_path.read_text()) or {}
+    try:
+        if data.get("domain") != form_route.DOMAIN:
+            raise ValueError(f"`aces form` needs domain: {form_route.DOMAIN}")
+        env, req = spec.parse(data, form_route.FormRequirements)
+    except (spec.SpecError, ValueError) as e:
+        print(e)
+        return 2
+    try:
+        res = form_route.run(req, args.out, spec_path.parent)
+    except ImportError as e:
+        print(f"formgen dependencies missing ({e}); install with: pip install -e .[formgen]")
+        return 2
+    canonical = env.model_dump(mode="json")
+    rec = evidence.make_record(
+        kind="aces.form_run",
+        spec=canonical,
+        model_id=form_route.DOMAIN,
+        model_version=__import__("formgen").__version__,
+        inputs={"source": req.source, "options": res["report"].get("options", {})},
+        observations={"stats": res["report"].get("stats"), "sequence": res["report"].get("sequence"),
+                      "estimate": res["report"].get("estimate"), "problems": res["problems"],
+                      "warnings": res["warnings"]},
+        calibration={},
+        artifacts=res["artifacts"],
+    )
+    ledger = Path(args.ledger)
+    written = evidence.Ledger(ledger).append(rec)
+    out = Path(args.out)
+    (out / "run.json").write_text(json.dumps({"record_hash": written["record_hash"], "spec_hash": written["spec_hash"],
+                                              "ledger": str(ledger.resolve()), "model": written["model"]}, indent=2))
+    (out / "report.md").write_text(_form_report(canonical, res, written["record_hash"]))
+    print(f"Report: {out / 'report.md'}\nEvidence: {ledger} ({written['record_hash'][:12]})")
+    for p in res["problems"]:
+        print(f"PROBLEM: {p}")
+    return 1 if res["problems"] else 0
 
 
 def cmd_design(args) -> int:
@@ -199,6 +293,15 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--units", choices=("m", "mm"), default="m", help="STL coordinate units (recorded in the experiment)")
     s.add_argument("--ledger", help="override the ledger path recorded in run.json")
     s.set_defaults(fn=cmd_export_simlab)
+
+    s = sub.add_parser("form", help="formgen lattice route from a form.lattice spec")
+    s.add_argument("spec")
+    s.add_argument("--out", required=True)
+    s.add_argument("--ledger", default=str(DEFAULT_LEDGER))
+    s.set_defaults(fn=cmd_form)
+
+    s = sub.add_parser("processes", help="list manufacturing routes")
+    s.set_defaults(fn=cmd_processes)
 
     s = sub.add_parser("ledger", help="evidence ledger tools")
     s.add_argument("action", choices=("verify",))

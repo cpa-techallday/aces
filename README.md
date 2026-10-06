@@ -22,6 +22,8 @@ spec.yaml -> design model (encoded engineering logic) -> NSGA-II search on the f
 | First domain: two-fluid TPMS heat-exchanger core (`hx.two_fluid`): gyroid, diamond, primitive | Working on the fast tier; **uncalibrated** |
 | TPMS geometry: porosity, wetted area, hydraulic diameter measured on the level set; STL export | Working; mid-surface areas within 0.4 % of literature |
 | Manufacturability: measured minimum wall, channel neck (passable sphere), isolated pockets, cells across | Working; precomputed table checked against live measurement |
+| Manufacturing routes (`aces processes`): LPBF, polymer extrusion, robotic lattice, printed formwork; CNC and casting planned | Working |
+| formgen (Fusion forms to robot-printed lattices, JBI jobs, scale models) as the `form.lattice` route | Imported and tested; see [docs/FORMGEN.md](docs/FORMGEN.md) |
 | Calibration loop from simlab CFD and rig tests | Registry and plumbing only; no fitted factors yet |
 | Agent-authored design logic (Author / Judge agents) | Not started |
 
@@ -32,7 +34,7 @@ factors stay at 1.0, and are listed on every report, until CFD or test data repl
 
 ```bash
 pip install -e .[dev]
-python -m pytest                       # 71 tests: textbook checks, geometry, safety guards, end to end
+python -m pytest                       # 77 tests: textbook checks, geometry, safety guards, formgen route, end to end
 
 cp specs/templates/hx_two_fluid.yaml my_job.yaml   # fill every null from the customer requirement
 aces check my_job.yaml                 # lists anything missing
@@ -40,6 +42,16 @@ aces design my_job.yaml --out runs/my_job
 aces export-simlab runs/my_job --rank 0 --solver <registered-solver> --vram-gb 8
 aces ledger verify
 ```
+
+Large-format forms (robot cell or printed formwork):
+
+```bash
+pip install -e .[formgen]              # or tools\windows\install.cmd on Windows
+cp specs/templates/form_lattice.yaml job.yaml
+aces form job.yaml --out runs/job
+```
+
+The formgen Studio app, CLI and Fusion add-in are documented in [docs/FORMGEN.md](docs/FORMGEN.md).
 
 `aces sample --tpms gyroid --cell-m 0.004 --wall-ratio 0.1 --out gyroid.stl` writes a printable TPMS block (mm by default).
 
@@ -56,7 +68,13 @@ src/aces/
   evidence.py       hash-chained ledger, company enforced as CPA
   simlab.py         simlab experiment export (float64 default, vram cap 60 GB)
   report.py         markdown report that states what is not verified
+  manufacturing.py  manufacturing routes and what is checked for each
   domains/hx/       TPMS geometry, manufacturability table, two-fluid heat-exchanger model
+  domains/form/     form.lattice route: formgen run + checks + evidence
+src/formgen/        formgen package (load, remesh, lattice, sequence, export, scale model, Studio GUI)
+fusion_addin/       formgen Fusion 360 add-in
+tools/windows/      install / formgen / formgen-studio launchers
+examples/formgen/   demo facade panel
 scripts/            build_tpms_table.py (regenerates the measured manufacturability table)
 specs/templates/    spec templates (nulls, units in comments)
 docs/               architecture, decisions, licence register, roadmap

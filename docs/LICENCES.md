@@ -15,6 +15,19 @@ licence that allows commercial, closed-source distribution and defence use.
 | optuna | MIT | NSGA-II search |
 | CoolProp | MIT | fluid properties |
 
+## formgen route (extra `[formgen]`; verified pins in requirements-formgen.txt)
+
+| Package | Licence | Use |
+| --- | --- | --- |
+| trimesh | MIT | mesh I/O, remeshing support |
+| cascadio | MIT | STEP to mesh. Bundles OpenCASCADE (LGPL-2.1 with exception): review before shipping binaries |
+| manifold3d | Apache-2.0 | boolean union |
+| fast_simplification | MIT | quadric decimation |
+| networkx | BSD-3-Clause | strut graph |
+| shapely | BSD-3-Clause | 2D geometry |
+| Pillow | MIT-CMU | preview images |
+| tkinter (stdlib) | PSF | formgen Studio GUI |
+
 ## Development
 
 | Package | Licence |

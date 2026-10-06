@@ -14,9 +14,18 @@ venv/
 out/
 runs/
 *.stl
+!examples/**/*.stl
 *.step
 *.vtk
 *.vtu
 *.npz
 *.h5
 optuna.db
+
+# formgen run outputs and machine-specific add-in config
+out_*/
+formgen-out/
+*.JBI
+*.glb
+fusion_addin/Formgen/formgen_path.txt
+_import_*/

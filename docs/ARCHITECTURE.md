@@ -16,6 +16,27 @@ sovereign on-prem operation.
 | 6 | Test | Rig and partner test data | Not started |
 | 7 | Data lake + learning loop | `aces.evidence` ledger + `aces.calibration` registry | Plumbing done; no fitted factors yet |
 
+## Manufacturing routes
+
+Not every part is printed in metal, and some are not printed at all. Every design model or generator
+declares the routes it supports (`aces processes` lists them). A spec must name an available route that its
+domain supports, or it is refused.
+
+| Route | Family | Status | Domain | What ACES checks |
+| --- | --- | --- | --- | --- |
+| `lpbf` | Metal powder-bed fusion | available | `hx.two_fluid` | measured minimum wall, channel neck, isolated pockets, envelope |
+| `polymer_extrusion` | FFF/FDM (on-site Raise3D) | available | `hx.two_fluid` | as `lpbf`; polymer properties come from the spec |
+| `robotic_lattice_extrusion` | Robotic spatial printing (HC10DTP cell) | available | `form.lattice` (formgen) | every strut sequenced, no islands, scale-model minimum feature |
+| `printed_formwork` | Lattice formwork for foam fill and sprayed concrete/render | available | `form.lattice` (formgen) | as above; fill and finish are outside ACES |
+| `arc_lattice_rod_welding` | Rod placement + stud-welded nodes (ARC-1 study) | planned | none | none yet |
+| `cnc_machining` | Subtractive | planned | none | none yet |
+| `casting` | Sand or investment, printed patterns | planned | none | none yet |
+
+`form.lattice` is a deterministic generator, not a search model. `aces form` validates the spec and runs
+formgen's pipeline (load, remesh, tessellate, sequence, export). It then checks the route and records every
+output (lattice JSON, waypoints, JBI jobs, scale model) by sha256 in the evidence ledger. See
+[FORMGEN.md](FORMGEN.md).
+
 ## ACES and simlab
 
 ```

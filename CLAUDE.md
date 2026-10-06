@@ -32,6 +32,14 @@ These rules apply to every human and AI contributor. Several are inherited from 
 12. Design data may be export-controlled (DSGL). Keep geometry on the LAN; classify before any transfer
     outside Australia.
 
+## Manufacturing routes and formgen
+
+13a. Every spec names a manufacturing route from `aces.manufacturing`; planned routes are refused until they
+     have a generator and checks.
+13b. formgen's standalone defaults (1.10 g/cm3 ABS-CF, 1.24 g/cm3 filament) are placeholders. Through ACES the
+     density must come from the spec with a source.
+13c. JBI jobs are stubs: nothing runs on the HC10DTP cell until every job is verified in MotoSim.
+
 ## The rig
 
 13. Never touch the CMP 170HX unlocker, drivers, kernel or CUDA on the rig host. Containers only.

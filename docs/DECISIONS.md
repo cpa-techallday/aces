@@ -5,6 +5,9 @@ an old one.
 
 | # | Date | Decision | By | Why |
 | --- | --- | --- | --- | --- |
+| D14 | 2026-10-06 | The ACES copy of formgen (`src/formgen`, `fusion_addin/`) is the one to develop. The standalone `C:\Users\shedm\formgen` folder stays untouched until the Fusion add-in is repointed. | Proposed (Claude); Aaron to confirm | Two copies drift |
+| D13 | 2026-10-06 | formgen is imported into ACES as the generator for the `robotic_lattice_extrusion` and `printed_formwork` routes. The ACES route requires sourced density and fails on unsequenced struts or islands. | Aaron ("add the formgen and associated files") | |
+| D12 | 2026-10-06 | Manufacturing is a first-class route, not a free-text field. Specs must name an available route their domain supports. Conventional routes (CNC, casting) are listed as planned. | Aaron ("not every process needs to be 3D printed") | |
 | D11 | 2026-10-06 | The laminar baseline is uniform wall temperature (Nu 3.66) unless the spec says otherwise | Engineering review | Conservative until calibrated; uniform heat flux is 19 % higher |
 | D10 | 2026-10-06 | Manufacturing limits are checked against the **measured** minimum wall and channel neck, never nominal thickness or hydraulic diameter | Engineering review | The neck is 0.6–0.75 of Dh; nominal checks were non-conservative |
 | D9 | 2026-10-06 | Calibration factors need provenance (`sources`); unsourced factors are refused on load and on set | Engineering review | An uncalibrated estimate must never look calibrated |

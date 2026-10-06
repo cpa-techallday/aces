@@ -31,7 +31,7 @@ requirements:
     density_kg_m3: null
     source: null                   # datasheet or standard these values come from
   manufacturing:
-    process: null                  # e.g. LPBF
+    process: null                  # lpbf or polymer_extrusion (aces processes lists routes)
     min_wall_m: null               # printer/bureau minimum reliable wall
     min_channel_m: null            # smallest open channel for powder removal
     envelope_length_m: null        # flow direction

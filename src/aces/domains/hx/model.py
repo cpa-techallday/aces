@@ -26,10 +26,10 @@ from __future__ import annotations
 import math
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, field_validator, model_validator
 
 from ... import correlations as corr
-from ... import fluids
+from ... import fluids, manufacturing
 from ...calibration import Registry
 from ...model import Evaluation, Param
 from . import tpms
@@ -60,7 +60,14 @@ class Material(BaseModel):
 
 class Manufacturing(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    process: str
+    process: str = Field(description="manufacturing route id from aces.manufacturing (lpbf, polymer_extrusion)")
+
+    @field_validator("process")
+    @classmethod
+    def _known_route(cls, v: str) -> str:
+        manufacturing.require(v, "hx.two_fluid")
+        return v
+
     min_wall_m: PositiveFloat
     min_channel_m: PositiveFloat = Field(description="smallest open passage (neck) for powder removal and fouling")
     envelope_length_m: PositiveFloat = Field(description="flow direction")
