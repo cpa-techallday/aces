@@ -164,8 +164,8 @@ class Adapter:
             raise RuntimeError(
                 f"aces-isaac-scene: {env['error']['type']}: {env['error'].get('message', 'environment probe failed')}"
             )
-        root = Path(env["layers"]["install"]["root"])
-        launcher = root / ("python.bat" if platform.system() == "Windows" else "python.sh")
+        install = env["layers"]["install"]
+        launcher = install["launcher"]  # install-root python.bat/python.sh, or the pip interpreter itself
 
         rd = Path(run_dir)
         script = generate_script(case)
@@ -174,7 +174,8 @@ class Adapter:
         t0 = time.monotonic()
         try:
             out = subprocess.run([str(launcher), "sim_script.py"], cwd=rd, capture_output=True,
-                                 text=True, timeout=timeout)
+                                 text=True, timeout=timeout,
+                                 env={**os.environ, "OMNI_KIT_ACCEPT_EULA": "YES"})
         except subprocess.TimeoutExpired:
             raise RuntimeError(f"aces-isaac-scene: timeout — killed at {timeout}s wall clock")
         wall_s = time.monotonic() - t0

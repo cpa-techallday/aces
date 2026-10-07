@@ -70,7 +70,24 @@ def probe_gpu() -> dict:
 
 
 def probe_install() -> dict:
-    """Install layer: ISAAC_SIM_PATH, then the standard roots for this OS."""
+    """Install layer: ISAAC_SIM_PYTHON (pip install), ISAAC_SIM_PATH, then standard roots.
+
+    A pip-installed Isaac Sim (``pip install isaacsim[all]``) has no python.bat root;
+    point ``ISAAC_SIM_PYTHON`` at that environment's interpreter instead.  The
+    interpreter is verified by actually importing isaacsim in it.
+    """
+    env_py = os.environ.get("ISAAC_SIM_PYTHON")
+    if env_py:
+        try:
+            out = subprocess.run([env_py, "-c", "import isaacsim; print('ok')"],
+                                 capture_output=True, text=True, timeout=120,
+                                 env={**os.environ, "OMNI_KIT_ACCEPT_EULA": "YES"})
+            if out.returncode == 0 and "ok" in out.stdout:
+                return {"ok": True, "kind": "pip", "root": env_py, "launcher": env_py}
+            return _err(f"ISAAC_SIM_PYTHON={env_py} cannot import isaacsim: {(out.stderr or '')[-400:]}")
+        except (FileNotFoundError, subprocess.TimeoutExpired) as e:
+            return _err(f"ISAAC_SIM_PYTHON={env_py} failed: {e}")
+
     candidates: list[Path] = []
     env = os.environ.get("ISAAC_SIM_PATH")
     if env:
@@ -108,17 +125,25 @@ app.close()
 
 
 def probe_deep(root: str, timeout_seconds: int = 300) -> dict:
-    """Deep layer: boot a minimal headless SimulationApp in a subprocess (cached per root)."""
+    """Deep layer: boot a minimal headless SimulationApp in a subprocess (cached per root).
+
+    ``root`` is either an install root (workstation install with python.bat/python.sh)
+    or, for pip installs, the python interpreter itself (``ISAAC_SIM_PYTHON``).
+    """
     if root in _deep_cache:
         return _deep_cache[root]
     install = Path(root)
-    launcher = install / ("python.bat" if platform.system() == "Windows" else "python.sh")
+    if install.is_file():  # pip kind: root IS the interpreter
+        launcher = str(install)
+    else:
+        launcher = str(install / ("python.bat" if platform.system() == "Windows" else "python.sh"))
     with tempfile.TemporaryDirectory() as td:
         script = Path(td) / "deep_probe.py"
         script.write_text(DEEP_SCRIPT, encoding="utf-8")
         try:
-            out = subprocess.run([str(launcher), str(script)], capture_output=True, text=True,
-                                 timeout=timeout_seconds)
+            out = subprocess.run([launcher, str(script)], capture_output=True, text=True,
+                                 timeout=timeout_seconds,
+                                 env={**os.environ, "OMNI_KIT_ACCEPT_EULA": "YES"})
         except subprocess.TimeoutExpired:
             res = {"ok": False, "error": {"type": "timeout",
                    "message": f"deep probe exceeded {timeout_seconds}s wall clock"}}
@@ -141,19 +166,22 @@ def health(deep: bool = False, timeout_seconds: int = 300) -> dict:
     gpu = probe_gpu()
     install = probe_install()
     layers: dict = {"gpu": gpu, "install": install}
+    # A degraded GPU layer (NVML unreachable from this shell, WMI-only evidence) does
+    # not block the deep probe — the skill's rule is to实测 SimulationApp and let it
+    # arbitrate.  Only a hard GPU absence (nvidia-smi missing entirely) blocks it.
     ok = gpu["ok"] and install["ok"]
     if deep:
-        if ok:
+        if install["ok"] and (gpu["ok"] or gpu.get("degraded")):
             layers["deep"] = probe_deep(install["root"], timeout_seconds)
-            ok = ok and layers["deep"]["ok"]
+            ok = layers["deep"]["ok"] if gpu.get("degraded") else (ok and layers["deep"]["ok"])
         else:
             layers["deep"] = {"skipped": True}
     result = {"ok": ok, "layers": layers}
     if not ok:
-        if not gpu["ok"]:
-            result["error"] = {"type": "environment_error", "message": gpu.get("guidance", GPU_GUIDANCE)}
-        elif not install["ok"]:
+        if not install["ok"]:
             result["error"] = {"type": "environment_error", "message": install["error"]["message"]}
+        elif not gpu["ok"] and not gpu.get("degraded"):
+            result["error"] = {"type": "environment_error", "message": gpu.get("guidance", GPU_GUIDANCE)}
         else:
             result["error"] = layers.get("deep", {}).get("error", {"type": "environment_error"})
     return result

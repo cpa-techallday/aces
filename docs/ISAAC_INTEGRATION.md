@@ -26,27 +26,38 @@ jobs do not lease rig GPUs.
 | Validation case | `free_fall` | drops a 0.1 m cube from 1 m onto a ground plane; checks it fell within the analytic window t = sqrt(2h/g). Required before the solver enters `solvers.json` (decision 6). |
 | Scene safety | adapter | input USDs are opened read-only; `outputs: ["stage_usd"]` writes `scene_out.usd` as a new file unless the case sets `allow_scene_save`. |
 
-## 3. Current environment status on DARKNESS (2026-10-07, this session)
+## 3. Environment on DARKNESS — PROVISIONED (2026-10-07)
 
-Reported honestly, per the probe discipline:
+Isaac Sim **6.1.0.0** is installed as a pip environment at
+`isaac-venv` (workspace), interpreter recorded via `ISAAC_SIM_PYTHON`.  The health
+probe accepts pip installs through `ISAAC_SIM_PYTHON` in addition to workstation
+roots (`ISAAC_SIM_PATH` / standard paths).  Notes from the install:
 
-- **GPU: RTX PRO 4000 Blackwell, 24 GB — confirmed present and assigned to this
-  tier (owner, 2026-10-07).** The probe's NVML call fails from agent shells
-  ("Failed to initialize NVML: Unknown Error" from both Git Bash and PowerShell
-  in the automation context) — a session-visibility issue, not missing hardware:
-  the card is proven by the platform's own benchmarks and the LTX renders. The
-  deep probe remains the arbiter and has not run. **VRAM budget for the tier:
-  ≤ 20 GB per Isaac job** (leave 4 GB headroom for the display driver and the
-  FP32 dev/preview lanes sharing the card); scenes are headless, so 24 GB is
-  well above Isaac Sim's 8 GB minimum.
-- **Install layer: not found.** No `ISAAC_SIM_PATH`, nothing under
-  `~/isaacsim`, `~/IsaacSim`, `C:\isaacsim`, `C:\isaac-sim`, or
-  `%LOCALAPPDATA%\ov\pkg\isaac-sim-*`. **This is the one real blocker.**
+- Full bundle: `pip install "isaacsim[all,extscache]"` with
+  `--extra-index-url https://pypi.nvidia.com` (the pinned
+  `opencv-python-headless-noffmpeg` rc and `isaacsim.cortex.behaviors` /
+  `isaacsim.replicator.behavior` extensions live there, not on PyPI).
+- The two multi-hundred-MB extscache wheels exceed any single automation window;
+  they were fetched with resumable `curl -C -` from files.pythonhosted.org and
+  installed from local files.  pip does not resume a partially downloaded wheel.
+- All packages pinned to one release (6.1.0.0); mixed 6.0.1/6.1.0 states fail the
+  Kit dependency solver at boot.
+- `OMNI_KIT_ACCEPT_EULA=YES` accepted non-interactively as part of the requested
+  install (NVIDIA Omniverse License Agreement); the adapter and probe pass it to
+  every subprocess.
+- **GPU layer from automation shells stays degraded** (nvidia-smi/NVML fails in
+  this context), so the probe now follows the plugin rule: a degraded GPU layer
+  does not block the deep probe — the real `SimulationApp` boot arbitrates.
+  CUDA itself works (CuPy 14.2 ran the job-3 CFD solve on the card).
 
-Until both pass, `aces-isaac-scene` raises `environment_error` with the official
-guidance instead of running. To provision: install Isaac Sim 5.0+ workstation
-(or set `ISAAC_SIM_PATH`), then `aces isaac-health --deep` — a green deep layer
-caches per install root and the adapter will run.
+### Trial record (2026-10-07, all real, artifacts in `pipeline-runs/`)
+
+| # | Job | Result |
+|---|---|---|
+| 1 | STL → USD staging of `aeris_x64_assembly.stl` (real KiCad/Fusion export) | 4,172 vertices / 8,332 triangles, 258.9 × 247.8 × 95.3 mm → `aeris_x64_assembly.usda` (metres) |
+| 2 | `aces design` on `radar_phased_array.yaml` (200 NSGA-II trials) | 194 distinct / 21 feasible / 5 non-dominated; evidence record `e4c4fbd15680`, ledger chain verified. Front shows the nominal 64 × 25 W point is thermally dominated by e.g. 156 el × 7.3 W (22.3 km at 60 W DC) |
+| 3 | `aces cfd-sample` gyroid t/a 0.12, Re 20, air, n = 32 **on the workstation GPU** (CuPy) | Re 19.57, Nu_H1 5.35, converged, 40.2 s — consistent with the repo resolution study (Nu 5.53 @ n = 32, t/a 0.10). Measurement row written. CPU FP64 at n = 32 exceeds 300 s — the rig-vs-workstation split is validated by measurement |
+| 4 | Isaac `free_fall` validation + staged-scene load through `aces-isaac-scene` | **PASS**: cube from 1 m rests at z = 0.049997 m (half-scale 0.05 m, −0.005 %); analytic fall time 0.4515 s inside the 10 s window. Staged AERIS USD opened and stepped 120 frames, wall 14.2 s warm |
 
 ## 4. Registration (once the environment is green)
 

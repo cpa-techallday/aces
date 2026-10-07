@@ -369,7 +369,9 @@ def cmd_design(args) -> int:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     canonical_spec = env.model_dump(mode="json")
-    pareto = sorted(res.pareto, key=lambda e: e.objectives["mass_kg"])
+    # domains choose their own objective names; sort the front by the first (minimised) objective
+    first_objective = sorted(res.pareto[0].objectives)[0] if res.pareto else None
+    pareto = sorted(res.pareto, key=lambda e: e.objectives[first_objective]) if first_objective else []
     _safe_write(out / "pareto.json", json.dumps([e.as_dict() for e in pareto], indent=2, default=str))
     _safe_write(out / "evaluations.jsonl", "".join(json.dumps(e.as_dict(), default=str) + "\n"
                                                    for e in res.evaluations))
@@ -380,7 +382,7 @@ def cmd_design(args) -> int:
         model_id=model.id,
         model_version=model.version,
         inputs={"trials": trials, "seed": cfg.seed, "population": cfg.population, "bounds": cfg.bounds,
-                "resolution": model.resolution},
+                "resolution": getattr(model, "resolution", None)},
         observations={
             "evaluated": len(res.distinct),
             "feasible": len(res.feasible),
@@ -395,7 +397,10 @@ def cmd_design(args) -> int:
     _safe_write(out / "run.json", json.dumps({
         "record_hash": written["record_hash"], "spec_hash": written["spec_hash"],
         "ledger": str(ledger.resolve()), "model": written["model"]}, indent=2))
-    report = hx_report(canonical_spec, res, written["record_hash"], model.id, model.version)
+    if env.domain.startswith("hx."):
+        report = hx_report(canonical_spec, res, written["record_hash"], model.id, model.version)
+    else:
+        report = _generic_report(canonical_spec, pareto, written["record_hash"], model.id, model.version)
     _safe_write(out / "report.md", report)
     print(f"{len(res.distinct)} distinct designs evaluated, {len(res.feasible)} feasible, {len(pareto)} non-dominated.")
     print(f"Report: {out / 'report.md'}\nEvidence: {ledger} ({written['record_hash'][:12]})")
@@ -473,6 +478,31 @@ def cmd_export_simlab(args) -> int:
     path = simlab.write(exp, exp_path)
     print(f"Geometry: {stl}\nExperiment: {path}\nAdd the solver adapter's own params, then run `simlab validate` before submitting.")
     return 0
+
+
+def _generic_report(canonical_spec: dict, pareto: list, record_hash: str, model_id: str, model_version: str) -> str:
+    """Domain-neutral design-run report for models without a specialised writer."""
+    lines = [
+        f"# ACES design run — {canonical_spec['domain']}",
+        "",
+        f"Model: `{model_id}` {model_version} · evidence record `{record_hash[:12]}`",
+        f"Hypothesis: {canonical_spec.get('hypothesis', '')}",
+        "",
+        f"## Pareto front ({len(pareto)} non-dominated designs)",
+        "",
+    ]
+    for i, e in enumerate(pareto):
+        objs = ", ".join(f"{k}={v:.4g}" for k, v in e.objectives.items())
+        lines.append(f"{i + 1}. {objs}")
+        top_metrics = ", ".join(f"{k}={v}" for k, v in list(e.metrics.items())[:6])
+        lines.append(f"   params: {e.params}")
+        lines.append(f"   {top_metrics}")
+        if e.warnings:
+            lines.append(f"   warnings: {'; '.join(e.warnings)}")
+        if e.uncalibrated:
+            lines.append(f"   uncalibrated: {', '.join(e.uncalibrated)}")
+    lines += ["", "Results from uncalibrated factors are ranking estimates, not performance claims."]
+    return "\n".join(lines) + "\n"
 
 
 def cmd_ledger(args) -> int:
