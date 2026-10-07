@@ -1,0 +1,42 @@
+# aces-em:0.1 — EM verification tier rig image (RUNTIME_PLAN §3)
+#
+# Palace (FEM, S-parameters / eigenmode ports) + gprMax (FDTD) in one image.
+# Canonical definition for the rig build host (no wall-clock cap there); on
+# DARKNESS the same recipe runs in a detached builder container (see
+# build_in_container.sh) because the harness caps foreground commands.
+#
+# Build:  docker build -t aces-em:0.1 docker/aces-em
+# Smoke:  docker run --rm aces-em:0.1 palace --version && python3 -c "import gprMax"
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential gfortran cmake ninja-build git pkg-config \
+        python3 python3-pip python3-venv ca-certificates wget curl \
+        libopenmpi-dev openmpi-bin libopenblas-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# ---- Palace (superbuild pulls MFEM, libCEED, PETSc, SLEPc, hypre, METIS)
+# SLEPc is required for eigenmode (waveguide-port) problems — wr90_through.
+ARG PALACE_REF=v0.14.0
+RUN git clone --depth 1 --branch ${PALACE_REF} https://github.com/awslabs/palace.git /opt/palace-src
+WORKDIR /opt/palace-src
+RUN cmake -S . -B build -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DPALACE_WITH_SUPERBUILD=ON \
+        -DPALACE_WITH_SLEPC=ON \
+        -DPALACE_WITH_OPENMP=ON \
+        -DCMAKE_INSTALL_PREFIX=/opt/palace \
+    && cmake --build build -j"$(nproc)" \
+    && cmake --install build \
+    && rm -rf /opt/palace-src
+ENV PATH="/opt/palace/bin:${PATH}"
+
+# ---- gprMax (FDTD tier, pip)
+RUN python3 -m venv /opt/venv && /opt/venv/bin/pip install --no-cache-dir gprMax h5py numpy
+ENV PATH="/opt/venv/bin:${PATH}"
+
+LABEL org.opencontainers.image.title="aces-em" \
+      org.opencontainers.image.version="0.1" \
+      org.opencontainers.image.description="ACES EM verification tier: Palace FEM + gprMax FDTD"
+CMD ["bash"]

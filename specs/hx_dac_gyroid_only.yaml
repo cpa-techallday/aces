@@ -1,0 +1,50 @@
+# ACES spec: TPMS contactor PANEL for a direct-air-capture (DAC) module.
+# Two-fluid framing: hot utility water loop (thermal-swing regeneration) heats the
+# sorbent-coated core; the cold stream is process air through the contactor.
+# Module basis: 1 tCO2/day = 0.263 mol/s; sorbent heat of adsorption ~70 kJ/mol
+# -> ~18.4 kW desorption heat + margin => 20 kW at module level, split across
+# 8 identical contactor panels of 1.2 x 1.2 m face. Panel: 2.5 kW, 4.5 kg/s air
+# (face velocity ~2.6 m/s, standard DAC contactor practice).
+# Rev 1 -> rev 2: the first run (36 kg/s through ONE panel) gave 0 feasible
+# designs, air-side dP the binding constraint (342/400 violated) - the air flow
+# must be spread over the full module frontal area, so the spec is per-panel.
+aces: 1
+domain: hx.two_fluid
+project: dac-gyroid-only
+owner: Aaron
+company: CPA
+rd_activity: "RDTI core: TPMS heat-exchanger design-space characterisation (hypothesis -> experiment -> observation)"
+hypothesis: "A sheet-gyroid contactor panel (1.2 x 1.2 m face, 0.4 m deep, LPBF AlSi10Mg) can deliver 2.5 kW of regeneration heat into the air/sorbent stream while holding the air-side core pressure drop under 100 Pa at 4.5 kg/s (face velocity ~2.6 m/s); 8 panels form the 1 t/day module."
+requirements:
+  duty_W: 2500.0
+  hot:
+    fluid: Water
+    mass_flow_kg_s: 0.07
+    inlet_temperature_K: 368.15
+    inlet_pressure_Pa: 300000.0
+    max_pressure_drop_Pa: 30000.0
+  cold:
+    fluid: Air
+    mass_flow_kg_s: 4.5
+    inlet_temperature_K: 293.15
+    inlet_pressure_Pa: 101325.0
+    max_pressure_drop_Pa: 100.0
+  material:
+    name: AlSi10Mg LPBF as-built
+    thermal_conductivity_W_mK: 130.0
+    density_kg_m3: 2670.0
+    source: "EOS Aluminium AlSi10Mg material datasheet (as-built, ~20 degC): k ~130 W/mK, rho ~2670 kg/m3"
+  manufacturing:
+    process: lpbf
+    min_wall_m: 0.0003
+    min_channel_m: 0.0015    # air-side fouling + sorbent-coating access + powder removal
+    envelope_length_m: 0.4   # air flow direction
+    envelope_width_m: 1.2
+    envelope_height_m: 1.2
+  tpms_types: [gyroid]
+  calibration_file: null     # no calibrated HX registry yet: all factors 1.0, reported as uncalibrated
+search:
+  trials: 400
+  seed: 0
+  population: 40
+notes: "Air-side flow and delta-P budget from typical DAC contactor practice (large volumetric flow, fan power limited). Sorbent coating, adsorption kinetics and mass transfer are NOT modelled; this run sizes the thermal-management core only. Fast tier: ranking estimates, not verified."

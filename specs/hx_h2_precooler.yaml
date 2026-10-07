@@ -1,0 +1,46 @@
+# ACES spec: TPMS hydrogen precooler core for 700-bar (H70) fuelling per SAE J2601.
+# Hot stream: compressed H2 at 87.5 MPa cooled from 293 K toward the -40 degC
+# fuelling target. Cold stream: single-phase 60 wt% ethylene-glycol brine at
+# -45 degC (two-phase refrigerant evaporation is outside this model's validity).
+# Duty basis: 1 kg/min H2 (0.01667 kg/s); cp ~15 kJ/kgK at 87.5 MPa; dT 60 K
+# -> ~15 kW.
+aces: 1
+domain: hx.two_fluid
+project: h2-precooler-700bar
+owner: Aaron
+company: CPA
+rd_activity: "RDTI core: TPMS heat-exchanger design-space characterisation (hypothesis -> experiment -> observation)"
+hypothesis: "A sheet-gyroid LPBF 316L core can precool 1 kg/min of 87.5 MPa hydrogen from 293 K to below 240 K with a -45 degC glycol loop, inside 0.3 x 0.15 x 0.15 m, within a 1 MPa hydrogen-side pressure-drop allowance."
+requirements:
+  duty_W: 15000.0
+  hot:
+    fluid: Hydrogen
+    mass_flow_kg_s: 0.01667
+    inlet_temperature_K: 293.15
+    inlet_pressure_Pa: 87500000.0
+    max_pressure_drop_Pa: 1000000.0
+  cold:
+    fluid: INCOMP::MEG[0.6]
+    mass_flow_kg_s: 0.4
+    inlet_temperature_K: 228.15
+    inlet_pressure_Pa: 400000.0
+    max_pressure_drop_Pa: 60000.0
+  material:
+    name: 316L LPBF as-built
+    thermal_conductivity_W_mK: 14.6
+    density_kg_m3: 7950.0
+    source: "AK Steel 316/316L product data bulletin: k ~14.6 W/mK at 100 degC, rho ~7950 kg/m3 (as-built LPBF)"
+  manufacturing:
+    process: lpbf
+    min_wall_m: 0.0004
+    min_channel_m: 0.0005
+    envelope_length_m: 0.3   # H2 flow direction
+    envelope_width_m: 0.15
+    envelope_height_m: 0.15
+  tpms_types: [gyroid, diamond, primitive]
+  calibration_file: null     # no calibrated HX registry yet: all factors 1.0, reported as uncalibrated
+search:
+  trials: 400
+  seed: 0
+  population: 40
+notes: "Brine: 60 wt% MEG freezing point ~-48 degC; -45 degC inlet leaves only ~3 K margin (flagged). Wall stress at 87.5 MPa is NOT checked by this model tier; an independent thin-wall check is done in the run analysis. Fast tier: ranking estimates, not verified."
