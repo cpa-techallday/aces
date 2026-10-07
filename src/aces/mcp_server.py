@@ -282,7 +282,7 @@ class Gate:
         self.runs = threading.BoundedSemaphore(self.max_runs)
         # Checked specs are frozen here (private to the server, outside the root) and the CLI runs on the frozen
         # copy, so a spec rewritten after its check can't reach the child (verification finding).
-        self.frozen_dir = Path(tempfile.mkdtemp(prefix="aces-mcp-specs-"))
+        self.frozen_dir = Path(tempfile.mkdtemp(prefix="aces-mcp-specs-")).resolve()  # long path on Windows
         self._audit_lock = threading.Lock()
 
     @property
