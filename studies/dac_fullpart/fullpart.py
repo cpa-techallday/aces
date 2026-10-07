@@ -172,9 +172,10 @@ class HolisticFullPart:
 
 
 # ---------------------------------------------------------------- voxel full-part generator
-def build_part(p: dict, voxel_m: float = 0.003):
+def build_part(p: dict, voxel_m: float = 0.003, keep_field: bool = False):
     """Voxel-assemble the part. Full-solid box; disjoint voids carved with >= tc
-    walls; gyroid core with network-selective seal slabs. Returns verts, faces, info."""
+    walls; gyroid core with network-selective seal slabs. Returns verts, faces, info
+    (and the solid field + axes when keep_field is set, for QA slices)."""
     from skimage.measure import marching_cubes
 
     a, ratio = p["cell_m"], p["wall_ratio"]
@@ -224,7 +225,9 @@ def build_part(p: dict, voxel_m: float = 0.003):
     sealB = np.where(fB, d + half, -1.0)                    # gallery walls: open B (d < -half) only
     fZ = ((Z < zc0 + slab) | (Z > zc0 + Hc - slab)) & inC
     sealZ = np.where(fZ, 1.0, -1.0)                         # top/bottom faces: fully closed
-    solid = np.maximum(solid, np.maximum(sheet, np.maximum(sealA, np.maximum(sealB, sealZ))))
+    # the core box REPLACES the base solid (networks are void); seals cap its faces
+    core_field = np.maximum(np.maximum(sheet, sealA), np.maximum(sealB, sealZ))
+    solid = np.where(inC, core_field, solid)
 
     # ---- interior voids (disjoint, >= tc walls everywhere) ------------------
     voids = [
@@ -275,7 +278,10 @@ def build_part(p: dict, voxel_m: float = 0.003):
     verts, faces, _, _ = marching_cubes(padded, level=0.0, spacing=(h, h, h))
     verts -= h
     info = dict(grid=list(X.shape), voxel_m=h, core_cells=[nx, ny, nz],
-                core_active=[Lc, Wc, Hc], L_total=L_tot)
+                core_active=[Lc, Wc, Hc], L_total=L_tot,
+                core_origin=[Lp, yc0, zc0], x_range=[x0, x1], cell_m=a)
+    if keep_field:
+        return verts, faces, info, (solid, xs, ys, zs)
     return verts, faces, info
 
 
