@@ -197,7 +197,8 @@ def test_export_uses_its_own_run_not_the_ledger_tail(tmp_path, spec_dict):
     ledger = tmp_path / "ledger.jsonl"
     run_a = _run(tmp_path, spec_dict, "projA", ledger)
     _run(tmp_path, spec_dict, "projB", ledger)
-    assert main(["export-simlab", str(run_a), "--solver", "s", "--vram-gb", "4", "--cells", "1"]) == 0
+    assert main(["export-simlab", str(run_a), "--solver", "s", "--vram-gb", "4", "--cells", "1",
+                 "--ledger", str(tmp_path / "ledger.jsonl")]) == 0
     exp = yaml.safe_load(next(run_a.glob("simlab_*.yaml")).read_text())
     assert exp["project"] == "projA" and exp["rd_activity"] == "activity-projA"
     assert json.loads((run_a / "run.json").read_text())["record_hash"] == exp["tags"]["aces_record"]
@@ -208,7 +209,8 @@ def test_export_refuses_edited_results(tmp_path, spec_dict):
     pareto = json.loads((run / "pareto.json").read_text())
     pareto[0]["params"]["cell_m"] *= 0.5
     (run / "pareto.json").write_text(json.dumps(pareto))
-    assert main(["export-simlab", str(run), "--solver", "s", "--vram-gb", "4", "--cells", "1"]) == 2
+    assert main(["export-simlab", str(run), "--solver", "s", "--vram-gb", "4", "--cells", "1",
+                 "--ledger", str(tmp_path / "ledger.jsonl")]) == 2
     assert not list(run.glob("simlab_*.yaml"))
 
 
@@ -224,7 +226,8 @@ def test_export_refuses_a_ledger_record_edited_to_match(tmp_path, spec_dict, cap
     rec["artifacts"]["pareto"]["sha256"] = evidence.file_sha256(run / "pareto.json")
     lines[-1] = json.dumps(rec, sort_keys=True)
     ledger.write_text("\n".join(lines) + "\n")
-    assert main(["export-simlab", str(run), "--solver", "s", "--vram-gb", "4", "--cells", "1"]) == 2
+    assert main(["export-simlab", str(run), "--solver", "s", "--vram-gb", "4", "--cells", "1",
+                 "--ledger", str(tmp_path / "ledger.jsonl")]) == 2
     assert "does not verify" in capsys.readouterr().out
     assert not list(run.glob("simlab_*.yaml")) and not list(run.glob("*.stl"))
 
@@ -235,10 +238,12 @@ def test_export_refuses_a_truncated_ledger(tmp_path, spec_dict, capsys):
     run_b = _run(tmp_path, spec_dict, "projU", ledger)
     lines = ledger.read_text().splitlines(keepends=True)
     ledger.write_text("".join(lines[:-1]))  # the last record (run_b's) cut off the end
-    assert main(["export-simlab", str(run_b), "--solver", "s", "--vram-gb", "4", "--cells", "1"]) == 2
+    assert main(["export-simlab", str(run_b), "--solver", "s", "--vram-gb", "4", "--cells", "1",
+                 "--ledger", str(tmp_path / "ledger.jsonl")]) == 2
     assert "is not in" in capsys.readouterr().out
     ledger.write_text("".join(lines[:-1]) + lines[-1][:40])  # half of it: an interrupted append
-    assert main(["export-simlab", str(run_a), "--solver", "s", "--vram-gb", "4", "--cells", "1"]) == 2
+    assert main(["export-simlab", str(run_a), "--solver", "s", "--vram-gb", "4", "--cells", "1",
+                 "--ledger", str(tmp_path / "ledger.jsonl")]) == 2
     assert "interrupted" in capsys.readouterr().out
 
 
@@ -252,15 +257,18 @@ def test_export_refuses_a_path_like_project(tmp_path, spec_dict, project, capsys
     sp.write_text(yaml.safe_dump(spec_dict))
     out = tmp_path / "run_evil"
     assert main(["design", str(sp), "--out", str(out), "--ledger", str(tmp_path / "ledger.jsonl")]) == 0
-    assert main(["export-simlab", str(out), "--solver", "s", "--vram-gb", "4", "--cells", "1"]) == 2
+    assert main(["export-simlab", str(out), "--solver", "s", "--vram-gb", "4", "--cells", "1",
+                 "--ledger", str(tmp_path / "ledger.jsonl")]) == 2
     assert "project" in capsys.readouterr().out and not list(out.glob("simlab_*.yaml"))
-    assert main(["export-simlab", str(run), "--solver", "../s", "--vram-gb", "4", "--cells", "1"]) == 2
+    assert main(["export-simlab", str(run), "--solver", "../s", "--vram-gb", "4", "--cells", "1",
+                 "--ledger", str(tmp_path / "ledger.jsonl")]) == 2
     assert not list(run.glob("simlab_*.yaml"))
 
 
 def test_reexport_never_overwrites_the_experiment(tmp_path, spec_dict, capsys):
     run = _run(tmp_path, spec_dict, "projX", tmp_path / "ledger.jsonl")
-    args = ["export-simlab", str(run), "--solver", "s", "--vram-gb", "4", "--cells", "1"]
+    args = ["export-simlab", str(run), "--solver", "s", "--vram-gb", "4", "--cells", "1",
+                 "--ledger", str(tmp_path / "ledger.jsonl")]
     assert main(args) == 0
     exp = next(run.glob("simlab_*.yaml"))
     before = exp.read_bytes()
@@ -375,10 +383,25 @@ def test_empty_calibration_file_is_a_spec_error(spec_dict):
         spec.parse(spec_dict, HXRequirements)
 
 
+def test_export_refuses_a_run_json_that_names_another_ledger(tmp_path, spec_dict, capsys):
+    """Verification finding: a forged run folder can name a ledger made for it; the caller's ledger decides."""
+    run = _run(tmp_path, spec_dict, "projF", tmp_path / "ledger.jsonl")
+    forged = tmp_path / "forged.jsonl"
+    forged.write_bytes((tmp_path / "ledger.jsonl").read_bytes())
+    m = json.loads((run / "run.json").read_text())
+    m["ledger"] = str(forged)
+    (run / "run.json").write_text(json.dumps(m))
+    args = ["export-simlab", str(run), "--solver", "s", "--vram-gb", "4", "--cells", "1"]
+    assert main([*args, "--ledger", str(tmp_path / "ledger.jsonl")]) == 2
+    assert "names ledger" in capsys.readouterr().out
+    assert main([*args, "--ledger", str(forged)]) == 0  # trusted only when the caller names it
+
+
 def test_export_refuses_symlinked_run_files(tmp_path, spec_dict):
     run = _run(tmp_path, spec_dict, "projL", tmp_path / "ledger.jsonl")
     elsewhere = tmp_path / "elsewhere.yaml"
     elsewhere.write_text("keep")
     (run / "simlab_rank0_fluid_a.yaml").symlink_to(elsewhere)
-    assert main(["export-simlab", str(run), "--solver", "s", "--vram-gb", "4", "--cells", "1"]) == 2
+    assert main(["export-simlab", str(run), "--solver", "s", "--vram-gb", "4", "--cells", "1",
+                 "--ledger", str(tmp_path / "ledger.jsonl")]) == 2
     assert elsewhere.read_text() == "keep"

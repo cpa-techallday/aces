@@ -338,3 +338,37 @@ def test_audit_log_is_not_written_through_a_link(tmp_path):
     with pytest.raises(OSError):
         Gate(root=tmp_path, policy="read").log("t", {}, 0)
     assert (tmp_path / "elsewhere.txt").read_text() == "keep"
+
+
+def test_the_cli_gets_a_frozen_spec_with_checked_absolute_paths(tmp_path, spec_dict):
+    """Verification finding: a spec rewritten after its check reached the child. The child now gets a frozen copy."""
+    root = tmp_path / "root"
+    (root / "cal").mkdir(parents=True)
+    (root / "cal" / "c.json").write_text("{}")
+    spec_dict["requirements"]["calibration_file"] = "cal/c.json"
+    (root / "s.yaml").write_text(yaml.safe_dump(spec_dict))
+    gate = Gate(root=root, policy="read")
+    frozen = Path(gate.check_spec("s.yaml"))
+    assert frozen.parent == gate.frozen_dir and not frozen.is_relative_to(root)
+    data = yaml.safe_load(frozen.read_text())
+    assert data["requirements"]["calibration_file"] == str((root / "cal" / "c.json").resolve())
+    spec_dict["requirements"]["calibration_file"] = str(tmp_path / "outside.json")  # rewritten after the check
+    (root / "s.yaml").write_text(yaml.safe_dump(spec_dict))
+    assert yaml.safe_load(frozen.read_text())["requirements"]["calibration_file"].startswith(str(root.resolve()))
+
+
+def test_the_child_rechecks_paths_against_the_root(tmp_path, spec_dict, monkeypatch, capsys):
+    """Defence in depth: under aces-mcp (ACES_PATH_ROOT) the CLI refuses a spec path outside the root."""
+    from aces.cli import main
+
+    root = tmp_path / "root"
+    root.mkdir()
+    secret = tmp_path / "outside.json"
+    secret.write_text('{"OUTSIDE_ROOT_TEST_KEY": {"value": 1}}')
+    spec_dict["requirements"]["calibration_file"] = str(secret)
+    sp = root / "s.yaml"
+    sp.write_text(yaml.safe_dump(spec_dict))
+    monkeypatch.setenv("ACES_PATH_ROOT", str(root))
+    assert main(["design", str(sp), "--out", str(root / "run"), "--ledger", str(root / "l.jsonl")]) == 2
+    out = capsys.readouterr().out
+    assert "outside the ACES MCP root" in out and "OUTSIDE_ROOT_TEST_KEY" not in out

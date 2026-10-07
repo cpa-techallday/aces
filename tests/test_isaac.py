@@ -436,3 +436,26 @@ def test_adapter_refuses_without_install(tmp_path, monkeypatch):
     _no_env(monkeypatch)
     with pytest.raises(RuntimeError, match="environment_error"):
         adapter.Adapter().run({"validate": "free_fall"}, None, str(tmp_path))
+
+
+def test_free_fall_path_must_be_a_parabola_not_just_land_on_time():
+    """Verification finding: a constant-speed fall, or a hover then a jump, that lands on time used to pass."""
+    import math as _m
+
+    g, d, dt = adapter.G_STANDARD, 0.95, 1 / 240
+    t_c = _m.sqrt(2 * d / g)
+    n = int(round(2.0 / dt))
+    t = [i * dt for i in range(n + 1)]
+    z0 = adapter.FREE_FALL_GROUND_Z_M + adapter.FREE_FALL_SIZE_M / 2  # centre height at rest on the plane
+
+    def result(bottom):
+        return {"trajectory": {"t_s": t, "z_m": [z0 + b for b in bottom]}, "finished": True, "steps": n,
+                "gravity_m_s2": g, "dt": dt, "final_linear_velocity_m_s": [0.0, 0.0, 0.0]}
+
+    exact = [max(0.0, d - 0.5 * g * ti * ti) for ti in t]
+    assert adapter.analyse_free_fall(result(exact))["pass"] == 1
+    linear = [max(0.0, d - d * ti / t_c) for ti in t]  # constant speed, lands exactly on time
+    rec = adapter.analyse_free_fall(result(linear))
+    assert rec["pass"] == 0 and any("not a free fall" in r for r in rec["reasons"])
+    hover = [d if ti < 0.99 * t_c else 0.0 for ti in t]  # hovers, then jumps to the plane on time
+    assert adapter.analyse_free_fall(result(hover))["pass"] == 0

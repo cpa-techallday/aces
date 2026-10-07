@@ -384,8 +384,8 @@ def test_cli_cost_from_verified_hot_water_run(tmp_path, spec_dict, capsys):
     run = tmp_path / "run"
     assert main(["design", str(sp), "--out", str(run), "--ledger", str(ledger)]) == 0
     out_json = tmp_path / "cost.json"
-    rc = main(["cost", "--from-run", str(run), "--rates", str(RATES_PATH), "--quantity", "5", "--verbose",
-               "--out", str(out_json)])
+    rc = main(["cost", "--from-run", str(run), "--ledger", str(ledger), "--rates", str(RATES_PATH), "--quantity",
+               "5", "--verbose", "--out", str(out_json)])
     out = capsys.readouterr().out
     assert rc in (0, 1)
     assert "80.0 C" in out and "Estimate only: not a quote, not verified" in out
@@ -396,7 +396,8 @@ def test_cli_cost_from_verified_hot_water_run(tmp_path, spec_dict, capsys):
     assert any("service temperature 80 C" in r for r in poly[0]["reasons"])
     assert all(s["material"] != "polymer_a" for s in rep["suggestions"] if s["feasible"])
 
-    assert main(["cost", "--from-run", str(run), "--rates", str(RATES_PATH), "--rank", "99"]) == 2
+    assert main(["cost", "--from-run", str(run), "--ledger", str(ledger), "--rates", str(RATES_PATH), "--rank",
+                 "99"]) == 2
     assert "--rank" in capsys.readouterr().out
 
     tampered = tmp_path / "tampered"
@@ -418,3 +419,11 @@ def test_test_rates_file_is_labelled():
     sources += [v["source"] for p in d["processes"].values() for v in p.values()]
     sources += [v["source"] for v in d["qa_factor"].values()]
     assert sources and all(s == "test input" for s in sources)
+
+
+def test_an_impossible_date_in_the_rates_file_is_a_clean_error(tmp_path):
+    """Verification finding: `date: 2026-13-01` raised a traceback."""
+    p = tmp_path / "rates.yaml"
+    p.write_text(RATES_PATH.read_text().replace("2026-10-07", "2026-13-01", 1))
+    with pytest.raises(costing.CostInputError):
+        costing.load_rates(p)

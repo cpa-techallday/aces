@@ -381,3 +381,17 @@ def test_registry_save_does_not_follow_a_planted_link(tmp_path):
     Registry({"hx.gyroid.nusselt": _full("hx.gyroid.nusselt", 1.5)}).save(link)
     assert target.read_text() == "keep"
     assert not link.is_symlink() and Registry.load(link).get("hx.gyroid.nusselt").value == 1.5
+
+
+def test_registry_sources_must_be_a_list(tmp_path):
+    """Verification finding: `sources: "test:x"` loaded as six one-character sources."""
+    import json as _json
+
+    from aces.calibration import Registry
+
+    p = tmp_path / "cal.json"
+    p.write_text(_json.dumps({"hx.gyroid.friction": {"value": 2.0, "sources": "test:x",
+                                                    "valid_range": {"reynolds": [1.0, 100.0]},
+                                                    "fitted_on": "2026-10-07"}}))
+    with pytest.raises(ValueError, match="list"):
+        Registry.load(p)

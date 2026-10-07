@@ -44,7 +44,9 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import threading
+import uuid
 from pathlib import Path, PurePath
 from typing import Any, get_args, get_origin
 
@@ -185,6 +187,53 @@ def _values_at(data: Any, keys: tuple[str, ...]):
         yield from _values_at(data[k], rest)
 
 
+def _set_at(data: Any, keys: tuple[str, ...], fn) -> None:
+    """Replace every value at ``keys`` (as :func:`_values_at` finds them) with ``fn(value)``."""
+    if not keys:
+        return
+    k, rest = keys[0], keys[1:]
+    if k == "*":
+        if isinstance(data, dict):
+            items = list(data.items())
+        elif isinstance(data, list):
+            items = list(enumerate(data))
+        else:
+            items = []
+        for i, item in items:
+            if rest:
+                _set_at(item, rest, fn)
+            elif isinstance(item, list):
+                data[i] = [fn(x) for x in item]
+            else:
+                data[i] = fn(item)
+    elif isinstance(data, dict) and k in data:
+        if rest:
+            _set_at(data[k], rest, fn)
+        elif isinstance(data[k], list):
+            data[k] = [fn(x) for x in data[k]]
+        else:
+            data[k] = fn(data[k])
+
+
+def confine_spec_paths(data: dict[str, Any], spec_dir: Path, check) -> dict[str, Any]:
+    """Every path inside a spec's requirements, checked with ``check(path) -> resolved path`` and rewritten to
+    that resolved, absolute path.  Returns the rewritten copy (the input is not changed)."""
+    data = json.loads(json.dumps(data, default=str))
+    req, domain = data.get("requirements"), data.get("domain")
+    model = requirement_models().get(domain) if isinstance(domain, str) else None
+    if model is None or not isinstance(req, dict):
+        return data
+    for keys, not_paths in path_fields(model):
+        def fix(v, keys=keys, not_paths=not_paths):
+            if v is None or v in not_paths:
+                return v
+            if not isinstance(v, str):
+                raise ValueError(f"requirements.{'.'.join(keys)} must be a path")
+            return check(str(Path(v) if Path(v).is_absolute() else spec_dir / v))
+        _set_at(req, keys, fix)
+    return data
+
+
 def _env_number(name: str, default: float) -> float:
     raw = os.environ.get(name)
     if raw is None or raw == "":
@@ -231,6 +280,9 @@ class Gate:
         if self.read_timeout_s <= 0 or self.run_timeout_s <= 0 or self.memory_mb < 0 or self.max_runs < 1:
             raise ValueError("ACES MCP limits: timeouts must be above 0, memory 0 (none) or more, max runs 1 or more")
         self.runs = threading.BoundedSemaphore(self.max_runs)
+        # Checked specs are frozen here (private to the server, outside the root) and the CLI runs on the frozen
+        # copy, so a spec rewritten after its check can't reach the child (verification finding).
+        self.frozen_dir = Path(tempfile.mkdtemp(prefix="aces-mcp-specs-"))
         self._audit_lock = threading.Lock()
 
     @property
@@ -250,7 +302,11 @@ class Gate:
         return str(q)
 
     def check_spec(self, spec_path: str) -> str:
-        """Resolve a spec path and confine every path written inside the spec to the root."""
+        """Resolve a spec path, confine every path written inside it to the root, and return a frozen copy.
+
+        The spec is read once. Its path fields are checked and rewritten to absolute, resolved paths, and the copy
+        is written to the server's private folder; the CLI is given the copy, never the original.
+        """
         sp = Path(self.path(spec_path))
         try:
             data = yaml.safe_load(safeio.read_text_limited(sp, MAX_SPEC_BYTES)) or {}
@@ -258,19 +314,10 @@ class Gate:
             raise ValueError(f"cannot read spec {spec_path!r}: {e}") from e
         if not isinstance(data, dict):
             raise ValueError(f"spec {spec_path!r} is not a mapping")
-        req, domain = data.get("requirements"), data.get("domain")
-        model = requirement_models().get(domain) if isinstance(domain, str) else None
-        if model is None or not isinstance(req, dict):
-            return str(sp)  # the CLI refuses an unknown domain or a missing requirements block
-        for keys, not_paths in path_fields(model):
-            for v in _values_at(req, keys):
-                if v is None or v in not_paths:
-                    continue
-                if not isinstance(v, str):
-                    raise ValueError(f"requirements.{'.'.join(keys)} must be a path")
-                q = Path(v) if Path(v).is_absolute() else sp.parent / v
-                self.path(str(q))  # raises PermissionError outside the root, or inside src/ or .git
-        return str(sp)
+        frozen = confine_spec_paths(data, sp.parent, self.path)  # PermissionError outside the root, src/ or .git
+        with safeio.OutDir(self.frozen_dir, mkdir=False) as d:
+            out = d.write_text(f"{uuid.uuid4().hex}-{sp.name}", yaml.safe_dump(frozen, sort_keys=False))
+        return str(out)
 
     def read_text(self, p: Path, limit: int = MAX_REPORT_BYTES) -> str:
         q = Path(self.path(str(p)))  # resolves symbolic links, so a planted link cannot escape
@@ -288,7 +335,7 @@ class Gate:
 
 def _run_cli(gate: Gate, tool: str, argv: list[str], log_args: dict[str, Any], *, timeout: float) -> dict[str, Any]:
     """Run ``aces ARGV`` in its own process with the gate's time and memory limits."""
-    env = proc.minimal_env(keep=(evidence.HMAC_ENV,))
+    env = proc.minimal_env({"ACES_PATH_ROOT": str(gate.root)}, keep=(evidence.HMAC_ENV,))
     try:
         cp = proc.run(_child_cmd(argv, gate.memory_bytes), cwd=gate.root, env=env, timeout=timeout)
     except subprocess.TimeoutExpired as e:

@@ -267,6 +267,13 @@ def _finite(xs) -> bool:
     return isinstance(xs, list) and all(isinstance(x, (int, float)) and math.isfinite(x) for x in xs)
 
 
+# Path check: semi-implicit Euler (PhysX) lags the exact parabola by about g*dt*t/2, which at dt = 1/240 s and
+# t = 0.44 s is 9 mm, ~1 % of the 0.95 m fall; 3 % of d leaves room for that and still fails a constant-speed
+# fall landing on time (off by d/4 at half time) by a factor of eight.
+FREE_FALL_PATH_TOL = 0.03
+FREE_FALL_MIN_SAMPLES = 20
+
+
 def analyse_free_fall(result: dict, *, g: float = G_STANDARD, h_m: float = FREE_FALL_H_M,
                       size_m: float = FREE_FALL_SIZE_M, ground_z_m: float = FREE_FALL_GROUND_Z_M) -> dict:
     """Validation record for the free_fall case from the run's ``result.json``.
@@ -343,7 +350,19 @@ def analyse_free_fall(result: dict, *, g: float = G_STANDARD, h_m: float = FREE_
     if not timing_ok:
         reasons.append(f"contact at {t_c:.4f} s vs analytic {t_ana:.4f} s: {rec['error_pct']:+.2f} %, "
                        f"outside +/-{FREE_FALL_TOL_PCT} %")
-    rec["pass"] = int(timing_ok and gravity_ok and rec["converged"] == 1)
+    # The path, not just the landing time: every sample before contact must follow d - g t^2 / 2. A cube that
+    # moves at constant speed, or hovers and then jumps, can land on time (verification finding).
+    pre = range(0, k)
+    dev = max(abs(bottom[i] - (d - 0.5 * g * (t[i] - t[0]) ** 2)) for i in pre)
+    rec["max_path_deviation_m"] = dev
+    rec["path_tolerance_m"] = FREE_FALL_PATH_TOL * d
+    path_ok = k >= FREE_FALL_MIN_SAMPLES and dev <= FREE_FALL_PATH_TOL * d
+    if k < FREE_FALL_MIN_SAMPLES:
+        reasons.append(f"only {k} samples before contact; need {FREE_FALL_MIN_SAMPLES} to check the path")
+    elif not path_ok:
+        reasons.append(f"fall path departs from d - g t^2/2 by {dev:.4g} m (limit {FREE_FALL_PATH_TOL * d:.4g} m): "
+                       f"not a free fall")
+    rec["pass"] = int(timing_ok and path_ok and gravity_ok and rec["converged"] == 1)
     return rec
 
 

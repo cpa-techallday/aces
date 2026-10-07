@@ -30,8 +30,11 @@ def minimal_env(extra: Mapping[str, str] | None = None, *, keep: Sequence[str] =
 
 
 def _kill_tree(p: subprocess.Popen) -> None:
-    if p.poll() is not None:
-        return
+    """Kill the child's whole process group, even if the child itself has already exited.
+
+    A child that exits while its background children keep running (``sleep 20 & exit 0``) still leaves the group
+    alive, so the group is killed regardless of the child's own state.
+    """
     if os.name == "nt":
         subprocess.run(["taskkill", "/T", "/F", "/PID", str(p.pid)], capture_output=True, check=False)
         try:
@@ -42,10 +45,34 @@ def _kill_tree(p: subprocess.Popen) -> None:
         try:
             os.killpg(p.pid, signal.SIGKILL)  # the child leads its own session (start_new_session)
         except (ProcessLookupError, PermissionError):
+            pass
+        if p.poll() is None:
             try:
                 p.kill()
             except OSError:
                 pass
+
+
+def _drain(p: subprocess.Popen, grace_s: float = 5.0):
+    """Collect what is left of the output after a kill, without waiting on an escaped grandchild.
+
+    A process that left the group (``setsid``) can keep the pipes open forever; after ``grace_s`` the pipes are
+    closed and whatever was read is returned.
+    """
+    try:
+        return p.communicate(timeout=grace_s)
+    except subprocess.TimeoutExpired as e:
+        for f in (p.stdout, p.stderr):
+            try:
+                if f:
+                    f.close()
+            except OSError:
+                pass
+        try:
+            p.wait(timeout=grace_s)
+        except subprocess.TimeoutExpired:
+            pass
+        return e.output, e.stderr
 
 
 def run(cmd: Sequence[str | os.PathLike], *, cwd: str | os.PathLike | None = None,
@@ -71,11 +98,11 @@ def run(cmd: Sequence[str | os.PathLike], *, cwd: str | os.PathLike | None = Non
         out, err = p.communicate(input=input, timeout=timeout)
     except subprocess.TimeoutExpired:
         _kill_tree(p)
-        out, err = p.communicate()
+        out, err = _drain(p)
         raise subprocess.TimeoutExpired(args, timeout, output=out, stderr=err) from None
     except BaseException:
         _kill_tree(p)
-        p.wait()
+        _drain(p)
         raise
     cp = subprocess.CompletedProcess(args, p.returncode, out, err)
     if check:

@@ -33,6 +33,7 @@ the real ledger.  Anchor the head outside the file:
 from __future__ import annotations
 
 import datetime as _dt
+import errno
 import hashlib
 import hmac
 import json
@@ -341,6 +342,10 @@ class Ledger:
         """Scan and apply the anchors.  Call with the lock held."""
         key = _hmac_key()
         signed = self._read_signed_head(key) if key is not None and self.path.exists() else None
+        if key is None and (self.head_path.exists() or safeio.is_link(self.head_path)):
+            st = _Scan()
+            return st.fail(f"{self.head_path} is a signed head, but {HMAC_ENV} is not set here, so it can't be "
+                           f"checked; set the key (environment only) and verify again")
         want = tuple(h for h in (expect_head, signed.get("head") if isinstance(signed, dict) else None) if h)
         st = self._scan(want)
         if not st.ok:
@@ -482,11 +487,21 @@ class Ledger:
     def _verify(self, expect_head: str | None = None, min_records: int | None = None) -> tuple[bool, str, _Scan]:
         if not self.path.exists():
             return False, f"ledger {self.path} not found", _Scan()
+        unlocked = False
         try:
             with _lock(self.path, shared=True):
                 st = self._check(expect_head=expect_head, min_records=min_records)
-        except (LedgerError, OSError) as e:
+        except LedgerError as e:
             return False, str(e), _Scan()
+        except OSError as e:
+            if getattr(e, "errno", None) not in (errno.EROFS, errno.EACCES, errno.EPERM):
+                return False, str(e), _Scan()
+            # A read-only copy (bind mount, archive): nobody can append through this path, so check it unlocked.
+            try:
+                st = self._check(expect_head=expect_head, min_records=min_records)
+            except (LedgerError, OSError) as e2:
+                return False, str(e2), _Scan()
+            unlocked = True
         if not st.ok:
             return False, st.problem, st
         if st.count == 0:
@@ -499,6 +514,8 @@ class Ledger:
             msg += f"; expected head found, {later} record(s) appended since"
         if self.head_path.exists() and _hmac_key() is not None:
             msg += "; signed head checked"
+        if unlocked:
+            msg += "; read-only copy, checked without the lock"
         return True, msg, st
 
     def verify(self, *, expect_head: str | None = None, min_records: int | None = None) -> tuple[bool, str]:
@@ -516,10 +533,31 @@ def make_record(
     inputs: dict[str, Any],
     observations: dict[str, Any],
     calibration: dict[str, Any],
-    artifacts: dict[str, str] | None = None,
+    artifacts: dict[str, str | Path | tuple[str | Path, str]] | None = None,
+    root: str | Path | None = None,
 ) -> dict[str, Any]:
-    """artifacts: name -> path; each is stored with its sha256 so later edits are detectable."""
-    arts = {name: {"path": str(p), "sha256": file_sha256(p)} for name, p in (artifacts or {}).items()}
+    """artifacts: name -> path, or name -> (path, sha256) when the caller hashed the file through its run-folder
+    handle (``safeio.OutDir.sha256``).  Each is stored with its sha256 so later edits are detectable.
+
+    ``root`` is the run folder as resolved when it was opened (``OutDir.path``).  Every artifact given as a path
+    must still resolve inside it and not be a link, or the record would vouch for whatever the folder was swapped
+    for mid-run (audit M1, verification finding).
+    """
+    arts = {}
+    for name, a in (artifacts or {}).items():
+        if isinstance(a, tuple):
+            path, digest = a
+        else:
+            path = a
+            if root is not None:
+                rp = Path(path)
+                if safeio.is_link(rp) or not rp.resolve().is_relative_to(Path(root)):
+                    raise EvidenceError(f"artifact {name} ({path}) is a link or no longer inside the run folder "
+                                        f"{root}; was the folder swapped during the run?")
+                digest = safeio.sha256_of(rp)
+            else:
+                digest = file_sha256(path)
+        arts[name] = {"path": str(path), "sha256": digest}
     return {
         "kind": kind,
         "timestamp_utc": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
@@ -545,12 +583,15 @@ class EvidenceError(ValueError):
     """A run folder or ledger record failed verification."""
 
 
-def load_verified_run(run_dir: str | Path, ledger_path: str | Path | None = None,
+def load_verified_run(run_dir: str | Path, ledger_path: str | Path,
                       artifacts: tuple[str, ...] = ("pareto",)) -> tuple[dict[str, Any], dict[str, Any]]:
     """The run manifest and its ledger record, after checking everything that ties them together (audit M2).
 
     Refuses unless:
     * ``run.json`` and each named artifact are regular files, not links;
+    * ``ledger_path`` is the caller's ledger, never just the one ``run.json`` names: a forged run folder could
+      name a ledger made for it. If ``run.json`` names a different ledger, the caller must pass that one
+      explicitly;
     * the whole ledger chain verifies (so the record's own hash is recomputed, not trusted);
     * the record named in ``run.json`` is in that ledger, and its spec hash matches the manifest;
     * each named artifact still has the sha256 recorded when the run finished.
@@ -568,7 +609,13 @@ def load_verified_run(run_dir: str | Path, ledger_path: str | Path | None = None
         record_hash = manifest["record_hash"]
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
         raise EvidenceError(f"{manifest_path} is not a valid run manifest: {e}") from e
-    ledger = Ledger(ledger_path or manifest.get("ledger") or "")
+    if not ledger_path:
+        raise EvidenceError("no ledger given; pass the ledger this run was recorded in")
+    named = manifest.get("ledger")
+    if named and Path(named).resolve() != Path(ledger_path).resolve():
+        raise EvidenceError(f"{manifest_path} names ledger {named}, not {ledger_path}; pass --ledger {named} "
+                            f"if you trust that ledger")
+    ledger = Ledger(ledger_path)
     ok, msg = ledger.verify()
     if not ok:
         raise EvidenceError(f"ledger {ledger.path} does not verify ({msg}); refusing to use its records")
@@ -584,6 +631,6 @@ def load_verified_run(run_dir: str | Path, ledger_path: str | Path | None = None
         p = run_dir / Path(art["path"]).name
         if p.is_symlink() or not p.is_file():
             raise EvidenceError(f"{p} is missing or a symbolic link")
-        if file_sha256(p) != art["sha256"]:
+        if safeio.sha256_of(p) != art["sha256"]:
             raise EvidenceError(f"{p} no longer matches its evidence record (edited after the run)")
     return manifest, rec

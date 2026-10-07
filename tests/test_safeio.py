@@ -107,3 +107,31 @@ def test_proc_timeout_kills_the_grandchild_too(tmp_path):
     assert time.monotonic() - t0 < 10
     time.sleep(2.0)
     assert not marker.exists()  # the grandchild was killed with the group
+
+
+@pytest.mark.skipif(os.name != "posix", reason="process-group check uses POSIX signals")
+def test_proc_timeout_kills_background_children_after_the_child_exits(tmp_path):
+    """Verification finding: `sleep & exit 0` left the group running and the call waited for it."""
+    t0 = time.monotonic()
+    with pytest.raises(subprocess.TimeoutExpired):
+        proc.run(["sh", "-c", "sleep 30 & exit 0"], timeout=1.0)
+    assert time.monotonic() - t0 < 10
+
+
+@pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="needs FIFOs")
+def test_read_text_limited_refuses_a_fifo(tmp_path):
+    """Verification finding: a planted FIFO blocked MCP reads forever."""
+    f = tmp_path / "report.md"
+    os.mkfifo(f)
+    with pytest.raises(safeio.UnsafePathError):
+        safeio.read_text_limited(f, 1000)
+    with pytest.raises(safeio.UnsafePathError):
+        safeio.sha256_of(f)
+
+
+def test_outdir_sha256_reads_through_the_handle(tmp_path):
+    import hashlib
+
+    d = safeio.OutDir(tmp_path / "run")
+    d.write_text("a.json", "[1]")
+    assert d.sha256("a.json") == hashlib.sha256(b"[1]").hexdigest() == safeio.sha256_of(tmp_path / "run" / "a.json")

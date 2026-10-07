@@ -49,7 +49,7 @@ entry = {
                  "Gyroid t/a 0.10 Re 20: friction ratio 3.4292 (n=48) / 3.4293 (n=64). The rig GPU validation run "
                  "is pending: on 2026-10-07 the rig was in mode general-flagship with no simulation GPUs. Re-run "
                  "cases/aces/aces-cfd-validation.yaml through the queue in a sim-lab mode and replace this record."),
-        "record": "ACES repo (github.com/steeldragon666/aces @ 4c26956): docs/SIMLAB_CFD.md, python -m aces.cfd.selftest",
+        "record": "ACES repo (github.com/cpa-techallday/aces @ 4c26956): docs/SIMLAB_CFD.md, python -m aces.cfd.selftest",
         "rig_image_id": rig_image,
     },
 }

@@ -31,7 +31,7 @@ import math
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from .safeio import write_text
+from .safeio import read_text_limited, write_text
 
 
 @dataclass(frozen=True)
@@ -108,6 +108,13 @@ def _validate(f: Factor) -> Factor:
     return f
 
 
+def _sources(key: str, raw) -> tuple[str, ...]:
+    """A factor's sources: a list of non-empty strings (a bare string would split into characters)."""
+    if not isinstance(raw, (list, tuple)) or not all(isinstance(x, str) and x.strip() for x in raw):
+        raise ValueError(f"calibration factor {key!r}: sources must be a list of run or test ids, got {raw!r}")
+    return tuple(raw)
+
+
 class Registry:
     def __init__(self, factors: dict[str, Factor] | None = None, path: Path | None = None):
         self._factors = {k: _validate(v) for k, v in (factors or {}).items()}
@@ -121,7 +128,7 @@ class Registry:
         p = Path(path)
         if not p.exists():
             raise FileNotFoundError(f"calibration file {p} not found (set calibration_file: null for none)")
-        raw = json.loads(p.read_text())
+        raw = json.loads(read_text_limited(p, 16 * 1024 * 1024))  # no links or FIFOs (MCP finding)
         if not isinstance(raw, dict):  # a bad file, not a programming error: callers catch ValueError
             raise ValueError(f"calibration file {p} must hold a JSON object of factors")  # noqa: TRY004
         factors = {}
@@ -135,7 +142,7 @@ class Registry:
                 if not (isinstance(rng, (list, tuple)) and len(rng) == 2):
                     raise ValueError(f"calibration factor {k!r} in {p}: valid_range {name} must be [low, high]")
                 vr[name] = (float(rng[0]), float(rng[1]))
-            factors[k] = Factor(key=k, value=float(v["value"]), sources=tuple(v.get("sources", ())),
+            factors[k] = Factor(key=k, value=float(v["value"]), sources=_sources(k, v.get("sources", ())),
                                 valid_range=vr, fitted_on=v.get("fitted_on", ""), basis=v.get("basis", ""),
                                 re_exponent=float(v.get("re_exponent", 0.0)), re_ref=float(v.get("re_ref", 0.0)),
                                 form=v.get("form", ""))

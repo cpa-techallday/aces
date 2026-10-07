@@ -114,6 +114,19 @@ class OutDir:
                 return False
         return is_link(self.path / name)
 
+    def sha256(self, name: str) -> str:
+        """sha256 of a file in this folder, read through the folder's handle (never through a link)."""
+        import hashlib
+
+        fd = self._open_fd(name, os.O_RDONLY | getattr(os, "O_NONBLOCK", 0))
+        h = hashlib.sha256()
+        with os.fdopen(fd, "rb") as f:
+            if not stat.S_ISREG(os.fstat(f.fileno()).st_mode):
+                raise UnsafePathError(f"{self.path / name} is not a regular file")
+            for chunk in iter(lambda: f.read(1 << 20), b""):
+                h.update(chunk)
+        return h.hexdigest()
+
     def exists(self, name: str) -> bool:
         name = _check_name(name)
         if self._fd is not None:
@@ -211,8 +224,33 @@ def read_text_limited(path: str | os.PathLike, max_bytes: int, *, encoding: str 
     p = Path(path)
     if is_link(p):
         raise UnsafePathError(f"{p} is a link")
-    size = p.stat().st_size
-    if size > max_bytes:
-        raise ValueError(f"{p} is {size:,} bytes; the limit is {max_bytes:,}")
-    with open(p, "rb") as f:
-        return f.read(max_bytes + 1).decode(encoding)
+    if not stat.S_ISREG(os.stat(p, follow_symlinks=False).st_mode):
+        raise UnsafePathError(f"{p} is not a regular file")  # a FIFO or device would block or never end
+    fd = os.open(p, os.O_RDONLY | _NOFOLLOW | _BINARY | getattr(os, "O_NONBLOCK", 0))
+    with os.fdopen(fd, "rb") as f:
+        st = os.fstat(f.fileno())
+        if not stat.S_ISREG(st.st_mode):  # swapped between the check and the open
+            raise UnsafePathError(f"{p} is not a regular file")
+        if st.st_size > max_bytes:
+            raise ValueError(f"{p} is {st.st_size:,} bytes; the limit is {max_bytes:,}")
+        data = f.read(max_bytes + 1)
+    if len(data) > max_bytes:
+        raise ValueError(f"{p} is larger than the limit of {max_bytes:,} bytes")
+    return data.decode(encoding)
+
+
+def sha256_of(path: str | os.PathLike) -> str:
+    """sha256 of a regular file, refusing links, FIFOs and devices."""
+    import hashlib
+
+    p = Path(path)
+    if is_link(p):
+        raise UnsafePathError(f"{p} is a link")
+    fd = os.open(p, os.O_RDONLY | _NOFOLLOW | _BINARY | getattr(os, "O_NONBLOCK", 0))
+    h = hashlib.sha256()
+    with os.fdopen(fd, "rb") as f:
+        if not stat.S_ISREG(os.fstat(f.fileno()).st_mode):
+            raise UnsafePathError(f"{p} is not a regular file")
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()

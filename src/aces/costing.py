@@ -374,7 +374,7 @@ def rates_from_dict(d: Any, origin: str = "<rates>") -> Rates:
 def parse_rates_text(text: str, origin: str) -> Rates:
     try:
         data = json.loads(text) if origin.lower().endswith(".json") else yaml.safe_load(text)
-    except (json.JSONDecodeError, yaml.YAMLError) as e:
+    except (json.JSONDecodeError, yaml.YAMLError, ValueError) as e:  # ValueError: e.g. date 2026-13-01
         raise CostInputError(f"{origin}: not valid {'JSON' if origin.lower().endswith('.json') else 'YAML'}: "
                              f"{e}") from e
     return rates_from_dict(data, origin)

@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -37,8 +38,28 @@ from .report import hx_report
 DEFAULT_LEDGER = Path("out/evidence/ledger.jsonl")
 
 
+def _confined_by_server(data: dict, spec_dir: Path) -> None:
+    """Under ``aces-mcp`` (``ACES_PATH_ROOT`` set), re-check every path in the spec at load time."""
+    root = os.environ.get("ACES_PATH_ROOT")
+    if not root:
+        return
+    from .mcp_server import confine_spec_paths
+
+    r = Path(root).resolve()
+
+    def check(p: str) -> str:
+        q = Path(p).resolve()
+        if not q.is_relative_to(r) or ".git" in q.relative_to(r).parts:
+            raise spec.SpecError([f"{p} is outside the ACES MCP root {r}"])
+        return str(q)
+
+    confine_spec_paths(data, spec_dir, check)
+
+
 def _load(path: str):
-    data = yaml.safe_load(Path(path).read_text()) or {}
+    data = yaml.safe_load(safeio.read_text_limited(Path(path), 4 * 1024 * 1024)) or {}
+    if isinstance(data, dict):
+        _confined_by_server(data, Path(path).parent)
     model_cls = get_model(data.get("domain", ""))
     env, req = spec.parse(data, model_cls.requirements_model)
     # like every other path in a spec, the calibration file is relative to the spec's folder
@@ -90,7 +111,9 @@ def _safe_write(path: Path, text: str) -> None:
 
 def cmd_check(args) -> int:
     try:
-        data = yaml.safe_load(Path(args.spec).read_text()) or {}
+        data = yaml.safe_load(safeio.read_text_limited(Path(args.spec), 4 * 1024 * 1024)) or {}
+        if isinstance(data, dict):
+            _confined_by_server(data, Path(args.spec).parent)
         if data.get("domain") == form_route.DOMAIN:
             env, _ = spec.parse(data, form_route.FormRequirements)
             print(f"OK: {env.domain} spec for project {env.project!r} is complete (formgen route).")
@@ -102,7 +125,7 @@ def cmd_check(args) -> int:
                   f"{study.rel} at {study.commit[:12]}).")
             return 0
         _, env, _, model_cls = _load(args.spec)
-    except (spec.SpecError, KeyError, ValueError, FileNotFoundError, rod_route.StudyError) as e:
+    except (spec.SpecError, KeyError, ValueError, OSError, rod_route.StudyError) as e:
         print(e)
         return 2
     print(f"OK: {env.domain} spec for project {env.project!r} is complete ({model_cls.id} {model_cls.version}).")
@@ -155,14 +178,16 @@ def _rod_report(spec_d: dict, res: dict, record_hash: str, req) -> str:
 
 def cmd_rod(args) -> int:
     spec_path = Path(args.spec)
-    data = yaml.safe_load(spec_path.read_text()) or {}
     try:
+        data = yaml.safe_load(safeio.read_text_limited(spec_path, 4 * 1024 * 1024)) or {}
+        if isinstance(data, dict):
+            _confined_by_server(data, spec_path.parent)
         if data.get("domain") != rod_route.DOMAIN:
             raise ValueError(f"`aces rod` needs domain: {rod_route.DOMAIN}")
         env, req = spec.parse(data, rod_route.RodRequirements)
         # only committed, unchanged studies under studies/ run (audit H1); refuse before making the run folder
         rod_route.check_study(req, spec_path.parent, out=args.out)
-    except (spec.SpecError, ValueError, FileNotFoundError, FileExistsError, rod_route.StudyError) as e:
+    except (spec.SpecError, ValueError, OSError, rod_route.StudyError) as e:
         print(e)
         return 2
     od = _new_run_dir(args.out)
@@ -181,7 +206,7 @@ def cmd_rod(args) -> int:
             inputs={"requirements_resolved": req.model_dump(mode="json")},
             observations={"summary": res["summary"], "stages": res["stages"], "problems": res["problems"],
                           "warnings": res["warnings"]},
-            calibration={}, artifacts=res["artifacts"],
+            calibration={}, artifacts=res["artifacts"], root=od.path,
         )
         ledger = Path(args.ledger)
         written = evidence.Ledger(ledger).append(rec)
@@ -322,7 +347,7 @@ def _cost_part(args) -> costing.PartProfile:
     if args.from_run:
         run_dir = Path(args.from_run)
         # the record is recomputed and the whole chain verified before anything in the folder is trusted (M2)
-        _, rec = evidence.load_verified_run(run_dir, args.ledger, artifacts=("pareto",))
+        _, rec = evidence.load_verified_run(run_dir, args.ledger or str(DEFAULT_LEDGER), artifacts=("pareto",))
         run_spec = rec.get("spec") or {}
         if rec.get("kind") != "aces.design_run" or run_spec.get("domain") != "hx.two_fluid":
             raise costing.CostInputError(f"--from-run costs hx.two_fluid design runs; {run_dir} holds "
@@ -529,12 +554,14 @@ def _form_report(spec_d: dict, res: dict, record_hash: str, req=None) -> str:
 
 def cmd_form(args) -> int:
     spec_path = Path(args.spec)
-    data = yaml.safe_load(spec_path.read_text()) or {}
     try:
+        data = yaml.safe_load(safeio.read_text_limited(spec_path, 4 * 1024 * 1024)) or {}
+        if isinstance(data, dict):
+            _confined_by_server(data, spec_path.parent)
         if data.get("domain") != form_route.DOMAIN:
             raise ValueError(f"`aces form` needs domain: {form_route.DOMAIN}")
         env, req = spec.parse(data, form_route.FormRequirements)
-    except (spec.SpecError, ValueError) as e:
+    except (spec.SpecError, ValueError, OSError) as e:
         print(e)
         return 2
     try:
@@ -562,6 +589,7 @@ def cmd_form(args) -> int:
                           "warnings": res["warnings"]},
             calibration={},
             artifacts=res["artifacts"],
+            root=od.path,
         )
         ledger = Path(args.ledger)
         written = evidence.Ledger(ledger).append(rec)
@@ -608,7 +636,7 @@ class DesignContract:
 def cmd_design(args) -> int:
     try:
         _, env, req, model_cls = _load(args.spec)
-    except (spec.SpecError, KeyError, FileNotFoundError, ValueError) as e:
+    except (spec.SpecError, KeyError, OSError, ValueError) as e:
         print(e)
         return 2
     if why := _fresh_out(args.out):
@@ -654,7 +682,8 @@ def cmd_design(args) -> int:
                 "pareto": [{"params": e.params, "objectives": e.objectives} for e in pareto],
             },
             calibration=calib,
-            artifacts={"pareto": run_dir.path / "pareto.json", "evaluations": run_dir.path / "evaluations.jsonl"},
+            artifacts={"pareto": (run_dir.path / "pareto.json", run_dir.sha256("pareto.json")),
+                       "evaluations": (run_dir.path / "evaluations.jsonl", run_dir.sha256("evaluations.jsonl"))},
         )
         ledger = Path(args.ledger)
         written = evidence.Ledger(ledger).append(rec)
@@ -688,7 +717,7 @@ def cmd_export_simlab(args) -> int:
     run_dir = Path(args.run)
     try:
         simlab.check_name("solver", args.solver)
-        _, rec = evidence.load_verified_run(run_dir, args.ledger)
+        _, rec = evidence.load_verified_run(run_dir, args.ledger or str(DEFAULT_LEDGER))
     except evidence.EvidenceError as e:
         print(f"{e}; refusing to export.")
         return 2
@@ -1131,7 +1160,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--physics", default="cfd")
     s.add_argument("--vram-gb", type=float, required=True)
     s.add_argument("--units", choices=("m", "mm"), default="m", help="STL coordinate units (recorded in the experiment)")
-    s.add_argument("--ledger", help="override the ledger path recorded in run.json")
+    s.add_argument("--ledger", help=f"the ledger the run was recorded in (default {DEFAULT_LEDGER}); a run.json "
+                   "naming another ledger is refused unless that ledger is given here")
     s.set_defaults(fn=cmd_export_simlab)
 
     s = sub.add_parser("form", help="formgen lattice route from a form.lattice spec")
@@ -1225,7 +1255,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--rates", help="rates file (YAML/JSON): every rate, build volume and material property as "
                                    "{value, source, date}; required")
     s.add_argument("--from-run", help="output folder of `aces design` (hx.two_fluid); cost a verified pareto entry")
-    s.add_argument("--ledger", help="with --from-run: override the ledger path recorded in run.json")
+    s.add_argument("--ledger", help=f"with --from-run: the ledger the run was recorded in (default {DEFAULT_LEDGER})")
     s.add_argument("--rank", type=int, default=0, help="pareto rank to cost with --from-run")
     s.add_argument("--quantity", type=int, default=10, help="target quantity for the route suggestion")
     s.add_argument("--quantities", type=int, nargs="+", default=list(costing.DEFAULT_QUANTITIES),

@@ -266,3 +266,42 @@ def test_git_gets_the_minimal_environment(tmp_path, monkeypatch):
     repo = _repo(tmp_path)
     monkeypatch.setenv("GIT_DIR", str(tmp_path / "elsewhere"))  # inherited, this would point git elsewhere
     assert evidence.code_revision(repo) != "unversioned"
+
+
+# ----------------------------------------------------------------------------- verification findings
+
+def test_a_signed_head_without_the_key_is_not_silently_ignored(tmp_path, spec_dict, monkeypatch):
+    """A rewritten chain must not pass just because the key isn't set where verify runs."""
+    led = _ledger(tmp_path, spec_dict, 2)
+    monkeypatch.setenv(evidence.HMAC_ENV, KEY)
+    led.sign_head()
+    monkeypatch.delenv(evidence.HMAC_ENV)
+    ok, msg = led.verify()
+    assert not ok and evidence.HMAC_ENV in msg
+
+
+@posix_only
+def test_verify_works_on_a_read_only_copy(tmp_path, spec_dict, monkeypatch):
+    led = _ledger(tmp_path, spec_dict, 2)
+    import errno as _errno
+
+    def readonly(*a, **k):
+        raise OSError(_errno.EROFS, "Read-only file system")
+
+    monkeypatch.setattr(evidence, "_lock", readonly)
+    ok, msg = led.verify()
+    assert ok and "read-only" in msg
+
+
+def test_a_record_refuses_artifacts_outside_the_run_folder(tmp_path, spec_dict):
+    """Verification finding: hashing by path after a mid-run swap would vouch for the attacker's file."""
+    run, outside = tmp_path / "run", tmp_path / "outside"
+    run.mkdir()
+    outside.mkdir()
+    (outside / "pareto.json").write_text("[]")
+    root = run.resolve()
+    run.rename(tmp_path / "moved")
+    run.symlink_to(outside)  # the run folder swapped for a link after its files were written
+    with pytest.raises(evidence.EvidenceError, match="swapped"):
+        evidence.make_record(kind="t", spec=spec_dict, model_id="m", model_version="0", inputs={},
+                             observations={}, calibration={}, artifacts={"pareto": run / "pareto.json"}, root=root)
