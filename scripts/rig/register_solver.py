@@ -2,6 +2,11 @@
 
     python3 register_solver.py /path/to/simlab/solvers.json [rig_image_id]
 Idempotent: replaces an existing aces-tpms-periodic entry, touches nothing else.
+
+The validation status says what was actually run (audit M8): the workstation GPU and the rig CPU self-test
+passed; the rig GPU run is pending. When the image id is given, the entry runs that exact image (docker
+accepts an image id wherever it takes a tag), so a rebuilt `aces-cfd:0.1` can't silently replace the image
+the validation record describes.
 """
 import datetime
 import json
@@ -22,11 +27,12 @@ entry = {
     "module": "aces.cfd.simlab_adapter",
     "physics": ["cfd"],
     "precision": ["float64"],
-    "image": "aces-cfd:0.1",
+    "image": rig_image or "aces-cfd:0.1",
+    "image_tag": "aces-cfd:0.1",
     "description": ("ACES periodic TPMS calibration samples: FP64 D3Q19/D3Q7 TRT lattice Boltzmann, body-force "
                     "driven to a target Re, H1 heat transfer; writes measurement.json rows for `aces calibrate`"),
     "validation": {
-        "status": "pass",
+        "status": "pass-workstation; rig GPU pending",
         "date": "2026-10-06",
         "device": gpu["device"],
         "dtype": "float64",

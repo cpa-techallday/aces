@@ -14,7 +14,9 @@ the previous gate passes.
 - [x] `aces calibrate`: fit `hx.*` factors from measurements with provenance and valid ranges
 - [x] simlab result adapter: `aces cfd-collect` reads a finished campaign straight into the calibration format
 - [x] Calibration CFD solver `aces-tpms-periodic` (FP64 periodic LBM, flow + H1 heat transfer), validated
-- [ ] Ship the `aces-cfd` image to the rig, register the solver with the rig's validation record (server agent)
+- [x] Ship the `aces-cfd` image to the rig and register the solver (2026-10-07; validation record says the rig GPU run is pending)
+- [ ] Rig GPU validation run in a sim-lab window, then pin the rig's registry entry to the image id (`scripts/rig/register_solver.py`)
+- [x] Audit of 2026-10-07 fixed: MCP sandboxing, safe writes, ledger hardening, verified exports, boundary on calibration rows, thermal-entry Nusselt, costing from sourced rates, radar/Isaac/compliance fixes, CI ([docs/AUDIT-2026-10-07.md](AUDIT-2026-10-07.md))
 - [ ] First CFD calibration set: periodic gyroid, diamond and primitive samples over Re and t/a on the rig
 - [ ] Interpolated (Bouzidi) walls in `aces.cfd` to remove staircase noise; fused GPU kernel if rig timings need it
 - [ ] Multigrid FP64 voxel FEA in simlab (runtime repo), for structural checks of printed cores

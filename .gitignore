@@ -31,3 +31,4 @@ fusion_addin/Formgen/formgen_path.txt
 _import_*/
 !studies/*/cad/*.stl
 !studies/*/cad/*.step
+.coverage

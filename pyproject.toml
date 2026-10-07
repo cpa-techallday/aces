@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=83.0.0", "wheel"]  # pip-audit: earlier releases carry advisories (audit M6)
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -21,7 +21,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "ruff>=0.6", "pip-audit>=2.7"]
 # formgen lattice route; the verified Windows set is pinned in requirements-formgen.txt
 formgen = [
     "trimesh>=4.0",
@@ -30,7 +30,7 @@ formgen = [
     "fast_simplification>=0.1",
     "networkx>=3.0",
     "shapely>=2.0",
-    "pillow>=10.0",
+    "pillow>=12.3.0",  # pip-audit: 34 advisories below 12.3.0 (audit M6)
     "PyNiteFEA>=1.0",  # structural check (aces.structures)
 ]
 # design studies under studies/ (ARC-1 rod-lattice chassis)
@@ -42,7 +42,7 @@ studies = [
 ]
 
 # MCP server for Mission Control agents (mcp 1.x FastMCP or 2.x MCPServer)
-mcp = ["mcp>=1.10"]
+mcp = ["mcp>=1.28.1"]  # pip-audit: earlier releases include a DNS-rebinding advisory (audit M6)
 
 [project.scripts]
 aces = "aces.cli:main"
@@ -54,6 +54,14 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 aces = ["domains/hx/data/*.json"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+# The CI gate: real errors only (pyflakes, syntax, pylint errors, blind pytest.raises). Style is not gated.
+select = ["F", "E9", "PLE", "B017"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
