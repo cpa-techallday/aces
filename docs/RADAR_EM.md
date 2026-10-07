@@ -1,6 +1,6 @@
 # ACES radar domain — the AERIS-X64 EM simulation pipeline
 
-Doc: CPA-ACES-RADAR-001 · Rev C · 2026-10-07 · status: fast tier live, verification tier live on gprMax (workstation) — patch_xband, wr90_through, tile_coupon, tile_multiport all PASS; NTFF far-field landed (directivity trustworthy, gain provisional); Palace building for the rig image
+Doc: CPA-ACES-RADAR-001 · Rev D · 2026-10-08 · status: fast tier live, verification tier live on gprMax — patch_xband, wr90_through, tile_coupon, tile_multiport all PASS on workstation AND inside the `aces-em:0.1` rig image (Palace v0.14.0 + gprMax 4.0.1, built and cross-checked); NTFF far-field landed (directivity trustworthy, gain provisional); Palace job-level integration is the remaining rig work
 
 This adds the AERIS-X64 X-band phased-array radar as an ACES domain
 (`radar.phased_array`) and wires the simulation pipeline that carries a radar
@@ -94,7 +94,7 @@ decides what limit is real. Also note the model's 8×8 λ/2 beamwidth is 12.7°,
 not the "~3.6° per 16-el row" the study table claims (that figure needs ~28
 elements per row; the study's own audit habit applies to itself).
 
-## 4. Verification tier — `aces-tile-em` (gprMax live; Palace pending image)
+## 4. Verification tier — `aces-tile-em` (gprMax live; rig image `aces-em:0.1` built)
 
 Solver id `aces-tile-em`, adapter `aces.domains.radar.em_adapter.Adapter`,
 same worker contract as `aces-tpms-periodic` (`run(case, spec, run_dir)`,
@@ -105,11 +105,15 @@ same worker contract as `aces-tpms-periodic` (`run(case, spec, run_dir)`,
   `python -m gprMax` as a subprocess, reads the HDF5 port/probe data, and
   writes `validation.json` / `measurement.json`. Ports to the rig image
   unchanged.
-- **Palace (FEM) — building for the rig image** (Linux-first, from-source
-  build; no PyPI route). The adapter raises honestly until `PALACE_BIN`
-  exists. Palace's role is now *cross-check*: gprMax eigenmode ports already
-  cover the waveguide/multiport cases, and Palace re-runs them under FEM for
-  solver diversity.
+- **Palace v0.14.0 (FEM) — BUILT into the rig image** (`aces-em:0.1`,
+  2026-10-08; from-source superbuild, `docker/aces-em/` with
+  `fix_superbuild.sh` for the upstream bit-rot: dead sundials pin → v7.2.1,
+  make-based externals invoked as ninja). `palace --version` smoke passes in
+  the image. The adapter still raises honestly on `solver="palace"` — the
+  job-level Palace path (mesh + config generation) is future work. Palace's
+  role is *cross-check*: gprMax eigenmode ports already cover the
+  waveguide/multiport cases, and Palace re-runs them under FEM for solver
+  diversity.
 
 Case parameters: `structure` (`tile` | `rf_dist` | `antenna_plate`), frequency
 sweep, `stackup` (er, h, loss tangent — from the board's real stackup, which is
@@ -207,14 +211,20 @@ measured 3.98 vs model 5.13 dB/m, ratio 0.776) is recorded but **not** folded
 into the registry — its 2-cell mesh fit residuals (0.33–0.62) are elevated;
 it waits for a finer-mesh rig re-run.
 
-**To finish the tier** (mirrors the aces-cfd rollout):
+**Tier status** (mirrors the aces-cfd rollout):
 
-1. Finish the `aces-em:0.1` image build (Palace from source + gprMax pip,
-   `docker/aces-em/`; sundials pin re-pointed to v7.2.1 after the upstream
-   commit vanished).
-2. Re-run `patch_xband`, `tile_coupon`, `tile_multiport` on the rig; run
-   `wr90_through` under Palace as the FEM cross-check of the gprMax
-   eigenmode-port result.
+1. ~~Finish the `aces-em:0.1` image build~~ — **DONE 2026-10-08** (Palace
+   v0.14.0 from source + gprMax 4.0.1 pip, `docker/aces-em/`; sundials pin
+   re-pointed to v7.2.1 after the upstream commit vanished, four make-based
+   externals de-ninjafied — all captured in `fix_superbuild.sh`).
+2. ~~Re-run the validation cases on the rig~~ — **DONE 2026-10-08**
+   (job17-container-crosscheck: `tile_multiport`, `wr90_through`,
+   `patch_xband`, `tile_coupon` re-run inside `aces-em:0.1` from fresh decks;
+   results reproduce the workstation numbers to FDTD precision. Container
+   gotcha: gprMax's OpenMP oversubscribes in a VM — run with
+   `-e OMP_NUM_THREADS=<cores>`). Remaining: `wr90_through` under Palace as
+   the FEM cross-check of the gprMax eigenmode-port result (needs the
+   job-level Palace mesh/config path).
 3. Register `aces-tile-em` in `solvers.json` (validation passed for gprMax
    cases, pending for Palace cases).
 4. Sweep the real tile/rf_dist stackups → `measurement.json` rows →
@@ -239,10 +249,12 @@ records factors and provenance, not geometry.
 
 ## 6. What this does not do yet
 
-- Palace (waveguide-port FEM) is still building for the rig image
-  (`docker/aces-em/`); when it lands it cross-checks the gprMax eigenmode-port
-  results rather than enabling them — wr90_through and tile_multiport already
-  pass on gprMax. gprMax CPU-only (no `-gpu` build) — large domains queue
+- Palace (waveguide-port FEM) is built into the rig image `aces-em:0.1` and
+  smokes clean, but the adapter's job-level Palace path (mesh + config
+  generation) does not exist yet; when it lands it cross-checks the gprMax
+  eigenmode-port results rather than enabling them — wr90_through and
+  tile_multiport already pass on gprMax, both on the workstation and inside
+  the rig image. gprMax CPU-only (no `-gpu` build) — large domains queue
   behind wall-time budgets.
 - Patch far-field *gain/efficiency* are provisional (lumped-port power
   bookkeeping); directivity is solid. A waveguide-fed or eigenmode-fed patch

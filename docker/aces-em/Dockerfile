@@ -34,9 +34,17 @@ RUN cmake -S . -B build -G Ninja \
     && cmake --install build \
     && rm -rf /opt/palace-src
 ENV PATH="/opt/palace/bin:${PATH}"
+# palace is an mpirun wrapper; containers commonly run as root
+ENV OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
 
-# ---- gprMax (FDTD tier, pip)
-RUN python3 -m venv /opt/venv && /opt/venv/bin/pip install --no-cache-dir gprMax h5py numpy
+# ---- gprMax (FDTD tier, pip) + the aces package runtime deps so the image
+# can drive `aces.domains.radar.em_adapter` end-to-end.
+# NOTE: gprMax's OpenMP backend oversubscribes badly in a container (it
+# spawned 71 threads on a 24-core host and thrashed ~50x slower). Run
+# containers with `-e OMP_NUM_THREADS=<physical cores>` (16 verified).
+RUN python3 -m venv /opt/venv && /opt/venv/bin/pip install --no-cache-dir \
+        gprMax h5py numpy \
+        pydantic pyyaml scipy scikit-image optuna CoolProp
 ENV PATH="/opt/venv/bin:${PATH}"
 
 LABEL org.opencontainers.image.title="aces-em" \
