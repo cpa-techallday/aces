@@ -16,6 +16,10 @@ say "clone palace ${PALACE_REF:-v0.14.0}"
 git clone --depth 1 --branch "${PALACE_REF:-v0.14.0}" https://github.com/awslabs/palace.git /opt/palace-src || { say "CLONE FAILED"; exit 1; }
 
 cd /opt/palace-src
+say "superbuild bit-rot fixes"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+bash "${SCRIPT_DIR}/fix_superbuild.sh" /opt/palace-src || { say "FIX FAILED"; exit 1; }
+
 say "cmake configure"
 cmake -S . -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \

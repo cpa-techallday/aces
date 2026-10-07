@@ -21,6 +21,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ARG PALACE_REF=v0.14.0
 RUN git clone --depth 1 --branch ${PALACE_REF} https://github.com/awslabs/palace.git /opt/palace-src
 WORKDIR /opt/palace-src
+# Upstream bit-rot fixes (dead sundials pin, ninja-vs-make externals) — see script.
+COPY fix_superbuild.sh /tmp/fix_superbuild.sh
+RUN bash /tmp/fix_superbuild.sh /opt/palace-src
 RUN cmake -S . -B build -G Ninja \
         -DCMAKE_BUILD_TYPE=Release \
         -DPALACE_WITH_SUPERBUILD=ON \
