@@ -37,6 +37,20 @@ def spec_dict():
     return copy.deepcopy(TEST_SPEC)
 
 
+def _called_from_pytest() -> bool:
+    """pytest's own tmp_path bookkeeping tries a link and ignores failure; only a test's own link should skip."""
+    import sys
+
+    f = sys._getframe(2)
+    for _ in range(6):
+        if f is None:
+            return False
+        if f.f_globals.get("__name__", "").startswith("_pytest"):
+            return True
+        f = f.f_back
+    return False
+
+
 @pytest.fixture(autouse=True)
 def _skip_where_symlinks_need_privilege(monkeypatch):
     """Windows without Developer Mode or admin can't create symbolic links (WinError 1314). The link-attack tests
@@ -49,7 +63,7 @@ def _skip_where_symlinks_need_privilege(monkeypatch):
         try:
             return real(*a, **k)
         except OSError as e:
-            if getattr(e, "winerror", None) == 1314:
+            if getattr(e, "winerror", None) == 1314 and not _called_from_pytest():
                 pytest.skip("creating symbolic links needs Developer Mode or admin rights on this Windows host")
             raise
 
