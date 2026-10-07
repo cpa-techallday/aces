@@ -50,3 +50,9 @@ These rules apply to every human and AI contributor. Several are inherited from 
 15. Tests first for physics: every formula gets a textbook or hand-calculated check.
 16. Keep the model honest about scope. If a model ignores something (headers, maldistribution, entrance
     effects), it says so in its warnings.
+17. **Branches and pull requests.** Agents push to a branch and merge through a pull request once CI
+    (`.github/workflows/ci.yml`: tests, the ruff error gate, pip-audit) passes. Commit under your own agent name
+    and say which agent you are; never commit a placeholder.
+18. Files written into run, evidence or output folders go through `aces.safeio` (no link following, no silent
+    overwrite). Subprocesses go through `aces.proc` (argument lists, minimal environment, whole-tree timeouts).
+    Anything that trusts a run folder loads it with `evidence.load_verified_run`.

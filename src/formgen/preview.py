@@ -23,17 +23,23 @@ _BG = (14, 17, 22)
 _FG = (220, 227, 236)
 
 
-def save_png(path: str, g, title: str = "", width: int = 1500,
-             height: int = 520, margin: int = 34) -> str:
-    """Write a three-view PNG of the lattice graph *g*."""
+def render_png(g, title: str = "", width: int = 1500, height: int = 520, margin: int = 34) -> bytes:
+    """A three-view PNG of the lattice graph *g*, as bytes."""
+    import io
+
     from PIL import Image, ImageDraw
 
     img = Image.new("RGB", (width, height), _BG)
     d = ImageDraw.Draw(img)
+
+    def png() -> bytes:
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        return buf.getvalue()
+
     if len(g.nodes) == 0 or not g.struts:
         d.text((margin, margin), "empty lattice", fill=_FG)
-        img.save(path)
-        return path
+        return png()
 
     nodes = np.asarray(g.nodes, dtype=float)
     cell_w = width // 3
@@ -70,5 +76,13 @@ def save_png(path: str, g, title: str = "", width: int = 1500,
         # top-left of the sheet, clear of the per-view labels along the bottom
         d.rectangle([0, 0, width, 8], fill=_BG)
         d.text((margin, height - 38), title, fill=_FG)
-    img.save(path)
+    return png()
+
+
+def save_png(path: str, g, title: str = "", width: int = 1500,
+             height: int = 520, margin: int = 34) -> str:
+    """Write a three-view PNG of the lattice graph *g* (replacing an earlier file, never through a link)."""
+    from aces import safeio
+
+    safeio.write_bytes(path, render_png(g, title, width, height, margin), overwrite=True)
     return path

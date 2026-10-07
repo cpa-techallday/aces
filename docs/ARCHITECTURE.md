@@ -76,9 +76,22 @@ chambers or motor cooling jackets, is one new package under `aces/domains/` plus
    The measurements are tabulated in `domains/hx/data/tpms_manufacturability.json` by
    `scripts/build_tpms_table.py`, and a test checks the table against a live measurement.
 3. **Thermal-hydraulics.** Fluid properties come from CoolProp, iterated to the mean stream temperatures.
-   Nusselt and friction use straight-duct baselines. The laminar default is uniform wall temperature (3.66),
-   the conservative choice. Overall UA is a series resistance, and the counterflow e-NTU gives duty and
-   outlet temperatures. Pressure drop is Darcy over the flow path.
+   Nusselt and friction use straight-duct baselines. The laminar default is uniform wall temperature (D11),
+   the conservative choice.
+   - **Thermal entry.** Laminar heat transfer uses the mean Nusselt number over the core length, from the
+     thermal entry length x* = L / (Dh·Re·Pr) (Graetz number Gz = 1/x*). Uniform wall temperature uses Hausen
+     (1943): Nu = 3.66 + 0.0668·Gz / (1 + 0.04·Gz^(2/3)). Uniform heat flux uses Shah (1975):
+     Nu = 1.953·x*^(−1/3) up to x* = 0.03, and 4.364 + 0.0722/x* above. Both are circular-tube correlations for
+     a developed velocity profile, valid for Re < 2300 at any x*, and tend to 3.66 and 4.36 for a long core. Each
+     result reports x*, Gz, the fully developed Nu and the correlation used, and warns when x* < 0.05.
+   - **Calibration.** The Nusselt factor is fitted to periodic, thermally developed CFD against the fully
+     developed baseline. It multiplies the developing baseline above.
+   - Overall UA is a series resistance, and the counterflow e-NTU gives duty and outlet temperatures. Pressure
+     drop is Darcy over the flow path, fully developed.
+   - **Walls.** `wall_min_m` and `wall_mean_m` are the thinnest and the area-weighted mean wall, both measured
+     along the mid-surface normal. `wall_conduction_m` (solid volume ÷ mid-surface area) is what the wall
+     conduction term uses. It is a different quantity: on saddle-shaped TPMS walls it is smaller than the
+     normal thickness.
 4. **Constraints.** The model checks:
    - duty;
    - both pressure drops;
@@ -92,8 +105,16 @@ chambers or motor cooling jackets, is one new package under `aces/domains/` plus
 6. **Calibration keys** for each TPMS kind are `hx.<kind>.nusselt`, `hx.<kind>.friction` and
    `hx.<kind>.tortuosity`.
 
-What it does not model, stated on every result: headers and manifolds, maldistribution, entrance effects, wall
-roughness, axial conduction, and compressibility at large pressure drop.
+Every result states these caveats (`ALWAYS_WARN` in `domains/hx/model.py`):
+
+- headers, manifolds and flow maldistribution are not modelled;
+- the correlations are straight-duct ones applied to a TPMS core;
+- laminar heat transfer uses circular-tube thermal-entry correlations, and the calibration factor (from fully
+  developed CFD) multiplies them;
+- the hydrodynamic entrance (pressure drop is fully developed), wall roughness and axial wall conduction are not
+  modelled.
+
+Compressibility is flagged on a result when a pressure drop exceeds 10 % of the inlet pressure.
 
 ## Structural check for lattices
 
@@ -133,9 +154,12 @@ is 22 % stiffer in torsion, for 5 kg more lattice.
    geometry of shortlisted cores for other solvers.
 2. simlab runs one case per GPU. Each case writes a measurement row: dpdx, mass flux and H1 heat transfer
    coefficient, on the design model's own definitions.
-3. `aces cfd-collect` gathers the finished, citable rows. `aces calibrate` turns them into factors with `sources`
-   (simlab run ids) and `valid_range` (Re, t/a, and Pr for Nusselt). It averages repeats of one operating
-   condition first and needs 3 distinct conditions. It leaves out points where the baseline is not valid (the
+3. `aces cfd-collect` gathers the finished rows whose `evidence.json` names their experiment and agrees with
+   them, and records its sha256 in each row. `aces calibrate` turns them into factors with `sources` (simlab run
+   ids), `valid_range` (Re, t/a, and Pr for Nusselt) and `fitted_on`; the registry refuses a factor without all
+   three. It takes the thermal boundary from the rows (CFD rows are H1, `uniform_heat_flux`) and refuses mixed
+   or contradicted boundaries. It averages repeats of one operating condition first and needs 3 distinct
+   conditions. It leaves out points where the baseline is not valid (the
    2300–3000 transition). When the sample standard deviation of log(ratio) exceeds 0.15 it tries a power law in
    Re, then an inertial-onset form, and refuses if neither fits.
 4. The next design run is calibrated. Factors used outside their fitted range raise warnings.

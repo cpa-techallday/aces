@@ -8,3 +8,4 @@ shapely==2.1.2
 scipy==1.17.1
 numpy==2.4.6
 pillow==12.3.0
+PyNiteFEA==3.2.0        # structural check (aces.structures); version on DARKNESS 2026-10-07

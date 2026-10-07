@@ -1,15 +1,18 @@
 """Calibration CFD (periodic lattice Boltzmann) against exact solutions.  All inputs are test inputs."""
+import hashlib
 import json
 import math
 
 import numpy as np
 import pytest
 import yaml
+from CoolProp.CoolProp import PropsSI
 
 from aces.cfd import lbm, periodic
 from aces.cfd.simlab_adapter import Adapter
 from aces.cli import main
 from aces.domains.hx import calibrate as hxcal
+from aces.domains.hx import tpms
 
 
 def _channel(h, nx=2):
@@ -88,7 +91,8 @@ def test_gyroid_sample_is_a_valid_measurement_for_calibrate():
     r = periodic.run(s)
     assert r.problems == [] and r.measurement is not None, r.problems
     m = hxcal.Measurement.model_validate(r.measurement)
-    pt = hxcal.reduce(m, "uniform_heat_flux")
+    assert m.boundary == "uniform_heat_flux"  # the solver's H1 condition travels with the row (audit H3)
+    pt = hxcal.reduce(m, m.boundary)
     assert pt.re == pytest.approx(5.0, rel=0.03)  # the solver hit the target on ACES's own definition
     assert 1.5 < pt.f_ratio < 8.0  # tortuous core: well above the straight duct, test-resolution sanity only
     assert r.diagnostics["mach"] < periodic.MACH_LIMIT
@@ -133,25 +137,81 @@ def test_cfd_campaign_writes_a_simlab_sweep(tmp_path):
     assert main(["cfd-campaign", "--id", "aces-cal-t", "--out", str(out)]) == 2  # never overwrites
 
 
+# Test inputs. The per-run evidence.json layout (the experiment spec under "spec", with ACES's own "id", "solver",
+# "params" and "sweep" fields) is what cfd-collect checks; the numbers are not results.
+GOOD_ROW = {"source": "simlab:exp:c000", "tpms": "gyroid", "cell_m": 0.004, "wall_ratio": 0.1, "fluid": "Air",
+            "T_K": 320.0, "p_Pa": 2e5, "mass_flux_kg_m2s": 1.0, "dpdx_Pa_m": 50.0, "h_W_m2K": 120.0,
+            "boundary": "uniform_heat_flux"}
+
+
+def _evidence(exp_id, **spec_over):
+    spec = {"id": exp_id, "solver": "aces-tpms-periodic",
+            "params": {"cell_m": 0.004, "fluid": "Air", "T_K": 320.0, "p_Pa": 2e5, "n": 96, "thermal": True},
+            "sweep": {"tpms": ["gyroid", "diamond"], "wall_ratio": [0.1, 0.12], "re": [10.0, 100.0]}}
+    spec.update(spec_over)
+    return {"spec": spec, "image_digest": "sha256:test-input"}
+
+
+def _case(exp, name, *, status="FINISHED", row=GOOD_ROW, evidence="default"):
+    d = exp / name
+    d.mkdir(parents=True)
+    (d / "status.json").write_text(json.dumps({"status": status}))
+    (d / "results.json").write_text(json.dumps({"problems": "test: not converged"}))
+    if row is not None:
+        (d / "measurement.json").write_text(json.dumps(row))
+    if evidence == "default":
+        evidence = json.dumps(_evidence(exp.name))
+    if evidence is not None:
+        (d / "evidence.json").write_text(evidence)
+    return d
+
+
 def test_cfd_collect_keeps_only_finished_citable_measurements(tmp_path):
     exp = tmp_path / "exp"
-    good = {"source": "simlab:exp:c000", "tpms": "gyroid", "cell_m": 0.004, "wall_ratio": 0.1, "fluid": "Air",
-            "T_K": 320.0, "p_Pa": 2e5, "mass_flux_kg_m2s": 1.0, "dpdx_Pa_m": 50.0, "h_W_m2K": 120.0}
-    for name, status, meas, ev in (("c000", "FINISHED", good, True), ("c001", "FAILED", good, True),
-                                   ("c002", "FINISHED", None, True), ("c003", "FINISHED", good, False)):
-        d = exp / name
-        d.mkdir(parents=True)
-        (d / "status.json").write_text(json.dumps({"status": status}))
-        (d / "results.json").write_text(json.dumps({"problems": "test: not converged"}))
-        if meas:
-            (d / "measurement.json").write_text(json.dumps(meas))
-        if ev:
-            (d / "evidence.json").write_text("{}")
+    _case(exp, "c000")
+    _case(exp, "c001", status="FAILED")
+    _case(exp, "c002", row=None)
+    _case(exp, "c003", evidence=None)
     out = tmp_path / "m.json"
     assert main(["cfd-collect", str(exp), "--out", str(out)]) == 0
     rows = json.loads(out.read_text())
     assert [r["source"] for r in rows] == ["simlab:exp:c000"]
     assert hxcal.load(out)[0].h_W_m2K == 120.0  # readable by `aces calibrate`
+
+
+@pytest.mark.parametrize("evidence, reason", [
+    ("{}", "experiment"),  # exists, but says nothing about the run
+    ("[1, 2]", "JSON object"),
+    ("not json", "JSON"),
+    (json.dumps(_evidence("another-exp")), "another-exp"),
+    (json.dumps(_evidence("exp", solver="pyfr")), "solver"),
+    (json.dumps(_evidence("exp", params={"cell_m": 0.005, "fluid": "Air", "T_K": 320.0, "p_Pa": 2e5})), "cell_m"),
+    (json.dumps(_evidence("exp", sweep={"tpms": ["diamond"], "wall_ratio": [0.1]})), "tpms"),
+    (json.dumps({**_evidence("exp"), "case_id": "c007"}), "c007"),
+])
+def test_cfd_collect_checks_what_the_evidence_says(tmp_path, capsys, evidence, reason):
+    """L3: an evidence.json that merely exists, or belongs to another run, does not make a case citable."""
+    exp = tmp_path / "exp"
+    _case(exp, "c000", evidence=evidence)
+    out = tmp_path / "m.json"
+    assert main(["cfd-collect", str(exp), "--out", str(out)]) == 1
+    assert json.loads(out.read_text()) == []
+    printed = capsys.readouterr().out
+    assert "SKIPPED c000" in printed and reason in printed
+
+
+def test_cfd_collect_records_the_evidence_hash_and_the_h1_boundary(tmp_path):
+    exp = tmp_path / "exp"
+    old_row = {k: v for k, v in GOOD_ROW.items() if k != "boundary"}  # a row written before rows carried it
+    d = _case(exp, "c000", row=old_row)
+    _case(exp, "c001", row=dict(GOOD_ROW, boundary="uniform_wall_temperature"))  # this solver computes H1 only
+    out = tmp_path / "m.json"
+    assert main(["cfd-collect", str(exp), "--out", str(out)]) == 0
+    rows = json.loads(out.read_text())
+    assert [r["source"] for r in rows] == ["simlab:exp:c000"]
+    assert rows[0]["evidence_sha256"] == hashlib.sha256((d / "evidence.json").read_bytes()).hexdigest()
+    assert rows[0]["boundary"] == "uniform_heat_flux"
+    assert hxcal.load(out)[0].evidence_sha256 == rows[0]["evidence_sha256"]
 
 
 def test_a_settled_flux_with_a_moving_field_is_not_steady():
@@ -202,14 +262,70 @@ def test_simlab_adapter_never_falls_back_to_the_cpu_silently(tmp_path, monkeypat
 
 def test_cfd_collect_takes_provenance_from_the_run_folder(tmp_path):
     exp = tmp_path / "aces-cal-x"
-    row = {"source": "simlab:other:c999", "tpms": "gyroid", "cell_m": 0.004, "wall_ratio": 0.1, "fluid": "Air",
-           "T_K": 320.0, "p_Pa": 2e5, "mass_flux_kg_m2s": 1.0, "dpdx_Pa_m": 50.0, "h_W_m2K": None}
-    for name, r in (("c000", row), ("c001", dict(row, wall_ratio=1.5))):  # c001 is not a valid row
-        d = exp / name
-        d.mkdir(parents=True)
-        (d / "status.json").write_text(json.dumps({"status": "FINISHED"}))
-        (d / "evidence.json").write_text("{}")
-        (d / "measurement.json").write_text(json.dumps(r))
+    row = dict(GOOD_ROW, source="simlab:other:c999", h_W_m2K=None)
+    _case(exp, "c000", row=row)
+    _case(exp, "c001", row=dict(row, wall_ratio=1.5),  # not a valid row, though its evidence matches
+          evidence=json.dumps(_evidence(exp.name, sweep={"tpms": ["gyroid"], "wall_ratio": [1.5]})))
     out = tmp_path / "m.json"
     assert main(["cfd-collect", str(exp), "--out", str(out)]) == 0
     assert [r["source"] for r in json.loads(out.read_text())] == ["simlab:aces-cal-x:c000"]
+
+
+def _channel_geometry(n, gap):
+    """A plane channel in place of the TPMS (test hook): fluid layer ``gap`` voxels high in an n^3 periodic cell."""
+    g = gap / n
+
+    def geometry(s):
+        fl = np.zeros((n, n, n), bool)
+        fl[:, :, (n - gap) // 2:(n + gap) // 2] = True
+        return tpms.UnitCell("plane_channel", s.wall_ratio, n, 1.0 - g, (g, 0.0), (2.0, 0.0)), fl
+
+    return geometry
+
+
+def test_plane_channel_through_periodic_run_is_exact(monkeypatch):
+    """L6: periodic.run's unit path (level-set porosity, Dh and wall area -> Re, dpdx and h in SI units) on a plane
+    channel, whose exact fully developed values are f Re = 96 and Nu_H1 = 8.235 (Shah & London 1978).
+
+    The channel replaces the TPMS through the private ``_geometry`` hook: a 16-voxel periodic cell with a fluid
+    layer 10 voxels high. Per unit cell (a = 1): fluid fraction 10/16, two walls of area 1, so area density 2 and
+    Dh/a = 4 x (10/16) / 2 = 1.25 = twice the gap.
+    """
+    n, gap = 16, 10
+    g = gap / n
+    monkeypatch.setattr(periodic, "_geometry", _channel_geometry(n, gap))
+    a, T, p = 0.004, 320.0, 2e5
+    r = periodic.run(periodic.Sample("plane_channel", 1.0 - g, a, "Air", T, p, re_target=2.0, n=n,
+                                     source="test:plane-channel"))
+    assert r.problems == [] and r.measurement is not None, r.problems
+    m = r.measurement
+    # Independent reduction of the SI row: CoolProp properties, Dh = 2 x gap, interstitial u = G / (rho phi)
+    rho, mu, k = (PropsSI(q, "T", T, "P", p, "Air") for q in ("D", "V", "L"))
+    dh = 2.0 * g * a
+    u = m["mass_flux_kg_m2s"] / (rho * g)
+    re = rho * u * dh / mu
+    f = m["dpdx_Pa_m"] * dh / (0.5 * rho * u * u)
+    assert re == pytest.approx(2.0, rel=0.03)
+    # half-way bounce-back: the node-sum flux of the parabola gives 96 / (1 + 1/(2 gap^2)) = 95.522 exactly
+    assert f * re == pytest.approx(96.0 / (1.0 + 1.0 / (2 * gap * gap)), rel=1e-3)
+    assert f * re == pytest.approx(96.0, rel=0.006)
+    assert m["h_W_m2K"] * dh / k == pytest.approx(8.235, rel=0.01)
+    assert m["boundary"] == "uniform_heat_flux"
+
+
+def test_simlab_adapter_writes_the_boundary_with_the_row(tmp_path, monkeypatch):
+    monkeypatch.setattr(periodic, "_geometry", _channel_geometry(12, 8))  # cheap geometry; the row is what matters
+
+    class Spec:
+        id = "test-adapter"
+
+        class resources:
+            precision = "float64"
+
+    case = {"tpms": "gyroid", "wall_ratio": 1.0 / 3.0, "cell_m": 0.004, "fluid": "Air", "T_K": 320.0, "p_Pa": 2e5,
+            "re": 2.0, "n": 12, "thermal": False, "cpu": True, "case_id": "c000"}
+    out = Adapter().run(case, Spec, str(tmp_path))
+    assert out["converged"] == 1 and out["boundary"] == "uniform_heat_flux"
+    row = json.loads((tmp_path / "measurement.json").read_text())
+    assert row["boundary"] == "uniform_heat_flux" and row["source"] == "simlab:test-adapter:c000"
+    hxcal.Measurement.model_validate(row)

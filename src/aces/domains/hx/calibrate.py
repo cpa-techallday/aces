@@ -11,7 +11,7 @@ so a fitted factor is the ratio the model actually needs:
   Nu_meas    h * Dh / k
 
   hx.<kind>.friction  = f_meas / f_baseline(Re)       (includes tortuosity, see below)
-  hx.<kind>.nusselt   = Nu_meas / Nu_baseline(Re, Pr)
+  hx.<kind>.nusselt   = Nu_meas / Nu_baseline(Re, Pr)   (FULLY DEVELOPED baseline, see below)
   hx.<kind>.tortuosity = 1.0, with the same sources: because dpdx is per metre of core,
                          the measured friction already contains the path-length effect.
 
@@ -32,9 +32,24 @@ Rules:
     the log-ratio) a constant cannot represent them and the fit is refused, rather
     than writing a misleading factor.
 
+The Nusselt baseline is the fully developed one (3.66 or 4.36 in laminar flow), never the
+thermal-entry mean the design model uses: periodic CFD samples are thermally developed by
+construction, so the factor is "periodic TPMS / fully developed duct".  The model then
+multiplies its developing-flow baseline by that factor.
+
+Thermal boundary.  A Nusselt ratio means nothing without the boundary condition h was
+measured under, so every row with h carries ``boundary`` (``aces-tpms-periodic`` rows are H1:
+``uniform_heat_flux``).  ``fit`` takes the boundary from the rows.  It refuses rows with mixed
+boundaries and rows that disagree with an explicit ``boundary``; rows with h but no boundary
+can be fitted only when ``boundary`` is given, otherwise the Nusselt factors are refused and
+friction is still fitted.
+
 Measurement file: CSV or JSON list with these columns
-  source, tpms, cell_m, wall_ratio, fluid, T_K, p_Pa, mass_flux_kg_m2s, dpdx_Pa_m, h_W_m2K
-(dpdx_Pa_m or h_W_m2K may be blank when a sample measured only one of them).
+  source, tpms, cell_m, wall_ratio, fluid, T_K, p_Pa, mass_flux_kg_m2s, dpdx_Pa_m, h_W_m2K,
+  boundary, evidence_sha256
+(dpdx_Pa_m or h_W_m2K may be blank when a sample measured only one of them; boundary is
+uniform_heat_flux or uniform_wall_temperature; evidence_sha256, written by ``aces cfd-collect``,
+is the sha256 of the simlab run's evidence.json).
 """
 from __future__ import annotations
 
@@ -44,7 +59,7 @@ import json
 import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, field_validator
@@ -67,6 +82,10 @@ class Measurement(BaseModel):
     mass_flux_kg_m2s: PositiveFloat
     dpdx_Pa_m: PositiveFloat | None = None
     h_W_m2K: PositiveFloat | None = None
+    boundary: Literal["uniform_heat_flux", "uniform_wall_temperature"] | None = Field(
+        None, description="thermal boundary h was measured under (H1 = uniform_heat_flux)")
+    evidence_sha256: str | None = Field(None, pattern=r"^[0-9a-f]{64}$",
+                                        description="sha256 of the simlab run's evidence.json")
 
     @field_validator("tpms")
     @classmethod
@@ -131,7 +150,7 @@ def reduce(m: Measurement, boundary: str, side: int = 0, resolution: int = 64) -
         pt.f_ratio, pt.f_regime, pt.f_valid = f_meas / c.value, c.regime, c.valid
     if m.h_W_m2K is not None:
         nu_meas = m.h_W_m2K * dh / st.k
-        c = corr.nusselt(re, st.pr, boundary)
+        c = corr.nusselt(re, st.pr, boundary)  # fully developed on purpose: no length, see the module docstring
         pt.nu_ratio, pt.nu_regime, pt.nu_valid = nu_meas / c.value, c.regime, c.valid
     return pt
 
@@ -205,19 +224,48 @@ def _fit_onset(re: list[float], ratios: list[float]) -> tuple[float, float, floa
     return math.exp(la), float(n), math.exp(lrc), sd
 
 
+def thermal_boundary(measurements: list[Measurement], boundary: str | None = None) -> tuple[str | None, str | None]:
+    """The boundary the Nusselt rows were measured under: (boundary, None), or (None, why Nu can't be fitted).
+
+    Raises ValueError for rows with mixed boundaries, or rows that disagree with an explicit ``boundary``.
+    """
+    if boundary is not None and boundary not in corr.NU_LAMINAR_FD:
+        raise ValueError(f"unknown boundary {boundary!r}; choose from {sorted(corr.NU_LAMINAR_FD)}")
+    heat = [m for m in measurements if m.h_W_m2K is not None]
+    declared = sorted({m.boundary for m in heat if m.boundary})
+    if len(declared) > 1:
+        raise ValueError(f"measurement rows have mixed thermal boundaries ({', '.join(declared)}); "
+                         f"calibrate each boundary from its own file")
+    if declared and boundary is not None and declared[0] != boundary:
+        raise ValueError(f"measurement rows were measured under {declared[0]} but --boundary says {boundary}; "
+                         f"they disagree, so the Nusselt factors would be filed under the wrong boundary")
+    unlabelled = [m.source for m in heat if not m.boundary]
+    if boundary is not None:
+        return boundary, None
+    if unlabelled:
+        return None, (f"{len(unlabelled)} row(s) with h carry no boundary (e.g. {unlabelled[0]}); give --boundary "
+                      f"for the condition they were measured under")
+    return (declared[0] if declared else None), None
+
+
 def fit(
     measurements: list[Measurement],
     *,
-    boundary: str = "uniform_wall_temperature",
+    boundary: str | None = None,
     min_points: int = 3,
     max_scatter: float = 0.15,
     resolution: int = 64,
 ) -> tuple[list[Factor], list[dict[str, Any]], list[str]]:
-    """Return (factors, per-kind summary rows, refusals)."""
+    """Return (factors, per-kind summary rows, refusals).
+
+    ``boundary`` is needed only for rows with h that carry no ``boundary`` of their own (see the module docstring).
+    """
     if min_points < 2:
         raise ValueError("min_points must be at least 2: one condition cannot show whether a constant factor holds")
+    bc, no_bc = thermal_boundary(measurements, boundary)
     today = _dt.date.today().isoformat()
-    points = [reduce(m, boundary, resolution=resolution) for m in measurements]
+    # rows without h never use the boundary; the placeholder keeps reduce's signature
+    points = [reduce(m, bc or "uniform_wall_temperature", resolution=resolution) for m in measurements]
     factors, summary, refused = [], [], []
     for kind in sorted({p.m.tpms for p in points}):
         pk = [p for p in points if p.m.tpms == kind]
@@ -226,12 +274,19 @@ def fit(
             have = [p for p in pk if getattr(p, attr) is not None]
             if not have:
                 continue
+            if key == "nusselt" and bc is None:
+                refused.append(f"hx.{kind}.nusselt: {no_bc}")
+                summary.append({"key": f"hx.{kind}.nusselt", "points": 0, "conditions": 0, "excluded": [],
+                                "status": "refused: no thermal boundary"})
+                continue
             use = [p for p in have if getattr(p, valid_attr)]
             excluded = [p for p in have if not getattr(p, valid_attr)]
             conditions = len({p.condition for p in use})
             row = {"key": f"hx.{kind}.{key}", "points": len(use), "conditions": conditions,
                    "excluded": [{"source": p.m.source, "reynolds": p.re, "regime": getattr(p, regime_attr)}
                                 for p in excluded]}
+            if key == "nusselt":
+                row["boundary"] = bc
             if conditions < min_points:
                 refused.append(f"hx.{kind}.{key}: {conditions} distinct condition(s) ({len(use)} usable row(s)), "
                                f"need at least {min_points}")
@@ -278,7 +333,7 @@ def fit(
                    "onset": f"inertial onset in Re (x (1 + (Re/{re_ref:.3g})^{exponent:.2f}))"}[form]
             basis = (f"{qty} baseline x factor; {how} of {len(use)} ratio(s) over {conditions} condition(s); "
                      f"{'/'.join(regimes)} baseline; level-set resolution {resolution}; "
-                     + ("Nu baseline " + boundary if key == "nusselt" else "dpdx per metre of core length"))
+                     + (f"Nu baseline {bc} (fully developed)" if key == "nusselt" else "dpdx per metre of core length"))
             factors.append(Factor(f"hx.{kind}.{key}", value, sources, vr, today, basis, exponent, re_ref,
                                   "" if form == "constant" else form))
             summary.append({**row, "status": "fitted"})

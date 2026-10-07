@@ -1,13 +1,15 @@
-# Example part profile for `aces cost`: a small LPBF aluminium HX core,
-# the kind of part an hx.two_fluid pareto entry describes.
+# Example part profile for `aces cost`: a small LPBF HX core, the kind of part an hx.two_fluid pareto entry
+# describes. Mass is not an input: each material's mass is volume_m3 times that material's density from the
+# rates file. Run it with a rates file whose every value has a source (quote, invoice or datasheet):
+#   aces cost examples/cost_hx_core.yaml --rates RATES.yaml
+# tests/cost_rates_test_input.yaml shows the shape; it is test input, never a basis for a quote.
 part:
   name: hx-core-demo
   envelope_m: [0.15, 0.10, 0.08]
   volume_m3: 0.00045        # solid volume only
-  mass_kg: 1.2
   min_feature_m: 0.0008
   max_temp_C: 180
   pressure_bar: 15
   tolerance_mm: 0.2
   complex_internal: true
-  application: industrial   # industrial | aerospace | defence (QA allowance)
+  application: industrial   # picks the QA factor from the rates file

@@ -15,9 +15,9 @@ from __future__ import annotations
 
 import csv
 import datetime as _dt
+import io
 import os
 
-import numpy as np
 
 
 def waypoints(g, steps, approach: float = 20.0, retract: float = 25.0):
@@ -34,18 +34,52 @@ def waypoints(g, steps, approach: float = 20.0, retract: float = 25.0):
         yield {"strut": s, "phase": "detach",   "x": b[0], "y": b[1], "z": b[2] + retract,  "extrude": 0}
 
 
-def save_csv(path: str, g, steps, **kw) -> int:
+def waypoints_csv(g, steps, **kw) -> tuple[str, int]:
+    """The waypoint table as CSV text (CRLF rows, as the csv module writes them) and its row count."""
     rows = list(waypoints(g, steps, **kw))
-    with open(path, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["strut", "phase", "x", "y", "z", "extrude"])
-        w.writeheader()
-        for r in rows:
-            w.writerow({k: (round(v, 3) if isinstance(v, float) else v) for k, v in r.items()})
-    return len(rows)
+    f = io.StringIO(newline="")
+    w = csv.DictWriter(f, fieldnames=["strut", "phase", "x", "y", "z", "extrude"])
+    w.writeheader()
+    for r in rows:
+        w.writerow({k: (round(v, 3) if isinstance(v, float) else v) for k, v in r.items()})
+    return f.getvalue(), len(rows)
 
 
-def save_jbi(
-    basepath: str,
+def save_csv(path: str, g, steps, **kw) -> int:
+    """Write the waypoint CSV (replacing an earlier file, never writing through a link)."""
+    from aces import safeio
+
+    text, n = waypoints_csv(g, steps, **kw)
+    safeio.write_text(path, text, overwrite=True)
+    return n
+
+
+def save_jbi(basepath: str, g, steps, **kw) -> list[str]:
+    """Write one or more .JBI files as ``<basepath>_NNN.JBI``; returns the file paths.
+
+    Jobs from a previous run with the same base name are removed first: numbering restarts at 001 every time,
+    so a coarser re-run would leave higher-numbered files behind from the old lattice, and an operator loading
+    001..NNN would feed the controller two different structures.  Each job is written through
+    :mod:`aces.safeio` (never through a link).  Keyword arguments are those of :func:`jbi_jobs`.
+    """
+    import glob as _glob
+
+    from aces import safeio
+
+    for f in sorted(_glob.glob(basepath + "_[0-9][0-9][0-9].JBI")):
+        try:
+            os.remove(f)  # removes a link itself, never its target
+        except OSError:
+            pass
+    paths = []
+    for ci, text in jbi_jobs(g, steps, **kw):
+        path = f"{basepath}_{ci:03d}.JBI"
+        safeio.write_text(path, text, overwrite=True)
+        paths.append(path)
+    return paths
+
+
+def jbi_jobs(
     g,
     steps,
     job_name: str = "FORMGEN",
@@ -58,8 +92,8 @@ def save_jbi(
     approach: float = 20.0,
     retract: float = 25.0,
     rx: float = 180.0, ry: float = 0.0, rz: float = 0.0,
-) -> list[str]:
-    """Write one or more .JBI files; returns the file paths.
+) -> list[tuple[int, str]]:
+    """The Yaskawa INFORM jobs as ``(job number, text)``; the text has CRLF line ends.
 
     Positions are emitted as Cartesian C-variables in the specified user frame
     with a fixed tool orientation (nozzle straight down by default). V= speeds
@@ -68,21 +102,9 @@ def save_jbi(
     """
     SPEED_SCALE = 10.0  # INFORM V= is in 0.1 mm/s
 
-    # Clear jobs from a previous run first. Job numbering restarts at 001 every
-    # time, so a coarser re-run leaves higher-numbered files behind from the old
-    # lattice -- and because the sequence looks continuous, an operator loading
-    # 001..NNN would feed the controller two different structures.
-    import glob as _glob
-    stale = sorted(_glob.glob(basepath + "_[0-9][0-9][0-9].JBI"))
-    for f in stale:
-        try:
-            os.remove(f)
-        except OSError:
-            pass
-
     good = [s for s in steps if "unreachable" not in s]
     chunks = [good[i:i + struts_per_job] for i in range(0, len(good), struts_per_job)]
-    paths = []
+    jobs = []
     date = _dt.date.today().strftime("%Y/%m/%d")
 
     for ci, chunk in enumerate(chunks, start=1):
@@ -135,8 +157,5 @@ def save_jbi(
             *inst,
             "END",
         ]
-        path = f"{basepath}_{ci:03d}.JBI"
-        with open(path, "w", newline="\r\n") as f:
-            f.write("\n".join(lines) + "\n")
-        paths.append(path)
-    return paths
+        jobs.append((ci, "\r\n".join(lines) + "\r\n"))
+    return jobs

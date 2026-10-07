@@ -8,7 +8,15 @@ docker run --rm --entrypoint python3 \
   -v /opt/simlab-runtime/simlab:/s -v "$B":/b:ro \
   simlab-queue:0.3 /b/register_solver.py /s/solvers.json "$IMG_ID"
 docker run --rm --entrypoint sh -v /opt/simlab-runtime/cases:/c -v "$B":/b:ro simlab-queue:0.3 -c \
-  'mkdir -p /c/aces && cp /b/aces-cfd-validation.yaml /b/aces-cfd-resolution.yaml /b/aces-cal-air-01.yaml /c/aces/ && ls -la /c/aces'
+  'set -e; mkdir -p /c/aces; stamp=$(date +%Y%m%d-%H%M%S)
+   for f in aces-cfd-validation.yaml aces-cfd-resolution.yaml aces-cal-air-01.yaml; do
+     if [ -e "/c/aces/$f" ]; then
+       if cmp -s "/b/$f" "/c/aces/$f"; then continue; fi
+       cp -p "/c/aces/$f" "/c/aces/$f.bak-$stamp"   # never overwrite a case file without a backup (audit L4)
+     fi
+     cp "/b/$f" "/c/aces/$f"
+   done
+   ls -la /c/aces'
 echo "--- registry as simlab sees it"
 docker exec simlab-queue-1 python -m simlab solvers | grep -E 'aces|gendesign-beam' || true
 for f in aces-cfd-validation aces-cfd-resolution aces-cal-air-01; do

@@ -15,5 +15,8 @@ from .remesh import remesh_to_edge_length
 from .lattice import build_lattice
 from .graph import LatticeGraph
 from .sequence import order_struts
-from . import export, fusion, scale, solids, viewer  # noqa: F401
-from .pipeline import Options, run  # noqa: F401
+from . import export, fusion, scale, solids, viewer
+from .pipeline import Options, run
+
+__all__ = ["LatticeGraph", "Options", "build_lattice", "export", "fusion", "load_mesh", "order_struts",
+           "remesh_to_edge_length", "run", "scale", "solids", "viewer"]

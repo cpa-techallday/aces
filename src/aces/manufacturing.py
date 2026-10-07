@@ -71,6 +71,10 @@ PROCESSES: dict[str, Process] = {
                 "Needs machinable geometry families (e.g. plate-fin, milled channels) and tool-access checks."),
         Process("casting", "Casting (sand or investment, printed patterns)", "formative", "planned", (), (), (),
                 "Needs draft, wall-ratio and gating checks."),
+        Process("pcb_antenna", "RF PCB and planar antenna fabrication (etched laminate, fab house)", "subtractive",
+                "planned", ("radar.phased_array",), (), (),
+                "Needs a layout/stackup generator and fab-house checks (track/gap, via, laminate, registration) "
+                "before a radar design can be built from ACES."),
     )
 }
 

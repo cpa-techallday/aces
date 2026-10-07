@@ -9,7 +9,7 @@ periodic unit cell of a TPMS core, solved with an FP64 lattice-Boltzmann method 
 aces cfd-campaign --id aces-cal-air-01 --out aces-cal-air-01.yaml     # simlab experiment (sweep)
    -> simlab validate / sim_submit on the rig (one case per GPU)
 aces cfd-collect out/exp/aces-cal-air-01 --out cal-air-01.json         # measurement rows
-aces calibrate cal-air-01.json --registry calibration.json --boundary uniform_heat_flux \
+aces calibrate cal-air-01.json --registry calibration.json \
      --project ... --owner ... --rd-activity ...                        # factors + evidence record
 ```
 
@@ -26,9 +26,8 @@ velocity, and hydraulic diameter measured on the level set.
 | `h_W_m2K` | heat taken up per cell ÷ (level-set wall area × (T_wall − T_bulk)) |
 
 The heat transfer is the thermally developed **H1** condition: the wall temperature is uniform around the
-periphery and rises linearly along the flow. Fit Nusselt factors from these rows with
-`--boundary uniform_heat_flux`. With conductive metal walls this is the closest single-stream idealisation.
-Conjugate heat transfer through the wall is not modelled.
+periphery and rises linearly along the flow. With conductive metal walls this is the closest single-stream
+idealisation. Conjugate heat transfer through the wall is not modelled.
 
 A case is not a measurement, and `cfd-collect` leaves it out, when any of these holds:
 
@@ -40,6 +39,34 @@ A case is not a measurement, and `cfd-collect` leaves it out, when any of these 
 
 If the thermal boundary layers are under-resolved (the grid Péclet limit), h is left out but the pressure drop is
 kept.
+
+### The thermal boundary travels with the rows
+
+- Every row says `boundary: uniform_heat_flux`. The adapter writes it, and `cfd-collect` adds it to older rows
+  from this solver.
+- `aces calibrate` takes the boundary from the rows, so no `--boundary` flag is needed. It divides the measured
+  Nu by the fully developed H1 baseline (4.36) and records the boundary in the factor's basis.
+- It refuses:
+  - rows with mixed boundaries;
+  - rows that disagree with an explicit `--boundary`;
+  - Nusselt fitting from rows with h but no boundary, unless `--boundary` says which one (friction is still
+    fitted).
+- **The design default is unchanged.** Specs default to uniform wall temperature (D11, Nu 3.66). A factor fitted
+  to H1 rows and used on a uniform-wall-temperature spec multiplies the uniform-wall-temperature baseline. For a
+  long core that is factor × 3.66, 16 % below the H1 value the CFD measured. The model warns that the factor
+  was fitted against a different boundary.
+- **Decision for Aaron** (next free decision number): keep uniform wall temperature as the design default (D11),
+  or move to H1 for conductive metal cores. Until then, set `thermal_boundary: uniform_heat_flux` in a spec only
+  when that is the condition intended.
+
+### Thermally developed samples, developing designs
+
+A sample is periodic, so it is thermally developed by construction. The design model's laminar baseline is the
+mean over the core length from circular-tube thermal-entry correlations (Hausen; Shah), which is higher than the
+fully developed value when x* = L/(Dh·Re·Pr) is small. Calibration therefore divides the CFD Nu by the fully
+developed baseline, and the model multiplies its developing baseline by that factor. That a TPMS core's entry
+gain follows the circular-tube correlation is an assumption that the periodic samples cannot test: every result
+says so, and a full-length CFD run or a rig test has to confirm it.
 
 ## Validation (registry record)
 
@@ -57,11 +84,14 @@ Both converge at second order. At 16 cells across, on the CPU:
 | square duct | −0.37 % | +1.06 % |
 | plane channel | −0.19 % | +0.31 % |
 
-The ACES test suite also checks three more properties:
+The ACES test suite also checks four more properties:
 
 - Poiseuille flow is exact, up to the node average: 96 / (1 + 1/2h²).
 - Permeability does not depend on viscosity, because TRT is used with Λ = 3/16.
 - An advected shear wave follows the exact Navier–Stokes solution, which checks the inertial terms.
+- A plane channel run through `periodic.run` itself, in SI units, gives f·Re = 96 (to the node average) and
+  Nu_H1 = 8.235 within 1 %. This checks the path from level-set porosity, Dh and wall area to the row's Re,
+  dpdx and h.
 
 ## Resolution: use n ≥ 96 on the rig
 
@@ -89,8 +119,10 @@ Interpolated walls (Bouzidi), using the level set's distance along each link, wo
 and allow coarser, faster grids. They are the next solver improvement.
 
 Run time on the rig is not measured yet. The time to reach a steady state scales with Dh²/ν in lattice units, so
-the high-Re cases take longest: at n = 96 and Re 300 that is several hundred thousand steps. Cases default to
-2,000,000 steps (`max_steps` in the params). A case that hits the limit is reported as not converged, not as a
+the high-Re cases take longest: at n = 96 and Re 300 that is several hundred thousand steps per flow solve.
+`max_steps` in the params (default 2,000,000) limits **each flow solve**, not the case. A case runs up to 8 flow
+solves while it iterates the force to the target Re, then one thermal solve of up to 4 × `max_steps`, so one case
+can run up to 24,000,000 steps. A solve that hits its limit is reported as not converged, not as a
 measurement. The validation run on the rig gives the first timings; put the Re 300 cases in a separate
 experiment if they hold the queue.
 
@@ -158,5 +190,15 @@ Once it is shipped and loaded on the rig, the server agent does three things:
 ```
 
 The adapter refuses `float32`. It writes `sample.json` (everything) and `measurement.json` (only for a valid
-measurement) in each run folder. `cfd-collect` keeps only cases with `status.json` FINISHED, a
-`measurement.json`, and an `evidence.json`.
+measurement) in each run folder. `cfd-collect` keeps a case only when all of these hold:
+
+- `status.json` says FINISHED, and there is a `measurement.json`;
+- `evidence.json` is a JSON object whose experiment spec (its `spec` member, or the top level) names this
+  experiment (`id` = the folder name) and the solver `aces-tpms-periodic`;
+- any `case_id` in it names this case, and every sample parameter the spec fixes (`params`) or lists (`sweep`)
+  agrees with the row;
+- the row is H1 and passes the schema `aces calibrate` applies.
+
+Each kept row records the sha256 of its `evidence.json` (`evidence_sha256`). The `spec` layout is inferred from
+the simlab hand-off ("evidence.json holds the spec") and the adapter contract; confirm it against simlab's writer
+on the first rig run. If it differs, `cfd-collect` keeps nothing and says why, rather than accepting rows.

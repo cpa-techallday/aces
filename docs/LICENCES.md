@@ -48,6 +48,8 @@ licence that allows commercial, closed-source distribution and defence use.
 | Package | Licence |
 | --- | --- |
 | pytest | MIT |
+| ruff | MIT |
+| pip-audit | Apache-2.0 |
 
 ## Reached through simlab (separate processes and containers, not linked)
 
@@ -59,6 +61,15 @@ licence that allows commercial, closed-source distribution and defence use.
 | CalculiX | GPL-2.0 | separate process only |
 | NVIDIA PhysicsNeMo, Warp | Apache-2.0 | surrogates, differentiable kernels |
 | CuPy | MIT | GPU arrays for `aces.cfd` inside the `aces-cfd` image (from simlab's gendesign base); optional, numpy otherwise |
+
+## External tools run as separate processes (added 2026-10-07, audit R8/I5)
+
+| Tool | Licence | Note |
+| --- | --- | --- |
+| Palace (AWS Labs) | Apache-2.0 | radar EM verification (`aces.domains.radar.em_adapter`); separate process |
+| gprMax | GPL-3.0 | radar EM (FDTD); **separate process only** (rule 11), never imported into ACES |
+| GitHub CLI (`gh`) | MIT | `aces compliance collect` reads repo evidence through it; separate process |
+| NVIDIA Isaac Sim | NVIDIA proprietary licence (EULA), not open source | `aces.isaac` drives an operator-installed copy on DARKNESS as a separate process; ACES never redistributes it, ships it in an image or accepts the EULA for anyone. The audit read the EULA as revocable, with no redistribution, an export clause and military use "at your own risk". **Restricted: no C-UAS/AERIS or other defence use until a legal review is recorded in DECISIONS.md.** PhysX runs in FP32, so results are never verification (rule 6) |
 
 ## Planned
 

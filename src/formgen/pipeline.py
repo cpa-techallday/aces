@@ -10,10 +10,12 @@
 
 from __future__ import annotations
 
+import contextlib
+import glob
 import json
 import os
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, asdict
 
 from . import export, preview, scale, solids, viewer
 from .lattice import build_lattice
@@ -76,21 +78,45 @@ def _default_log(msg: str) -> None:
     print(msg, flush=True)
 
 
-def run(opts: Options, log=_default_log) -> dict:
-    """Run the whole chain and return a result dict of paths + numbers."""
+def run(opts: Options, log=_default_log, *, out=None) -> dict:
+    """Run the whole chain and return a result dict of paths + numbers.
+
+    Every output goes through :mod:`aces.safeio` (audit M1): files are created relative to the output folder
+    opened once, and never through a link.  ``out`` is an open :class:`aces.safeio.OutDir`; ACES passes a new
+    run folder, and then nothing in it is ever overwritten.  Without it, formgen opens ``opts.out`` itself and
+    replaces its own earlier outputs by atomic rename (a re-run into the same folder still works).
+    """
+    from aces import safeio
+
+    with contextlib.ExitStack() as stack:
+        if out is None:
+            out = stack.enter_context(safeio.OutDir(opts.out))
+            return _run(opts, log, out, overwrite=True, stack=stack)
+        return _run(opts, log, out, overwrite=False, stack=stack)
+
+
+def _run(opts: Options, log, out, *, overwrite: bool, stack: contextlib.ExitStack) -> dict:
     t0 = time.time()
-    os.makedirs(opts.out, exist_ok=True)
     outputs: dict = {}
     source_info: dict = {}
+
+    def write(name: str, data: str | bytes) -> str:
+        if isinstance(data, bytes):
+            out.write_bytes(name, data, overwrite=overwrite)
+        else:
+            out.write_text(name, data, overwrite=overwrite)
+        return os.path.join(opts.out, name)
 
     # ---------------------------------------------------------------- load
     if opts.source == "fusion":
         from . import fusion as fusion_adaptor
 
         log("[1/7] pulling geometry from the running Fusion 360 session")
+        # Fusion writes this export itself; the folder is created through the run folder's handle.
+        export_dir = stack.enter_context(out.subdir("_fusion_export"))
         mesh, source_info = fusion_adaptor.load_from_fusion(
             ref=opts.fusion_ref,
-            dest=os.path.join(opts.out, "_fusion_export"),
+            dest=str(export_dir.path),
             refinement=opts.fusion_refinement,
         )
         stem = opts.stem or _safe_stem(source_info.get("ref") or "fusion_body")
@@ -167,40 +193,40 @@ def run(opts: Options, log=_default_log) -> dict:
 
     # -------------------------------------------------------------- export
     log("[5/7] exporting full-size outputs")
-    p = lambda suffix: os.path.join(opts.out, "{}_{}".format(stem, suffix))  # noqa: E731
+    n = lambda suffix: "{}_{}".format(stem, suffix)  # noqa: E731
 
-    g.save_json(p("lattice.json"), order=steps)
-    outputs["lattice_json"] = p("lattice.json")
+    outputs["lattice_json"] = write(n("lattice.json"), g.to_json(order=steps))
 
     if opts.want_preview:
         solid = solids.strut_solids(g, strut_diameter=opts.strut_dia, union=opts.union)
-        solid.export(p("lattice.stl"))
-        solid.export(p("lattice.glb"))
-        outputs["preview_stl"] = p("lattice.stl")
-        outputs["preview_glb"] = p("lattice.glb")
+        outputs["preview_stl"] = write(n("lattice.stl"), solid.export(file_type="stl"))
+        outputs["preview_glb"] = write(n("lattice.glb"), solid.export(file_type="glb"))
 
     if opts.want_waypoints:
-        n_wp = export.save_csv(p("waypoints.csv"), g, steps)
-        outputs["waypoints_csv"] = p("waypoints.csv")
+        text, n_wp = export.waypoints_csv(g, steps)
+        outputs["waypoints_csv"] = write(n("waypoints.csv"), text)
         log("      {} robot waypoints".format(n_wp))
 
     if opts.want_viewer:
-        viewer.save_viewer(p("viewer.html"), g, steps,
-                           title="{} - {} lattice".format(stem, opts.mode))
-        outputs["viewer_html"] = p("viewer.html")
+        outputs["viewer_html"] = write(n("viewer.html"), viewer.render_viewer(
+            g, steps, title="{} - {} lattice".format(stem, opts.mode)))
 
     if opts.want_png:
-        preview.save_png(p("preview.png"), g,
-                         title="{} - {} - {} struts".format(
-                             stem, opts.mode, stats["struts"]))
-        outputs["preview_png"] = p("preview.png")
+        outputs["preview_png"] = write(n("preview.png"), preview.render_png(
+            g, title="{} - {} - {} struts".format(stem, opts.mode, stats["struts"])))
 
     if opts.want_jbi:
-        jobs = export.save_jbi(os.path.join(opts.out, stem.upper()[:6]), g, steps,
-                               job_name=stem.upper()[:6].replace("-", ""),
-                               dout_extrude=opts.dout, tool=opts.tool,
-                               user_frame=opts.user_frame,
-                               speed_extrude=opts.speed)
+        base = stem.upper()[:6]
+        if overwrite:  # a re-run into the same folder: drop numbered jobs left from the old lattice
+            for f in glob.glob(os.path.join(glob.escape(str(out.path)), glob.escape(base) + "_[0-9][0-9][0-9].JBI")):
+                try:
+                    os.remove(f)  # removes a link itself, never its target
+                except OSError:
+                    pass
+        jobs = [write("{}_{:03d}.JBI".format(base, ci), text)
+                for ci, text in export.jbi_jobs(g, steps, job_name=base.replace("-", ""),
+                                                dout_extrude=opts.dout, tool=opts.tool,
+                                                user_frame=opts.user_frame, speed_extrude=opts.speed)]
         outputs["jbi"] = jobs
         log("      {} JBI job file(s)".format(len(jobs)))
 
@@ -221,17 +247,13 @@ def run(opts: Options, log=_default_log) -> dict:
         model_mesh = scale.build_model(g, plan, sections=opts.model_sections,
                                        union=opts.model_union)
         tag = plan["ratio_label"].replace(":", "to").replace(".", "p")
-        model_path = p("model_{}.stl".format(tag))
-        model_mesh.export(model_path)
-        model_mesh.export(p("model_{}.glb".format(tag)))
+        model_path = write(n("model_{}.stl".format(tag)), model_mesh.export(file_type="stl"))
         outputs["model_stl"] = model_path
-        outputs["model_glb"] = p("model_{}.glb".format(tag))
+        outputs["model_glb"] = write(n("model_{}.glb".format(tag)), model_mesh.export(file_type="glb"))
         if opts.want_png:
-            preview.save_png(p("model_{}.png".format(tag)), scale.scaled_graph(g, plan),
-                             title="scale model {} - {} mm".format(
-                                 plan["ratio_label"],
-                                 " x ".join(str(v) for v in plan["model_size_mm"])))
-            outputs["model_png"] = p("model_{}.png".format(tag))
+            outputs["model_png"] = write(n("model_{}.png".format(tag)), preview.render_png(
+                scale.scaled_graph(g, plan), title="scale model {} - {} mm".format(
+                    plan["ratio_label"], " x ".join(str(v) for v in plan["model_size_mm"]))))
         model_est = scale.model_estimate(g, plan)
         log("      {}  ~{} g filament, {} m".format(
             os.path.basename(model_path), model_est["filament_g"], model_est["filament_m"]))
@@ -256,9 +278,7 @@ def run(opts: Options, log=_default_log) -> dict:
         "outputs": outputs,
         "seconds": round(time.time() - t0, 1),
     }
-    with open(p("estimate.json"), "w") as f:
-        json.dump(report, f, indent=2)
-    outputs["report_json"] = p("estimate.json")
+    outputs["report_json"] = write(n("estimate.json"), json.dumps(report, indent=2))
     log("      full size: {} kg material, {} h print".format(
         est["material_mass_kg"], est["total_time_h"]))
     log("done in {:.1f}s -> {}".format(time.time() - t0, os.path.abspath(opts.out)))
