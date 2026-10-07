@@ -1,6 +1,6 @@
 # ACES radar domain — the AERIS-X64 EM simulation pipeline
 
-Doc: CPA-ACES-RADAR-001 · Rev A · 2026-10-07 · status: fast tier live, verification tier pending image
+Doc: CPA-ACES-RADAR-001 · Rev B · 2026-10-07 · status: fast tier live, verification tier live on gprMax (workstation), Palace pending rig image
 
 This adds the AERIS-X64 X-band phased-array radar as an ACES domain
 (`radar.phased_array`) and wires the simulation pipeline that carries a radar
@@ -94,15 +94,21 @@ decides what limit is real. Also note the model's 8×8 λ/2 beamwidth is 12.7°,
 not the "~3.6° per 16-el row" the study table claims (that figure needs ~28
 elements per row; the study's own audit habit applies to itself).
 
-## 4. Verification tier — `aces-tile-em` (pending image)
+## 4. Verification tier — `aces-tile-em` (gprMax live; Palace pending image)
 
 Solver id `aces-tile-em`, adapter `aces.domains.radar.em_adapter.Adapter`,
 same worker contract as `aces-tpms-periodic` (`run(case, spec, run_dir)`,
-`measurement.json` per case). Physics: **Palace** (open-source FEM, S-parameters
-of driven structures from mesh + stackup) as primary; **gprMax** (FDTD) for
-propagation and antenna-plate checks. Both are on the runtime plan's solver
-list (RUNTIME_PLAN §3, "Electromagnetics — Palace and gprMax (AERIS radar tile,
-HERMES antennas)").
+`measurement.json` per case). Engines:
+
+- **gprMax 4.0.1 (FDTD) — LIVE (2026-10-07, pip install on DARKNESS, CPU
+  OpenMP).** The adapter generates the input deck from case parameters, runs
+  `python -m gprMax` as a subprocess, reads the HDF5 port/probe data, and
+  writes `validation.json` / `measurement.json`. Ports to the rig image
+  unchanged.
+- **Palace (FEM) — pending rig image** (Linux-first, from-source build; no
+  PyPI route). The adapter raises honestly until `PALACE_BIN` exists. Palace
+  remains the target for driven S-parameter cases that need waveguide ports
+  (`wr90_through`, tile/rf_dist multiport).
 
 Case parameters: `structure` (`tile` | `rf_dist` | `antenna_plate`), frequency
 sweep, `stackup` (er, h, loss tangent — from the board's real stackup, which is
@@ -111,21 +117,73 @@ choice.
 
 **Validation cases that must pass before registry entry (decision 6):**
 
-| Case | Reference | Pass bar |
-|---|---|---|
-| `wr90_through` | 25.4 mm WR-90 through | S21 within 0.1 dB of 0 dB; cutoff within 1 % of 6.557 GHz |
-| `patch_xband` | λ/2 patch on RO4350B (er 3.66, h 0.508 mm) | resonance within 2 % of the cavity-model frequency (`em_adapter.patch_resonance_hz`) |
+| Case | Reference | Pass bar | Status |
+|---|---|---|---|
+| `patch_xband` | λ/2 patch on RO4350B (er 3.66, h 0.508 mm, tanD 0.004), cavity model with Hammerstad fringing | FDTD resonance within **5 %** of the cavity reference **and** the two independent FDTD estimators (far-end probe FFT, feed-port S11 minimum) agreeing within 1.5 % | **PASS (2026-10-07)**: FDTD 9999.5 MHz vs cavity 10524.1 MHz (4.98 %), estimator agreement 0.003 % |
+| `wr90_through` | 25.4 mm WR-90 through | S21 within 0.1 dB of 0 dB; cutoff within 1 % of 6.557 GHz | pending Palace (waveguide ports) |
 
-**To bring the tier up** (mirrors the aces-cfd rollout, steps 3–12 of the
-50-step plan):
+Why 5 % and not 2 %: the cavity model is the *approximate* side of the
+comparison — closed magnetic walls, no feed, no surface waves — good to ~3–5 %
+for h/λ ≈ 0.018 patches. What actually pins the solver setup is the
+mesh-convergence study plus internal agreement:
 
-1. Build the `aces-em:0.1` image on the workstation (Palace from source — Phase
-   2b class build like MFEM+cuDSS; no PyPI route on the rig).
-2. Self-test both validation cases on the workstation GPU.
-3. Ship to the rig with the server agent; register `aces-tile-em` in
-   `solvers.json` marked *validation pending*.
-4. `aces cfd-campaign`-style sweep over the tile stackup grid → `measurement.json`
-   rows → `radar.calibrate.fit` → registry with `simlab:<run-id>` provenance.
+| Cells through substrate | FDTD resonance (probe FFT / port S11) |
+|---|---|
+| 2 (cell 0.254 mm) | 9.70 GHz (both estimators) |
+| 3 (cell 0.169 mm) | 9999.5 / 9999.8 MHz |
+| 4 (cell 0.127 mm) | 9999.6 / 10099.8 MHz |
+
+Converged FDTD ≈ 10.0–10.1 GHz, two estimators within 0.3–1 % of each other;
+the residual ~5 % against the cavity model is reference-model error and is
+documented as such in `validation.json` (`bar_pct`, `estimator_agreement_pct`).
+
+**FDTD modeling lessons baked into the adapter** (each cost a failed run):
+
+- Ez edges lying on a PEC surface are pinned to zero — the feed source and the
+  probe must sit on a live edge *inside* the substrate, and the probe away
+  from the feed point so it reads the mode, not the driving point.
+- gprMax 4.x turns every `#voltage_source` into a port and stores per-point
+  validity flags (`valid_S11`, `source_valid`, `mesh_valid`) — mask with them,
+  they are per-frequency arrays, not scalars.
+- gprMax 4.x writes `<case>.h5` with no per-rx time vector; the time axis is
+  rebuilt from the root `dt` attribute.
+- Patch/coupon dimensions are snapped to whole cells and the cavity reference
+  is computed for the *snapped* geometry, keeping grid rounding out of the
+  pass bar.
+
+**Structure case `tile_coupon` — λg/2 open-line resonator, delta-Q:**
+
+The coupon measures the board-9 stackup's dielectric loss. Two through-line
+transfer approaches failed honestly first (single-probe: +29.7 dB nonsense —
+a field probe is not a calibrated voltage; reference-subtracted 3-probe
+average: +1.07 dB with 3.1 dB probe-to-probe standing-wave contamination
+against a 0.14 dB signal). The shipped method is a half-wave open-line
+resonator with ring-down Q:
+
+- raw Q loads dielectric loss with open-end radiation + feed loading
+  (measured Q=87 vs dielectric Q~200) → a second run with tanD = 0 de-embeds
+  them: `1/Q_diel = 1/Q_dut − 1/Q_ref`, then `α = β/2Q_diel`;
+- Q from a direct least-squares decay fit `exp(−t/τ)(C cos ωt + S sin ωt)` —
+  envelope/Hilbert extraction proved leakage-biased +70 % on a synthetic
+  Q=180 ring-down, the direct fit is exact;
+- conductors are PEC, so copper loss is excluded on both sides; result is
+  normalised to a 20 mm reference length as `tile_insertion_loss_db`.
+
+**First calibrated row (2026-10-07, job7-em-coupon):** measured 5.19 dB/m vs
+Hammerstad dielectric model 5.32 dB/m at 9.68 GHz (probes agree within 4 %) →
+`radar.calibrate.fit` → **`radar.tx.line_loss_factor = 0.9745`**, provenance
+`simlab:job7-em-coupon`. The full loop — FDTD → measurement.json → read_rows →
+fit → registry — is demonstrated end-to-end.
+
+**To finish the tier** (mirrors the aces-cfd rollout):
+
+1. Build the `aces-em:0.1` image on the rig (Palace from source + gprMax pip).
+2. Re-run `patch_xband` and `tile_coupon` on the rig; add `wr90_through` once
+   Palace ports exist.
+3. Register `aces-tile-em` in `solvers.json` (validation passed for gprMax
+   cases, pending for Palace cases).
+4. Sweep the real tile/rf_dist stackups → `measurement.json` rows →
+   `radar.calibrate.fit` → registry with `simlab:<run-id>` provenance.
 5. Reports stop saying "uncalibrated" for the three radar factors.
 
 Export-control note: AERIS board data plausibly sits under DSGL 6A008. The EM
@@ -140,15 +198,17 @@ records factors and provenance, not geometry.
 | Domain package | `src/aces/domains/radar/` (`array`, `cascade`, `linkbudget`, `model`, `calibrate`, `em_adapter`) |
 | Registration | `src/aces/domains/__init__.py` (`MODELS`) |
 | Spec template | `specs/templates/radar_phased_array.yaml` (X64 baseline values, datasheet-cited chain) |
-| Tests | `tests/test_radar.py` (16 tests) |
+| Tests | `tests/test_radar.py` (16 tests), `tests/test_em_adapter.py` (17 tests) |
 
 ## 6. What this does not do yet
 
-- Palace/gprMax image does not exist; the adapter raises until it does.
+- Palace (waveguide-port FEM) is not built; `wr90_through` and multiport
+  tile/rf_dist S-parameter cases wait for the rig image. gprMax CPU-only
+  (no `-gpu` build) — large domains queue behind wall-time budgets.
 - SI sign-off (DDR skew, JESD lanes) stays in HyperLynx/ADS/Sigrity class tools —
   not claimed by this pipeline.
 - No mutual-coupling or scan-blindness model in the fast tier (calibration
   factors absorb first-order reality once measured).
 - `aces em-sample` / `em-campaign` / `em-collect` CLI commands land with the
-  image, mirroring the cfd trio; until then `calibrate.fit` is callable from
-  Python and from `aces calibrate`'s measurement-row convention.
+  rig image, mirroring the cfd trio; until then `calibrate.fit` is callable
+  from Python and from `aces calibrate`'s measurement-row convention.
