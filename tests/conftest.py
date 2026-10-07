@@ -5,6 +5,7 @@ customer requirement, a material datasheet or a measured result, and must never 
 quoted as such.
 """
 import copy
+import os
 
 import pytest
 
@@ -34,3 +35,22 @@ TEST_SPEC = {
 @pytest.fixture
 def spec_dict():
     return copy.deepcopy(TEST_SPEC)
+
+
+@pytest.fixture(autouse=True)
+def _skip_where_symlinks_need_privilege(monkeypatch):
+    """Windows without Developer Mode or admin can't create symbolic links (WinError 1314). The link-attack tests
+    then skip instead of failing; they still run on Linux, in CI and on any Windows host that allows links."""
+    if os.name != "nt":
+        return
+    real = os.symlink
+
+    def symlink(*a, **k):
+        try:
+            return real(*a, **k)
+        except OSError as e:
+            if getattr(e, "winerror", None) == 1314:
+                pytest.skip("creating symbolic links needs Developer Mode or admin rights on this Windows host")
+            raise
+
+    monkeypatch.setattr(os, "symlink", symlink)
