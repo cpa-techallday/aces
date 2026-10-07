@@ -173,10 +173,13 @@ def test_palace_raises_without_binary():
         ad.run({"solver": "palace"}, None, ".")
 
 
-def test_wr90_validation_raises_pending_ports(tmp_path):
-    ad = em.Adapter()
-    with pytest.raises(RuntimeError, match="waveguide-port"):
-        ad.run({"solver": "gprmax", "validate": "wr90_through"}, None, str(tmp_path))
+def test_wr90_deck_geometry_is_exact():
+    deck = em._gprmax_wr90_input(8e-9, 6e9, 13e9, 15)
+    assert "#eigenmode_port" in deck and "#eigenmode_excitation" in deck
+    cell = 0.508e-3
+    assert abs(45 * cell - 22.86e-3) < 1e-12  # WR-90 broad wall, exact
+    assert abs(20 * cell - 10.16e-3) < 1e-12  # narrow wall, exact
+    assert abs(50 * cell - 25.4e-3) < 1e-12   # through length, exact
 
 
 def test_unknown_structure_raises(tmp_path):

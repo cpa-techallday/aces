@@ -26,7 +26,10 @@ Validation cases (must pass before the solver enters ``solvers.json``, decision 
     radiation damping); the agreement check plus a mesh-convergence study is
     what actually pins the solver setup.  gprMax: live.  Palace: pending.
   - ``wr90_through``: 25.4 mm WR-90 through, S21 within 0.1 dB of 0 dB, cutoff
-    within 1 % of 6.557 GHz.  Pending a waveguide-port engine (Palace).
+    within 1 % of 6.557 GHz.  gprMax: LIVE via eigenmode ports (measured
+    2026-10-07: worst |S21| 0.04 dB, |S11| -36..-54 dB, cutoff 6.5565 GHz =
+    0.008 % from theory, cell 0.508 mm divides WR-90 exactly).  Palace:
+    pending, will cross-check when the rig image lands.
 
 Structure cases:
 
@@ -435,6 +438,48 @@ def _gprmax_multiport_input(cell: float, window_s: float, f0: float,
     return deck, geom
 
 
+def _gprmax_wr90_input(window_s: float, band_lo: float, band_hi: float,
+                       points: int, cell: float = 0.508e-3,
+                       anchors: str = "auto") -> str:
+    """Input deck for the wr90_through validation via gprMax eigenmode ports.
+
+    cell 0.508 mm divides WR-90 exactly (a = 45, b = 20, through = 50 cells).
+    PEC walls are explicit boxes; the ports are internal z-planes with inward
+    directions (example_4_complete_s_matrix pattern) and the guide continues
+    into the z PMLs as matched terminations.
+
+    Anchors: the auto policy trims broadband anchors and left the 8.2-9.0 GHz
+    band points without a valid modal basis (S11 read ~0 dB there while S21
+    read 0 dB — unphysical, DARKNESS 2026-10-07).  The sweep therefore uses
+    the solver-suggested explicit coverage anchors
+    (4991001101.34 7642470436.43 10293939771.5 12945409106.6 15596878441.7),
+    which gave S11 -27..-71 dB and S21 within +/-0.006 dB across X-band.
+    Cutoff: 6.5565 GHz (0.008 % from the 6.557 GHz theory value) from the
+    n_eff^2 zero crossing of a narrowband (6.35-6.75 GHz) auto-anchor scan.
+    """
+    a, b, thr = 45 * cell, 20 * cell, 50 * cell
+    wall, marg = 3, 10
+    nx, ny = 45 + 2 * (wall + marg), 20 + 2 * (wall + marg)
+    dom_x, dom_y, dom_z = nx * cell, ny * cell, thr
+    x0 = (wall + marg) * cell
+    y0 = (wall + marg) * cell
+    z1p, z2p = 12 * cell, 38 * cell
+    return f"""#title: aces-tile-em wr90_through validation (eigenmode ports)
+#domain: {dom_x:.6f} {dom_y:.6f} {dom_z:.6f}
+#dx_dy_dz: {cell:.6f} {cell:.6f} {cell:.6f}
+#time_window: {window_s:.6e}
+#pml_cells: {marg} {marg} {marg} {marg} 10 10
+#box: 0 0 0 {dom_x:.6f} {y0:.6f} {dom_z:.6f} pec
+#box: 0 {y0 + b:.6f} 0 {dom_x:.6f} {dom_y:.6f} {dom_z:.6f} pec
+#box: 0 {y0:.6f} 0 {x0:.6f} {y0 + b:.6f} {dom_z:.6f} pec
+#box: {x0 + a:.6f} {y0:.6f} 0 {dom_x:.6f} {y0 + b:.6f} {dom_z:.6f} pec
+#eigenmode_band: band1 {band_lo:.6e} {band_hi:.6e} {points}
+#eigenmode_port: 1 {x0:.6f} {y0:.6f} {z1p:.6f} {x0 + a:.6f} {y0 + b:.6f} {z1p:.6f} + 1 {anchors} n
+#eigenmode_port: 2 {x0:.6f} {y0:.6f} {z2p:.6f} {x0 + a:.6f} {y0 + b:.6f} {z2p:.6f} - 1 {anchors} n
+#eigenmode_excitation: 1 1 auto n
+"""
+
+
 # ------------------------------------------------------------------ adapter
 
 class Adapter:
@@ -477,6 +522,8 @@ class Adapter:
         elif case.get("structure") in ("tile_coupon", "rf_dist", "tile"):
             deck, geom = _gprmax_coupon_input(cell, window, f0, er, h, tand, **margins)
             kind = "coupon"
+        elif validate == "wr90_through":
+            return self._run_wr90(case, rd)
         elif validate:
             raise RuntimeError(f"aces-tile-em: validation case {validate!r} needs a waveguide-port engine (Palace, pending)")
         else:
@@ -690,6 +737,78 @@ class Adapter:
         (rd / "validation.json").write_text(json.dumps(validation, indent=2), encoding="utf-8")
         return {"kind": "tile_multiport", "sparams": sparams, "validation": validation,
                 "geometry": runs[1][0], "converged": 1}
+
+    def _run_wr90(self, case: dict, rd: Path) -> dict:
+        """WR-90 through validation on gprMax eigenmode ports.
+
+        Two runs: a wideband sweep (S-parameters over X-band) and a narrowband
+        anchor scan around the TE10 cutoff.  Cutoff is read from the n_eff^2
+        zero crossing between the solver's candidate anchors.  Existing h5
+        outputs are reused when present (pipeline resume semantics).
+        """
+        import h5py
+
+        window = float(case.get("time_window_s", 8e-9))
+        timeout = int(case.get("timeout_seconds", 1800))
+        sweep_anchors = ("4991001101.34 7642470436.43 10293939771.5 "
+                         "12945409106.6 15596878441.7")  # solver-suggested coverage
+        for stem, lo, hi, pts, anch in (("case_sweep", 8.2e9, 12.4e9, 15, sweep_anchors),
+                                        ("case_cutoff", 6.35e9, 6.75e9, 17, "auto")):
+            deck = _gprmax_wr90_input(window, lo, hi, pts, anchors=anch)
+            (rd / f"{stem}.in").write_text(deck, encoding="utf-8")
+            if not (rd / f"{stem}.h5").exists():
+                self._gprmax_exec(rd, stem, timeout)
+
+        with h5py.File(rd / "case_sweep.h5", "r") as f:
+            p1, p2 = f["eigenmode_ports/port1"], f["eigenmode_ports/port2"]
+            fr = np.asarray(p1["frequency"], dtype=float)
+            inc1 = np.asarray(p1["incident"])[0]
+            out1 = np.asarray(p1["outgoing"])[0]
+            out2 = np.asarray(p2["outgoing"])[0]
+            beta = np.asarray(p1["beta"])[:, 0]
+        s11 = np.abs(out1 / inc1)
+        s21 = np.abs(out2 / inc1)
+        db = lambda m: 20 * math.log10(max(float(m), 1e-30))
+        xb = (fr >= 8.2e9) & (fr <= 12.4e9) & (np.abs(beta.real) > 1.0)  # propagating, anchored
+        if not xb.any():
+            raise RuntimeError("aces-tile-em: wr90 sweep has no propagating anchored band points")
+        rows = [{"frequency_hz": float(f), "s11_db": db(a), "s21_db": db(b_),
+                 "beta_sim_rad_per_m": float(be.real)}
+                for f, a, b_, be in zip(fr, s11, s21, beta)]
+        worst_s21 = max(abs(db(v)) for v in s21[xb])
+        worst_s11 = max(db(v) for v in s11[xb])
+
+        with h5py.File(rd / "case_cutoff.h5", "r") as f:
+            p1c = f["eigenmode_ports/port1"]
+            anch = np.asarray(p1c.attrs["CandidateAnchorFrequencies"], dtype=float)
+            neff = np.asarray(p1c["anchor_complex_neff"]).ravel().astype(complex)
+        n2 = (neff ** 2).real  # linear in f near cutoff
+        fc_sim = None
+        for i in range(len(anch) - 1):
+            if n2[i] <= 0 < n2[i + 1]:
+                fc_sim = float(anch[i] - n2[i] * (anch[i + 1] - anch[i]) / (n2[i + 1] - n2[i]))
+                break
+        if fc_sim is None:
+            raise RuntimeError("aces-tile-em: wr90 cutoff not bracketed by the anchor scan")
+        fc_ref = 6.557e9
+        fc_err = abs(fc_sim - fc_ref) / fc_ref
+        passed = worst_s21 <= 0.1 and worst_s11 <= -20.0 and fc_err <= 0.01
+        validation = {
+            "case": "wr90_through",
+            "method": ("gprMax 4.x eigenmode ports (PEC-boundary aperture solve, explicit "
+                       "coverage anchors on the sweep, auto anchors on the cutoff scan), "
+                       "0.508 mm cells (WR-90 a=45 b=20 through=50), "
+                       "cutoff from n_eff^2 zero crossing of a 6.35-6.75 GHz anchor scan"),
+            "xband_worst_s21_db": worst_s21, "bar_s21_db": 0.1,
+            "xband_worst_s11_db": worst_s11, "bar_s11_db": -20.0,
+            "cutoff_sim_hz": fc_sim, "cutoff_theory_hz": fc_ref,
+            "cutoff_err_pct": 100 * fc_err, "bar_cutoff_pct": 1.0,
+            "pass": int(passed),
+        }
+        (rd / "sparams.json").write_text(json.dumps(rows, indent=2), encoding="utf-8")
+        (rd / "validation.json").write_text(json.dumps(validation, indent=2), encoding="utf-8")
+        return {"kind": "wr90_through", "sparams": rows, "validation": validation,
+                "converged": 1}
 
     def _gprmax_exec(self, rd: Path, stem: str, timeout: int) -> None:
         cmd = [os.environ.get("GPRMAX_PYTHON", sys.executable), "-m", "gprMax", f"{stem}.in"]
