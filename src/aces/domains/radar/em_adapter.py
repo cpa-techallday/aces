@@ -35,6 +35,13 @@ Structure cases:
     recorded as ``tile_insertion_loss_db`` with the method stated — PML
     terminations, so radiation is included; it is a relative loss check against
     substrate theory, not a calibrated VNA sweep.
+  - ``tile_multiport``: 2-port S-parameters of a 50-ohm through-line by
+    sequential excitation + travelling-wave decomposition on field probes
+    (``wave_split_ab``).  gprMax single-edge lumped ports cannot read a
+    microstrip's modal voltage (they return the ~10 fF feed-gap capacitance,
+    |S11| = 1.000 flat, DARKNESS 2026-10-07), so the port reference is taken
+    from the field probes instead.  The resistive-column load and the split
+    were validated at |Gamma| ~ 0.08, beta within 1.2 % of model, 8-13 GHz.
 
 Case parameters: structure | validate, freq_lo_hz, freq_hi_hz, n_freq,
 stackup {substrate_er, substrate_h_m, loss_tan}, geom {...}, solver
@@ -157,6 +164,30 @@ def resonator_q_from_field(t: np.ndarray, ez: np.ndarray, f0: float,
     return {"resonance_hz": fres, "resolution_hz": res["resolution_hz"],
             "tau_s": float(tau), "q": float(math.pi * fres * tau),
             "fit_residual": resid_ratio}
+
+
+def wave_split_ab(specs: np.ndarray, ys: np.ndarray, beta: float) -> tuple[complex, complex, float]:
+    """Split probe spectra into forward/backward travelling waves (least squares).
+
+    Model: ``E(y) = A exp(-j beta y) + B exp(+j beta y)`` with >= 2 probes at
+    positions ``ys`` (metres, any reference).  Returns ``(A, B, rel_residual)``.
+
+    This is how the adapter extracts S-parameters: gprMax single-edge lumped
+    ports read the feed-point LOCAL gap capacitance (~9-16 fF) instead of the
+    line's modal voltage, so port S11 sat at 1.000 flat even while the
+    identical geometry rang at Q~138 (DARKNESS, 2026-10-07).  Field probes
+    plus a two-wave decomposition avoid the lumped-port reference entirely;
+    a 3-probe split on a terminated 20 mm line measured |Gamma| = 0.080-0.085
+    and beta within 1.2 % of the er_eff model across 8-13 GHz (same session).
+    """
+    specs = np.asarray(specs, dtype=complex).ravel()
+    ys = np.asarray(ys, dtype=float).ravel()
+    if specs.size != ys.size or ys.size < 2:
+        raise ValueError("wave_split_ab needs >= 2 probes, one spectrum per position")
+    m = np.column_stack([np.exp(-1j * beta * ys), np.exp(1j * beta * ys)])
+    sol, *_ = np.linalg.lstsq(m, specs, rcond=None)
+    resid = float(np.linalg.norm(m @ sol - specs) / max(np.linalg.norm(specs), 1e-30))
+    return complex(sol[0]), complex(sol[1]), resid
 
 
 # ------------------------------------------------------------------ references
@@ -334,6 +365,76 @@ def _gprmax_coupon_input(cell: float, window_s: float, f0: float,
                   "er_eff_model": er_eff, "cell_m": cell}
 
 
+def _gprmax_multiport_input(cell: float, window_s: float, f0: float,
+                            er: float, h: float, tand: float,
+                            length: float = 16e-3, feed_end: int = 1,
+                            margin_cells: int = 18, air_cells: int = 24) -> tuple[str, dict]:
+    """Input deck for the tile_multiport 2-port through-line (S-parameters by
+    travelling-wave decomposition on field probes).
+
+    One end of the line is excited with the voltage source; the other end is
+    terminated by a 2x2 resistive column load spanning the substrate gap
+    (sigma = 1/(100*cell) -> R ~ 50 ohm at stability sigma*dt/2eps ~ 0.3 —
+    a single full-height column needs sigma*dt/2eps > 1 and goes unstable,
+    DARKNESS 2026-10-07).  Three probes near each end feed ``wave_split_ab``.
+
+    Requires the proven single-live-edge recipe: exactly 2 cells through the
+    substrate (feed edge = only live Ez edge in the gap).
+    """
+    sub_cells = max(2, round(h / cell))
+    if sub_cells != 2:
+        raise ValueError(f"tile_multiport needs 2 cells through the substrate, got {sub_cells}")
+    w_line = microstrip_width_for_z0(er, h, 50.0)
+    er_eff = microstrip_er_eff(er, h, w_line)
+    sigma_d = 2 * math.pi * f0 * 8.854187817e-12 * er * tand
+    sigma_load = 1.0 / (100.0 * cell)  # R = h / (sigma * (2*cell)^2) = 50 ohm
+    z_lift = 12
+    dom_x = w_line + 2 * margin_cells * cell
+    dom_y = length + 2 * margin_cells * cell
+    z_gnd = z_lift * cell
+    z_sub = z_gnd + cell
+    z_line = z_sub + sub_cells * cell
+    dom_z = z_line + cell + air_cells * cell
+    x0 = (dom_x - w_line) / 2
+    y0 = margin_cells * cell
+    z_live = z_sub + cell
+    xc = x0 + w_line / 2
+
+    def snap(y: float) -> float:
+        return round(y / cell) * cell
+
+    # probe triads near each end, snapped to the grid
+    near_ys = [snap(y0 + d) for d in (3e-3, 5.5e-3, 8e-3)]
+    far_ys = [snap(y0 + length - d) for d in (8e-3, 5.5e-3, 3e-3)]
+    y_p1 = snap(y0 + 2 * cell)              # port1 reference plane = feed edge
+    y_p2 = snap(y0 + length - 2 * cell)     # port2 reference plane = load centre
+    if feed_end == 1:
+        feed_y, load_y = y_p1, snap(y0 + length - 3 * cell)
+    else:
+        feed_y, load_y = y_p2, snap(y0 + cell)
+
+    rx_lines = "".join(f"#rx: {xc:.6f} {py:.6f} {z_live:.6f}\n" for py in near_ys + far_ys)
+    deck = f"""#title: aces-tile-em tile_multiport 2-port through-line (feed end {feed_end})
+#domain: {dom_x:.6f} {dom_y:.6f} {dom_z:.6f}
+#dx_dy_dz: {cell:.6f} {cell:.6f} {cell:.6f}
+#time_window: {window_s:.6e}
+#material: {er:.4f} {sigma_d:.5f} 1.0 0.0 sub
+#material: {er:.4f} {sigma_load:.2f} 1.0 0.0 rload
+#waveform: gaussiandot 1.0 {f0:.6e} feed
+#box: 0 0 {z_gnd:.6f} {dom_x:.6f} {dom_y:.6f} {z_gnd + cell:.6f} pec
+#box: 0 0 {z_sub:.6f} {dom_x:.6f} {dom_y:.6f} {z_line:.6f} sub
+#box: {x0:.6f} {y0:.6f} {z_line:.6f} {x0 + w_line:.6f} {y0 + length:.6f} {z_line + cell:.6f} pec
+#box: {xc - cell:.6f} {load_y:.6f} {z_sub:.6f} {xc + cell:.6f} {load_y + 2 * cell:.6f} {z_line:.6f} rload
+#voltage_source: z {xc:.6f} {feed_y:.6f} {z_live:.6f} 50 feed
+{rx_lines}"""
+    geom = {"line_w_m": w_line, "er_eff_model": er_eff, "cell_m": cell,
+            "length_m": length, "feed_end": feed_end,
+            "y_port1_m": y_p1, "y_port2_m": y_p2,
+            "probes_near_m": near_ys, "probes_far_m": far_ys,
+            "sigma_load_s_per_m": sigma_load}
+    return deck, geom
+
+
 # ------------------------------------------------------------------ adapter
 
 class Adapter:
@@ -366,6 +467,8 @@ class Adapter:
         window = float(case.get("time_window_s", 10e-9))
 
         validate = case.get("validate")
+        if case.get("structure") == "tile_multiport":
+            return self._run_multiport(case, rd)
         margins = {"margin_cells": int(case.get("margin_cells", 30)),
                    "air_cells": int(case.get("air_cells", 40))}
         if validate == "patch_xband" or (not validate and case.get("structure") in (None, "antenna_plate")):
@@ -481,6 +584,112 @@ class Adapter:
                 "loss_per_m_db": loss_per_m_db, "model_loss_per_m_db": model_loss_db / ref_len,
                 "er_eff_model": er_eff,
                 "geometry": geom, "converged": 1, "measurement_written": 1}
+
+    def _run_multiport(self, case: dict, rd: Path) -> dict:
+        """2-port S-parameters of a 50-ohm through-line via wave-split field probes.
+
+        Sequential excitation: run A feeds port1 (near end) with port2 on the
+        resistive column load, run B feeds port2 with port1 loaded.  Per run,
+        ``wave_split_ab`` on each probe triad gives the forward/backward wave
+        amplitudes at each port reference plane:
+
+          run A (+y travel):  S11 = B1/A1,  S21 = A2/A1
+          run B (-y travel):  S22 = A2/B2,  S12 = B1/B2
+
+        Pass bars (validated on DARKNESS 2026-10-07: |Gamma_load| ~ 0.08 flat,
+        beta within 1.2 % of the er_eff model):
+        |S11|,|S22| <= 0.15; |S21|,|S12| within 0.5 dB of 0 dB; reciprocity
+        within 0.2 dB; wave-split residuals <= 5 %; unterminated-end wave
+        ratio <= 0.2.
+        """
+        from .linkbudget import C0
+
+        st = case.get("stackup", RO4350B)
+        er, h, tand = st["substrate_er"], st["substrate_h_m"], st["loss_tan"]
+        f0 = case.get("f0_hz", 10.5e9)
+        flo, fhi = case.get("freq_lo_hz", 8e9), case.get("freq_hi_hz", 13e9)
+        cell = float(case.get("cell_m", h / 2))
+        window = float(case.get("time_window_s", 4e-9))
+        length = float(case.get("length_m", 16e-3))
+        n_freq = int(case.get("n_freq", 6))
+        timeout = int(case.get("timeout_seconds", 1800))
+        margins = {"margin_cells": int(case.get("margin_cells", 18)),
+                   "air_cells": int(case.get("air_cells", 24))}
+
+        runs = {}
+        for stem, feed_end in (("case_p1", 1), ("case_p2", 2)):
+            deck, geom = _gprmax_multiport_input(cell, window, f0, er, h, tand,
+                                                 length=length, feed_end=feed_end, **margins)
+            (rd / f"{stem}.in").write_text(deck, encoding="utf-8")
+            self._gprmax_exec(rd, stem, timeout)
+            runs[feed_end] = (geom, self._read_probes(rd / f"{stem}.h5"))
+
+        er_eff = runs[1][0]["er_eff_model"]
+        freqs = np.linspace(flo, fhi, n_freq)
+
+        def spectra(probes: dict) -> tuple[np.ndarray, list[np.ndarray]]:
+            t, ez1 = probes["rx1"]
+            n = len(t)
+            dt = float(t[1] - t[0])
+            fr = np.fft.rfftfreq(n, d=dt)
+            specs = [np.fft.rfft(np.asarray(probes[f"rx{i}"][1], dtype=float)
+                                 - np.mean(probes[f"rx{i}"][1]))
+                     for i in range(1, 7)]
+            return fr, specs
+
+        rows = []
+        for ghz in freqs:
+            beta = 2 * math.pi * ghz * math.sqrt(er_eff) / C0
+            row = {"frequency_hz": float(ghz)}
+            for feed_end, (geom, probes) in runs.items():
+                fr, specs = spectra(probes)
+                k = int(np.argmin(np.abs(fr - ghz)))
+                near = np.array([s[k] for s in specs[:3]])
+                far = np.array([s[k] for s in specs[3:]])
+                y1 = np.asarray(geom["probes_near_m"]) - geom["y_port1_m"]
+                y2 = np.asarray(geom["probes_far_m"]) - geom["y_port2_m"]
+                a1, b1, r1 = wave_split_ab(near, y1, beta)
+                a2, b2, r2 = wave_split_ab(far, y2, beta)
+                if feed_end == 1:
+                    row.update(s11=b1 / a1, s21=a2 / a1, resid=r1,
+                               open_end_ratio=abs(b2) / max(abs(a2), 1e-30))
+                else:
+                    row.update(s22=a2 / b2, s12=b1 / b2, resid2=r2,
+                               open_end_ratio2=abs(a1) / max(abs(b1), 1e-30))
+            rows.append(row)
+
+        def db(x: complex) -> float:
+            return 20 * math.log10(max(abs(x), 1e-30))
+
+        sparams = [{
+            "frequency_hz": r["frequency_hz"],
+            "s11_db": db(r["s11"]), "s21_db": db(r["s21"]),
+            "s22_db": db(r["s22"]), "s12_db": db(r["s12"]),
+            "gamma_load": abs(r["s11"]), "wave_split_residual": r["resid"],
+        } for r in rows]
+        worst_s11 = max(max(abs(r["s11"]), abs(r["s22"])) for r in rows)
+        worst_s21_db = max(max(abs(db(r["s21"])), abs(db(r["s12"]))) for r in rows)
+        recip_db = max(abs(db(r["s21"]) - db(r["s12"])) for r in rows)
+        worst_resid = max(max(r["resid"], r["resid2"]) for r in rows)
+        worst_open = max(max(r["open_end_ratio"], r["open_end_ratio2"]) for r in rows)
+        passed = (worst_s11 <= 0.15 and worst_s21_db <= 0.5
+                  and recip_db <= 0.2 and worst_resid <= 0.05 and worst_open <= 0.2)
+        validation = {
+            "case": "tile_multiport",
+            "method": ("gprMax FDTD, sequential excitation, 2x2 resistive column "
+                       "load (R~50 ohm), 3-probe travelling-wave decomposition "
+                       "per port (wave_split_ab)"),
+            "worst_return_wave": worst_s11, "bar_return_wave": 0.15,
+            "worst_transmission_db": worst_s21_db, "bar_transmission_db": 0.5,
+            "reciprocity_db": recip_db, "bar_reciprocity_db": 0.2,
+            "worst_fit_residual": worst_resid, "bar_residual": 0.05,
+            "worst_open_end_ratio": worst_open, "bar_open_end_ratio": 0.2,
+            "pass": int(passed),
+        }
+        (rd / "sparams.json").write_text(json.dumps(sparams, indent=2), encoding="utf-8")
+        (rd / "validation.json").write_text(json.dumps(validation, indent=2), encoding="utf-8")
+        return {"kind": "tile_multiport", "sparams": sparams, "validation": validation,
+                "geometry": runs[1][0], "converged": 1}
 
     def _gprmax_exec(self, rd: Path, stem: str, timeout: int) -> None:
         cmd = [os.environ.get("GPRMAX_PYTHON", sys.executable), "-m", "gprMax", f"{stem}.in"]

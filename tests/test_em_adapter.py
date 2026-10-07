@@ -183,3 +183,58 @@ def test_unknown_structure_raises(tmp_path):
     ad = em.Adapter()
     with pytest.raises(RuntimeError, match="unknown structure"):
         ad.run({"solver": "gprmax", "structure": "warp_drive"}, None, str(tmp_path))
+
+
+# ------------------------------------------------------------------ wave split
+
+def test_wave_split_recovers_synthetic_waves():
+    beta = 350.0
+    ys = np.array([0.003, 0.0055, 0.008])
+    a_true, b_true = 1.0 + 0.2j, 0.08 - 0.03j
+    specs = a_true * np.exp(-1j * beta * ys) + b_true * np.exp(1j * beta * ys)
+    a, b, resid = em.wave_split_ab(specs, ys, beta)
+    assert abs(a - a_true) < 1e-9
+    assert abs(b - b_true) < 1e-9
+    assert resid < 1e-12
+
+
+def test_wave_split_two_probes_exact():
+    beta = 280.0
+    ys = np.array([0.0, 0.004])
+    a_true, b_true = 0.7, -0.1j
+    specs = a_true * np.exp(-1j * beta * ys) + b_true * np.exp(1j * beta * ys)
+    a, b, resid = em.wave_split_ab(specs, ys, beta)
+    assert abs(a - a_true) < 1e-9 and abs(b - b_true) < 1e-9
+
+
+def test_wave_split_flags_wrong_beta_with_residual():
+    beta = 350.0
+    ys = np.array([0.003, 0.0055, 0.008])
+    specs = np.exp(-1j * beta * ys)
+    _, _, resid_ok = em.wave_split_ab(specs, ys, beta)
+    _, _, resid_bad = em.wave_split_ab(specs, ys, beta * 1.6)
+    assert resid_ok < 1e-12
+    assert resid_bad > 0.1
+
+
+def test_multiport_deck_load_and_probes():
+    cell = RO["substrate_h_m"] / 2
+    deck, geom = em._gprmax_multiport_input(cell, 4e-9, 10.5e9, RO["substrate_er"],
+                                            RO["substrate_h_m"], RO["loss_tan"])
+    lines = {ln.split(":")[0]: ln for ln in deck.strip().splitlines()}
+    assert "#material" in lines and "rload" in deck
+    assert deck.count("#rx:") == 6
+    assert deck.count("#voltage_source:") == 1
+    # feed at port1 by default; feed moves to port2 for feed_end=2
+    deck2, geom2 = em._gprmax_multiport_input(cell, 4e-9, 10.5e9, RO["substrate_er"],
+                                              RO["substrate_h_m"], RO["loss_tan"], feed_end=2)
+    feed1 = [ln for ln in deck.splitlines() if ln.startswith("#voltage_source")][0]
+    feed2 = [ln for ln in deck2.splitlines() if ln.startswith("#voltage_source")][0]
+    assert feed1 != feed2
+    assert geom["probes_near_m"][0] < geom["probes_far_m"][0]
+
+
+def test_multiport_deck_rejects_wrong_substrate_cells():
+    with pytest.raises(ValueError, match="2 cells"):
+        em._gprmax_multiport_input(RO["substrate_h_m"] / 4, 4e-9, 10.5e9,
+                                   RO["substrate_er"], RO["substrate_h_m"], RO["loss_tan"])
