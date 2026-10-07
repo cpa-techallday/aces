@@ -42,13 +42,9 @@ def _called_from_pytest() -> bool:
     import sys
 
     f = sys._getframe(2)
-    for _ in range(6):
-        if f is None:
-            return False
-        if f.f_globals.get("__name__", "").startswith("_pytest"):
-            return True
-        f = f.f_back
-    return False
+    while f is not None and f.f_globals.get("__name__") in ("pathlib", "pathlib._local", "os"):
+        f = f.f_back  # past Path.symlink_to to whoever asked for the link
+    return f is not None and f.f_globals.get("__name__", "").startswith("_pytest")
 
 
 @pytest.fixture(autouse=True)
