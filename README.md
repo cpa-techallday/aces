@@ -30,7 +30,7 @@ spec.yaml -> design model (encoded engineering logic) -> NSGA-II search on the f
 | Calibration CFD (`aces cfd-sample`, `cfd-campaign`, `cfd-collect`; simlab solver `aces-tpms-periodic`) | Validated against exact duct results. `aces-cfd:0.1` is built and registered on the rig (2026-10-07); the rig GPU validation run waits for a sim-lab window ([docs/SIMLAB_CFD.md](docs/SIMLAB_CFD.md)) |
 | MCP server for Mission Control agents (`aces-mcp`, read/submit/full tiers, audit log) | Working (stdio); each call runs in its own limited process; the rod route is `full` tier only |
 | Radar phased-array domain (`radar.phased_array`) | Fast tier with hand-checked link budget. Refused by `check`/`design` until the spec has sourced losses and efficiencies and the `pcb_antenna` route exists (planned). Keep radar data on the LAN until it is classified under the DSGL |
-| Manufacturing cost estimate (`aces cost`, proposed D24) | Estimate only, not a quote: every rate comes from a sourced `--rates` file; planned routes are never recommended |
+| Manufacturing cost estimate (`aces cost`, proposed) | Estimate only, not a quote: every rate comes from a sourced `--rates` file; planned routes are never recommended |
 | Isaac Sim scene tier (`aces.isaac`, DARKNESS) | Scene and robotics checks only: PhysX is FP32, so never verification. No defence use until the EULA review ([docs/LICENCES.md](docs/LICENCES.md)) |
 | ISO 27001 evidence (`aces compliance`) | Collects into a new `run-*` folder with a sha256 manifest, chained into the ledger |
 | CI (`.github/workflows/ci.yml`) | pytest on Linux and Windows, the ruff error gate and pip-audit on every push and pull request |
@@ -44,7 +44,7 @@ factors stay at 1.0, and are listed on every report, until CFD or test data repl
 
 ```bash
 pip install -e .[dev]
-python -m pytest                       # ~TESTCOUNT tests: textbook and hand checks, geometry, safety guards, routes, structures, calibration, MCP
+python -m pytest                       # 529 tests: textbook and hand checks, geometry, safety guards, routes, structures, calibration, MCP
 
 cp specs/templates/hx_two_fluid.yaml my_job.yaml   # fill every null from the customer requirement
 aces check my_job.yaml                 # lists anything missing

@@ -3,7 +3,7 @@
 Rev 2 (2026-10-07). This revision takes in the review from the agent working in `aces-dev/`:
 
 - backup and scheduled copy-off now come before the first campaign;
-- the costing module (its D24–D26) has been added;
+- the costing module (its proposed decisions) has been added;
 - ARC-1 rev B is flagged as Aaron's decision.
 
 **Status:** ✅ done · ⏸️ blocked (reason given) · blank = to do. **Bold** steps are gates.
@@ -14,8 +14,9 @@ Rev 2 (2026-10-07). This revision takes in the review from the agent working in 
   costing agent works in `aces-dev/`.
 - **Merging the costing patch.** It is additive: one import and one command block in `cli.py`, a new module and a
   test file. Rebase it onto `origin/main` and run the full suite before pushing.
-- **Decision numbers.** D24–D26 are reserved for the costing agent's decisions, and the compliance commit
-  (`0bfaa88`) claims D27. Take the next free number from DECISIONS.md when a decision is accepted.
+- **Decision numbers.** Numbers are given only when a decision is recorded in DECISIONS.md: D24 is ARC-1 rev B,
+  D28 the audit fixes, and the compliance commit (`0bfaa88`) claimed D27. The costing agent's proposals (cost
+  per route, cost calibration, lead times) take the next free numbers when Aaron accepts them.
 - **The rig is shared.** Only Aaron switches GRID CONTROL modes. No agent launches GPU work outside the simlab
   queue. Agents tell each other before touching rig services (for example the GLM-5.2 lane on :8019).
 
@@ -96,12 +97,12 @@ Rev 2 (2026-10-07). This revision takes in the review from the agent working in 
 
 ## G. Cost, routes and revenue
 
-43. Costing module (costing agent, D24): `aces cost` per route, merged as described under Coordination.
-44. Cost-calibration registry (D25): quotes and invoices calibrate cost the way CFD calibrates physics, with the
+43. Costing module (costing agent, proposed): `aces cost` per route, merged as described under Coordination.
+44. Cost-calibration registry (proposed): quotes and invoices calibrate cost the way CFD calibrates physics, with the
     same provenance rules.
-45. Lead-time model (D26) per route: print, machine, robot cell.
-46. ARC-1 rev B: **Aaron's decision**, and safety-relevant. Then fatigue coupons for the welded nodes. Nothing
-    downstream waits on it.
+45. Lead-time model (proposed) per route: print, machine, robot cell.
+46. ✅ ARC-1 rev B accepted as the design to quote (D24, 2026-10-07). Next: fatigue coupons for the welded
+    nodes. Nothing downstream waits on it.
 47. CNC-machinable geometry family (plate-fin and milled channels), so a design can leave ACES without a
     printer.
 48. `aces-mcp` over HTTP on the LAN with bearer tokens, in Mission Control.

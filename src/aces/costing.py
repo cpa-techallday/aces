@@ -1,4 +1,4 @@
-"""Manufacturing advisor and cost estimator (decision D24, proposed; audit H2 fixes, 2026-10-07).
+"""Manufacturing advisor and cost estimator (proposed costing decision, not yet numbered; audit H2 fixes, 2026-10-07).
 
 Estimate only: not a quote, not verified.
 
@@ -18,7 +18,7 @@ Inputs
 * A rates file (``load_rates``, YAML or JSON): every rate, build volume and material property the estimate
   uses, each as ``{value, source, date}`` where the source is a quote, invoice or datasheet.  ACES ships no
   rates, prices or material properties (rules 1 and 2).  Anything the file lacks is reported as missing,
-  never defaulted.  The shape is meant to be extended by the cost-calibration registry (D25), which can add
+  never defaulted.  The shape is meant to be extended by the cost-calibration registry (proposed), which can add
   keys such as the quotes behind a value without changing what is read here.
 
 Cost model (per part, for one route and material at quantity q)
@@ -40,7 +40,7 @@ Cost model (per part, for one route and material at quantity q)
     band          = unit x (1 -/+ uncertainty_frac)
 
 Scope: build time ignores orientation, build height and supports; parts are not stacked; scrap is applied to
-every direct cost.  Lead times (D26) are not modelled.
+every direct cost.  Lead times (proposed) are not modelled.
 """
 from __future__ import annotations
 
