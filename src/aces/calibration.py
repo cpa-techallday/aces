@@ -14,15 +14,24 @@ update it and the evidence ledger can hash it:
                            "valid_range": {"reynolds": [50, 1500], "wall_ratio": [0.05, 0.15]},
                            "fitted_on": "2026-11-02"}}
 
+A factor with sources must say where it holds and when it was fitted: ``value``, a non-empty
+``valid_range`` (each ``[low, high]``) and ``fitted_on`` (ISO date) are required, both when it
+is loaded and when it is set.  Otherwise an entry with only ``sources`` would load as a
+"calibrated" 1.0 that can never warn out of range.
+
 A factor may vary with Reynolds number (``Factor.at``: a power law, or an inertial onset
 value * (1 + (Re / re_ref) ** n)) when calibration data show a trend a constant cannot
 represent; it is never used outside its fitted Re range without a warning.
 """
 from __future__ import annotations
 
+import datetime as _dt
 import json
+import math
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+
+from .safeio import write_text
 
 
 @dataclass(frozen=True)
@@ -76,8 +85,19 @@ class Factor:
 def _validate(f: Factor) -> Factor:
     if not f.sources:
         raise ValueError(f"calibration factor {f.key!r} has no provenance (sources); refusing to use it")
-    if not f.value > 0:
+    if not (math.isfinite(f.value) and f.value > 0):
         raise ValueError(f"calibration factor {f.key!r} must be positive, got {f.value}")
+    if not f.valid_range:
+        raise ValueError(f"calibration factor {f.key!r} has no valid_range: without the fitted range it could "
+                         f"never warn when used outside it")
+    for name, rng in f.valid_range.items():
+        lo, hi = rng
+        if not (math.isfinite(lo) and math.isfinite(hi) and lo <= hi):
+            raise ValueError(f"calibration factor {f.key!r} has a bad valid_range for {name}: {rng}")
+    try:
+        _dt.date.fromisoformat(str(f.fitted_on)[:10])
+    except ValueError:
+        raise ValueError(f"calibration factor {f.key!r} needs fitted_on as an ISO date, got {f.fitted_on!r}") from None
     if f.kind not in ("constant", "power", "onset"):
         raise ValueError(f"calibration factor {f.key!r} has unknown form {f.form!r}")
     if f.kind != "constant":
@@ -102,10 +122,20 @@ class Registry:
         if not p.exists():
             raise FileNotFoundError(f"calibration file {p} not found (set calibration_file: null for none)")
         raw = json.loads(p.read_text())
+        if not isinstance(raw, dict):  # a bad file, not a programming error: callers catch ValueError
+            raise ValueError(f"calibration file {p} must hold a JSON object of factors")  # noqa: TRY004
         factors = {}
         for k, v in raw.items():
-            vr = {name: (float(lo), float(hi)) for name, (lo, hi) in (v.get("valid_range") or {}).items()}
-            factors[k] = Factor(key=k, value=float(v.get("value", 1.0)), sources=tuple(v.get("sources", ())),
+            if not isinstance(v, dict):
+                raise ValueError(f"calibration factor {k!r} in {p} is not an object")  # noqa: TRY004
+            if "value" not in v:  # never default a stored factor to 1.0: it would pass as calibrated
+                raise ValueError(f"calibration factor {k!r} in {p} has no value")
+            vr = {}
+            for name, rng in (v.get("valid_range") or {}).items():
+                if not (isinstance(rng, (list, tuple)) and len(rng) == 2):
+                    raise ValueError(f"calibration factor {k!r} in {p}: valid_range {name} must be [low, high]")
+                vr[name] = (float(rng[0]), float(rng[1]))
+            factors[k] = Factor(key=k, value=float(v["value"]), sources=tuple(v.get("sources", ())),
                                 valid_range=vr, fitted_on=v.get("fitted_on", ""), basis=v.get("basis", ""),
                                 re_exponent=float(v.get("re_exponent", 0.0)), re_ref=float(v.get("re_ref", 0.0)),
                                 form=v.get("form", ""))
@@ -120,7 +150,7 @@ class Registry:
     def save(self, path: str | Path | None = None) -> Path:
         p = Path(path or self.path or "calibration.json")
         data = {k: {kk: vv for kk, vv in asdict(f).items() if kk != "key"} for k, f in sorted(self._factors.items())}
-        p.write_text(json.dumps(data, indent=2, sort_keys=True))
+        write_text(p, json.dumps(data, indent=2, sort_keys=True), overwrite=True)  # never through a planted link
         self.path = p
         return p
 

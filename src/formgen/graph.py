@@ -196,6 +196,11 @@ class LatticeGraph:
             "print_order": order if order is not None else [],
         }
 
+    def to_json(self, order: list | None = None) -> str:
+        return json.dumps(self.to_dict(order))
+
     def save_json(self, path: str, order: list | None = None) -> None:
-        with open(path, "w") as f:
-            json.dump(self.to_dict(order), f)
+        """Write the lattice JSON, replacing an earlier file but never writing through a link."""
+        from aces import safeio
+
+        safeio.write_text(path, self.to_json(order), overwrite=True)

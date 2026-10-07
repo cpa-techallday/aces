@@ -420,16 +420,19 @@ class Studio(tk.Tk):
         self.progress.start(12)
         self.var_status.set("running...")
 
-        def work():
-            try:
-                res = run(opts, log=self.log)
-                self.after(0, lambda: self._done(res, None))
-            except Exception as exc:
-                self.log(traceback.format_exc())
-                self.after(0, lambda: self._done(None, exc))
-
-        self.worker = threading.Thread(target=work, daemon=True)
+        self.worker = threading.Thread(target=self._run_worker, args=(opts,), daemon=True)
         self.worker.start()
+
+    def _run_worker(self, opts):
+        """Worker thread: run the pipeline and hand the result, or the error, back to the Tk thread."""
+        try:
+            res = run(opts, log=self.log)
+        except Exception as exc:
+            self.log(traceback.format_exc())
+            # bind the exception now: Python deletes ``exc`` when this block ends, before Tk runs the callback
+            self.after(0, lambda err=exc: self._done(None, err))
+            return
+        self.after(0, lambda: self._done(res, None))
 
     def _done(self, res, exc):
         self.progress.stop()

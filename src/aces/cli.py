@@ -7,27 +7,27 @@
   aces form SPEC.yaml --out DIR             formgen lattice route (robot cell / printed formwork)
   aces rod SPEC.yaml --out DIR              rod-lattice route (ARC-1 process: placed rods, welded nodes)
   aces calibrate MEAS.csv --registry R.json  fit hx factors from CFD/test measurements
+  aces radar-calibrate ROWS.json --registry R.json  fit radar factors from EM-sim/bench rows
   aces cfd-sample --tpms gyroid ...         one periodic CFD calibration sample (lattice Boltzmann, FP64)
   aces cfd-campaign --out EXP.yaml ...      simlab experiment: a sweep of calibration samples for the rig
   aces cfd-collect EXP_DIR --out M.json     measurement rows from a finished simlab campaign
   aces processes                            manufacturing routes and what ACES checks for each
-  aces cost PART.yaml                       route suggestions + per-unit cost at different scales
+  aces cost PART.yaml --rates RATES.yaml    route suggestions + per-unit cost estimates (not quotes)
   aces compliance collect|validate|index    ISO 27001 evidence package (API-first, ledger-chained)
-  aces ledger verify PATH                   check the evidence hash chain
+  aces ledger verify|head|seal PATH         check the hash chain; print or sign the head; seal a torn line
   aces isaac-health [--deep]                layered Isaac Sim probe (GPU / install / SimulationApp)
 """
 from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
-import tempfile
 from pathlib import Path
 
 import yaml
 
 from . import compliance, costing, evidence, manufacturing, search, simlab, spec
+from . import safeio
 from .domains import get as get_model
 from .domains.form import route as form_route
 from .domains.rod import route as rod_route
@@ -45,45 +45,47 @@ def _load(path: str):
     cf = getattr(req, "calibration_file", None)
     if cf and not Path(cf).is_absolute():
         req = req.model_copy(update={"calibration_file": str((Path(path).parent / cf).resolve())})
+    # bounds may only narrow the model's own ranges (audit M5); say so here, before any search starts
+    try:
+        search.check_bounds(model_cls().parameters(req), env.search.bounds)
+    except ValueError as e:
+        raise spec.SpecError([str(e)]) from None
     return data, env, req, model_cls
 
 
 def _fresh_out(out: str | Path) -> str | None:
     """Reason the output folder cannot take a new run, or None.
 
-    A folder holding run.json belongs to an earlier run and its own evidence record; writing a new run over
-    it would leave report.md, run.json and the ledger pointing at different results.
+    A run needs a new folder (audit M1): a folder holding run.json belongs to an earlier run and its own
+    evidence record, and anything already in a folder (including a planted link) is not this run's.
     """
     o = Path(out)
-    if o.is_symlink():
+    if safeio.is_link(o):
         return f"{o} is a symbolic link; give a real folder for --out"
-    if (o / "run.json").exists() or (o / "run.json").is_symlink():
+    if (o / "run.json").exists() or safeio.is_link(o / "run.json"):
         return f"{o} already holds a finished run (run.json); choose a new --out folder"
-    for name in RUN_FILES:
-        if (o / name).is_symlink():
-            return f"{o / name} is a symbolic link; choose a new --out folder"
+    if o.exists():
+        return f"{o} already exists; a run needs a new --out folder"
     return None
 
 
-RUN_FILES = ("run.json", "report.md", "pareto.json", "evaluations.jsonl", "stages.log", "structure.json")
+def _new_run_dir(out: str | Path) -> safeio.OutDir | str:
+    """The new run folder, opened once (write every run file through it), or why it can't be used."""
+    if why := _fresh_out(out):
+        return why
+    try:
+        return safeio.OutDir(out, new=True)
+    except OSError as e:
+        return str(e)
 
 
 def _safe_write(path: Path, text: str) -> None:
-    """Write a run file atomically, never through a link planted at the target.
+    """Write one run file through :mod:`aces.safeio` (audit M1).
 
-    The text goes to a temporary file in the same folder, then replaces the target's directory entry, so a
-    symbolic or hard link at the target is replaced rather than followed.
+    The file must be new, and neither it nor its folder may be a link: :class:`safeio.UnsafePathError` for a
+    link (so a run folder swapped for a link mid-run is refused), FileExistsError for an existing file.
     """
-    if path.is_symlink():
-        raise PermissionError(f"refusing to write through the symbolic link {path}")
-    fd, tmp = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as fh:
-            fh.write(text)
-        os.replace(tmp, path)
-    except BaseException:
-        Path(tmp).unlink(missing_ok=True)
-        raise
+    safeio.write_text(Path(path), text)
 
 
 def cmd_check(args) -> int:
@@ -94,11 +96,13 @@ def cmd_check(args) -> int:
             print(f"OK: {env.domain} spec for project {env.project!r} is complete (formgen route).")
             return 0
         if data.get("domain") == rod_route.DOMAIN:
-            env, _ = spec.parse(data, rod_route.RodRequirements)
-            print(f"OK: {env.domain} spec for project {env.project!r} is complete (rod-lattice route).")
+            env, req = spec.parse(data, rod_route.RodRequirements)
+            study = rod_route.check_study(req, Path(args.spec).parent)  # committed under studies/ (audit H1)
+            print(f"OK: {env.domain} spec for project {env.project!r} is complete (rod-lattice route; study "
+                  f"{study.rel} at {study.commit[:12]}).")
             return 0
         _, env, _, model_cls = _load(args.spec)
-    except (spec.SpecError, KeyError, ValueError) as e:
+    except (spec.SpecError, KeyError, ValueError, FileNotFoundError, rod_route.StudyError) as e:
         print(e)
         return 2
     print(f"OK: {env.domain} spec for project {env.project!r} is complete ({model_cls.id} {model_cls.version}).")
@@ -156,31 +160,35 @@ def cmd_rod(args) -> int:
         if data.get("domain") != rod_route.DOMAIN:
             raise ValueError(f"`aces rod` needs domain: {rod_route.DOMAIN}")
         env, req = spec.parse(data, rod_route.RodRequirements)
-    except (spec.SpecError, ValueError) as e:
+        # only committed, unchanged studies under studies/ run (audit H1); refuse before making the run folder
+        rod_route.check_study(req, spec_path.parent, out=args.out)
+    except (spec.SpecError, ValueError, FileNotFoundError, FileExistsError, rod_route.StudyError) as e:
         print(e)
         return 2
-    if why := _fresh_out(args.out):
-        print(why)
+    od = _new_run_dir(args.out)
+    if isinstance(od, str):
+        print(od)
         return 2
-    try:
-        res = rod_route.run(req, args.out, spec_path.parent)
-    except (FileNotFoundError, FileExistsError) as e:
-        print(e)
-        return 2
-    canonical = env.model_dump(mode="json")
-    rec = evidence.make_record(
-        kind="aces.rod_run", spec=canonical, model_id=rod_route.DOMAIN, model_version="study",
-        inputs={"requirements_resolved": req.model_dump(mode="json")},
-        observations={"summary": res["summary"], "stages": res["stages"], "problems": res["problems"],
-                      "warnings": res["warnings"]},
-        calibration={}, artifacts=res["artifacts"],
-    )
-    ledger = Path(args.ledger)
-    written = evidence.Ledger(ledger).append(rec)
-    out = Path(args.out)
-    _safe_write(out / "run.json", json.dumps({"record_hash": written["record_hash"], "spec_hash": written["spec_hash"],
+    with od:
+        try:
+            res = rod_route.run(req, od, spec_path.parent)
+        except (FileNotFoundError, FileExistsError, rod_route.StudyError) as e:
+            print(e)
+            return 2
+        canonical = env.model_dump(mode="json")
+        rec = evidence.make_record(
+            kind="aces.rod_run", spec=canonical, model_id=rod_route.DOMAIN, model_version="study",
+            inputs={"requirements_resolved": req.model_dump(mode="json")},
+            observations={"summary": res["summary"], "stages": res["stages"], "problems": res["problems"],
+                          "warnings": res["warnings"]},
+            calibration={}, artifacts=res["artifacts"],
+        )
+        ledger = Path(args.ledger)
+        written = evidence.Ledger(ledger).append(rec)
+        od.write_text("run.json", json.dumps({"record_hash": written["record_hash"], "spec_hash": written["spec_hash"],
                                               "ledger": str(ledger.resolve()), "model": written["model"]}, indent=2))
-    _safe_write(out / "report.md", _rod_report(canonical, res, written["record_hash"], req))
+        od.write_text("report.md", _rod_report(canonical, res, written["record_hash"], req))
+    out = Path(args.out)
     print(f"Report: {out / 'report.md'}\nEvidence: {ledger} ({written['record_hash'][:12]})")
     for p in res["problems"]:
         print(f"PROBLEM: {p}")
@@ -192,6 +200,8 @@ def cmd_calibrate(args) -> int:
 
     try:
         meas = hxcal.load(args.measurements)
+        # the Nusselt rows' own boundary (H1 for CFD rows); --boundary only for rows that carry none
+        boundary, _ = hxcal.thermal_boundary(meas, args.boundary)
         factors, summary, refused = hxcal.fit(meas, boundary=args.boundary, min_points=args.min_points,
                                               max_scatter=args.max_scatter, resolution=args.resolution)
     except (ValueError, FileNotFoundError) as e:
@@ -214,16 +224,71 @@ def cmd_calibrate(args) -> int:
     if not factors:
         print("No factors written.")
         return 1
-    reg = hxcal.update_registry(args.registry, factors)
+    try:
+        reg = hxcal.update_registry(args.registry, factors)
+    except (ValueError, OSError) as e:  # an existing registry that fails its checks, or an unsafe path
+        print(f"Registry {args.registry} not updated: {e}")
+        return 2
     rec = evidence.make_record(
         kind="aces.calibration",
         spec={"company": spec.COMPANY, "project": args.project, "owner": args.owner,
               "rd_activity": args.rd_activity, "hypothesis": "Fast-tier hx correlations can be calibrated to "
               "the measurements within the stated scatter."},
         model_id="hx.two_fluid", model_version="calibration",
-        inputs={"measurements": str(args.measurements), "boundary": args.boundary, "min_points": args.min_points,
+        inputs={"measurements": str(args.measurements), "boundary": boundary, "min_points": args.min_points,
                 "resolution": args.resolution,
                 "max_scatter": args.max_scatter},
+        observations={"summary": summary, "refused": refused},
+        calibration=reg.as_dict(),
+        artifacts={"measurements": args.measurements, "registry": args.registry},
+    )
+    written = evidence.Ledger(args.ledger).append(rec)
+    print(f"Registry: {args.registry} ({len(factors)} factor(s))\nEvidence: {args.ledger} ({written['record_hash'][:12]})")
+    return 0 if not refused else 1
+
+
+def cmd_radar_calibrate(args) -> int:
+    """Fit the radar fast tier's factors from EM-sim or bench rows (D18), like `aces calibrate` for hx."""
+    from .domains.radar import calibrate as rcal
+    from .domains.radar.model import DOMAIN as RADAR_DOMAIN
+
+    try:
+        rows = rcal.read_rows(args.measurements)
+        factors, summary, refused = rcal.fit(rows, min_points=args.min_points, max_scatter=args.max_scatter,
+                                             min_held_out=args.min_held_out, holdout_tol=args.holdout_tol)
+    except (ValueError, OSError) as e:
+        print(e)
+        return 2
+    for row in summary:
+        val = f"{row['value']:.4f}" if "value" in row else "-"
+        sc = f"{row['scatter_sd_log']:.3f}" if "scatter_sd_log" in row else "-"
+        print(f"{row['key']:<26} points {row['points']:>3}  conditions {row['conditions']:>3}  value {val:>8}  "
+              f"scatter {sc:>6}  held-out {len(row.get('held_out', [])):>2}  {row['status']}")
+        for c in row.get("held_out", []):
+            print(f"  HELD-OUT {c['source']} at {c['frequency_hz'] / 1e9:.4g} GHz: measured {c['measured_db']:.3f} dB, "
+                  f"predicted {c['predicted_db']:.3f} dB ({c['error']:+.1%}){'' if c['ok'] else '  FAIL'}")
+        for s in row.get("held_out_not_independent", []):
+            print(f"  NOT INDEPENDENT: held-out row {s} is at a fitted condition")
+    for r in refused:
+        print(f"REFUSED: {r}")
+    if not factors:
+        print("No factors written.")
+        return 1
+    try:
+        reg = rcal.update_registry(args.registry, factors)
+    except (OSError, ValueError) as e:
+        print(e)
+        return 2
+    rec = evidence.make_record(
+        kind="aces.calibration",
+        spec={"company": spec.COMPANY, "project": args.project, "owner": args.owner,
+              "rd_activity": args.rd_activity, "hypothesis": "Fast-tier radar loss, noise and gain can be "
+              "calibrated to EM and bench measurements within the stated scatter, and the factors predict "
+              "held-out rows."},
+        model_id=RADAR_DOMAIN, model_version="calibration",
+        inputs={"measurements": str(args.measurements), "min_points": args.min_points,
+                "max_scatter": args.max_scatter, "min_held_out": args.min_held_out,
+                "holdout_tol": args.holdout_tol},
         observations={"summary": summary, "refused": refused},
         calibration=reg.as_dict(),
         artifacts={"measurements": args.measurements, "registry": args.registry},
@@ -245,100 +310,160 @@ def cmd_processes(args) -> int:
     return 0
 
 
-def _cost_part(args) -> costing.PartProfile | None:
-    """Part profile from --from-run (a pareto entry) or the YAML part block."""
+def _cost_part(args) -> costing.PartProfile:
+    """Part profile from --from-run (a verified design run's pareto entry) or a YAML part file.
+
+    Raises costing.CostInputError or evidence.EvidenceError with a message for the user.
+    """
+    import hashlib
+
+    from . import safeio
+
     if args.from_run:
         run_dir = Path(args.from_run)
+        # the record is recomputed and the whole chain verified before anything in the folder is trusted (M2)
+        _, rec = evidence.load_verified_run(run_dir, args.ledger, artifacts=("pareto",))
+        run_spec = rec.get("spec") or {}
+        if rec.get("kind") != "aces.design_run" or run_spec.get("domain") != "hx.two_fluid":
+            raise costing.CostInputError(f"--from-run costs hx.two_fluid design runs; {run_dir} holds "
+                                         f"{rec.get('kind')} for {run_spec.get('domain')!r}")
         pareto_path = run_dir / "pareto.json"
-        if not pareto_path.exists():
-            print(f"{pareto_path} not found; --from-run needs the output directory of `aces design`.")
-            return None
-        pareto = json.loads(pareto_path.read_text())
-        if not pareto:
-            print("No designs in that run's pareto.json.")
-            return None
+        try:
+            text = safeio.read_text_limited(pareto_path, 64 << 20)
+        except (OSError, ValueError) as e:
+            raise costing.CostInputError(f"cannot read {pareto_path}: {e}") from e
+        if hashlib.sha256(text.encode("utf-8")).hexdigest() != rec["artifacts"]["pareto"]["sha256"]:
+            raise evidence.EvidenceError(f"{pareto_path} no longer matches its evidence record")
+        pareto = json.loads(text)  # the bytes verified above are what `aces design` wrote
+        if not isinstance(pareto, list) or not pareto:
+            raise costing.CostInputError(f"no designs in {pareto_path}; nothing to cost")
         if not 0 <= args.rank < len(pareto):
-            print(f"--rank must be 0..{len(pareto) - 1}")
-            return None
-        return costing.PartProfile.from_pareto(pareto[args.rank], name=f"{run_dir.name}-rank{args.rank}")
-    data = yaml.safe_load(Path(args.part).read_text()) or {}
+            raise costing.CostInputError(f"--rank must be 0..{len(pareto) - 1}")
+        return costing.PartProfile.from_pareto(pareto[args.rank], f"{run_dir.name}-rank{args.rank}", spec=run_spec)
     try:
-        return costing.PartProfile.from_dict(data.get("part") or data)
-    except (KeyError, TypeError, ValueError) as e:
-        print(f"part profile is incomplete or invalid: {e}")
-        return None
+        data = yaml.safe_load(safeio.read_text_limited(args.part, 1 << 20))
+    except (OSError, ValueError) as e:
+        raise costing.CostInputError(f"cannot read part profile {args.part}: {e}") from e
+    except yaml.YAMLError as e:
+        raise costing.CostInputError(f"{args.part}: not valid YAML: {e}") from e
+    if not isinstance(data, dict):
+        raise costing.CostInputError(f"{args.part}: expected a mapping with a `part:` block")
+    return costing.PartProfile.from_dict(data.get("part", data))
 
 
 def cmd_cost(args) -> int:
-    if not args.from_run and not args.part:
-        print("give a part profile YAML, or --from-run DIR to cost a design-run pareto entry")
-        return 2
-    part = _cost_part(args)
-    if part is None:
-        return 2
-    quantities = tuple(sorted({max(1, q) for q in args.quantities}))
-    mats = tuple(args.materials) if args.materials else None
-    print(f"Part: {part.name}  envelope {tuple(round(x, 3) for x in part.envelope_m)} m, "
-          f"{part.mass_kg:.2f} kg, min feature {part.min_feature_m * 1e3:.2f} mm "
-          f"(profile from: {part.source})")
-    print(f"Cost rates are baseline assumptions (AUD 2026); calibrate to real quotes before quoting customers.\n")
+    from . import safeio
 
-    sug = costing.suggest(part, args.quantity, preferred_materials=mats)
+    if bool(args.from_run) == bool(args.part):
+        print("give a part profile YAML or --from-run DIR (the output folder of `aces design`), not both")
+        return 2
+    if not args.rates:
+        print(costing.RATES_HELP)
+        return 2
+    if args.out and (safeio.is_link(args.out) or Path(args.out).exists()):
+        print(f"{args.out} exists; choose a new file")
+        return 2
+    if args.out and not Path(args.out).parent.is_dir():
+        print(f"cannot write {args.out}: its folder does not exist")
+        return 2
+    try:
+        rates = costing.load_rates(args.rates)
+        part = _cost_part(args)
+        quantities = costing.check_quantities(args.quantities)
+        target = costing.check_quantity(args.quantity)
+        if args.top < 1:
+            raise costing.CostInputError("--top must be at least 1")
+        sug = costing.suggest(part, target, tuple(args.materials or ()), rates=rates)
+    except (costing.CostInputError, evidence.EvidenceError, OSError) as e:
+        print(e)
+        return 2
+    cur = rates.currency
+    tol = f"{part.tolerance_mm:g} mm" if part.tolerance_mm is not None else "not given (route tolerances not checked)"
+    print(costing.DISCLAIMER)
+    print(f"Part: {part.name}  bounding box {tuple(round(x, 4) for x in part.envelope_m)} m, solid volume "
+          f"{part.volume_cm3:,.1f} cm3, min feature {part.min_feature_m * 1e3:.2f} mm")
+    print(f"Duty: {part.max_temp_C:.1f} C, {part.pressure_bar:g} bar; tolerance {tol}; application {part.application}")
+    print(f"Profile from: {part.source}")
+    for n in part.notes:
+        print(f"Note: {n}")
+    print(f"Rates from: {rates.origin} ({cur}{', ' + rates.basis if rates.basis else ''}); every value used is "
+          "listed under Rate sources")
+    print(f"Margins: {costing.MARGINS_TEXT}\n")
+
     feasible = [s for s in sug if s.feasible]
-    print(f"## Route suggestion at qty {args.quantity}")
+    print(f"## Route suggestion at qty {target}")
     for s in feasible[: args.top]:
         print(f"  {s.process}/{s.material}: {s.reasons[0]}")
     if not feasible:
-        print("  no feasible route at this quantity with the given part limits")
-    excluded = [s for s in sug if not s.feasible]
-    if excluded and args.verbose:
-        print("\n## Excluded (the DFM feedback)")
-        seen = set()
-        for s in excluded:
-            key = (s.process, s.reasons[0])
-            if key in seen:
-                continue
-            seen.add(key)
-            print(f"  {s.process}: {s.reasons[0]}")
+        print("  no feasible route at this quantity" + ("" if args.verbose else "; --verbose lists why"))
+    planned = [p.id for p in manufacturing.PROCESSES.values() if p.status != "available"]
+    if planned:
+        print(f"Planned, not available (never recommended): {', '.join(planned)}")
+    missing = rates.missing()
+    if missing:
+        print("\n## Missing inputs (the rates file needs these before those routes or materials can be costed)")
+        for m in missing:
+            print(f"  {m}")
+    if args.verbose:
+        print("\n## Excluded (the DFM feedback; pairs with no feedstock price in the rates file are not listed)")
+        for s in sug:
+            if not s.feasible and s.process not in planned and "is not offered on" not in s.reasons[0]:
+                print(f"  {s.process}/{s.material}: {'; '.join(s.reasons)}")
 
     pairs = tuple((s.process, s.material) for s in feasible[: args.top])
-    if not pairs:
-        return 1
-    co = costing.crossovers(part, pairs, quantities)
-    print("\n## Unit cost by quantity (AUD/part, central estimate)")
-    header = "| route | " + " | ".join(f"{q:,}" for q in co["quantities"]) + " |"
-    print(header)
-    print("| --- | " + " | ".join("---:" for _ in co["quantities"]) + " |")
-    for route, vals in co["curves"].items():
-        print(f"| {route} | " + " | ".join(f"{v:,.0f}" for v in vals) + " |")
-    print("\n## Crossover points")
-    for l in co["leaders"]:
-        print(f"  qty {l['quantity']:>6,}: cheapest is {l['cheapest']} at A${l['unit_aud']:,.0f}/part")
+    co, details, sources = None, [], {}
+    if pairs:
+        co = costing.crossovers(part, pairs, quantities, rates=rates)
+        print(f"\n## Unit cost by quantity ({cur}/part, central estimate; '-' is past the route's quantity limit)")
+        print("| route | " + " | ".join(f"{q:,}" for q in co["quantities"]) + " |")
+        print("| --- | " + " | ".join("---:" for _ in co["quantities"]) + " |")
+        for route, vals in co["curves"].items():
+            print(f"| {route} | " + " | ".join("-" if v is None else f"{v:,.0f}" for v in vals) + " |")
+        print("\n## Crossover points")
+        for lead in co["leaders"]:
+            if lead["cheapest"] is None:
+                print(f"  qty {lead['quantity']:>6,}: no suggested route is costed at this quantity")
+            else:
+                print(f"  qty {lead['quantity']:>6,}: cheapest is {lead['cheapest']} at {cur} "
+                      f"{lead['unit_aud']:,.0f}/part")
+        details = [e for pid, mid in pairs for e in costing.curve(part, pid, mid, quantities, rates=rates)]
+        for e in details:
+            sources.update(e.rates_used)
+        for _, mid in pairs:
+            sources.update(costing.material_checks_used(part, mid, rates))
+        print("\n## Rate sources (every value used above)")
+        for k in sorted(sources):
+            print(f"  {costing.format_source(k, sources[k])}")
+    print(f"\n{costing.DISCLAIMER}")
 
     if args.out:
-        out = Path(args.out)
-        if out.exists() or out.is_symlink():
-            print(f"\n{out} exists; choose a new file")
-            return 2
         report = {
             "kind": "aces.cost_estimate",
-            "part": {"name": part.name, "envelope_m": part.envelope_m, "volume_m3": part.volume_m3,
-                     "mass_kg": part.mass_kg, "min_feature_m": part.min_feature_m,
-                     "application": part.application, "source": part.source},
-            "quantity_target": args.quantity,
+            "disclaimer": f"{costing.DISCLAIMER} Every rate is the rates file's, listed with its source.",
+            "rates_file": rates.origin,
+            "currency": cur,
+            "margins": costing.MARGINS_TEXT,
+            "part": dict(vars(part)),
+            "quantity_target": target,
+            "planned_routes": planned,
+            "missing_inputs": missing,
             "suggestions": [{"process": s.process, "material": s.material, "feasible": s.feasible,
                              "unit_aud": s.unit_aud_at_target, "reasons": list(s.reasons)} for s in sug],
             "crossovers": co,
             "detail": {
                 f"{e.process}/{e.material}@{e.quantity}": {
                     "unit_aud": e.unit_aud, "unit_low_aud": e.unit_low_aud, "unit_high_aud": e.unit_high_aud,
-                    "batch_aud": e.batch_aud, "breakdown": e.breakdown, "assumptions": list(e.assumptions)}
-                for pid, mid in pairs for e in costing.curve(part, pid, mid, quantities)},
-            "disclaimer": ("Baseline assumption rates with wide uncertainty bands. Not a quote. "
-                           "Calibrate material/machine rates to supplier quotes before customer use."),
+                    "batch_aud": e.batch_aud, "mass_kg": e.mass_kg, "parts_per_build": e.parts_per_build,
+                    "builds": e.builds, "breakdown": e.breakdown, "assumptions": list(e.assumptions)}
+                for e in details},
+            "rate_sources": sources,
         }
-        _safe_write(out, json.dumps(report, indent=2))
-        print(f"\nWrote {out}")
+        try:
+            safeio.write_text(args.out, json.dumps(report, indent=2), overwrite=False)
+        except OSError as e:
+            print(f"cannot write {args.out}: {e}")
+            return 2
+        print(f"Wrote {args.out}")
     return 0 if feasible else 1
 
 
@@ -412,44 +537,77 @@ def cmd_form(args) -> int:
     except (spec.SpecError, ValueError) as e:
         print(e)
         return 2
-    if why := _fresh_out(args.out):
-        print(why)
-        return 2
     try:
-        res = form_route.run(req, args.out, spec_path.parent)
+        import formgen.pipeline  # noqa: F401 - optional dependency group [formgen]; check before making the folder
     except ImportError as e:
         print(f"formgen dependencies missing ({e}); install with: pip install -e .[formgen]")
         return 2
-    canonical = env.model_dump(mode="json")
-    rec = evidence.make_record(
-        kind="aces.form_run",
-        spec=canonical,
-        model_id=form_route.DOMAIN,
-        model_version=__import__("formgen").__version__,
-        inputs={"source": req.source, "options": res["report"].get("options", {}),
-                "requirements_resolved": req.model_dump(mode="json")},
-        observations={"stats": res["report"].get("stats"), "sequence": res["report"].get("sequence"),
-                      "structure": res.get("structure"),
-                      "estimate": res["report"].get("estimate"), "problems": res["problems"],
-                      "warnings": res["warnings"]},
-        calibration={},
-        artifacts=res["artifacts"],
-    )
-    ledger = Path(args.ledger)
-    written = evidence.Ledger(ledger).append(rec)
-    out = Path(args.out)
-    _safe_write(out / "run.json", json.dumps({"record_hash": written["record_hash"], "spec_hash": written["spec_hash"],
+    od = _new_run_dir(args.out)
+    if isinstance(od, str):
+        print(od)
+        return 2
+    with od:
+        res = form_route.run(req, od, spec_path.parent)
+        canonical = env.model_dump(mode="json")
+        rec = evidence.make_record(
+            kind="aces.form_run",
+            spec=canonical,
+            model_id=form_route.DOMAIN,
+            model_version=__import__("formgen").__version__,
+            inputs={"source": req.source, "options": res["report"].get("options", {}),
+                    "requirements_resolved": req.model_dump(mode="json")},
+            observations={"stats": res["report"].get("stats"), "sequence": res["report"].get("sequence"),
+                          "structure": res.get("structure"),
+                          "estimate": res["report"].get("estimate"), "problems": res["problems"],
+                          "warnings": res["warnings"]},
+            calibration={},
+            artifacts=res["artifacts"],
+        )
+        ledger = Path(args.ledger)
+        written = evidence.Ledger(ledger).append(rec)
+        od.write_text("run.json", json.dumps({"record_hash": written["record_hash"], "spec_hash": written["spec_hash"],
                                               "ledger": str(ledger.resolve()), "model": written["model"]}, indent=2))
-    _safe_write(out / "report.md", _form_report(canonical, res, written["record_hash"], req))
+        od.write_text("report.md", _form_report(canonical, res, written["record_hash"], req))
+    out = Path(args.out)
     print(f"Report: {out / 'report.md'}\nEvidence: {ledger} ({written['record_hash'][:12]})")
     for p in res["problems"]:
         print(f"PROBLEM: {p}")
     return 1 if res["problems"] else 0
 
 
+class DesignContract:
+    """What `aces design` needs from a domain model on top of the DesignModel protocol (audit R1).
+
+    Every model gives ``id``, ``version``, ``requirements_model``, ``parameters(req)``, ``evaluate(params, req)``
+    and ``registry(req)``.  Each Evaluation carries its own objectives, constraints, metrics, ``warnings`` and
+    ``uncalibrated`` keys; they reach pareto.json and evaluations.jsonl (both hashed into the record) and the
+    report.  On top of that a model states, as ``rank_objective``, ``run_inputs()`` and ``report(...)``:
+
+    rank_objective  the objective (minimised) that orders pareto.json, the record and the report
+    run_inputs      model settings recorded in the record's inputs (hx: its level-set resolution); {} if none
+    report          report(spec, SearchResult, record_hash) -> markdown that says "Not verified" (rule 3)
+
+    hx.two_fluid predates the contract, so its terms are stated here, unchanged.
+    """
+
+    __slots__ = ("rank_objective", "report", "run_inputs")
+
+    def __init__(self, rank_objective: str, run_inputs: dict, report) -> None:
+        self.rank_objective, self.run_inputs, self.report = rank_objective, dict(run_inputs), report
+
+    @classmethod
+    def of(cls, model) -> DesignContract:
+        if all(hasattr(model, a) for a in ("rank_objective", "run_inputs", "report")):
+            return cls(model.rank_objective, model.run_inputs(), model.report)
+        if model.id == "hx.two_fluid":
+            return cls("mass_kg", {"resolution": model.resolution},
+                       lambda s, r, h: hx_report(s, r, h, model.id, model.version))
+        raise ValueError(f"{model.id} does not state its design contract (rank_objective, run_inputs, report)")
+
+
 def cmd_design(args) -> int:
     try:
-        data, env, req, model_cls = _load(args.spec)
+        _, env, req, model_cls = _load(args.spec)
     except (spec.SpecError, KeyError, FileNotFoundError, ValueError) as e:
         print(e)
         return 2
@@ -458,6 +616,7 @@ def cmd_design(args) -> int:
         return 2
     model = model_cls()
     try:
+        contract = DesignContract.of(model)
         model.registry(req)  # fail early on a missing or unsourced calibration file
     except (FileNotFoundError, ValueError) as e:
         print(e)
@@ -465,42 +624,45 @@ def cmd_design(args) -> int:
     cfg = env.search
     trials = args.trials or cfg.trials
     res = search.run(model, req, trials=trials, seed=cfg.seed, population=cfg.population, bounds=cfg.bounds)
+    if contract.rank_objective not in res.objective_names:
+        print(f"{model.id} ranks by {contract.rank_objective!r}, which is not one of its objectives "
+              f"{res.objective_names}; nothing written")
+        return 2
     out = Path(args.out)
-    out.mkdir(parents=True, exist_ok=True)
     canonical_spec = env.model_dump(mode="json")
-    # domains choose their own objective names; sort the front by the first (minimised) objective
-    first_objective = sorted(res.pareto[0].objectives)[0] if res.pareto else None
-    pareto = sorted(res.pareto, key=lambda e: e.objectives[first_objective]) if first_objective else []
-    _safe_write(out / "pareto.json", json.dumps([e.as_dict() for e in pareto], indent=2, default=str))
-    _safe_write(out / "evaluations.jsonl", "".join(json.dumps(e.as_dict(), default=str) + "\n"
-                                                   for e in res.evaluations))
-    calib = model.registry(req).as_dict()
-    rec = evidence.make_record(
-        kind="aces.design_run",
-        spec=canonical_spec,
-        model_id=model.id,
-        model_version=model.version,
-        inputs={"trials": trials, "seed": cfg.seed, "population": cfg.population, "bounds": cfg.bounds,
-                "resolution": getattr(model, "resolution", None)},
-        observations={
-            "evaluated": len(res.distinct),
-            "feasible": len(res.feasible),
-            "pareto": [{"params": e.params, "objectives": e.objectives} for e in pareto],
-        },
-        calibration=calib,
-        artifacts={"pareto": out / "pareto.json", "evaluations": out / "evaluations.jsonl"},
-    )
-    ledger = Path(args.ledger)
-    written = evidence.Ledger(ledger).append(rec)
-    # The run manifest ties this directory to its own evidence record (not the ledger tail).
-    _safe_write(out / "run.json", json.dumps({
-        "record_hash": written["record_hash"], "spec_hash": written["spec_hash"],
-        "ledger": str(ledger.resolve()), "model": written["model"]}, indent=2))
-    if env.domain.startswith("hx."):
-        report = hx_report(canonical_spec, res, written["record_hash"], model.id, model.version)
-    else:
-        report = _generic_report(canonical_spec, pareto, written["record_hash"], model.id, model.version)
-    _safe_write(out / "report.md", report)
+    pareto = sorted(res.pareto, key=lambda e: e.objectives[contract.rank_objective])
+    run_dir = _new_run_dir(out)  # still new after the search, or refused (audit M1)
+    if isinstance(run_dir, str):
+        print(run_dir)
+        return 2
+    with run_dir:
+        run_dir.write_text("pareto.json", json.dumps([e.as_dict() for e in pareto], indent=2, default=str),
+                           overwrite=True)
+        run_dir.write_text("evaluations.jsonl", "".join(json.dumps(e.as_dict(), default=str) + "\n"
+                                                        for e in res.evaluations), overwrite=True)
+        calib = model.registry(req).as_dict()
+        rec = evidence.make_record(
+            kind="aces.design_run",
+            spec=canonical_spec,
+            model_id=model.id,
+            model_version=model.version,
+            inputs={"trials": trials, "seed": cfg.seed, "population": cfg.population, "bounds": cfg.bounds,
+                    **contract.run_inputs},
+            observations={
+                "evaluated": len(res.distinct),
+                "feasible": len(res.feasible),
+                "pareto": [{"params": e.params, "objectives": e.objectives} for e in pareto],
+            },
+            calibration=calib,
+            artifacts={"pareto": run_dir.path / "pareto.json", "evaluations": run_dir.path / "evaluations.jsonl"},
+        )
+        ledger = Path(args.ledger)
+        written = evidence.Ledger(ledger).append(rec)
+        # The run manifest ties this directory to its own evidence record (not the ledger tail).
+        run_dir.write_text("run.json", json.dumps({
+            "record_hash": written["record_hash"], "spec_hash": written["spec_hash"],
+            "ledger": str(ledger.resolve()), "model": written["model"]}, indent=2), overwrite=True)
+        run_dir.write_text("report.md", contract.report(canonical_spec, res, written["record_hash"]), overwrite=True)
     print(f"{len(res.distinct)} distinct designs evaluated, {len(res.feasible)} feasible, {len(pareto)} non-dominated.")
     print(f"Report: {out / 'report.md'}\nEvidence: {ledger} ({written['record_hash'][:12]})")
     return 0 if pareto else 1
@@ -509,33 +671,40 @@ def cmd_design(args) -> int:
 def cmd_sample(args) -> int:
     verts, faces = tpms.sample_mesh(args.tpms, args.cell_m, args.wall_ratio * args.cell_m, args.cells, args.region, args.resolution)
     scale = 1000.0 if args.units == "mm" else 1.0
-    p = tpms.write_stl(args.out, verts, faces, f"ACES {args.tpms} {args.region} a={args.cell_m} t/a={args.wall_ratio} units={args.units}",
-                       scale=scale)
+    try:
+        p = tpms.write_stl(args.out, verts, faces,
+                           f"ACES {args.tpms} {args.region} a={args.cell_m} t/a={args.wall_ratio} units={args.units}",
+                           scale=scale)
+    except FileExistsError:
+        print(f"{args.out} exists; choose a new file")
+        return 2
     print(f"{p}: {len(faces)} triangles, enclosed volume {tpms.mesh_volume(verts, faces):.4e} m3")
     return 0
 
 
 def cmd_export_simlab(args) -> int:
+    import hashlib
+
     run_dir = Path(args.run)
-    manifest_path = run_dir / "run.json"
-    for q in (manifest_path, run_dir / "pareto.json"):
-        if q.is_symlink():
-            print(f"{q} is a symbolic link; refusing to export from it.")
-            return 2
-    if not manifest_path.exists():
-        print(f"{manifest_path} not found; export works on the output directory of `aces design`.")
+    try:
+        simlab.check_name("solver", args.solver)
+        _, rec = evidence.load_verified_run(run_dir, args.ledger)
+    except evidence.EvidenceError as e:
+        print(f"{e}; refusing to export.")
         return 2
-    manifest = json.loads(manifest_path.read_text())
-    ledger = evidence.Ledger(args.ledger or manifest["ledger"])
-    rec = ledger.find(manifest["record_hash"])
-    if rec is None:
-        print(f"Evidence record {manifest['record_hash'][:12]} not found in {ledger.path}; refusing to export.")
+    except ValueError as e:
+        print(e)
         return 2
-    pareto_path = run_dir / "pareto.json"
-    if evidence.file_sha256(pareto_path) != rec["artifacts"]["pareto"]["sha256"]:
-        print(f"{pareto_path} no longer matches its evidence record (edited after the run); refusing to export.")
+    if (rec.get("model") or {}).get("id") != "hx.two_fluid":
+        print(f"export-simlab writes TPMS core geometry, so it takes hx.two_fluid runs only; this run is "
+              f"{(rec.get('model') or {}).get('id')!r}.")
         return 2
-    pareto = json.loads(pareto_path.read_text())
+    # read the bytes once and check them against the record, so the file can't change between check and use
+    raw = (run_dir / "pareto.json").read_bytes()
+    if hashlib.sha256(raw).hexdigest() != rec["artifacts"]["pareto"]["sha256"]:
+        print(f"{run_dir / 'pareto.json'} no longer matches its evidence record; refusing to export.")
+        return 2
+    pareto = json.loads(raw)
     if not pareto:
         print("No feasible designs in this run; nothing to verify.")
         return 1
@@ -545,67 +714,90 @@ def cmd_export_simlab(args) -> int:
     d = pareto[args.rank]
     p = d["params"]
     run_spec = rec["spec"]
+    try:
+        simlab.check_name("project", run_spec["project"])
+    except ValueError as e:
+        print(f"{e}; refusing to export.")
+        return 2
     scale = 1000.0 if args.units == "mm" else 1.0
-    stl = run_dir / f"rank{args.rank}_{p['tpms']}_{args.region}_{args.units}.stl"
-    exp_path = run_dir / f"simlab_rank{args.rank}_{args.region}.yaml"
-    for q in (stl, exp_path):
-        if q.is_symlink():
-            print(f"{q} is a symbolic link; refusing to write through it.")
+    stl_name = f"rank{args.rank}_{p['tpms']}_{args.region}_{args.units}.stl"
+    exp_name = f"simlab_rank{args.rank}_{args.region}.yaml"
+    try:
+        od = safeio.OutDir(run_dir, mkdir=False)
+    except OSError as e:
+        print(f"{e}; refusing to export.")
+        return 2
+    with od:
+        for name in (stl_name, exp_name):
+            if od.exists(name):
+                print(f"{run_dir / name} exists (an earlier export, or a planted link); export never overwrites. "
+                      f"Move it away first, or export another rank or region.")
+                return 2
+        try:
+            exp = simlab.experiment(
+                exp_id=f"aces-{run_spec['project']}-{rec['record_hash'][:8]}-rank{args.rank}-{args.region}",
+                project=run_spec["project"],
+                owner=run_spec["owner"],
+                rd_activity=run_spec["rd_activity"],
+                physics=args.physics,
+                solver=args.solver,
+                description=(f"ACES verification of rank-{args.rank} {p['tpms']} core: periodic {args.cells}^3-cell "
+                             f"{args.region} sample, a={p['cell_m']:.5f} m, t/a={p['wall_ratio']:.4f}."),
+                hypothesis=("Fast-tier pressure drop and heat transfer for this core are within the calibration "
+                            "tolerance of the solver result."),
+                expected="Per-cell pressure gradient and Nusselt number to fit the hx calibration factors.",
+                geometry_ref=str(od.path / stl_name),
+                geometry_units=args.units,
+                params={"aces_design": p,
+                        "aces_metrics": {k: v for k, v in d["metrics"].items() if k in ("hot", "cold")}},
+                outputs=["pressure_gradient_Pa_m", "nusselt", "mass_flow_kg_s"],
+                vram_gb=args.vram_gb,
+                system="hx",
+                aces_record=rec["record_hash"],
+            )
+        except ValueError as e:
+            print(f"{e}; refusing to export.")
             return 2
-    verts, faces = tpms.sample_mesh(p["tpms"], p["cell_m"], p["wall_ratio"] * p["cell_m"], args.cells, args.region)
-    tpms.write_stl(stl, verts, faces, f"ACES {p['tpms']} {args.region} units={args.units}", scale=scale)
-    exp = simlab.experiment(
-        exp_id=f"aces-{run_spec['project']}-{rec['record_hash'][:8]}-rank{args.rank}-{args.region}",
-        project=run_spec["project"],
-        owner=run_spec["owner"],
-        rd_activity=run_spec["rd_activity"],
-        physics=args.physics,
-        solver=args.solver,
-        description=(f"ACES verification of rank-{args.rank} {p['tpms']} core: periodic {args.cells}^3-cell "
-                     f"{args.region} sample, a={p['cell_m']:.5f} m, t/a={p['wall_ratio']:.4f}."),
-        hypothesis=("Fast-tier pressure drop and heat transfer for this core are within the calibration "
-                    "tolerance of the solver result."),
-        expected="Per-cell pressure gradient and Nusselt number to fit the hx calibration factors.",
-        geometry_ref=str(stl),
-        geometry_units=args.units,
-        params={"aces_design": p, "aces_metrics": {k: v for k, v in d["metrics"].items() if k in ("hot", "cold")}},
-        outputs=["pressure_gradient_Pa_m", "nusselt", "mass_flow_kg_s"],
-        vram_gb=args.vram_gb,
-        system="hx",
-        aces_record=rec["record_hash"],
-    )
-    path = simlab.write(exp, exp_path)
+        verts, faces = tpms.sample_mesh(p["tpms"], p["cell_m"], p["wall_ratio"] * p["cell_m"], args.cells, args.region)
+        stl = tpms.write_stl(stl_name, verts, faces, f"ACES {p['tpms']} {args.region} units={args.units}",
+                             scale=scale, out=od)
+        path = simlab.write(exp, exp_name, out=od)
     print(f"Geometry: {stl}\nExperiment: {path}\nAdd the solver adapter's own params, then run `simlab validate` before submitting.")
     return 0
 
 
-def _generic_report(canonical_spec: dict, pareto: list, record_hash: str, model_id: str, model_version: str) -> str:
-    """Domain-neutral design-run report for models without a specialised writer."""
-    lines = [
-        f"# ACES design run — {canonical_spec['domain']}",
-        "",
-        f"Model: `{model_id}` {model_version} · evidence record `{record_hash[:12]}`",
-        f"Hypothesis: {canonical_spec.get('hypothesis', '')}",
-        "",
-        f"## Pareto front ({len(pareto)} non-dominated designs)",
-        "",
-    ]
-    for i, e in enumerate(pareto):
-        objs = ", ".join(f"{k}={v:.4g}" for k, v in e.objectives.items())
-        lines.append(f"{i + 1}. {objs}")
-        top_metrics = ", ".join(f"{k}={v}" for k, v in list(e.metrics.items())[:6])
-        lines.append(f"   params: {e.params}")
-        lines.append(f"   {top_metrics}")
-        if e.warnings:
-            lines.append(f"   warnings: {'; '.join(e.warnings)}")
-        if e.uncalibrated:
-            lines.append(f"   uncalibrated: {', '.join(e.uncalibrated)}")
-    lines += ["", "Results from uncalibrated factors are ranking estimates, not performance claims."]
-    return "\n".join(lines) + "\n"
-
-
 def cmd_ledger(args) -> int:
-    ok, msg = evidence.Ledger(args.path).verify()
+    led = evidence.Ledger(args.path)
+    if args.action == "seal":
+        try:
+            rec = led.seal()
+        except evidence.LedgerError as e:
+            print(f"NOT SEALED: {e}")
+            return 1
+        print(f"Sealed the interrupted last line ({rec['sealed_line']['bytes']} bytes, sha256 "
+              f"{rec['sealed_line']['sha256'][:12]}); it stays in the file as written. Seal record "
+              f"{rec['record_hash'][:12]}.")
+        return 0
+    if args.action == "head":
+        try:
+            n, head = led.sign_head() if args.sign else led.head()
+        except evidence.LedgerError as e:
+            print(f"BROKEN: {e}")
+            return 1
+        print(f"records {n}\nhead {head}")
+        if args.sign:
+            print(f"Signed head written to {led.head_path}.")
+        print(f"Keep a copy of these where the ledger's writers can't change them; later check with:\n"
+              f"  aces ledger verify {args.path} --expect-head {head} --min-records {n}")
+        return 0
+    expect = args.expect_head
+    if expect is not None and not (len(expect) == 64 and all(c in "0123456789abcdef" for c in expect)):
+        print("--expect-head takes the full 64-character head hash that `aces ledger head` prints")
+        return 2
+    if args.min_records is not None and args.min_records < 1:
+        print("--min-records must be 1 or more")
+        return 2
+    ok, msg = led.verify(expect_head=expect, min_records=args.min_records)
     print(("OK: " if ok else "BROKEN: ") + msg)
     return 0 if ok else 1
 
@@ -628,63 +820,88 @@ def cmd_isaac_health(args) -> int:
         print(f"Install: FAIL — {inst['error']['message']}")
     if "deep" in rep["layers"]:
         deep = rep["layers"]["deep"]
-        if deep.get("skipped"):
-            print("Deep:    skipped (a prerequisite layer failed)")
-        elif deep["ok"]:
+        if deep.get("ok"):
             print(f"Deep:    OK — SimulationApp booted, Isaac Sim {deep.get('version', '?')}")
         else:
-            print(f"Deep:    FAIL — {deep['error'].get('message', '')}")
+            print(f"Deep:    FAIL — {deep.get('error', {}).get('message', 'deep probe failed')}")
     print(json.dumps(rep, indent=1))
     return 0 if rep["ok"] else 1
 # ----------------------------------------------------------------------------- ISO 27001 compliance
 
 def cmd_compliance(args) -> int:
+    from . import safeio  # local: the shared import line belongs to every agent
+
+    if args.action in ("validate", "index"):
+        try:
+            findings = compliance.validate(args.dir) if args.action == "validate" else None
+            text = compliance.index(args.dir) if args.action == "index" else ""
+        except (OSError, ValueError) as e:
+            print(f"cannot read the evidence folder: {e}")
+            return 2
     if args.action == "validate":
-        findings = compliance.validate(args.dir)
         bad = [f for f in findings if f.level != "ok"]
         for f in findings:
             if f.level == "ok" and not args.verbose:
                 continue
             print(f"{f.level.upper():<8} {f.control:<7} {f.detail}")
-        print(f"\n{len(bad)} gap(s)/stale item(s)" if bad else "No gaps: package is complete and current.")
+        print(f"\n{len(bad)} gap(s)/stale/invalid item(s)" if bad else "No gaps: package is complete and current.")
         return 1 if bad else 0
     if args.action == "index":
         out = Path(args.dir) / "INDEX.md"
-        if out.exists():
+        try:
+            safeio.write_text(out, text)  # exclusive create, never through a link (audit C4)
+        except FileExistsError:
             print(f"{out} exists; remove it or validate instead")
             return 2
-        _safe_write(out, compliance.index(args.dir))
+        except OSError as e:
+            print(f"refusing to write {out}: {e}")
+            return 2
         print(f"Wrote {out}")
         return 0
-    # collect
-    collectors = []
-    if args.repo:
-        collectors += compliance.github_collectors(args.repo)
-    if args.with_aces:
-        collectors += compliance.aces_collectors(args.ledger)
+    # collect: every input is checked before anything runs (audit C1)
+    try:
+        compliance.check_ledger_path(args.ledger, must_exist=args.with_aces)
+        collectors = []
+        if args.repo:
+            collectors += compliance.github_collectors(args.repo)
+        if args.with_aces:
+            collectors += compliance.aces_collectors(args.ledger)
+    except (OSError, ValueError) as e:
+        print(f"refusing to collect: {e}")
+        return 2
     if not collectors:
         print("nothing to collect: pass --repo owner/name and/or --with-aces")
         return 2
-    manifest = compliance.collect(args.dir, collectors, dry_run=args.dry_run)
+    try:
+        manifest = compliance.collect(args.dir, collectors, dry_run=args.dry_run)
+    except (OSError, ValueError) as e:
+        print(f"collection stopped: {e}")
+        return 2
     ok = [r for r in manifest["results"] if r["ok"] and r.get("sha256")]
-    failed = [r for r in manifest["results"] if not r["ok"]]
+    failed = [r for r in manifest["results"] if not r["ok"] and not r.get("optional")]
+    warned = [r for r in manifest["results"] if not r["ok"] and r.get("optional")]
     for r in manifest["results"]:
-        state = "ok" if r["ok"] and r.get("sha256") else ("skip" if r["ok"] else "FAILED")
+        if r["ok"]:
+            state = "ok" if r.get("sha256") else "skip"
+        else:
+            state = "WARN" if r.get("optional") else "FAILED"
         print(f"{state:<7} {r['control']:<8} {r['name']}" + (f" ({r['error']})" if r.get("error") and not r["ok"] else ""))
     if not args.dry_run:
         rec = evidence.make_record(
             kind="aces.compliance_collection",
             spec={"company": spec.COMPANY, "project": "iso27001-evidence", "owner": args.owner,
                   "rd_activity": "n/a", "hypothesis": "n/a (compliance evidence collection)"},
-            model_id="aces.compliance", model_version="0.1",
-            inputs={"repo": args.repo, "with_aces": args.with_aces},
+            model_id="aces.compliance", model_version="0.2",
+            inputs={"repo": args.repo, "with_aces": args.with_aces, "run_dir": manifest["run_dir"]},
             observations={"files": [{"file": r["file"], "control": r["control"], "sha256": r["sha256"]}
                                     for r in ok],
-                          "failed": [{"name": r["name"], "error": r["error"]} for r in failed]},
+                          "failed": [{"name": r["name"], "error": r["error"]} for r in failed],
+                          "warnings": [{"name": r["name"], "error": r["error"]} for r in warned]},
             calibration={}, artifacts={"manifest": Path(manifest["manifest_file"])},
         )
         written = evidence.Ledger(args.ledger).append(rec)
-        print(f"\n{len(ok)} file(s) collected, {len(failed)} failed. "
+        print(f"\nEvidence: {manifest['evidence_dir']}")
+        print(f"{len(ok)} file(s) collected, {len(failed)} failed, {len(warned)} optional failed (warning). "
               f"Ledger: {args.ledger} ({written['record_hash'][:12]})")
     return 1 if failed else 0
 
@@ -750,7 +967,8 @@ def cmd_cfd_campaign(args) -> int:
                 f"Re {args.re}, {args.fluid} at {args.T:g} K, {args.n} voxels per cell.")
         hyp = ("Pressure drop and H1 heat transfer of TPMS cores differ from the straight-duct baselines by a factor "
                "that is constant enough over this range to calibrate the fast tier.")
-        expected = "dpdx and h per case; fitted with `aces calibrate --boundary uniform_heat_flux`."
+        expected = ("dpdx and H1 h per case (rows carry boundary uniform_heat_flux); fitted with `aces calibrate`, "
+                    "which takes the boundary from the rows.")
         outputs = ["re_achieved", "dpdx_Pa_m", "mass_flux_kg_m2s", "h_W_m2K", "nusselt_h1", "mach"]
     exp = simlab.experiment(
         exp_id=args.id, project=args.project, owner=args.owner, rd_activity=args.rd_activity, physics="cfd",
@@ -767,7 +985,67 @@ def cmd_cfd_campaign(args) -> int:
     return 0
 
 
+CFD_SOLVER = "aces-tpms-periodic"
+EVIDENCE_MAX_BYTES = 8_000_000
+_CASE_KEYS = ("tpms", "wall_ratio", "cell_m", "fluid", "T_K", "p_Pa")
+
+
+def _same(a, b) -> bool:
+    num = (int, float)
+    if isinstance(a, num) and isinstance(b, num) and not isinstance(a, bool) and not isinstance(b, bool):
+        return abs(float(a) - float(b)) <= 1e-9 * max(abs(float(a)), abs(float(b)))
+    return a == b
+
+
+def _cfd_evidence(case: Path, exp_id: str, row: dict) -> tuple[str | None, str | None]:
+    """(sha256 of evidence.json, None) when it makes ``row`` citable, else (None, why not) (audit L3).
+
+    simlab's per-run evidence.json holds the experiment spec, input hashes, image digest and device. The check reads
+    the spec ACES wrote (``id``, ``solver``, ``params``, ``sweep``) from its ``spec`` member, or from the top level,
+    and needs it to name this experiment and solver, any ``case_id`` to name this case, and every sample parameter it
+    fixes (params) or lists (sweep) to agree with the row.
+    """
+    import hashlib
+
+    from .safeio import is_link
+
+    p = case / "evidence.json"
+    if not p.exists():
+        return None, "no evidence.json; not citable"
+    if is_link(p):
+        return None, "evidence.json is a link; not citable"
+    if p.stat().st_size > EVIDENCE_MAX_BYTES:
+        return None, f"evidence.json is larger than {EVIDENCE_MAX_BYTES:,} bytes"
+    raw = p.read_bytes()
+    try:
+        ev = json.loads(raw)
+    except ValueError:
+        return None, "evidence.json is not valid JSON"
+    if not isinstance(ev, dict):
+        return None, "evidence.json is not a JSON object"
+    sp = ev["spec"] if isinstance(ev.get("spec"), dict) else ev
+    if sp.get("id") is None:
+        return None, "evidence.json does not name its experiment (no spec id)"
+    if sp.get("id") != exp_id:
+        return None, f"evidence.json belongs to experiment {sp.get('id')!r}, not {exp_id!r}"
+    if sp.get("solver") != CFD_SOLVER:
+        return None, f"evidence.json is for solver {sp.get('solver')!r}, not {CFD_SOLVER}"
+    for where in (ev, sp):
+        cid = where.get("case_id")
+        if cid is not None and str(cid) != case.name:
+            return None, f"evidence.json is for case {cid!r}, not {case.name!r}"
+    params = sp.get("params") if isinstance(sp.get("params"), dict) else {}
+    sweep = sp.get("sweep") if isinstance(sp.get("sweep"), dict) else {}
+    for k in _CASE_KEYS:
+        if k in params and not _same(params[k], row.get(k)):
+            return None, f"evidence params {k}={params[k]!r}, but the row has {row.get(k)!r}"
+        if isinstance(sweep.get(k), list) and not any(_same(v, row.get(k)) for v in sweep[k]):
+            return None, f"evidence sweep {k} {sweep[k]} does not include the row's {row.get(k)!r}"
+    return hashlib.sha256(raw).hexdigest(), None
+
+
 def cmd_cfd_collect(args) -> int:
+    from .cfd import periodic
     from .domains.hx import calibrate as hxcal
 
     root = Path(args.exp_dir)
@@ -789,10 +1067,21 @@ def cmd_cfd_collect(args) -> int:
             res = json.loads((case / "results.json").read_text()) if (case / "results.json").exists() else {}
             skipped.append(f"{case.name}: not a measurement ({res.get('problems') or 'no measurement.json'})")
             continue
-        if not (case / "evidence.json").exists():
-            skipped.append(f"{case.name}: no evidence.json; not citable")
-            continue
         m = json.loads(meas_p.read_text())
+        if not isinstance(m, dict):
+            skipped.append(f"{case.name}: measurement.json is not a JSON object")
+            continue
+        sha, why = _cfd_evidence(case, root.name, m)
+        if why:
+            skipped.append(f"{case.name}: {why}")
+            continue
+        if m.get("boundary") is None:  # rows written before they carried it; the evidence names the H1-only solver
+            m["boundary"] = periodic.BOUNDARY
+        elif m["boundary"] != periodic.BOUNDARY:
+            skipped.append(f"{case.name}: row says boundary {m['boundary']}, but {CFD_SOLVER} measures "
+                           f"{periodic.BOUNDARY} (H1) only")
+            continue
+        m["evidence_sha256"] = sha  # pins the evidence the row was accepted on
         m["source"] = f"simlab:{root.name}:{case.name}"  # the run folder is the provenance, whatever the row says
         try:
             hxcal.Measurement.model_validate(m)  # the same schema check `aces calibrate` applies
@@ -860,8 +1149,9 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("calibrate", help="fit hx calibration factors from measurements")
     s.add_argument("measurements", help="CSV or JSON measurement file (see aces.domains.hx.calibrate)")
     s.add_argument("--registry", required=True, help="calibration JSON to create or update")
-    s.add_argument("--boundary", choices=("uniform_wall_temperature", "uniform_heat_flux"),
-                   default="uniform_wall_temperature", help="must match the specs that will use the factors")
+    s.add_argument("--boundary", choices=("uniform_wall_temperature", "uniform_heat_flux"), default=None,
+                   help="thermal boundary of rows with h that carry no 'boundary' column (CFD rows are H1 = "
+                        "uniform_heat_flux and carry it); refused if it disagrees with the rows")
     s.add_argument("--min-points", type=int, default=3, help="distinct operating conditions needed per factor")
     s.add_argument("--max-scatter", type=float, default=0.15,
                    help="sample sd of log(ratio) above which a constant is refused")
@@ -871,6 +1161,22 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--rd-activity", required=True)
     s.add_argument("--ledger", default=str(DEFAULT_LEDGER))
     s.set_defaults(fn=cmd_calibrate)
+
+    s = sub.add_parser("radar-calibrate", help="fit radar calibration factors from EM-sim or bench rows")
+    s.add_argument("measurements", help="JSON or CSV rows (see aces.domains.radar.calibrate)")
+    s.add_argument("--registry", required=True, help="calibration JSON to create or update")
+    s.add_argument("--min-points", type=int, default=3, help="distinct frequencies needed per factor")
+    s.add_argument("--max-scatter", type=float, default=0.15,
+                   help="sample sd of ln(ratio) above which a constant is refused")
+    s.add_argument("--min-held-out", type=int, default=1,
+                   help="held-out rows at unseen frequencies each factor must predict")
+    s.add_argument("--holdout-tol", type=float, default=0.10,
+                   help="largest held-out error, as a fraction of the linear quantity")
+    s.add_argument("--project", required=True)
+    s.add_argument("--owner", required=True)
+    s.add_argument("--rd-activity", required=True)
+    s.add_argument("--ledger", default=str(DEFAULT_LEDGER))
+    s.set_defaults(fn=cmd_radar_calibrate)
 
     s = sub.add_parser("cfd-sample", help="one periodic CFD calibration sample (FP64 lattice Boltzmann)")
     s.add_argument("--tpms", choices=tpms.KINDS, required=True)
@@ -913,24 +1219,35 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("processes", help="list manufacturing routes")
     s.set_defaults(fn=cmd_processes)
 
-    s = sub.add_parser("cost", help="manufacturing route suggestion + unit cost across quantities")
-    s.add_argument("part", nargs="?", help="YAML part profile (see aces.costing.PartProfile)")
-    s.add_argument("--from-run", help="output directory of `aces design`; cost a pareto entry instead")
+    s = sub.add_parser("cost", help="manufacturing route suggestion + unit cost across quantities (estimate only: "
+                                    "not a quote, not verified)")
+    s.add_argument("part", nargs="?", help="YAML part profile with a part: block (see aces.costing.PartProfile)")
+    s.add_argument("--rates", help="rates file (YAML/JSON): every rate, build volume and material property as "
+                                   "{value, source, date}; required")
+    s.add_argument("--from-run", help="output folder of `aces design` (hx.two_fluid); cost a verified pareto entry")
+    s.add_argument("--ledger", help="with --from-run: override the ledger path recorded in run.json")
     s.add_argument("--rank", type=int, default=0, help="pareto rank to cost with --from-run")
     s.add_argument("--quantity", type=int, default=10, help="target quantity for the route suggestion")
-    s.add_argument("--quantities", type=int, nargs="+",
-                   default=[1, 5, 10, 25, 50, 100, 250, 500, 1_000, 5_000, 10_000],
-                   help="quantities for the cost curves")
-    s.add_argument("--materials", nargs="+", choices=sorted(costing.MATERIALS),
-                   help="restrict candidate materials")
+    s.add_argument("--quantities", type=int, nargs="+", default=list(costing.DEFAULT_QUANTITIES),
+                   help="quantities for the cost curves (each curve stops at its route's quantity limit)")
+    s.add_argument("--materials", nargs="+", help="restrict candidate materials (ids from the rates file)")
     s.add_argument("--top", type=int, default=4, help="how many routes to curve and report")
     s.add_argument("--verbose", action="store_true", help="list excluded routes and why")
     s.add_argument("--out", help="write the full estimate as JSON (new file only)")
     s.set_defaults(fn=cmd_cost)
 
-    s = sub.add_parser("ledger", help="evidence ledger tools")
-    s.add_argument("action", choices=("verify",))
+    s = sub.add_parser("ledger", help="evidence ledger tools: verify, head (print or sign it), seal",
+                       description="verify: check the hash chain (and the anchors given). head: print the record "
+                                   "count and head hash to keep elsewhere; --sign writes the HMAC-signed head "
+                                   "(key from ACES_LEDGER_HMAC_KEY). seal: close an interrupted last line with a "
+                                   "seal record; the line itself is kept as written.")
+    s.add_argument("action", choices=("verify", "head", "seal"))
     s.add_argument("path", nargs="?", default=str(DEFAULT_LEDGER))
+    s.add_argument("--expect-head", help="verify: a head hash kept from `aces ledger head`; fail unless the chain "
+                                         "still holds it")
+    s.add_argument("--min-records", type=int, help="verify: fail if the ledger holds fewer records")
+    s.add_argument("--sign", action="store_true", help="head: write <ledger>.head, signed with "
+                                                       "ACES_LEDGER_HMAC_KEY")
     s.set_defaults(fn=cmd_ledger)
 
     s = sub.add_parser("isaac-health", help="layered Isaac Sim probe (GPU / install / SimulationApp)")
@@ -939,20 +1256,31 @@ def build_parser() -> argparse.ArgumentParser:
     s.set_defaults(fn=cmd_isaac_health)
     s = sub.add_parser("compliance", help="ISO 27001 evidence collection (API-first, ledger-chained)")
     s.add_argument("action", choices=("collect", "validate", "index"))
-    s.add_argument("dir", help="evidence directory (collect/validate/index target)")
-    s.add_argument("--repo", help="GitHub repo as owner/name; enables the repo collectors")
-    s.add_argument("--with-aces", action="store_true", help="also collect ACES ledger evidence")
+    s.add_argument("dir", help="evidence folder; each collect adds a new run-*/ folder with its manifest")
+    s.add_argument("--repo", help="GitHub repo as owner/name (letters, digits, '_', '.', '-'); "
+                                  "enables the repo collectors")
+    s.add_argument("--with-aces", action="store_true",
+                   help="also collect ACES ledger evidence (verify result, record count and head hash only)")
     s.add_argument("--dry-run", action="store_true", help="list what would be collected, write nothing")
     s.add_argument("--owner", default="aaron")
     s.add_argument("--verbose", action="store_true", help="validate: show ok controls too")
-    s.add_argument("--ledger", default=str(DEFAULT_LEDGER))
+    s.add_argument("--ledger", default=str(DEFAULT_LEDGER),
+                   help="ACES ledger: a regular file, not a link (must exist with --with-aces); "
+                        "collect appends a record of the run")
     s.set_defaults(fn=cmd_compliance)
     return ap
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    return args.fn(args)
+    try:
+        return args.fn(args)
+    except safeio.UnsafePathError as e:  # a planted link, or a folder swapped mid-run (audit M1)
+        print(f"REFUSED: {e}")
+        return 2
+    except evidence.LedgerError as e:  # e.g. an interrupted append: nothing was recorded (audit M3)
+        print(f"LEDGER: {e}")
+        return 2
 
 
 if __name__ == "__main__":

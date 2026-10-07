@@ -5,15 +5,16 @@ of gyroid, diamond and primitive sheets are congruent), periodic in all directio
 driven along x.  The result is a measurement row in exactly the format
 ``aces calibrate`` reads, so CFD and rig tests enter the registry the same way:
 
-    source, tpms, cell_m, wall_ratio, fluid, T_K, p_Pa, mass_flux_kg_m2s, dpdx_Pa_m, h_W_m2K
+    source, tpms, cell_m, wall_ratio, fluid, T_K, p_Pa, mass_flux_kg_m2s, dpdx_Pa_m, h_W_m2K, boundary
 
 Definitions match the design model so the fitted factor is the ratio the model needs:
   * dpdx is the mean pressure gradient (pressure drop per metre of core);
   * mass flux is per frontal area of the core (rho x superficial velocity);
   * h = heat taken up per cell / (ACES wall area x (T_wall - T_bulk)), with the wall area
     measured on the level set by ``tpms.unit_cell``; H1 condition (wall temperature uniform
-    around the periphery, rising linearly along the flow).  Fit Nusselt factors from these
-    rows with ``--boundary uniform_heat_flux``.
+    around the periphery, rising linearly along the flow), thermally developed.  Every row
+    says so (``boundary: uniform_heat_flux``), and ``aces calibrate`` fits its Nusselt
+    factors against the fully developed uniform-heat-flux baseline (4.36).
 
 Similarity: the lattice runs at the target Reynolds number (ACES definition, interstitial
 velocity and level-set hydraulic diameter) and Prandtl number; physical units come from the
@@ -36,6 +37,7 @@ from . import lbm
 
 MACH_LIMIT = 0.15  # sqrt(3) * u_max; compressibility error ~ Ma^2
 TAU_MIN = 0.505
+BOUNDARY = "uniform_heat_flux"  # H1: the thermal boundary every sample's h is measured under
 
 
 @dataclass
@@ -80,17 +82,26 @@ def _percolates_x(fl: np.ndarray) -> bool:
     return bool(a & b - {0})
 
 
+def _geometry(s: Sample) -> tuple[tpms.UnitCell, np.ndarray]:
+    """Level-set measurements and the voxel mask of the sample's cell.
+
+    Private seam: the tests swap in a plane channel here to check the unit path against an exact solution.
+    """
+    return tpms.unit_cell(s.tpms, s.wall_ratio), voxel_mask(s.tpms, s.wall_ratio, s.n, s.side)
+
+
 def run(s: Sample, *, xp=np, max_steps: int = 400_000, log=None) -> SampleResult:
+    """Solve one sample.  ``max_steps`` bounds each flow solve; up to 8 flow solves (the Re iteration) and one
+    thermal solve of up to 4 x ``max_steps`` run per sample."""
     t0 = time.time()
     problems: list[str] = []
     notes: list[str] = []
     if s.n < 8:
         raise ValueError("n must be at least 8 voxels per cell")
-    uc = tpms.unit_cell(s.tpms, s.wall_ratio)
+    uc, fl = _geometry(s)
     phi = uc.fluid_fraction[s.side]
     dh_a = uc.hydraulic_diameter_over_a(s.side)
     ad = uc.area_density_a[s.side]
-    fl = voxel_mask(s.tpms, s.wall_ratio, s.n, s.side)
     phi_vox = float(fl.mean())
     wall_vox = 0.5 * s.wall_ratio * s.n * 2
     diag: dict[str, Any] = {"n": s.n, "phi_levelset": phi, "phi_voxel": phi_vox, "dh_over_a": dh_a,
@@ -155,7 +166,8 @@ def run(s: Sample, *, xp=np, max_steps: int = 400_000, log=None) -> SampleResult
     dpdx = g * st.rho * dx / (dt * dt)
     meas: dict[str, Any] = {"source": s.source, "tpms": s.tpms, "cell_m": s.cell_m, "wall_ratio": s.wall_ratio,
                             "fluid": s.fluid, "T_K": s.T_K, "p_Pa": s.p_Pa,
-                            "mass_flux_kg_m2s": st.rho * u_sup, "dpdx_Pa_m": dpdx, "h_W_m2K": None}
+                            "mass_flux_kg_m2s": st.rho * u_sup, "dpdx_Pa_m": dpdx, "h_W_m2K": None,
+                            "boundary": BOUNDARY}
 
     if s.thermal and not problems:
         alpha = nu / st.pr

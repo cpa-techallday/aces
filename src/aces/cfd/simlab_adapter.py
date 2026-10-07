@@ -4,11 +4,15 @@ simlab's worker imports ``module.Adapter`` from its registry entry, calls
 ``run(case, spec, run_dir)`` and stores the returned numbers in ``results.json``.  This
 adapter runs one periodic TPMS sample (``aces.cfd.periodic``) per case and also writes
 ``measurement.json``: the row ``aces calibrate`` reads, or nothing when the case is not a
-valid measurement.  ``aces cfd-collect`` gathers those rows from a finished experiment.
+valid measurement.  The row carries ``boundary: uniform_heat_flux`` (h is H1).  ``aces
+cfd-collect`` gathers those rows from a finished experiment.
 
 Case parameters (from the experiment's params / sweep):
   tpms, wall_ratio, cell_m, fluid, T_K, p_Pa, re      the sample
-  n (default 64), thermal (default true), max_steps (default 2,000,000 per solve), cpu (force numpy)
+  n (default 64), thermal (default true), cpu (force numpy)
+  max_steps (default 2,000,000): the limit for EACH flow solve.  A case runs up to 8 flow
+      solves (the force is iterated to the target Re) and one thermal solve of up to
+      4 x max_steps, so one case can take up to 24,000,000 steps in all.
   validate: "square_duct" | "plane_channel"            the registry validation cases instead
 
 Validation cases compare against exact fully developed laminar results (Shah & London
@@ -22,6 +26,7 @@ import time
 
 import numpy as np
 
+from ..safeio import OutDir
 from . import lbm, periodic
 
 EXACT = {"square_duct": (56.91, 3.608), "plane_channel": (96.0, 8.235)}
@@ -80,13 +85,12 @@ class Adapter:
         r = periodic.run(s, xp=xp, max_steps=int(case.get("max_steps", 2_000_000)))
         os.makedirs(run_dir, exist_ok=True)
         art = []
-        with open(os.path.join(run_dir, "sample.json"), "w", encoding="utf-8") as fh:
-            json.dump(periodic.as_dict(r), fh, indent=2, default=float)
-        art.append(os.path.join(run_dir, "sample.json"))
-        if r.measurement is not None:
-            with open(os.path.join(run_dir, "measurement.json"), "w", encoding="utf-8") as fh:
-                json.dump(r.measurement, fh, indent=2)
-            art.append(os.path.join(run_dir, "measurement.json"))
+        with OutDir(run_dir) as out:  # never writes through a link planted in the run folder
+            out.write_text("sample.json", json.dumps(periodic.as_dict(r), indent=2, default=float), overwrite=True)
+            art.append(os.path.join(run_dir, "sample.json"))
+            if r.measurement is not None:
+                out.write_text("measurement.json", json.dumps(r.measurement, indent=2), overwrite=True)
+                art.append(os.path.join(run_dir, "measurement.json"))
         d = r.diagnostics
         m = r.measurement or {}
         return {
@@ -95,6 +99,7 @@ class Adapter:
             "dpdx_Pa_m": m.get("dpdx_Pa_m"),
             "mass_flux_kg_m2s": m.get("mass_flux_kg_m2s"),
             "h_W_m2K": m.get("h_W_m2K"),
+            "boundary": periodic.BOUNDARY,
             "nusselt_h1": d.get("nusselt_h1"),
             "mach": d.get("mach"),
             "grid_peclet": d.get("grid_peclet"),

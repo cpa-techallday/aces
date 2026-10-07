@@ -95,7 +95,7 @@ def test_too_few_supports_raise():
 def test_material_needs_a_source():
     bad = dict(MAT)
     del bad["source"]
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         _spec(material=bad)
 
 

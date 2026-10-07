@@ -37,6 +37,11 @@ class SearchResult:
 
 
 def _apply_bounds(params: list[Param], overrides: dict[str, tuple[float, float]]) -> list[Param]:
+    """The model's parameters with ``search.bounds`` applied.
+
+    An override may only narrow a parameter: the model's own range is where its correlations and geometry
+    tables are valid, and outside it the cost can explode (a wall ratio of 0.012 took 2.5 GB, audit M5).
+    """
     known = {p.name for p in params}
     unknown = set(overrides) - known
     if unknown:
@@ -45,11 +50,21 @@ def _apply_bounds(params: list[Param], overrides: dict[str, tuple[float, float]]
     for p in params:
         if p.name in overrides:
             lo, hi = overrides[p.name]
-            if not lo < hi:
-                raise ValueError(f"search.bounds[{p.name}] must have low < high, got {lo}, {hi}")
+            if p.kind == "categorical":
+                raise ValueError(f"search.bounds[{p.name}]: {p.name} is categorical; it has no numeric bounds")
+            if not (math.isfinite(lo) and math.isfinite(hi)) or not lo < hi:
+                raise ValueError(f"search.bounds[{p.name}] must be finite with low < high, got {lo}, {hi}")
+            if lo < p.low or hi > p.high:
+                raise ValueError(f"search.bounds[{p.name}] = [{lo:g}, {hi:g}] goes outside the model's valid range "
+                                 f"[{p.low:g}, {p.high:g}] {p.units}".rstrip() + "; bounds may only narrow it")
             p = Param(p.name, p.kind, lo, hi, p.choices, p.log, p.units)
         out.append(p)
     return out
+
+
+def check_bounds(params: list[Param], overrides: dict[str, tuple[float, float]]) -> None:
+    """ValueError if ``search.bounds`` names an unknown parameter or leaves the model's range."""
+    _apply_bounds(params, overrides)
 
 
 def _suggest(trial: optuna.Trial, p: Param) -> Any:

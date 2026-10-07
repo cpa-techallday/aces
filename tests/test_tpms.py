@@ -56,3 +56,15 @@ def test_stl_round_trip(tmp_path):
 def test_unknown_kind_raises():
     with pytest.raises(ValueError):
         tpms.unit_cell("lidinoid", 0.1)
+
+
+def test_tabulated_mean_wall_is_never_below_the_minimum():
+    """L8: both come from the same normal-direction measurement, so the mean can't fall below the minimum."""
+    table = tpms._table()
+    assert table, "precomputed table missing; run scripts/build_tpms_table.py"
+    for rows in table["kinds"].values():
+        for r in rows:
+            assert r["wall_mean_over_a"] >= r["wall_min_over_a"]
+    for kind in tpms.KINDS:  # interpolated between rows as well
+        m = tpms.manufacturability(kind, 0.137)
+        assert m.wall_mean_over_a >= m.wall_min_over_a

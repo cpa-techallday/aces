@@ -1,5 +1,6 @@
 """ARC-1 rod-lattice study: regenerates from params and runs as the rod.lattice route."""
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -107,72 +108,195 @@ def test_rod_route_refuses_unknown_stage_script(tmp_path):
         route.run(_req(stages=["nope.py"]), tmp_path / "run", tmp_path, log=lambda *_: None)
 
 
-def test_rod_route_never_deletes_a_folder_it_did_not_create(tmp_path):
+def test_rod_route_needs_a_new_folder(tmp_path):
     from aces.domains.rod import route
     keep = tmp_path / "run" / "work" / "precious.txt"
     keep.parent.mkdir(parents=True)
     keep.write_text("user data")
-    with pytest.raises(FileExistsError, match="not created by the rod route"):
+    with pytest.raises(FileExistsError, match="already exists"):
         route.run(_req(stages=["process.py"]), tmp_path / "run", tmp_path, log=lambda *_: None)
     assert keep.read_text() == "user data"
 
 
+# ----------------------------------------------------------------------------- committed test studies
+
+def _git(repo: Path, *args: str) -> str:
+    return subprocess.run(["git", "-c", "user.name=test", "-c", "user.email=test@example.invalid",
+                           "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", *args],
+                          cwd=repo, check=True, capture_output=True, text=True).stdout
+
+
+def _committed_study(tmp_path: Path, files: dict[str, str], name: str = "s") -> tuple[Path, Path]:
+    """A study committed in a temporary git checkout (test input). Returns (study folder, studies root)."""
+    repo = tmp_path / "repo"
+    study = repo / "studies" / name
+    for rel, text in files.items():
+        f = study / rel
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text(text)
+    if not (repo / ".git").exists():
+        _git(repo, "init", "-q")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "test study")
+    return study, repo / "studies"
+
+
 def test_rod_route_reports_timeouts_and_missing_checks(tmp_path):
     from aces.domains.rod import route
-    study = tmp_path / "study"
-    (study / "cad").mkdir(parents=True)
-    (study / "scripts").mkdir()
-    (study / "cad" / "params.json").write_text(json.dumps({"rev": "test", "output": {"dir": "out"}}))
-    (study / "scripts" / "slow.py").write_text("import time\ntime.sleep(30)\n")
+    study, root = _committed_study(tmp_path, {"cad/params.json": json.dumps({"rev": "test", "output": {"dir": "out"}}),
+                                              "scripts/slow.py": "import time\ntime.sleep(30)\n"})
     req = _req(study_dir=str(study), stages=["slow.py"], stage_timeout_s=1)
-    res = route.run(req, tmp_path / "run", tmp_path, log=lambda *_: None)
+    res = route.run(req, tmp_path / "run", tmp_path, log=lambda *_: None, studies_root=root)
     assert res["stages"][0]["exit"] is None
     assert any("timed out" in p for p in res["problems"])
     assert any("frame check not run" in p for p in res["problems"])
     assert any("rod check not run" in p for p in res["problems"])
-    # a second run into the same folder is allowed: the route created it
-    res2 = route.run(req, tmp_path / "run", tmp_path, log=lambda *_: None)
-    assert any("timed out" in p for p in res2["problems"])
+    assert res["summary"]["study"] == {"path": "studies/s", "commit": _git(study, "rev-parse", "HEAD").strip()}
+    with pytest.raises(FileExistsError):  # a run needs a new folder (audit M1)
+        route.run(req, tmp_path / "run", tmp_path, log=lambda *_: None, studies_root=root)
 
 
 def test_rod_route_refuses_an_output_inside_the_study(tmp_path):
     from aces.domains.rod import route
-    study = tmp_path / "study"
-    (study / "cad").mkdir(parents=True)
-    (study / "scripts").mkdir()
-    (study / "cad" / "params.json").write_text("{}")
-    (study / "scripts" / "a.py").write_text("")
+    study, root = _committed_study(tmp_path, {"cad/params.json": "{}", "scripts/a.py": ""})
     with pytest.raises(FileExistsError, match="overlaps the study"):
-        route.run(_req(study_dir=str(study), stages=["a.py"]), study / "cad", tmp_path, log=lambda *_: None)
+        route.run(_req(study_dir=str(study), stages=["a.py"]), study / "cad" / "run", tmp_path,
+                  log=lambda *_: None, studies_root=root)
     assert sorted(p.name for p in (study / "cad").iterdir()) == ["params.json"]
 
 
 def test_rod_route_reports_malformed_outputs_as_problems(tmp_path):
     from aces.domains.rod import route
-    study = tmp_path / "study"
-    (study / "cad").mkdir(parents=True)
-    (study / "scripts").mkdir()
-    (study / "cad" / "params.json").write_text(json.dumps({"output": {"dir": "out"}}))
-    (study / "scripts" / "w.py").write_text(
-        "from pathlib import Path\nPath('out').mkdir(exist_ok=True)\n"
-        "Path('out/arc1_frame.json').write_text('{truncated')\n"
-        "Path('out/micro_stats.json').write_text('{\"capacity_N\": {\"min\": 0}}')\n"
-        "import sys\nsys.stdout.write('hello')\n")
-    res = route.run(_req(study_dir=str(study), stages=["w.py"]), tmp_path / "run", tmp_path, log=lambda *_: None)
+    study, root = _committed_study(tmp_path, {
+        "cad/params.json": json.dumps({"output": {"dir": "out"}}),
+        "scripts/w.py": ("from pathlib import Path\nPath('out').mkdir(exist_ok=True)\n"
+                         "Path('out/arc1_frame.json').write_text('{truncated')\n"
+                         "Path('out/micro_stats.json').write_text('{\"capacity_N\": {\"min\": 0}}')\n"
+                         "import sys\nsys.stdout.write('hello')\n")})
+    res = route.run(_req(study_dir=str(study), stages=["w.py"]), tmp_path / "run", tmp_path, log=lambda *_: None,
+                    studies_root=root)
     assert any("could not read arc1_frame.json" in p for p in res["problems"])
     assert any("frame check not run" in p for p in res["problems"])
 
 
 def test_rod_stage_timeout_log_is_text(tmp_path):
     from aces.domains.rod import route
-    study = tmp_path / "study"
+    study, root = _committed_study(tmp_path, {
+        "cad/params.json": "{}", "scripts/s.py": "import sys, time\nprint('hello', flush=True)\ntime.sleep(30)\n"})
+    route.run(_req(study_dir=str(study), stages=["s.py"], stage_timeout_s=2), tmp_path / "run", tmp_path,
+              log=lambda *_: None, studies_root=root)
+    assert "b'" not in (tmp_path / "run" / "stages.log").read_text()
+
+
+# ----------------------------------------------------------------------------- H1: only committed studies run
+
+EVIL = "open({marker!r}, 'w').write('ran')\n"
+
+
+def test_rod_route_refuses_a_study_outside_studies(tmp_path):
+    from aces.domains.rod import route
+    marker = tmp_path / "PWNED"
+    study = tmp_path / "planted"
     (study / "cad").mkdir(parents=True)
     (study / "scripts").mkdir()
     (study / "cad" / "params.json").write_text("{}")
-    (study / "scripts" / "s.py").write_text("import sys, time\nprint('hello', flush=True)\ntime.sleep(30)\n")
-    route.run(_req(study_dir=str(study), stages=["s.py"], stage_timeout_s=2), tmp_path / "run", tmp_path,
-              log=lambda *_: None)
-    assert "b'" not in (tmp_path / "run" / "stages.log").read_text()
+    (study / "scripts" / "evil.py").write_text(EVIL.format(marker=str(marker)))
+    with pytest.raises(route.StudyError, match="not under"):
+        route.run(_req(study_dir=str(study), stages=["evil.py"]), tmp_path / "run", tmp_path, log=lambda *_: None)
+    assert not marker.exists() and not (tmp_path / "run").exists()
+
+
+@pytest.mark.parametrize("change", ["untracked", "modified", "staged"])
+def test_rod_route_refuses_local_changes(tmp_path, change):
+    from aces.domains.rod import route
+    marker = tmp_path / "PWNED"
+    study, root = _committed_study(tmp_path, {"cad/params.json": "{}", "scripts/a.py": "print('committed')\n"})
+    target = study / "scripts" / ("evil.py" if change == "untracked" else "a.py")
+    target.write_text(EVIL.format(marker=str(marker)))
+    if change == "staged":
+        _git(study, "add", "-A")
+    stage = "evil.py" if change == "untracked" else "a.py"
+    with pytest.raises(route.StudyError, match="local changes"):
+        route.run(_req(study_dir=str(study), stages=[stage]), tmp_path / "run", tmp_path, log=lambda *_: None,
+                  studies_root=root)
+    assert not marker.exists() and not (tmp_path / "run").exists()
+
+
+def test_rod_cli_refuses_a_planted_study_and_makes_no_folder(tmp_path, monkeypatch):
+    """The audit's attack through the CLI: a study folder planted (not committed) under studies/."""
+    marker = tmp_path / "PWNED"
+    _, root = _committed_study(tmp_path, {"README.md": "test checkout\n"}, name="real")
+    monkeypatch.setattr(evidence, "REPO_ROOT", root.parent)  # the checkout the CLI trusts, for this test only
+    study = root / "planted"
+    (study / "cad").mkdir(parents=True)
+    (study / "scripts").mkdir()
+    (study / "cad" / "params.json").write_text("{}")
+    (study / "scripts" / "evil.py").write_text(EVIL.format(marker=str(marker)))
+    d = json.loads(json.dumps(ROD_SPEC))
+    d["requirements"].update(study_dir=str(study), stages=["evil.py"])
+    sp = tmp_path / "spec.yaml"
+    sp.write_text(yaml.safe_dump(d))
+    assert main(["rod", str(sp), "--out", str(tmp_path / "run"), "--ledger", str(tmp_path / "l.jsonl")]) == 2
+    assert not marker.exists() and not (tmp_path / "run").exists() and not (tmp_path / "l.jsonl").exists()
+
+
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="symbolic links in git need POSIX here")
+def test_rod_route_refuses_links_in_the_study(tmp_path):
+    from aces.domains.rod import route
+    study, root = _committed_study(tmp_path, {"cad/params.json": "{}", "scripts/a.py": ""})
+    (study / "scripts" / "link.py").symlink_to("/etc/passwd")
+    _git(study, "add", "-A")
+    _git(study, "commit", "-q", "-m", "a link (test input)")
+    with pytest.raises(route.StudyError, match="link"):
+        route.run(_req(study_dir=str(study), stages=["a.py"]), tmp_path / "run", tmp_path, log=lambda *_: None,
+                  studies_root=root)
+
+
+def test_rod_route_runs_the_committed_files_only(tmp_path):
+    """Ignored files in the study (a planted sitecustomize.py, say) are not copied into the run."""
+    from aces.domains.rod import route
+    study, root = _committed_study(tmp_path, {
+        ".gitignore": "*.local.py\n", "cad/params.json": "{}",
+        "scripts/a.py": "import os\nprint(sorted(os.listdir('scripts')))\n"})
+    (study / "scripts" / "sitecustomize.local.py").write_text("raise SystemExit('planted')\n")
+    route.run(_req(study_dir=str(study), stages=["a.py"]), tmp_path / "run", tmp_path, log=lambda *_: None,
+              studies_root=root)
+    assert sorted(p.name for p in (tmp_path / "run" / "work" / "scripts").iterdir()) == ["a.py"]
+
+
+def test_rod_stages_get_a_minimal_environment(tmp_path, monkeypatch):
+    from aces.domains.rod import route
+    monkeypatch.setenv("ACES_TEST_SERVER_SECRET", "test input, must not reach a stage")
+    study, root = _committed_study(tmp_path, {
+        "cad/params.json": "{}", "scripts/env.py": "import os\nprint(sorted(os.environ))\n"})
+    route.run(_req(study_dir=str(study), stages=["env.py"]), tmp_path / "run", tmp_path, log=lambda *_: None,
+              studies_root=root)
+    log = (tmp_path / "run" / "stages.log").read_text()
+    assert "ARC1_PARAMS" in log and "ACES_TEST_SERVER_SECRET" not in log
+
+
+def test_planted_git_config_does_not_run_during_the_study_check(tmp_path):
+    from aces.domains.rod import route
+    marker = tmp_path / "PWNED"
+    hook = tmp_path / "hook.sh"
+    hook.write_text(f"#!/bin/sh\ntouch {marker}\ncat\n")
+    hook.chmod(0o755)
+    study, root = _committed_study(tmp_path, {".gitattributes": "* filter=evil\n", "cad/params.json": "{}",
+                                              "scripts/a.py": ""})
+    _git(study, "config", "core.fsmonitor", str(hook))
+    _git(study, "config", "filter.evil.clean", str(hook))
+    os.utime(study / "scripts" / "a.py")  # stat-dirty, so git would re-read the file through the filter
+    route.run(_req(study_dir=str(study), stages=["a.py"]), tmp_path / "run", tmp_path, log=lambda *_: None,
+              studies_root=root)
+    assert not marker.exists()
+
+
+@pytest.mark.parametrize("bad", [{"stage_timeout_s": 3601}, {"stages": ["process.py"] * 21}])
+def test_rod_stage_limits(bad):
+    d = json.loads(json.dumps(ROD_SPEC))
+    d["requirements"].update(bad)
+    with pytest.raises(spec.SpecError):
+        spec.parse(d, RodRequirements)
 
 
 def _rod_spec(tmp_path, params="params.json", stages=None):

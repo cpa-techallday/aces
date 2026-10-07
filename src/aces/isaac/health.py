@@ -3,7 +3,11 @@
 Mirrors the isaac-sim plugin contract: GPU layer, install layer, then — only when
 both pass — a deep layer that actually boots a minimal headless ``SimulationApp``.
 Every layer reports structured results; failures are ``environment_error`` with the
-official guidance, never silently normal.  No GUI is ever launched.
+official guidance, never silently normal: a deep layer that cannot run is reported as
+failed, with the reason.  No GUI is ever launched.
+
+Every probe runs through :func:`aces.proc.run` (a timeout kills the whole process group)
+with :func:`isaac_env`: the minimal environment plus the variables Isaac needs.
 """
 from __future__ import annotations
 
@@ -11,9 +15,10 @@ import json
 import os
 import platform
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
+
+from .. import proc
 
 GPU_GUIDANCE = (
     "NVIDIA driver/GPU not detected. Install the NVIDIA driver per the Isaac Sim "
@@ -39,6 +44,25 @@ _LINUX_ROOTS = (
     "/opt/isaac-sim",
 )
 
+# Passed through to Isaac on top of aces.proc's base set, when set.  Nothing is set here on anyone's behalf:
+# OMNI_KIT_ACCEPT_EULA / ACCEPT_EULA reach Isaac only if the operator has accepted NVIDIA's EULA and set them.
+# Nucleus credentials (OMNI_USER, OMNI_PASS) and other secrets are not passed: no run fetches remote assets.
+ISAAC_ENV_KEEP = (
+    "ISAAC_SIM_PATH", "ISAAC_SIM_PYTHON", "OMNI_KIT_ACCEPT_EULA", "ACCEPT_EULA",  # install, licence acceptance
+    "CUDA_VISIBLE_DEVICES", "NVIDIA_VISIBLE_DEVICES", "NVIDIA_DRIVER_CAPABILITIES", "CUDA_PATH",  # GPU choice
+    "LD_LIBRARY_PATH", "VK_ICD_FILENAMES",                              # driver and Vulkan loader
+    "XDG_RUNTIME_DIR", "XDG_CACHE_HOME", "XDG_DATA_HOME", "XDG_CONFIG_HOME",  # Kit caches and config (Linux)
+    "USER", "LOGNAME", "USERNAME",
+    "SYSTEMDRIVE", "PROGRAMDATA", "PROGRAMFILES", "PROGRAMW6432",      # Windows (names are case-insensitive)
+    "NUMBER_OF_PROCESSORS", "PROCESSOR_ARCHITECTURE", "OS",
+)
+
+
+def isaac_env() -> dict[str, str]:
+    """The environment every Isaac subprocess gets: :func:`aces.proc.minimal_env` plus :data:`ISAAC_ENV_KEEP`."""
+    return proc.minimal_env(keep=ISAAC_ENV_KEEP)
+
+
 _deep_cache: dict[str, dict] = {}
 
 
@@ -50,14 +74,12 @@ def probe_gpu() -> dict:
     """GPU layer: nvidia-smi first (name + driver + CUDA), degraded flag when NVML fails.
 
     A WMI-level check can prove Windows sees an adapter but not that Vulkan/CUDA
-    works; when nvidia-smi fails the layer reports degraded=true and the deep
-    probe is the arbiter.
+    works; when nvidia-smi fails the layer reports degraded=true with the detail,
+    and :func:`health` reports the deep layer as failed (not run) with that reason.
     """
     try:
-        out = subprocess.run(
-            ["nvidia-smi", "--query-gpu=name,driver_version", "--format=csv,noheader"],
-            capture_output=True, text=True, timeout=30,
-        )
+        out = proc.run(["nvidia-smi", "--query-gpu=name,driver_version", "--format=csv,noheader"],
+                       env=isaac_env(), timeout=30)
         if out.returncode == 0 and out.stdout.strip():
             gpus = [line.split(", ") for line in out.stdout.strip().splitlines()]
             return {"ok": True, "degraded": False,
@@ -65,8 +87,8 @@ def probe_gpu() -> dict:
         return {"ok": False, "degraded": True,
                 "detail": (out.stderr or out.stdout).strip() or "nvidia-smi failed",
                 "guidance": GPU_GUIDANCE}
-    except (FileNotFoundError, subprocess.TimeoutExpired) as e:
-        return {"ok": False, "degraded": True, "detail": str(e), "guidance": GPU_GUIDANCE}
+    except (OSError, subprocess.TimeoutExpired) as e:
+        return {"ok": False, "degraded": True, "detail": str(e) or type(e).__name__, "guidance": GPU_GUIDANCE}
 
 
 def probe_install() -> dict:
@@ -79,9 +101,7 @@ def probe_install() -> dict:
     env_py = os.environ.get("ISAAC_SIM_PYTHON")
     if env_py:
         try:
-            out = subprocess.run([env_py, "-c", "import isaacsim; print('ok')"],
-                                 capture_output=True, text=True, timeout=120,
-                                 env={**os.environ, "OMNI_KIT_ACCEPT_EULA": "YES"})
+            out = proc.run([env_py, "-c", "import isaacsim; print('ok')"], env=isaac_env(), timeout=120)
             if out.returncode == 0 and "ok" in out.stdout:
                 return {"ok": True, "kind": "pip", "root": env_py, "launcher": env_py}
             return _err(f"ISAAC_SIM_PYTHON={env_py} cannot import isaacsim: {(out.stderr or '')[-400:]}")
@@ -141,12 +161,10 @@ def probe_deep(root: str, timeout_seconds: int = 300) -> dict:
         script = Path(td) / "deep_probe.py"
         script.write_text(DEEP_SCRIPT, encoding="utf-8")
         try:
-            out = subprocess.run([launcher, str(script)], capture_output=True, text=True,
-                                 timeout=timeout_seconds,
-                                 env={**os.environ, "OMNI_KIT_ACCEPT_EULA": "YES"})
+            out = proc.run([str(launcher), str(script)], cwd=td, env=isaac_env(), timeout=timeout_seconds)
         except subprocess.TimeoutExpired:
             res = {"ok": False, "error": {"type": "timeout",
-                   "message": f"deep probe exceeded {timeout_seconds}s wall clock"}}
+                   "message": f"deep probe exceeded {timeout_seconds}s wall clock; process group killed"}}
             _deep_cache[root] = res
             return res
     for line in out.stdout.splitlines():
@@ -167,7 +185,7 @@ def health(deep: bool = False, timeout_seconds: int = 300) -> dict:
     install = probe_install()
     layers: dict = {"gpu": gpu, "install": install}
     # A degraded GPU layer (NVML unreachable from this shell, WMI-only evidence) does
-    # not block the deep probe — the skill's rule is to实测 SimulationApp and let it
+    # not block the deep probe — the rule is to run SimulationApp and let it
     # arbitrate.  Only a hard GPU absence (nvidia-smi missing entirely) blocks it.
     ok = gpu["ok"] and install["ok"]
     if deep:
@@ -175,7 +193,13 @@ def health(deep: bool = False, timeout_seconds: int = 300) -> dict:
             layers["deep"] = probe_deep(install["root"], timeout_seconds)
             ok = layers["deep"]["ok"] if gpu.get("degraded") else (ok and layers["deep"]["ok"])
         else:
-            layers["deep"] = {"skipped": True}
+            why = []
+            if not gpu["ok"]:
+                why.append(f"GPU layer failed ({gpu.get('detail') or 'nvidia-smi/NVML failed'})")
+            if not install["ok"]:
+                why.append(f"install layer failed ({install.get('error', {}).get('message', 'not found')})")
+            layers["deep"] = {"ok": False, "skipped": True, "error": {
+                "type": "environment_error", "message": "deep probe not run: " + "; ".join(why)}}
     result = {"ok": ok, "layers": layers}
     if not ok:
         if not install["ok"]:

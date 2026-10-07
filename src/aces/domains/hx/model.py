@@ -13,12 +13,21 @@ Encoded logic, in order:
   4. Heat transfer: straight-duct Nusselt and friction baselines x calibration
      factors; overall UA through both films and the wall; counterflow e-NTU.
      Fluid properties re-evaluated at mean stream temperatures until converged.
-  5. Pressure drop: Darcy over the flow path (core length x tortuosity factor).
+     In laminar flow the Nusselt baseline is the circular-tube thermal-entry MEAN over
+     the core length (Hausen for uniform wall temperature, Shah for uniform heat flux),
+     from x* = L / (Dh Re Pr); it tends to 3.66 / 4.36 for a long core.  The calibration
+     factor, fitted to periodic (fully developed) CFD against the fully developed
+     baseline, multiplies this developing baseline.
+  5. Pressure drop: Darcy over the flow path (core length x tortuosity factor),
+     fully developed.
 
-What this tier does NOT model (reported on every result): inlet/outlet headers
-and manifolds, flow maldistribution, entrance and developing-flow effects, wall
-roughness, compressibility at large pressure drop, axial wall conduction.  The
-calibration factors start at 1.0; until simlab CFD or rig tests replace them the
+Every result states these caveats (``ALWAYS_WARN``): inlet/outlet headers and
+manifolds and flow maldistribution are not modelled; the correlations are
+straight-duct ones applied to a TPMS core; the thermal entry is a circular-tube
+correlation and calibration multiplies it; the hydrodynamic entrance (pressure drop
+is fully developed), wall roughness and axial wall conduction are not modelled.
+Compressibility is flagged when a pressure drop exceeds 10 % of the inlet pressure.
+The calibration factors start at 1.0; until simlab CFD or rig tests replace them the
 results are ranking estimates, not performance claims.
 """
 from __future__ import annotations
@@ -37,6 +46,11 @@ from . import tpms
 ALWAYS_WARN = (
     "core only: headers, manifolds and flow maldistribution not modelled",
     "fast tier: straight-duct correlations applied to a TPMS core; verify on simlab before use",
+    ("laminar heat transfer: circular-tube thermal-entry mean Nusselt numbers (Hausen 1943 for uniform wall "
+     "temperature, Shah 1975 for uniform heat flux) over the core length, applied to the TPMS baseline; calibration "
+     "factors fitted to periodic, fully developed CFD multiply this developing baseline"),
+    ("not modelled: hydrodynamic entrance (pressure drop is fully developed, so it is under-predicted in short "
+     "laminar cores), wall roughness, axial wall conduction"),
 )
 ISOLATED_LIMIT = 1e-3  # share of a fluid volume allowed to sit in pockets cut off from the network
 
@@ -171,7 +185,7 @@ class TwoFluidTPMS:
                 st = fluids.state(stream.fluid, Tm, stream.inlet_pressure_Pa)
                 u = stream.mass_flow_kg_s / (st.rho * s["phi"] * Af)
                 re = st.rho * u * s["dh_m"] / st.mu
-                nu = corr.nusselt(re, st.pr, req.thermal_boundary)
+                nu = corr.nusselt(re, st.pr, req.thermal_boundary, l_over_dh=L / s["dh_m"])  # thermal entry
                 ff = corr.friction_factor_darcy(re)
                 h = nu.value * f_nu.at(re) * st.k / s["dh_m"]
                 dp = ff.value * f_f.at(re) * (f_tau.at(re) * L / s["dh_m"]) * 0.5 * st.rho * u * u
@@ -204,6 +218,11 @@ class TwoFluidTPMS:
             for c in (r["nu"], r["f"]):
                 if not c.valid:
                     warnings.append(f"{name}: Re {r['re']:.0f} {c.regime}; " + "; ".join(c.notes))
+            nu_c = r["nu"]
+            if nu_c.regime == "laminar" and nu_c.x_star < corr.X_STAR_DEVELOPED:
+                warnings.append(f"{name}: thermally developing over the core (x* {nu_c.x_star:.3g} < "
+                                f"{corr.X_STAR_DEVELOPED}, Graetz {nu_c.graetz:.3g}): mean Nu {nu_c.value:.3g} from "
+                                f"{nu_c.source.split(' mean')[0]}, not the fully developed {nu_c.fully_developed:.3g}")
             if r["dp"] > 0.1 * stream.inlet_pressure_Pa:
                 warnings.append(f"{name}: pressure drop exceeds 10% of inlet pressure; incompressible treatment is doubtful")
             ph_in = fluids.phase(stream.fluid, stream.inlet_temperature_K, stream.inlet_pressure_Pa)
@@ -251,8 +270,12 @@ class TwoFluidTPMS:
             "cold_outlet_K": out["Tc_out"],
             "mass_kg": mass,
             "core_volume_m3": V,
-            "wall_mean_m": t_mean,
+            # thinnest wall and area-weighted mean wall, both measured along the mid-surface normal (manufacturing)
             "wall_min_m": t_min,
+            "wall_mean_m": mf.wall_mean_over_a * a,
+            # solid volume / mid-surface area: the thickness the conduction term uses. On saddle-shaped TPMS walls
+            # (negative Gaussian curvature) it is smaller than the normal thickness, so it is not a "mean wall".
+            "wall_conduction_m": t_mean,
             "cells_across": cells_across,
             "solid_fraction": uc.solid_fraction,
         }
@@ -263,7 +286,11 @@ class TwoFluidTPMS:
                 "velocity_m_s": r["u"],
                 "reynolds": r["re"],
                 "regime": r["nu"].regime,
-                "nusselt_baseline": r["nu"].value,
+                "nusselt_baseline": r["nu"].value,  # what h uses (thermal-entry mean in laminar flow)
+                "nusselt_fully_developed": r["nu"].fully_developed,
+                "nusselt_correlation": r["nu"].source,
+                "x_star": r["nu"].x_star,  # L / (Dh Re Pr)
+                "graetz": r["nu"].graetz,
                 "friction_baseline": r["f"].value,
                 "h_W_m2K": r["h"],
                 "hydraulic_diameter_m": s["dh_m"],

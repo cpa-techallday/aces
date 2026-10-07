@@ -32,14 +32,22 @@ class CascadeResult:
     gain_db: float
     nf_db: float
     output_p1db_dbm: float | None  # output-referred cascade compression, if all stages declare one
+    input_p1db_dbm: float | None = None  # the same point referred to the input: output P1dB - gain
 
 
 def cascade(stages: list[Stage]) -> CascadeResult:
     """Friis noise-figure and gain cascade over ``stages`` in signal order.
 
     F = f1 + (f2-1)/g1 + (f3-1)/(g1*g2) + ...
-    Output compression walks backward: P1dB_out of the cascade is set by the
-    earliest compressing stage referred to its output plane.
+
+    Compression is cascaded OUTPUT-referred, from each stage's datasheet output P1dB in mW:
+
+        1 / P1dB_out = sum_i 1 / (OP1dB_i * G_after_i),   G_after_i = gain of the stages after i
+
+    the same form as the cascaded intercept point (Pozar, Microwave Engineering, intermodulation of
+    cascaded components); for P1dB it is the usual first-order estimate.  The input-referred value is
+    P1dB_out / G_total (small-signal gain), which equals 1 / sum_i 1 / (IP1dB_i / G_before_i) with
+    IP1dB_i = OP1dB_i / G_i.  Both are None unless every stage gives an output P1dB.
     """
     if not stages:
         raise ValueError("cascade needs at least one stage")
@@ -54,21 +62,19 @@ def cascade(stages: list[Stage]) -> CascadeResult:
         g_cum *= from_db(s.gain_db)
 
     op1db: float | None = None
+    ip1db: float | None = None
     if all(s.op1db_dbm is not None for s in stages):
-        # Walk from the last stage back to the first, referring each stage's
-        # compression point to the cascade output through later-stage gains.
-        gains_after = 0.0
-        p_out = stages[-1].op1db_dbm
-        for s in reversed(stages[:-1]):
-            gains_after += s.gain_db  # gain of stages between s and output
-            # s compresses when its own output hits its op1db; that level
-            # referred to the cascade output adds the gains after s.
-            cand = s.op1db_dbm + gains_after
-            p_out = min(p_out, cand)
-        op1db = p_out
+        inv = 0.0
+        g_after = 1.0  # linear gain from the output of stage i to the cascade output
+        for s in reversed(stages):
+            inv += 1.0 / (from_db(s.op1db_dbm) * g_after)
+            g_after *= from_db(s.gain_db)
+        op1db = to_db(1.0 / inv)
+        ip1db = op1db - to_db(g_cum)
 
     return CascadeResult(
         gain_db=to_db(g_cum),
         nf_db=to_db(f_tot),
         output_p1db_dbm=op1db,
+        input_p1db_dbm=ip1db,
     )

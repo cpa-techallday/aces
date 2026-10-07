@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import yaml
 
-from aces import evidence, fluids, spec
+from aces import evidence, fluids, safeio, search, spec
 from aces.calibration import Factor, Registry
 from aces.cli import main
 from aces.domains.hx import HXRequirements, TwoFluidTPMS, tpms
@@ -81,7 +81,7 @@ def test_reported_h_ua_and_dp_follow_from_reported_quantities(spec_dict):
     assert hs["pressure_drop_Pa"] == pytest.approx(dp, rel=1e-3)
     cs = m["cold"]
     a_m = 0.5 * (hs["wetted_area_m2"] + cs["wetted_area_m2"])
-    ua = 1 / (1 / (hs["h_W_m2K"] * hs["wetted_area_m2"]) + m["wall_mean_m"] / (15.0 * a_m) + 1 / (cs["h_W_m2K"] * cs["wetted_area_m2"]))
+    ua = 1 / (1 / (hs["h_W_m2K"] * hs["wetted_area_m2"]) + m["wall_conduction_m"] / (15.0 * a_m) + 1 / (cs["h_W_m2K"] * cs["wetted_area_m2"]))
     assert m["UA_W_K"] == pytest.approx(ua, rel=1e-3)
 
 
@@ -110,9 +110,11 @@ def test_phase_change_is_infeasible(spec_dict):
     assert ev.constraints["single_phase"] > 0 and not ev.feasible
 
 
-def test_laminar_default_is_the_conservative_constant(spec_dict):
-    m = TwoFluidTPMS().evaluate(BASE, _req(spec_dict)).metrics
-    assert m["hot"]["regime"] == "laminar" and m["hot"]["nusselt_baseline"] == pytest.approx(3.66)
+def test_laminar_default_is_uniform_wall_temperature_with_entry_gain(spec_dict):
+    """D11 baseline (uniform wall temperature, 3.66 fully developed) with Hausen's entry gain (audit H4)."""
+    hs = TwoFluidTPMS().evaluate(BASE, _req(spec_dict)).metrics["hot"]
+    assert hs["regime"] == "laminar" and hs["nusselt_fully_developed"] == pytest.approx(3.66)
+    assert "Hausen" in hs["nusselt_correlation"] and hs["nusselt_baseline"] >= 3.66
 
 
 # ----------------------------------------------------------------------------- calibration
@@ -131,7 +133,8 @@ def test_registry_missing_file_is_an_error(tmp_path):
 
 def test_registry_cache_follows_calibration_file(tmp_path, spec_dict):
     p = tmp_path / "cal.json"
-    Registry({"hx.gyroid.friction": Factor("hx.gyroid.friction", 3.0, ("simlab:t",))}).save(p)
+    Registry({"hx.gyroid.friction": Factor("hx.gyroid.friction", 3.0, ("simlab:t",), valid_range={"reynolds": (1.0, 2000.0)},
+                                          fitted_on="2026-10-07")}).save(p)
     model = TwoFluidTPMS()
     base = model.evaluate(BASE, _req(spec_dict)).metrics["hot"]["pressure_drop_Pa"]
     spec_dict["requirements"]["calibration_file"] = str(p)
@@ -141,7 +144,8 @@ def test_registry_cache_follows_calibration_file(tmp_path, spec_dict):
 
 def test_factor_outside_fitted_range_warns(spec_dict):
     reg = Registry()
-    reg.set(Factor("hx.gyroid.nusselt", 1.5, ("simlab:t",), valid_range={"reynolds": (5000.0, 9000.0)}))
+    reg.set(Factor("hx.gyroid.nusselt", 1.5, ("simlab:t",), valid_range={"reynolds": (5000.0, 9000.0)},
+                   fitted_on="2026-10-07"))
     ev = TwoFluidTPMS(registry=reg).evaluate(BASE, _req(spec_dict))
     assert any("outside its fitted range" in w for w in ev.warnings)
 
@@ -160,6 +164,10 @@ def test_verify_corrupt_ledger_fails_cleanly(tmp_path, spec_dict):
                                     inputs={}, observations={}, calibration={}))
     with led.path.open("a") as fh:
         fh.write('{"truncated": ')
+    ok, msg = led.verify()
+    assert not ok and "append was interrupted" in msg and "aces ledger seal" in msg
+    with led.path.open("a") as fh:
+        fh.write('\n{"truncated": \n')
     ok, msg = led.verify()
     assert not ok and "not valid JSON" in msg
 
@@ -201,6 +209,64 @@ def test_export_refuses_edited_results(tmp_path, spec_dict):
     pareto[0]["params"]["cell_m"] *= 0.5
     (run / "pareto.json").write_text(json.dumps(pareto))
     assert main(["export-simlab", str(run), "--solver", "s", "--vram-gb", "4", "--cells", "1"]) == 2
+    assert not list(run.glob("simlab_*.yaml"))
+
+
+def test_export_refuses_a_ledger_record_edited_to_match(tmp_path, spec_dict, capsys):
+    """Audit M2: pareto.json edited and its sha256 edited in the ledger record to match."""
+    ledger = tmp_path / "ledger.jsonl"
+    run = _run(tmp_path, spec_dict, "projE", ledger)
+    pareto = json.loads((run / "pareto.json").read_text())
+    pareto[0]["params"]["cell_m"] *= 0.5
+    (run / "pareto.json").write_text(json.dumps(pareto, indent=2))
+    lines = ledger.read_text().splitlines()
+    rec = json.loads(lines[-1])
+    rec["artifacts"]["pareto"]["sha256"] = evidence.file_sha256(run / "pareto.json")
+    lines[-1] = json.dumps(rec, sort_keys=True)
+    ledger.write_text("\n".join(lines) + "\n")
+    assert main(["export-simlab", str(run), "--solver", "s", "--vram-gb", "4", "--cells", "1"]) == 2
+    assert "does not verify" in capsys.readouterr().out
+    assert not list(run.glob("simlab_*.yaml")) and not list(run.glob("*.stl"))
+
+
+def test_export_refuses_a_truncated_ledger(tmp_path, spec_dict, capsys):
+    ledger = tmp_path / "ledger.jsonl"
+    run_a = _run(tmp_path, spec_dict, "projT", ledger)
+    run_b = _run(tmp_path, spec_dict, "projU", ledger)
+    lines = ledger.read_text().splitlines(keepends=True)
+    ledger.write_text("".join(lines[:-1]))  # the last record (run_b's) cut off the end
+    assert main(["export-simlab", str(run_b), "--solver", "s", "--vram-gb", "4", "--cells", "1"]) == 2
+    assert "is not in" in capsys.readouterr().out
+    ledger.write_text("".join(lines[:-1]) + lines[-1][:40])  # half of it: an interrupted append
+    assert main(["export-simlab", str(run_a), "--solver", "s", "--vram-gb", "4", "--cells", "1"]) == 2
+    assert "interrupted" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("project", ["../evil", "a/b", "..", "x" * 65, "C:evil"])
+def test_export_refuses_a_path_like_project(tmp_path, spec_dict, project, capsys):
+    run = _run(tmp_path, spec_dict, "projP", tmp_path / "ledger.jsonl")
+    spec_dict = json.loads(json.dumps(spec_dict))
+    spec_dict["project"] = project
+    spec_dict["search"]["trials"] = 40
+    sp = tmp_path / "evil.yaml"
+    sp.write_text(yaml.safe_dump(spec_dict))
+    out = tmp_path / "run_evil"
+    assert main(["design", str(sp), "--out", str(out), "--ledger", str(tmp_path / "ledger.jsonl")]) == 0
+    assert main(["export-simlab", str(out), "--solver", "s", "--vram-gb", "4", "--cells", "1"]) == 2
+    assert "project" in capsys.readouterr().out and not list(out.glob("simlab_*.yaml"))
+    assert main(["export-simlab", str(run), "--solver", "../s", "--vram-gb", "4", "--cells", "1"]) == 2
+    assert not list(run.glob("simlab_*.yaml"))
+
+
+def test_reexport_never_overwrites_the_experiment(tmp_path, spec_dict, capsys):
+    run = _run(tmp_path, spec_dict, "projX", tmp_path / "ledger.jsonl")
+    args = ["export-simlab", str(run), "--solver", "s", "--vram-gb", "4", "--cells", "1"]
+    assert main(args) == 0
+    exp = next(run.glob("simlab_*.yaml"))
+    before = exp.read_bytes()
+    assert main([*args[:3], "other-solver", *args[4:]]) == 2
+    assert "never overwrites" in capsys.readouterr().out
+    assert exp.read_bytes() == before
 
 
 # ----------------------------------------------------------------------------- run folders
@@ -222,8 +288,70 @@ def test_run_files_are_not_written_through_symlinks(tmp_path):
     target.write_text("keep")
     link = tmp_path / "report.md"
     link.symlink_to(target)
-    with pytest.raises(PermissionError):
+    with pytest.raises(safeio.UnsafePathError):
         _safe_write(link, "overwrite")
+    assert target.read_text() == "keep"
+
+
+def test_run_files_are_not_written_into_a_folder_swapped_for_a_link(tmp_path):
+    """Audit M1: the run folder replaced by a link to somewhere else in the middle of a search."""
+    from aces.cli import _safe_write
+    run, elsewhere = tmp_path / "run", tmp_path / "elsewhere"
+    run.mkdir()
+    elsewhere.mkdir()
+    run.rmdir()
+    run.symlink_to(elsewhere, target_is_directory=True)
+    for name in ("pareto.json", "evaluations.jsonl", "run.json", "report.md"):
+        with pytest.raises(safeio.UnsafePathError):
+            _safe_write(run / name, "x")
+    assert not list(elsewhere.iterdir())
+
+
+def test_a_run_needs_a_new_folder(tmp_path, spec_dict, capsys):
+    out = tmp_path / "existing"
+    out.mkdir()
+    sp = tmp_path / "s.yaml"
+    sp.write_text(yaml.safe_dump(spec_dict))
+    assert main(["design", str(sp), "--out", str(out), "--ledger", str(tmp_path / "l.jsonl")]) == 2
+    assert "needs a new --out folder" in capsys.readouterr().out
+    assert not (tmp_path / "l.jsonl").exists()
+
+
+@pytest.mark.parametrize("bounds", [{"wall_ratio": [0.01, 0.02]}, {"wall_ratio": [0.05, 0.9]},
+                                    {"cell_m": [float("nan"), 0.01]}, {"tpms": [0, 1]}])
+def test_search_bounds_may_only_narrow_the_model_range(tmp_path, spec_dict, bounds, capsys):
+    """Audit M5: a wall ratio of 0.012 (outside the model's 0.03-0.35) took 2.5 GB; such bounds are refused."""
+    spec_dict["search"]["bounds"] = bounds
+    sp = tmp_path / "s.yaml"
+    sp.write_text(yaml.safe_dump(spec_dict))
+    assert main(["check", str(sp)]) == 2
+    assert "bounds" in capsys.readouterr().out
+    assert main(["design", str(sp), "--out", str(tmp_path / "run"), "--ledger", str(tmp_path / "l.jsonl")]) == 2
+    assert not (tmp_path / "run").exists()
+    req = _req(spec_dict)
+    with pytest.raises(ValueError):
+        search.run(TwoFluidTPMS(), req, trials=8, bounds={k: tuple(v) for k, v in bounds.items()})
+
+
+def test_narrower_search_bounds_are_accepted(tmp_path, spec_dict):
+    spec_dict["search"]["bounds"] = {"wall_ratio": [0.08, 0.2]}
+    sp = tmp_path / "s.yaml"
+    sp.write_text(yaml.safe_dump(spec_dict))
+    assert main(["check", str(sp)]) == 0
+
+
+def test_sample_never_overwrites_or_follows_a_link(tmp_path, capsys):
+    args = ["sample", "--tpms", "gyroid", "--cell-m", "0.004", "--wall-ratio", "0.1", "--cells", "1",
+            "--resolution", "12"]
+    out = tmp_path / "s.stl"
+    assert main([*args, "--out", str(out)]) == 0
+    before = out.read_bytes()
+    assert main([*args, "--wall-ratio", "0.2", "--out", str(out)]) == 2
+    assert out.read_bytes() == before
+    target = tmp_path / "elsewhere.txt"
+    target.write_text("keep")
+    (tmp_path / "link.stl").symlink_to(target)
+    assert main([*args, "--out", str(tmp_path / "link.stl")]) == 2
     assert target.read_text() == "keep"
 
 
@@ -231,7 +359,8 @@ def test_calibration_file_is_relative_to_the_spec(tmp_path, spec_dict, monkeypat
     from aces.cli import _load
     d = tmp_path / "specs"
     d.mkdir()
-    Registry({"hx.gyroid.friction": Factor("hx.gyroid.friction", 3.0, ("simlab:t",))}).save(d / "cal.json")
+    Registry({"hx.gyroid.friction": Factor("hx.gyroid.friction", 3.0, ("simlab:t",), valid_range={"reynolds": (1.0, 2000.0)},
+                                          fitted_on="2026-10-07")}).save(d / "cal.json")
     spec_dict["requirements"]["calibration_file"] = "cal.json"
     (d / "s.yaml").write_text(yaml.safe_dump(spec_dict))
     monkeypatch.chdir(tmp_path)  # a CWD-relative lookup would miss the file

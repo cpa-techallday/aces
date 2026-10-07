@@ -125,7 +125,8 @@ requestAnimationFrame(loop);
 """
 
 
-def save_viewer(path: str, g, steps, title: str = "formgen lattice") -> None:
+def render_viewer(g, steps, title: str = "formgen lattice") -> str:
+    """The self-contained viewer page as text (UTF-8, as its meta tag says)."""
     stats = g.stats()
     data = {
         "nodes": np.round(g.nodes, 2).tolist(),
@@ -146,5 +147,11 @@ def save_viewer(path: str, g, steps, title: str = "formgen lattice") -> None:
         .replace("__BBOX__", bbox_s)
         .replace("__DATA__", json.dumps(data))
     )
-    with open(path, "w") as f:
-        f.write(html)
+    return html
+
+
+def save_viewer(path: str, g, steps, title: str = "formgen lattice") -> None:
+    """Write the viewer page, replacing an earlier file but never writing through a link."""
+    from aces import safeio
+
+    safeio.write_text(path, render_viewer(g, steps, title), overwrite=True)

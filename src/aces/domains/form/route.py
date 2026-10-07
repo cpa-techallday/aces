@@ -1,13 +1,18 @@
-"""form.lattice: run formgen from an ACES spec and record the result as evidence."""
+"""form.lattice: run formgen from an ACES spec and record the result as evidence.
+
+Every file of a run (formgen's outputs, ``formgen.log``, ``structure.json``) is written through one
+:class:`aces.safeio.OutDir` on a new run folder: never through a link, never over an existing file (audit M1).
+"""
 from __future__ import annotations
 
 import json
+from contextlib import ExitStack
 from pathlib import Path
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, field_validator
 
-from ... import manufacturing
+from ... import manufacturing, safeio
 from ...structures import StructureSpec
 from ...structures import analyse as frame_analyse
 
@@ -41,7 +46,8 @@ class ScaleModel(BaseModel):
 class FormRequirements(BaseModel):
     model_config = ConfigDict(extra="forbid")
     process: str = Field(description="robotic_lattice_extrusion or printed_formwork")
-    source: str = Field(description="geometry file (relative to the spec) or 'fusion' for the live selection")
+    source: str = Field(description="geometry file (relative to the spec) or 'fusion' for the live selection",
+                        json_schema_extra={"aces_path": {"not_paths": ["fusion"]}})
     fusion_body: str | None = None
     body_name: str | None = None
     unit_scale: PositiveFloat | None = None
@@ -94,20 +100,29 @@ def options(req: FormRequirements, out_dir: Path, spec_dir: Path):
     return Options(**kw)
 
 
-def run(req: FormRequirements, out_dir: str | Path, spec_dir: str | Path, log=print) -> dict[str, Any]:
-    """Run formgen and return (report, artifacts, problems)."""
+def run(req: FormRequirements, out_dir: str | Path | safeio.OutDir, spec_dir: str | Path,
+        log=print) -> dict[str, Any]:
+    """Run formgen and return (report, artifacts, problems).
+
+    ``out_dir`` is a new folder: a path, or a :class:`aces.safeio.OutDir` the caller opened with ``new=True``.
+    """
     from formgen.pipeline import run as formgen_run
 
-    out = Path(out_dir)
-    out.mkdir(parents=True, exist_ok=True)
+    with ExitStack() as stack:
+        od = out_dir if isinstance(out_dir, safeio.OutDir) else stack.enter_context(safeio.OutDir(out_dir, new=True))
+        return _run(req, od, Path(spec_dir), log, formgen_run)
+
+
+def _run(req: FormRequirements, od: safeio.OutDir, spec_dir: Path, log, formgen_run) -> dict[str, Any]:
+    out = od.path
     lines: list[str] = []
 
     def _log(msg: str) -> None:
         lines.append(msg)
         log(msg)
 
-    report = formgen_run(options(req, out, Path(spec_dir)), log=_log)
-    (out / "formgen.log").write_text("\n".join(lines) + "\n")
+    report = formgen_run(options(req, out, spec_dir), log=_log, out=od)
+    od.write_text("formgen.log", "\n".join(lines) + "\n")
     outputs = report.get("outputs", {})
     artifacts: dict[str, str] = {"log": str(out / "formgen.log")}
     for key in ("report_json", "lattice_json", "waypoints_csv", "preview_stl", "model_stl"):
@@ -120,7 +135,7 @@ def run(req: FormRequirements, out_dir: str | Path, spec_dir: str | Path, log=pr
     structure = None
     if req.structure is not None and outputs.get("lattice_json"):
         structure = check_structure(req, Path(outputs["lattice_json"]))
-        (out / "structure.json").write_text(json.dumps(structure, indent=2, default=float))
+        od.write_text("structure.json", json.dumps(structure, indent=2, default=float))
         artifacts["structure_json"] = str(out / "structure.json")
         if structure["max_utilisation"] > 1.0:
             problems.append(f"structural utilisation {structure['max_utilisation']:.2f} > 1.0 "

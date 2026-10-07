@@ -319,19 +319,24 @@ def mesh_volume(verts: np.ndarray, faces: np.ndarray) -> float:
 
 
 def write_stl(path: str | Path, verts: np.ndarray, faces: np.ndarray, header: str = "ACES TPMS sample",
-              scale: float = 1.0) -> Path:
-    """Binary STL.  Coordinates are written in metres x scale (scale=1000 for millimetres)."""
-    p = Path(path)
-    p.parent.mkdir(parents=True, exist_ok=True)
+              scale: float = 1.0, *, out=None) -> Path:
+    """Binary STL.  Coordinates are written in metres x scale (scale=1000 for millimetres).
+
+    Written through :mod:`aces.safeio` (audit M1): a new file only, never through a link.  With ``out`` (an open
+    :class:`aces.safeio.OutDir`), ``path`` is a file name inside that folder.
+    """
+    from ... import safeio
+
     tri = (verts[faces] * scale).astype(np.float32)
     n = np.cross(tri[:, 1] - tri[:, 0], tri[:, 2] - tri[:, 0])
     norm = np.linalg.norm(n, axis=1, keepdims=True)
     n = (n / np.where(norm == 0, 1, norm)).astype(np.float32)
-    with p.open("wb") as fh:
-        fh.write(header.encode()[:80].ljust(80, b" "))
-        fh.write(struct.pack("<I", len(faces)))
-        rec = np.zeros(len(faces), dtype=[("n", "<f4", 3), ("v", "<f4", (3, 3)), ("a", "<u2")])
-        rec["n"] = n
-        rec["v"] = tri
-        fh.write(rec.tobytes())
-    return p
+    rec = np.zeros(len(faces), dtype=[("n", "<f4", 3), ("v", "<f4", (3, 3)), ("a", "<u2")])
+    rec["n"] = n
+    rec["v"] = tri
+    data = header.encode()[:80].ljust(80, b" ") + struct.pack("<I", len(faces)) + rec.tobytes()
+    if out is not None:
+        return out.write_bytes(str(path), data)
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    return safeio.write_bytes(p, data)

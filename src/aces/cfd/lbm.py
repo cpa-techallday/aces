@@ -193,7 +193,6 @@ def solve_scalar(fluid, u, alpha: float, gamma: float = 1e-3, *, xp=np, tol: flo
     boundary layers and the call is refused.
     """
     fl = xp.asarray(fluid, dtype=bool)
-    nfl = int(fl.sum())
     umax = float(_asnp(xp, xp.sqrt((u * u).sum(axis=0)).max()))
     alpha_t = min(CS2_7 * (tau_max - 0.5), u_lattice_max * alpha / umax) if umax > 0 else CS2_7 * (tau_max - 0.5)
     tau_target = 0.5 + alpha_t / CS2_7

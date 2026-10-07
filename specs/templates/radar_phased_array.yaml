@@ -1,8 +1,11 @@
 # AERIS-X64 phased-array radar spec template.
 # `aces check specs/radar_aeris_x64.yaml` validates; `aces design` runs the NSGA-II search.
-# Every chain-stage number must carry a datasheet citation in `source` — the standing
-# rule is no invented data, and the calibration keys below stay "uncalibrated" until
-# the EM tier (aces-tile-em) or bench tests land rows in the registry.
+# Every number the model cannot know carries a `source` (a datasheet, test report or EM result): the
+# standing rule is no invented data (rules 1, 2).  The empty values below have no source yet, so
+# `aces check` lists them as missing until they are filled from real documents.  The calibration keys
+# stay "uncalibrated" until the EM tier (aces-tile-em) or bench tests land rows in the registry.
+# Export control: radar design data may be DSGL-controlled (rule 12); keep filled specs and run folders
+# on the LAN until the radar work has been classified.
 
 aces: 1
 domain: radar.phased_array
@@ -17,28 +20,52 @@ requirements:
   frequency_hz: 10.5e9
   target_rcs_m2: 1.0            # primary sizing target; drone class is 0.01 m^2
   detection:
-    pd: 0.9
+    pd: 0.9                     # Albersheim's fitted range: Pd 0.1-0.9, Pfa 1e-7-1e-3
     pfa: 1.0e-6
     cpi_pulses: 64              # 64-pulse CPI @ 6 kHz PRF per the redesign study
-  min_range_m: 10_500
+    integration: coherent       # pulse-Doppler FFT; `noncoherent` uses Albersheim's n-pulse SNR instead
+  min_range_m: 10_500           # required detection range, held to the edge of the scan sector
+  max_blind_range_m:            # REQUIRED: closest range a target must be seen at (blind zone is c*tau/2)
   max_range_resolution_m: 0.15  # 1 GHz chirp
   scan_half_angle_deg: 45
-  element_gain_db: 6.0          # patch element, per the antenna-plate design
+  # Sourced inputs.  REQUIRED: fill each value with the datasheet, test report or EM result it comes from.
+  element_gain_db:              # embedded element broadside gain, dBi (antenna-plate EM result or measurement)
+    value:
+    source:
+  element_pattern_exponent:     # n in G(theta) = G(0) cos^n(theta): sets the scan loss (embedded-element pattern)
+    value:
+    source:
+  antenna_noise_temperature_k:  # antenna noise temperature Ta, K
+    value:
+    source:
+  system_losses_db:             # radome + processing + atmosphere, dB
+    value:
+    source:
+  tx_line_loss_db:              # element-to-antenna, dB; calibratable via radar.tx.line_loss_factor
+    value:
+    source:
+  pa_efficiency:                # PAE of the GaN PA at its rated duty (PA datasheet)
+    value:
+    source:
+  duty_max:                     # the PA's rated duty cycle (PA datasheet)
+    value:
+    source:
+  support_dc_w_per_element:     # DC per element for LNA, beamformer and control, W (datasheets)
+    value:
+    source:
   # RX chain per element, in signal order (datasheet-cited):
   rx_chain:
     - {name: "QPM1002 LNA",        gain_db: 20.0, nf_db: 2.2,  op1db_dbm: 12.0, source: "Qorvo QPM1002 datasheet (Project B front end)"}
     - {name: "TGP2109 phase 6-bit", gain_db: -6.5, nf_db: 6.5, source: "Qorvo TGP2109 datasheet, insertion loss"}
     - {name: "ADAR1000 buffer",    gain_db: 12.0, nf_db: 7.0,  source: "Analog ADAR1000 datasheet"}
     - {name: "combiner 4:1 x2",    gain_db: -7.5, nf_db: 7.5,  source: "board 9 RF distribution estimate — uncalibrated"}
-  system_losses_db: 4.0         # radome + processing + atmosphere, baseline
-  tx_line_loss_db: 1.0          # element-to-antenna, calibratable via radar.tx.line_loss_factor
-  pa_efficiency: 0.30           # GaN PAE at 30 % duty (QPA2962 class)
-  duty_max: 0.30
   max_dc_power_w: 5000          # ~3.7 kW RF + overhead per the redesign study
   max_dissipation_w_cm2: 4.0    # below Project B's 6.5 W/cm2 failure class, cold-plated
-  max_aperture_mm: 200          # 8x8 at lambda/2 is ~114 mm; headroom for pitch growth
+  max_aperture_mm: 200          # largest aperture width or height; 8x8 at lambda/2 is ~114 mm
   phase_bits_options: [4, 5, 6, 7]
-  # calibration_file: radar_registry.json   # uncomment once EM/bench factors exist
+  manufacturing:
+    process: pcb_antenna        # planned in aces.manufacturing: `check`/`design` refuse it until it has a generator and checks
+  # calibration_file: radar_registry.json   # uncomment once EM/bench factors exist (`aces radar-calibrate`)
 search:
   trials: 400
   population: 48
