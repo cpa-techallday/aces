@@ -14,7 +14,8 @@ Rev 2 (2026-10-07). This revision takes in the review from the agent working in 
   costing agent works in `aces-dev/`.
 - **Merging the costing patch.** It is additive: one import and one command block in `cli.py`, a new module and a
   test file. Rebase it onto `origin/main` and run the full suite before pushing.
-- **Decision numbers.** D24–D26 are reserved for the costing agent's decisions. This agent's next decision is D27.
+- **Decision numbers.** D24–D26 are reserved for the costing agent's decisions, and the compliance commit
+  (`0bfaa88`) claims D27. Take the next free number from DECISIONS.md when a decision is accepted.
 - **The rig is shared.** Only Aaron switches GRID CONTROL modes. No agent launches GPU work outside the simlab
   queue. Agents tell each other before touching rig services (for example the GLM-5.2 lane on :8019).
 
