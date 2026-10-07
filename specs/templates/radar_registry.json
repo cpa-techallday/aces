@@ -1,0 +1,21 @@
+{
+  "radar.tx.line_loss_factor": {
+    "basis": "geometric mean of measured/model over 3 rows (radar.tx.line_loss_factor)",
+    "fitted_on": "2026-10-07",
+    "form": "",
+    "re_exponent": 0.0,
+    "re_ref": 0.0,
+    "sources": [
+      "simlab:f12.5",
+      "simlab:f8.5",
+      "simlab:job7-em-coupon"
+    ],
+    "valid_range": {
+      "frequency_hz": [
+        7933211144.37514,
+        11359849681.531218
+      ]
+    },
+    "value": 0.9453060764368901
+  }
+}

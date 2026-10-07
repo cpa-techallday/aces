@@ -38,7 +38,7 @@ requirements:
   max_dissipation_w_cm2: 4.0    # below Project B's 6.5 W/cm2 failure class, cold-plated
   max_aperture_mm: 200          # 8x8 at lambda/2 is ~114 mm; headroom for pitch growth
   phase_bits_options: [4, 5, 6, 7]
-  # calibration_file: radar_registry.json   # uncomment once EM/bench factors exist
+  calibration_file: radar_registry.json   # gprMax delta-Q coupon sweep 2026-10-07 (line loss only; NF/gain still 1.0)
 search:
   trials: 400
   population: 48
