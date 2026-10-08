@@ -241,3 +241,42 @@ def test_multiport_deck_rejects_wrong_substrate_cells():
     with pytest.raises(ValueError, match="2 cells"):
         em._gprmax_multiport_input(RO["substrate_h_m"] / 4, 4e-9, 10.5e9,
                                    RO["substrate_er"], RO["substrate_h_m"], RO["loss_tan"])
+
+
+# ------------------------------------------------------------------ palace path
+
+def test_palace_wr90_config_shape():
+    cfg = em._palace_wr90_config([9.5, 10.0, 12.4])
+    assert cfg["Problem"]["Type"] == "Driven"
+    assert cfg["Model"]["L0"] == 1.0e-3  # mesh in mm
+    mats = cfg["Domains"]["Materials"]
+    assert mats == [{"Attributes": [1], "Permeability": 1.0, "Permittivity": 1.0,
+                     "LossTan": 0.0}]
+    ports = cfg["Boundaries"]["WavePort"]
+    assert [p["Index"] for p in ports] == [1, 2]
+    assert all(p["Mode"] == 1 for p in ports)              # TE10
+    assert [p["Excitation"] for p in ports] == [1, 2]      # full 2x2 S-matrix
+    assert [p["Attributes"] for p in ports] == [[2], [3]]  # z=0 / z=L faces
+    assert cfg["Boundaries"]["PEC"]["Attributes"] == [4]
+    samples = cfg["Solver"]["Driven"]["Samples"]
+    assert len(samples) == 1 and samples[0]["Type"] == "Point"  # not PROM "Linear"
+    assert samples[0]["Freq"] == [9.5, 10.0, 12.4]
+
+
+def test_palace_kn_parser():
+    log = (
+        "Calculating boundary modes at wave ports for ω/2π = 9.500e+00 GHz (4.559e+00)\n"
+        " Port 1, mode 1: kₙ = 1.441e+02-2.751e-18i m⁻¹\n"
+        " Port 2, mode 1: kₙ = 1.441e+02-9.999e-18i m⁻¹\n"
+        "Calculating boundary modes at wave ports for ω/2π = 1.000e+01 GHz (4.791e+00)\n"
+        " Port 1, mode 1: kₙ = 1.582e+02+1.488e-17i m⁻¹\n"
+        " Port 2, mode 1: kₙ = 1.582e+02+2.096e-18i m⁻¹\n"
+    )
+    kn = em._parse_palace_kn(log)
+    assert kn == {9.5: 144.1, 10.0: 158.2}  # port 1 only, real part
+
+
+def test_palace_rejects_unknown_case():
+    ad = em.Adapter()
+    with pytest.raises(RuntimeError, match="no Palace path"):
+        ad._run_palace({"validate": "patch_xband"}, __import__("pathlib").Path("."))

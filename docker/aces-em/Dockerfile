@@ -14,7 +14,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential gfortran cmake ninja-build git pkg-config \
         python3 python3-pip python3-venv ca-certificates wget curl \
         libopenmpi-dev openmpi-bin libopenblas-dev \
+        libglu1-mesa libgl1 libxrender1 libxext6 libxft2 libxinerama1 \
+        libxcursor1 libxi6 libfontconfig1 \
     && rm -rf /var/lib/apt/lists/*
+# (the libGL/libX set is for the gmsh Python wheel, which dlopens them even
+# for headless mesh generation — needed by the adapter's Palace path)
 
 # ---- Palace (superbuild pulls MFEM, libCEED, PETSc, SLEPc, hypre, METIS)
 # SLEPc is required for eigenmode (waveguide-port) problems — wr90_through.
@@ -43,7 +47,7 @@ ENV OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
 # spawned 71 threads on a 24-core host and thrashed ~50x slower). Run
 # containers with `-e OMP_NUM_THREADS=<physical cores>` (16 verified).
 RUN python3 -m venv /opt/venv && /opt/venv/bin/pip install --no-cache-dir \
-        gprMax h5py numpy \
+        gprMax h5py numpy gmsh \
         pydantic pyyaml scipy scikit-image optuna CoolProp
 ENV PATH="/opt/venv/bin:${PATH}"
 

@@ -482,6 +482,93 @@ def _gprmax_wr90_input(window_s: float, band_lo: float, band_hi: float,
 
 # ------------------------------------------------------------------ adapter
 
+# ------------------------------------------------------------------ Palace
+# WR-90 geometry in mm (matches the gprMax model: 45x20 aperture cells and a
+# 26-cell port separation at 0.508 mm).
+WR90_A_MM, WR90_B_MM, WR90_L_MM = 22.86, 10.16, 13.208
+
+
+def _palace_wr90_config(freqs_ghz: list[float], mesh_name: str = "wr90.msh") -> dict:
+    """Palace Driven config for the WR-90 through with TE10 wave ports.
+
+    Point-sample direct solves on purpose: the "Linear" sweep takes Palace's
+    PROM fast-sweep path whose wave-port eigensolver fails on this geometry
+    (v0.14.0-dirty, 2026-10-08).  Physical groups in the mesh: 1 = air
+    (volume), 2 = port1 (z=0), 3 = port2 (z=L), 4 = PEC walls."""
+    return {
+        "Problem": {"Type": "Driven", "Verbose": 2, "Output": "postpro"},
+        "Model": {"Mesh": mesh_name, "L0": 1.0e-3, "Refinement": {}},
+        "Domains": {"Materials": [
+            {"Attributes": [1], "Permeability": 1.0, "Permittivity": 1.0, "LossTan": 0.0}]},
+        "Boundaries": {
+            "PEC": {"Attributes": [4]},
+            "WavePort": [
+                {"Index": 1, "Attributes": [2], "Mode": 1, "Excitation": 1, "Offset": 0.0,
+                 "MaxIts": 200, "KSPTol": 1e-8, "EigenTol": 1e-6},
+                {"Index": 2, "Attributes": [3], "Mode": 1, "Excitation": 2, "Offset": 0.0,
+                 "MaxIts": 200, "KSPTol": 1e-8, "EigenTol": 1e-6},
+            ],
+        },
+        "Solver": {
+            "Order": 2, "Device": "CPU",
+            "Driven": {"Samples": [{"Type": "Point", "Freq": list(freqs_ghz)}]},
+            "Linear": {"Type": "Default", "KSPType": "GMRES", "Tol": 1.0e-8, "MaxIts": 200},
+        },
+    }
+
+
+def _palace_wr90_mesh(path: Path, cl_min: float = 0.6, cl_max: float = 1.2) -> None:
+    """Tetrahedral WR-90 through-section mesh (mm) via gmsh.  Requires the
+    gmsh Python wheel plus system libGL (both present in aces-em:0.1)."""
+    try:
+        import gmsh
+    except Exception as exc:  # pragma: no cover - environment dependent
+        raise RuntimeError(
+            "aces-tile-em: gmsh unavailable (needed for the Palace mesh); "
+            "use the aces-em:0.1 rig image") from exc
+    gmsh.initialize()
+    try:
+        gmsh.model.add("wr90")
+        box = gmsh.model.occ.addBox(0, 0, 0, WR90_A_MM, WR90_B_MM, WR90_L_MM)
+        gmsh.model.occ.synchronize()
+        gmsh.model.addPhysicalGroup(3, [box], 1, "air")
+
+        def surf_at_z(z: float) -> int:
+            eps = 1e-6
+            ents = gmsh.model.getEntitiesInBoundingBox(
+                -eps, -eps, z - eps, WR90_A_MM + eps, WR90_B_MM + eps, z + eps, dim=2)
+            if len(ents) != 1:
+                raise RuntimeError(f"aces-tile-em: expected 1 port surface at z={z}, got {ents}")
+            return ents[0][1]
+
+        p1, p2 = surf_at_z(0.0), surf_at_z(WR90_L_MM)
+        boundary = [s for d, s in gmsh.model.getBoundary([(3, box)]) if d == 2]
+        gmsh.model.addPhysicalGroup(2, [p1], 2, "port1")
+        gmsh.model.addPhysicalGroup(2, [p2], 3, "port2")
+        gmsh.model.addPhysicalGroup(2, [s for s in boundary if s not in (p1, p2)], 4, "pec")
+        gmsh.option.setNumber("Mesh.CharacteristicLengthMin", cl_min)
+        gmsh.option.setNumber("Mesh.CharacteristicLengthMax", cl_max)
+        gmsh.option.setNumber("Mesh.MshFileVersion", 2.2)
+        gmsh.model.mesh.generate(3)
+        gmsh.write(str(path))
+    finally:
+        gmsh.finalize()
+
+
+def _parse_palace_kn(stdout: str) -> dict[float, float]:
+    """Port-1 TE10 propagation constants from palace stdout, keyed by GHz."""
+    import re
+    kn: dict[float, float] = {}
+    cur_f = None
+    for m in re.finditer(r"ω/2π = ([0-9.e+-]+) GHz|Port (\d), mode 1: kₙ = "
+                         r"([0-9]+\.[0-9]+e[+-][0-9]+)", stdout):
+        if m.group(1):
+            cur_f = float(m.group(1))
+        elif m.group(2) == "1" and cur_f is not None:
+            kn[cur_f] = float(m.group(3))
+    return kn
+
+
 class Adapter:
     name = "aces-tile-em"
 
@@ -492,14 +579,7 @@ class Adapter:
         solver = case.get("solver", "gprmax")
         rd = Path(run_dir)
         if solver == "palace":
-            binary = os.environ.get("PALACE_BIN", "palace")
-            if shutil.which(binary.split()[0]) is None:
-                raise RuntimeError(
-                    "aces-tile-em: Palace executable not found. Palace targets the rig image "
-                    "(Linux-first, from-source build) — see docs/RADAR_EM.md. Use solver 'gprmax' "
-                    "on the workstation meanwhile."
-                )
-            raise RuntimeError("aces-tile-em: Palace path lands with the rig image build")
+            return self._run_palace(case, rd)
         return self._run_gprmax(case, rd)
 
     # --------------------------------------------------------------- gprMax path
@@ -809,6 +889,100 @@ class Adapter:
         (rd / "validation.json").write_text(json.dumps(validation, indent=2), encoding="utf-8")
         return {"kind": "wr90_through", "sparams": rows, "validation": validation,
                 "converged": 1}
+
+    # --------------------------------------------------------------- Palace path
+    def _run_palace(self, case: dict, rd: Path) -> dict:
+        if case.get("validate") != "wr90_through":
+            raise RuntimeError(
+                f"aces-tile-em: no Palace path for case "
+                f"{case.get('validate') or case.get('structure')!r} "
+                "(only validate='wr90_through' is implemented — FEM cross-check tier)")
+        binary = os.environ.get("PALACE_BIN", "palace")
+        if shutil.which(binary.split()[0]) is None:
+            raise RuntimeError(
+                "aces-tile-em: Palace executable not found. Palace ships in the "
+                "aces-em:0.1 rig image — see docs/RADAR_EM.md. Use solver 'gprmax' "
+                "on the workstation meanwhile."
+            )
+        return self._run_palace_wr90(case, rd, binary)
+
+    def _run_palace_wr90(self, case: dict, rd: Path, binary: str) -> dict:
+        """WR-90 through under Palace FEM (TE10 wave ports) — the FEM cross-check
+        of the gprMax eigenmode-port validation.
+
+        Bars (validated in the rig image 2026-10-08, job18): |S21| <= 0.1 dB,
+        S11 <= -20 dB, port k_n within 1 % of the theoretical TE10 dispersion,
+        cutoff from the port-mode dispersion fit (kc^2 = k0^2 - kn^2) within
+        1 % of 6.557 GHz.  Frequency band defaults to 9.5-12.4 GHz: on
+        v0.14.0-dirty the wave-port eigensolver does not converge below
+        ~9.5 GHz on this geometry (robust to mesh/order/tolerances; see
+        docs/RADAR_EM.md).
+        """
+        flo = float(case.get("freq_lo_hz", 9.5e9)) / 1e9
+        fhi = float(case.get("freq_hi_hz", 12.4e9)) / 1e9
+        n = int(case.get("n_freq", 10))
+        timeout = int(case.get("timeout_seconds", 1800))
+        freqs = [round(flo + i * (fhi - flo) / (n - 1), 4) for i in range(n)]
+
+        _palace_wr90_mesh(rd / "wr90.msh")
+        cfg = _palace_wr90_config(freqs)
+        (rd / "wr90.json").write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        out = subprocess.run(binary.split() + ["wr90.json"], cwd=rd, capture_output=True,
+                             text=True, encoding="utf-8", errors="replace", timeout=timeout)
+        (rd / "palace_stdout.log").write_text(
+            (out.stdout or "") + "\n--- stderr ---\n" + (out.stderr or ""), encoding="utf-8")
+        if out.returncode != 0:
+            raise RuntimeError(f"aces-tile-em: palace failed rc={out.returncode}; see palace_stdout.log")
+
+        kn = _parse_palace_kn(out.stdout or "")
+        rows = []
+        with open(rd / "postpro" / "port-S.csv", encoding="utf-8") as fh:
+            next(fh)
+            for line in fh:
+                f = [float(x) for x in line.split(",")]
+                rows.append({"frequency_hz": f[0] * 1e9, "s11_db": f[1], "s21_db": f[3],
+                             "s12_db": f[5], "s22_db": f[7]})
+        from .linkbudget import C0
+        kc_th = math.pi / (WR90_A_MM * 1e-3)
+        kc2 = []
+        for r in rows:
+            f_ghz = r["frequency_hz"] / 1e9
+            g = min(kn, key=lambda k: abs(k - f_ghz), default=None)
+            if g is None or abs(g - f_ghz) >= 0.05:
+                continue
+            k0 = 2 * math.pi * r["frequency_hz"] / C0
+            r["kn_sim_rad_per_m"] = kn[g]
+            r["kn_theory_rad_per_m"] = math.sqrt(k0 * k0 - kc_th * kc_th)
+            r["kn_err_pct"] = 100 * abs(kn[g] - r["kn_theory_rad_per_m"]) / r["kn_theory_rad_per_m"]
+            kc2.append(k0 * k0 - kn[g] ** 2)
+        if not kc2:
+            raise RuntimeError("aces-tile-em: no Palace port modes parsed; see palace_stdout.log")
+        fc_sim = math.sqrt(sum(kc2) / len(kc2)) * C0 / (2 * math.pi)
+        fc_ref = 6.557e9
+        fc_err = abs(fc_sim - fc_ref) / fc_ref
+        worst_s21 = max(abs(r["s21_db"]) for r in rows)
+        worst_s11 = max(r["s11_db"] for r in rows)
+        worst_kn = max(r["kn_err_pct"] for r in rows if "kn_err_pct" in r)
+        passed = (worst_s21 <= 0.1 and worst_s11 <= -20.0 and worst_kn <= 1.0
+                  and fc_err <= 0.01)
+        validation = {
+            "case": "wr90_through",
+            "solver": "palace",
+            "method": ("Palace Driven, 2x TE10 WavePort, p=2 ND tets (gmsh box, "
+                       "1.2 mm), Point-sample direct solves (PROM 'Linear' sweep "
+                       "path fails its port eigensolver on this geometry), cutoff "
+                       "from port-mode dispersion kc^2 = k0^2 - kn^2"),
+            "xband_worst_s21_db": worst_s21, "bar_s21_db": 0.1,
+            "xband_worst_s11_db": worst_s11, "bar_s11_db": -20.0,
+            "worst_kn_err_pct": worst_kn, "bar_kn_pct": 1.0,
+            "cutoff_sim_hz": fc_sim, "cutoff_theory_hz": fc_ref,
+            "cutoff_err_pct": 100 * fc_err, "bar_cutoff_pct": 1.0,
+            "pass": int(passed),
+        }
+        (rd / "sparams.json").write_text(json.dumps(rows, indent=2), encoding="utf-8")
+        (rd / "validation.json").write_text(json.dumps(validation, indent=2), encoding="utf-8")
+        return {"kind": "wr90_through", "solver": "palace", "sparams": rows,
+                "validation": validation, "converged": 1}
 
     def _gprmax_exec(self, rd: Path, stem: str, timeout: int) -> None:
         cmd = [os.environ.get("GPRMAX_PYTHON", sys.executable), "-m", "gprMax", f"{stem}.in"]
