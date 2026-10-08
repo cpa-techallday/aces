@@ -1,0 +1,63 @@
+# Tier 0: generative proposers
+
+Tier 0 sits *below* the fast tier: it suggests geometry. It never decides anything.
+
+```
+Tier 0  proposer (parametric today, latent diffusion later)   <- aces propose
+Tier 1  correlations + measured manufacturability             <- aces.domains.hx
+Tier 2  surrogates (simlab-ml)
+Tier 3  registered verified solvers (simlab)                  <- signs off (D5)
+```
+
+## The contract (`aces.propose.contract`)
+
+- A **Proposer** declares `name`, `licence`, `domain`, and `propose(req, n, seed)`.
+- Every **Proposal** carries complete parameters: the domain's measurement layer must be able
+  to build and measure the geometry with no further input. Unmeasurable proposals are a
+  contract violation.
+- **Licence gate.** `register()` refuses any proposer whose licence is not on the allowlist
+  (commercial + closed-source + defence, per `docs/LICENCES.md`). Known-blocked models are in
+  `REJECTED` with reasons — currently `nvidia-xcube` and `nvidia-scube` (Nvidia Source Code
+  License, non-commercial; verified 2026-10-08). Attempting to use one fails loudly, on purpose.
+- Deterministic per seed: proposals are reproducible evidence, not vibes.
+
+## Reference proposer: `tpms-parametric`
+
+`aces propose --method tpms-parametric --n 8 --seed 1 --out DIR` samples the calibrated TPMS
+space (kind, wall ratio, cell size) and measures every proposal on the domain's own definitions
+(solid fraction, wall min, necks, isolated pockets). Samples outside the calibrated wall-ratio
+range 0.08–0.16 are allowed but flagged; `primitive` carries a "no calibrated factors" warning
+until its Mach-limit problem is solved (the air campaign's primitive cases all exceeded Mach 0.15).
+
+This proposer exists to exercise the contract end to end before any learned model plugs in.
+It is also genuinely useful: a seeded, measured idea-list for design sprints.
+
+## The corpus (`aces corpus`)
+
+`aces corpus measurements.json --out corpus.jsonl` turns verified measurement rows (from
+`aces cfd-collect`) into training rows with provenance (`source` run id, `internal-verified`
+licence tag, thermal boundary). Rows without a source never load — the gate is enforced by
+`aces.domains.hx.calibrate` itself (D18). First corpus: 17 rows from `aces-cal-air-01`
+(gyroid + diamond, Re 9.7–100, air 320 K), committed at `data/corpus/` is *not* done — corpora
+are regenerated from measurements, so the JSONL is a build artifact, not a repo file.
+
+## The learned proposer (next)
+
+The diffusion proposer registers against the same contract:
+
+1. Architecture: hierarchical latent diffusion over sparse voxel cells (XCube-class), but
+   trained on **our own verified corpus** under a clean-room implementation — NVIDIA's weights
+   and code are non-commercial (see the licence register). Permissive substrates: PyTorch
+   (BSD-style) on the rig; fVDB/OpenVDB (MPL-2.0 family) for the sparse hierarchy.
+2. Conditioning: target stiffness/thermal tensors and the spec envelope, not text prompts.
+   Text-to-3D is a demo feature; tensor-to-cell is the product.
+3. Output decodes to the level-set grid → measured by `aces.domains.hx.tpms` → DfAM checks →
+   NSGA-II → Tier 3 verification. No path around the ladder.
+4. Training happens on the rig as a container image (no PyPI on the rig); the corpus grows with
+   every calibrated campaign and coupon test.
+
+## What Tier 0 must never do
+
+- Emit geometry to a customer without Tier 3 sign-off (D5).
+- Load weights or code under a non-allowlisted licence (the gate refuses).
+- Propose parameters the measurement layer cannot measure.

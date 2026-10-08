@@ -1125,6 +1125,49 @@ def cmd_cfd_collect(args) -> int:
     return 0 if rows else 1
 
 
+def cmd_propose(args) -> int:
+    from .propose import LicenceError, get
+    from .propose.tpms_parametric import measure
+    try:
+        proposer = get(args.method)
+    except (KeyError, LicenceError) as e:
+        print(f"REFUSED: {e}")
+        return 2
+    req = {}
+    if args.cell_m is not None:
+        req["cell_m"] = args.cell_m
+    if args.kinds:
+        req["kinds"] = args.kinds.split(",")
+    try:
+        proposals = [measure(p) for p in proposer.propose(req, args.n, args.seed)]
+    except ValueError as e:
+        print(f"REFUSED: {e}")
+        return 2
+    with safeio.OutDir(args.out) as od:
+        od.write_text("proposals.json", json.dumps(
+            {"proposer": proposer.name, "licence": proposer.licence, "domain": proposer.domain,
+             "seed": args.seed, "n": len(proposals),
+             "note": "Tier 0 proposals: suggestions only — measured, not verified. A registered solver signs off (D5).",
+             "proposals": proposals}, indent=2))
+    warned = sum(1 for p in proposals if p["notes"])
+    print(f"{len(proposals)} proposal(s) from {proposer.name} ({proposer.licence}) -> {args.out}/proposals.json"
+          + (f"; {warned} carry warnings" if warned else ""))
+    return 0
+
+
+def cmd_corpus(args) -> int:
+    from .propose import corpus as corpus_mod
+    rows, skipped = corpus_mod.build_corpus(args.measurements, boundary=args.boundary)
+    if not rows:
+        print(f"no usable rows in {args.measurements} (skipped {len(skipped)})")
+        return 1
+    corpus_mod.write_jsonl(rows, args.out)
+    print(f"{len(rows)} corpus row(s) -> {args.out}; skipped {len(skipped)}")
+    for s in skipped[:10]:
+        print(f"  skipped: {s}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="aces", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -1298,6 +1341,25 @@ def build_parser() -> argparse.ArgumentParser:
                    help="ACES ledger: a regular file, not a link (must exist with --with-aces); "
                         "collect appends a record of the run")
     s.set_defaults(fn=cmd_compliance)
+
+    s = sub.add_parser("propose", help="Tier 0: generate and measure geometry proposals (suggestions only; "
+                                       "a verified solver signs off)")
+    s.add_argument("--method", default="tpms-parametric",
+                   help="registered proposer (aces propose lists it; unknown or licence-blocked names are refused)")
+    s.add_argument("--n", type=int, default=8, help="number of proposals")
+    s.add_argument("--seed", type=int, default=1, help="deterministic sampling seed")
+    s.add_argument("--cell-m", type=float, default=None, help="TPMS cell size in metres (default 0.004)")
+    s.add_argument("--kinds", default=None, help="comma-separated TPMS kinds (default: gyroid,diamond,primitive)")
+    s.add_argument("--out", required=True, help="output folder (created; never overwritten)")
+    s.set_defaults(fn=cmd_propose)
+
+    s = sub.add_parser("corpus", help="training corpus (JSONL, with provenance) from verified measurement rows")
+    s.add_argument("measurements", help="measurement JSON from aces cfd-collect")
+    s.add_argument("--out", required=True, help="corpus JSONL path")
+    s.add_argument("--boundary", default="uniform_heat_flux",
+                   choices=("uniform_wall_temperature", "uniform_heat_flux"),
+                   help="thermal boundary the rows were measured under")
+    s.set_defaults(fn=cmd_corpus)
     return ap
 
 
