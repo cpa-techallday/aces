@@ -1,6 +1,6 @@
 # ACES radar domain — the AERIS-X64 EM simulation pipeline
 
-Doc: CPA-ACES-RADAR-001 · Rev D · 2026-10-08 · status: fast tier live, verification tier live on gprMax — patch_xband, wr90_through, tile_coupon, tile_multiport all PASS on workstation AND inside the `aces-em:0.1` rig image (Palace v0.14.0 + gprMax 4.0.1, built and cross-checked); NTFF far-field landed (directivity trustworthy, gain provisional); Palace job-level integration is the remaining rig work
+Doc: CPA-ACES-RADAR-001 · Rev E · 2026-10-08 · status: fast tier live, verification tier live on gprMax AND Palace — patch_xband, wr90_through, tile_coupon, tile_multiport PASS on workstation, in the `aces-em:0.1` rig image, and wr90_through cross-checked FEM-vs-FDTD (S21 agreement 0.005 dB); patch far-field resolved (D 6.78 dBi, η 0.74–0.82, gain-at-match 5.5–5.9 dBi); remaining: KiCad-layout import, matched-feed gain verification
 
 This adds the AERIS-X64 X-band phased-array radar as an ACES domain
 (`radar.phased_array`) and wires the simulation pipeline that carries a radar
@@ -105,15 +105,17 @@ same worker contract as `aces-tpms-periodic` (`run(case, spec, run_dir)`,
   `python -m gprMax` as a subprocess, reads the HDF5 port/probe data, and
   writes `validation.json` / `measurement.json`. Ports to the rig image
   unchanged.
-- **Palace v0.14.0 (FEM) — BUILT into the rig image** (`aces-em:0.1`,
+- **Palace v0.14.0 (FEM) — LIVE in the rig image** (`aces-em:0.1`,
   2026-10-08; from-source superbuild, `docker/aces-em/` with
   `fix_superbuild.sh` for the upstream bit-rot: dead sundials pin → v7.2.1,
-  make-based externals invoked as ninja). `palace --version` smoke passes in
-  the image. The adapter still raises honestly on `solver="palace"` — the
-  job-level Palace path (mesh + config generation) is future work. Palace's
-  role is *cross-check*: gprMax eigenmode ports already cover the
-  waveguide/multiport cases, and Palace re-runs them under FEM for solver
-  diversity.
+  make-based externals invoked as ninja).  `solver="palace"` with
+  `validate="wr90_through"` runs end-to-end: the adapter generates the WR-90
+  mesh (gmsh), writes the Driven config with two TE10 WavePorts, runs palace,
+  and validates (job19: S21 ≤ 3e-7 dB, S11 ≤ −134 dB, port kₙ within 0.021 %
+  of the TE10 dispersion, cutoff 6.55621 GHz = 0.012 % from the dispersion
+  fit — pass=1).  Palace's role is *cross-check*: gprMax eigenmode ports
+  already cover the waveguide/multiport cases; job18 confirmed the two
+  solvers agree to 0.005 dB on S21.  Other structures raise honestly.
 
 Case parameters: `structure` (`tile` | `rf_dist` | `antenna_plate`), frequency
 sweep, `stackup` (er, h, loss tangent — from the board's real stackup, which is
@@ -141,16 +143,23 @@ RO4350B): S11/S22 −21…−22.4 dB, S21/S12 −0.01…−0.04 dB, reciprocity
 Arbitrary N-port layouts from the KiCad RF layout are future work; the
 machinery (feed, load, wave-split, sequential excitation) is what was missing.
 
-**Patch far-field (job14, preliminary):** gprMax 4.x layered-background NTFF
-(`#ntff_layered_background` with the PEC-terminated RO4350B stack — the
-Sommerfeld formulation; a conventional Huygens box is rejected when it
-straddles materials, gain normalization requires a rectangular DFT window,
-observation must stay above the horizon).  Board-2 patch at 10.5 GHz: max
-directivity **6.91 dBi** at θ = 3° (broadside class, port-independent and
-trustworthy); gain 2.34 dBi and efficiency 0.35 are *provisional* — they
-inherit the lumped port's accepted-power bookkeeping, which is the same
-suspect path that broke port S11, and the infinite slab captures surface-wave
-power a finite board would re-radiate.
+**Patch far-field (job14 + job20 audit, resolved):** gprMax 4.x
+layered-background NTFF (`#ntff_layered_background` with the PEC-terminated
+RO4350B stack — the Sommerfeld formulation; a conventional Huygens box is
+rejected when it straddles materials, gain normalization requires a
+rectangular DFT window, observation must stay above the horizon).  The job20
+audit closed the "gain provisional" flag: gprMax's port bookkeeping is
+internally consistent (power conservation exact, validity flags green), but
+the terminal impedance is dominated by a constant ~35 fF feed-gap capacitance
+(the same single-edge port artifact as tile_multiport), and 10.5 GHz is off
+the antenna's mesh resonance (**9.76 GHz** at 0.254 mm cells).  Measured at
+the resonance: max directivity **6.78 dBi** (θ = 3°, port-independent,
+trustworthy), radiation efficiency **0.74** (NTFF radiated/accepted) with a
+port-independent ringdown upper bound **0.82** (Q = 45.2 from a textbook
+exponential tail, R² = 0.9997, vs Q_diel = 250; the ~8-point gap is the
+surface-wave fraction the infinite slab traps).  **Gain at a matched feed:
+5.5–5.9 dBi.**  job14's 2.34 dBi @ 10.5 GHz is superseded — it measured the
+mismatch, not the antenna.
 
 Why 5 % and not 2 %: the cavity model is the *approximate* side of the
 comparison — closed magnetic walls, no feed, no surface waves — good to ~3–5 %
@@ -202,14 +211,21 @@ resonator with ring-down Q:
 **First calibrated row (2026-10-07, job7-em-coupon + sweep):** measured
 5.19 dB/m vs Hammerstad dielectric model 5.32 dB/m at 9.68 GHz, plus sweep
 rows at 7.93/11.36 GHz (ratios 0.862/0.975/1.006) → `radar.calibrate.fit` →
-**`radar.tx.line_loss_factor = 0.9453`**, provenance `simlab:f8.5`,
-`simlab:f12.5`, `simlab:job7-em-coupon`, valid 7.9–11.4 GHz. The full loop —
+**`radar.tx.line_loss_factor = 0.9496`** (4 rows), provenance `simlab:f8.5`,
+`simlab:f12.5`, `simlab:job7-em-coupon`, `simlab:job21-coupon-finemesh`, valid 7.9–11.4 GHz. The full loop —
 FDTD → measurement.json → read_rows → fit → registry — is demonstrated
 end-to-end, and `aces design` no longer reports the line-loss factor as
-uncalibrated. A fourth row on the *real* 0.254 mm board-1 stackup (job11:
-measured 3.98 vs model 5.13 dB/m, ratio 0.776) is recorded but **not** folded
-into the registry — its 2-cell mesh fit residuals (0.33–0.62) are elevated;
-it waits for a finer-mesh rig re-run.
+uncalibrated. The real 0.254 mm board-1 stackup row landed the next day:
+job11 (2-cell mesh) measured 3.98 vs model 5.13 dB/m (ratio 0.776) with
+elevated fit residuals, so it was held out; **job21 (3-cell mesh, 2026-10-09)
+measured 4.93 vs model 5.12 dB/m (ratio 0.963)** with Q estimates consistent
+to <1 % across two independent fits (Q_dut 180, Q_ref 424 — the coarse mesh
+had been taxing Q_ref with numerical loss).  job21 is folded into the
+registry: **`radar.tx.line_loss_factor = 0.9496`**, provenance `simlab:f8.5`,
+`simlab:f12.5`, `simlab:job7-em-coupon`, `simlab:job21-coupon-finemesh`,
+valid 7.9–11.4 GHz.  (job21's raw fit residuals remain above the 0.05 comfort
+bar at 0.18–0.56 — the fold rests on the cross-fit Q consistency, recorded
+here honestly.)
 
 **Tier status** (mirrors the aces-cfd rollout):
 
@@ -222,15 +238,15 @@ it waits for a finer-mesh rig re-run.
    `patch_xband`, `tile_coupon` re-run inside `aces-em:0.1` from fresh decks;
    results reproduce the workstation numbers to FDTD precision. Container
    gotcha: gprMax's OpenMP oversubscribes in a VM — run with
-   `-e OMP_NUM_THREADS=<cores>`). Remaining: `wr90_through` under Palace as
-   the FEM cross-check of the gprMax eigenmode-port result (needs the
-   job-level Palace mesh/config path).
+   `-e OMP_NUM_THREADS=<cores>`).  ~~`wr90_through` under Palace~~ — **DONE
+   2026-10-08** (job18/job19: FEM-vs-FDTD cross-check PASS; S21 agreement
+   0.005 dB, port kₙ within 0.021 % of theory, cutoff 0.012 %).
 3. Register `aces-tile-em` in `solvers.json` (validation passed for gprMax
    cases, pending for Palace cases).
 4. Sweep the real tile/rf_dist stackups → `measurement.json` rows →
    `radar.calibrate.fit` → registry with `simlab:<run-id>` provenance
-   (first rows already landed; job11's real-stackup row awaits a finer-mesh
-   re-run).
+   (four rows landed incl. the real board-1 stackup via job21's finer-mesh
+   re-run — factor 0.9496).
 5. Reports stop saying "uncalibrated" for the three radar factors.
 
 Export-control note: AERIS board data plausibly sits under DSGL 6A008. The EM
@@ -249,19 +265,26 @@ records factors and provenance, not geometry.
 
 ## 6. What this does not do yet
 
-- Palace (waveguide-port FEM) is built into the rig image `aces-em:0.1` and
-  smokes clean, but the adapter's job-level Palace path (mesh + config
-  generation) does not exist yet; when it lands it cross-checks the gprMax
-  eigenmode-port results rather than enabling them — wr90_through and
-  tile_multiport already pass on gprMax, both on the workstation and inside
-  the rig image. gprMax CPU-only (no `-gpu` build) — large domains queue
-  behind wall-time budgets.
-- Patch far-field *gain/efficiency* are provisional (lumped-port power
-  bookkeeping); directivity is solid. A waveguide-fed or eigenmode-fed patch
-  variant would make gain trustworthy.
+- Palace (waveguide-port FEM) is LIVE for `validate="wr90_through"`
+  (`solver="palace"`, job18/job19): the adapter builds the WR-90 mesh (gmsh)
+  and Driven config, runs palace in the rig image, and validates S-magnitudes,
+  port kₙ against the TE10 dispersion (0.021 %), and cutoff from the
+  dispersion fit (0.012 %).  Two solver limitations recorded: the "Linear"
+  sample type (PROM fast sweep) fails its wave-port eigensolver on this
+  geometry — use "Point" lists; and on v0.14.0-dirty the port eigensolver
+  does not converge below ~9.5 GHz here (robust to mesh/order/tolerances), so
+  the band is 9.5–12.4 GHz.  Palace paths for the other structures remain
+  unimplemented (honest raise).  gprMax CPU-only (no `-gpu` build) — large
+  domains queue behind wall-time budgets.
+- Patch far-field gain is resolved at the antenna's resonance (job20 audit):
+  directivity 6.78 dBi, efficiency 0.74–0.82, gain-at-match 5.5–5.9 dBi.  A
+  *verified* gain needs a matched feed (probe-position or inset redesign) —
+  antenna design work, not pipeline work.
 - tile_multiport is the machinery + a 2-port through-line validation; parsing
   the real KiCad RF layout (board 1/3/9) into multiport geometry is future
-  work.
+  work.  The gprMax eigenmode-port sweep beta degrades mid-anchor (up to
+  6.9 % at 9.5 GHz vs theory, observed in the job18 Palace comparison) while
+  S-magnitudes are unaffected — phase-sensitive uses should re-anchor.
 - SI sign-off (DDR skew, JESD lanes) stays in HyperLynx/ADS/Sigrity class tools —
   not claimed by this pipeline.
 - No mutual-coupling or scan-blindness model in the fast tier (calibration

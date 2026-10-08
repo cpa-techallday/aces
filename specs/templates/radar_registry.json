@@ -1,13 +1,14 @@
 {
   "radar.tx.line_loss_factor": {
-    "basis": "geometric mean of measured/model over 3 rows (radar.tx.line_loss_factor)",
-    "fitted_on": "2026-10-07",
+    "basis": "geometric mean of measured/model over 4 rows (radar.tx.line_loss_factor)",
+    "fitted_on": "2026-10-09",
     "form": "",
     "re_exponent": 0.0,
     "re_ref": 0.0,
     "sources": [
       "simlab:f12.5",
       "simlab:f8.5",
+      "simlab:job21-coupon-finemesh",
       "simlab:job7-em-coupon"
     ],
     "valid_range": {
@@ -16,6 +17,6 @@
         11359849681.531218
       ]
     },
-    "value": 0.9453060764368901
+    "value": 0.9496348897497699
   }
 }
