@@ -8,7 +8,9 @@ carries a warning, exactly like a hand-written parameter set.
 
 Licence gate: proposer code and any weights it loads must allow commercial,
 closed-source distribution and defence use (docs/LICENCES.md). Research-only
-weights are registered in REJECTED so nobody wires them in by accident.
+weights live in RESEARCH_ONLY: they register only with research=True (CLI:
+--research), and every proposal they emit is stamped RESEARCH_STAMP, so the
+research lane cannot leak into a product image or customer deliverable (D29).
 """
 from __future__ import annotations
 
@@ -27,12 +29,21 @@ ALLOWED_LICENCES = frozenset({
 })
 
 # Known-blocked proposers, with the reason, so an integration attempt fails loudly.
-REJECTED: dict[str, str] = {
-    "nvidia-xcube": ("Nvidia Source Code License: non-commercial research use only; "
-                     "commercial use requires a separate NVIDIA Research Licence. "
-                     "Verified 2026-10-08 against github.com/nv-tlabs/XCube."),
-    "nvidia-scube": ("Nvidia Source Code License (same terms as XCube)."),
+# Non-commercial licences admitted for INTERNAL R&D only, under the owner's research-quarantine
+# decision (D29): usable while the work is research, never in a product image, a customer
+# deliverable, or a commercial sprint. Registration requires research=True, and every proposal
+# such a proposer emits is stamped RESEARCH_ONLY in its notes.
+RESEARCH_ONLY: dict[str, str] = {
+    "nvidia-xcube": ("Nvidia Source Code License: non-commercial research use; commercial use "
+                     "requires a separate NVIDIA Research Licence. Verified 2026-10-08 against "
+                     "github.com/nv-tlabs/XCube. Admitted to the research lane by D29."),
+    "nvidia-scube": ("Nvidia Source Code License (same terms as XCube). Research lane per D29."),
 }
+
+RESEARCH_STAMP = "RESEARCH ONLY — non-commercial licence; not for customer deliverables (D29)"
+
+# Kept as an alias so older callers still read the same registry.
+REJECTED: dict[str, str] = RESEARCH_ONLY
 
 
 @dataclass(frozen=True)
@@ -64,10 +75,13 @@ class Proposer(Protocol):
 _REGISTRY: dict[str, Proposer] = {}
 
 
-def register(p: Proposer) -> Proposer:
-    if p.name in REJECTED:
-        raise LicenceError(f"proposer {p.name!r} is blocked: {REJECTED[p.name]}")
-    if p.licence not in ALLOWED_LICENCES:
+def register(p: Proposer, research: bool = False) -> Proposer:
+    if p.name in RESEARCH_ONLY and not research:
+        raise LicenceError(
+            f"proposer {p.name!r} is research-only (D29): {RESEARCH_ONLY[p.name]} "
+            f"Pass research=True / --research for internal R&D use; never in a "
+            f"product image or customer deliverable.")
+    if p.name not in RESEARCH_ONLY and p.licence not in ALLOWED_LICENCES:
         raise LicenceError(
             f"proposer {p.name!r} declares licence {p.licence!r}, which is not on the "
             f"allowlist in aces.propose.contract (see docs/LICENCES.md)")
@@ -77,9 +91,12 @@ def register(p: Proposer) -> Proposer:
     return p
 
 
-def get(name: str) -> Proposer:
-    if name in REJECTED:
-        raise LicenceError(f"proposer {name!r} is blocked: {REJECTED[name]}")
+def get(name: str, research: bool = False) -> Proposer:
+    if name in RESEARCH_ONLY and not research:
+        raise LicenceError(
+            f"proposer {name!r} is research-only (D29): {RESEARCH_ONLY[name]} "
+            f"Pass research=True / --research for internal R&D use; never in a "
+            f"product image or customer deliverable.")
     if name not in _REGISTRY:
         raise KeyError(f"unknown proposer {name!r}; registered: {', '.join(sorted(_REGISTRY)) or '(none)'}")
     return _REGISTRY[name]

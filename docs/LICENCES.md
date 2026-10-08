@@ -87,4 +87,20 @@ licence that allows commercial, closed-source distribution and defence use.
 | cuPyNumeric | End of life |
 | DrivAerNet++ dataset | CC BY-NC |
 | Any CC-BY-NC or "research only" data or model weights | Not usable in a sold product |
-| NVIDIA XCube and SCube (code and weights) | Nvidia Source Code License: non-commercial research use; commercial use needs a separate NVIDIA Research Licence. Verified 2026-10-08 (github.com/nv-tlabs/XCube). Blocked in `aces.propose.contract.REJECTED`; the Tier-0 learned proposer is a clean-room implementation trained on our own verified corpus (docs/TIER0.md) |
+
+## Research quarantine (D29)
+
+Non-commercial research licences are admitted for **internal R&D only** while the work is research
+(the owner's call, 2026-10-09: "the nvidia licenses are fine as it is only research currently").
+The quarantine rules, enforced in `aces.propose.contract`:
+
+- registration needs `research=True` (CLI: `aces propose --research`); without it the gate still refuses
+- every proposal a quarantined proposer emits is stamped `RESEARCH ONLY` in its notes and the output JSON
+- quarantined code and weights never enter a product image, a customer deliverable or a commercial sprint,
+  and live outside the shipped package (on the rig under a separate research path)
+- each quarantined item is replaced by the clean-room proposer (docs/TIER0.md) before Gate 2 (paying customers)
+
+| Item | Licence | Quarantined use |
+| --- | --- | --- |
+| NVIDIA XCube (code and weights) | Nvidia Source Code License: non-commercial research use; commercial use needs a separate NVIDIA Research Licence. Verified 2026-10-08 (github.com/nv-tlabs/XCube) | Reference generator while training the clean-room latent-diffusion proposer on our own verified corpus |
+| NVIDIA SCube (code and weights) | Nvidia Source Code License (same terms) | Same |

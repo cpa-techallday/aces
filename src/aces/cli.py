@@ -1126,10 +1126,10 @@ def cmd_cfd_collect(args) -> int:
 
 
 def cmd_propose(args) -> int:
-    from .propose import LicenceError, get
+    from .propose import LicenceError, RESEARCH_ONLY, RESEARCH_STAMP, get
     from .propose.tpms_parametric import measure
     try:
-        proposer = get(args.method)
+        proposer = get(args.method, research=args.research)
     except (KeyError, LicenceError) as e:
         print(f"REFUSED: {e}")
         return 2
@@ -1143,14 +1143,22 @@ def cmd_propose(args) -> int:
     except ValueError as e:
         print(f"REFUSED: {e}")
         return 2
+    research_lane = proposer.name in RESEARCH_ONLY
+    if research_lane:
+        for p in proposals:
+            if RESEARCH_STAMP not in p["notes"]:
+                p["notes"].append(RESEARCH_STAMP)
     with safeio.OutDir(args.out) as od:
         od.write_text("proposals.json", json.dumps(
             {"proposer": proposer.name, "licence": proposer.licence, "domain": proposer.domain,
              "seed": args.seed, "n": len(proposals),
-             "note": "Tier 0 proposals: suggestions only — measured, not verified. A registered solver signs off (D5).",
+             "research_only": research_lane,
+             "note": ("Tier 0 proposals: suggestions only — measured, not verified. A registered solver signs off (D5)."
+                      + (f" {RESEARCH_STAMP}." if research_lane else "")),
              "proposals": proposals}, indent=2))
     warned = sum(1 for p in proposals if p["notes"])
     print(f"{len(proposals)} proposal(s) from {proposer.name} ({proposer.licence}) -> {args.out}/proposals.json"
+          + (" [RESEARCH ONLY]" if research_lane else "")
           + (f"; {warned} carry warnings" if warned else ""))
     return 0
 
@@ -1351,6 +1359,9 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--cell-m", type=float, default=None, help="TPMS cell size in metres (default 0.004)")
     s.add_argument("--kinds", default=None, help="comma-separated TPMS kinds (default: gyroid,diamond,primitive)")
     s.add_argument("--out", required=True, help="output folder (created; never overwritten)")
+    s.add_argument("--research", action="store_true",
+                   help="admit a research-lane proposer (D29): internal R&D only; every proposal "
+                        "is stamped RESEARCH ONLY and must never reach a product image or customer deliverable")
     s.set_defaults(fn=cmd_propose)
 
     s = sub.add_parser("corpus", help="training corpus (JSONL, with provenance) from verified measurement rows")

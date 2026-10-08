@@ -34,6 +34,24 @@ def test_rejected_proposers_fail_loudly():
         register(X())
 
 
+def test_research_lane_requires_explicit_flag():
+    # without the flag the quarantine holds, even after a research registration
+    class X(_Dummy):
+        name = "nvidia-xcube"
+        licence = "Nvidia-Source-Code-License"
+
+    register(X(), research=True)
+    with pytest.raises(LicenceError, match="research-only"):
+        get("nvidia-xcube")
+    assert get("nvidia-xcube", research=True).name == "nvidia-xcube"
+    # research=True never whitewashes a merely unknown licence
+    bad = _Dummy()
+    bad.name = "dummy-gpl-research"
+    bad.licence = "GPL-3.0"
+    with pytest.raises(LicenceError):
+        register(bad, research=True)
+
+
 def test_reference_proposer_registered():
     assert "tpms-parametric" in available(domain="hx")
     assert get("tpms-parametric").licence == "internal"
@@ -111,3 +129,35 @@ def test_cli_propose_and_unknown_method(tmp_path, capsys):
     assert rc == 2
     assert "non-commercial" in capsys.readouterr().out
     assert not (tmp_path / "q").exists()
+
+
+def test_cli_research_lane_stamps_every_proposal(tmp_path):
+    from aces.propose import RESEARCH_STAMP, Proposal
+
+    class _ResearchXcube:
+        name = "nvidia-xcube-test"
+        licence = "Nvidia-Source-Code-License"
+        domain = "hx"
+
+        def propose(self, req, n, seed):
+            yield Proposal(proposer=self.name, domain="hx", seed=seed,
+                           params={"tpms": "gyroid", "wall_ratio": 0.1, "cell_m": 0.004})
+
+    from aces.propose import contract
+    contract.RESEARCH_ONLY[_ResearchXcube.name] = "test entry"
+    try:
+        register(_ResearchXcube(), research=True)
+        rc = cli.main(["propose", "--method", "nvidia-xcube-test", "--research",
+                       "--n", "1", "--out", str(tmp_path / "r")])
+        assert rc == 0
+        data = json.loads((tmp_path / "r" / "proposals.json").read_text())
+        assert data["research_only"] is True
+        assert RESEARCH_STAMP in data["note"]
+        assert all(RESEARCH_STAMP in pr["notes"] for pr in data["proposals"])
+
+        rc = cli.main(["propose", "--method", "nvidia-xcube-test", "--out", str(tmp_path / "r2")])
+        assert rc == 2
+        assert not (tmp_path / "r2").exists()
+    finally:
+        contract.RESEARCH_ONLY.pop(_ResearchXcube.name, None)
+        contract._REGISTRY.pop(_ResearchXcube.name, None)

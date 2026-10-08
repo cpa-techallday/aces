@@ -16,9 +16,14 @@ Tier 3  registered verified solvers (simlab)                  <- signs off (D5)
   to build and measure the geometry with no further input. Unmeasurable proposals are a
   contract violation.
 - **Licence gate.** `register()` refuses any proposer whose licence is not on the allowlist
-  (commercial + closed-source + defence, per `docs/LICENCES.md`). Known-blocked models are in
-  `REJECTED` with reasons — currently `nvidia-xcube` and `nvidia-scube` (Nvidia Source Code
-  License, non-commercial; verified 2026-10-08). Attempting to use one fails loudly, on purpose.
+  (commercial + closed-source + defence, per `docs/LICENCES.md`).
+- **Research quarantine (D29).** Non-commercial research licences — currently `nvidia-xcube` and
+  `nvidia-scube` (Nvidia Source Code License; verified 2026-10-08) — live in `RESEARCH_ONLY`.
+  They register only with `research=True` (CLI: `--research`); without the flag the gate still
+  refuses, even if one is registered. Every proposal from the research lane is stamped
+  `RESEARCH ONLY` in its notes and the output JSON. Quarantined code and weights never enter a
+  product image, a customer deliverable or a commercial sprint, and are replaced by the
+  clean-room proposer before Gate 2.
 - Deterministic per seed: proposals are reproducible evidence, not vibes.
 
 ## Reference proposer: `tpms-parametric`
@@ -46,9 +51,11 @@ are regenerated from measurements, so the JSONL is a build artifact, not a repo 
 The diffusion proposer registers against the same contract:
 
 1. Architecture: hierarchical latent diffusion over sparse voxel cells (XCube-class), but
-   trained on **our own verified corpus** under a clean-room implementation — NVIDIA's weights
-   and code are non-commercial (see the licence register). Permissive substrates: PyTorch
-   (BSD-style) on the rig; fVDB/OpenVDB (MPL-2.0 family) for the sparse hierarchy.
+   trained on **our own verified corpus** under a clean-room implementation. While the work is
+   R&D-only, NVIDIA's own XCube may run in the research quarantine (D29) as a reference
+   generator — never in a product or deliverable, and replaced by the clean-room proposer
+   before Gate 2. Permissive substrates: PyTorch (BSD-style) on the rig; fVDB/OpenVDB
+   (MPL-2.0 family) for the sparse hierarchy.
 2. Conditioning: target stiffness/thermal tensors and the spec envelope, not text prompts.
    Text-to-3D is a demo feature; tensor-to-cell is the product.
 3. Output decodes to the level-set grid → measured by `aces.domains.hx.tpms` → DfAM checks →
@@ -59,5 +66,6 @@ The diffusion proposer registers against the same contract:
 ## What Tier 0 must never do
 
 - Emit geometry to a customer without Tier 3 sign-off (D5).
-- Load weights or code under a non-allowlisted licence (the gate refuses).
+- Load weights or code under a non-allowlisted licence — the gate refuses, and the research
+  quarantine (D29) is the only exception, explicitly flagged and stamped.
 - Propose parameters the measurement layer cannot measure.
