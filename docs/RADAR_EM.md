@@ -1,6 +1,6 @@
 # ACES radar domain — the AERIS-X64 EM simulation pipeline
 
-Doc: CPA-ACES-RADAR-001 · Rev E · 2026-10-08 · status: fast tier live, verification tier live on gprMax AND Palace — patch_xband, wr90_through, tile_coupon, tile_multiport PASS on workstation, in the `aces-em:0.1` rig image, and wr90_through cross-checked FEM-vs-FDTD (S21 agreement 0.005 dB); patch far-field resolved (D 6.78 dBi, η 0.74–0.82, gain-at-match 5.5–5.9 dBi); remaining: KiCad-layout import, matched-feed gain verification
+Doc: CPA-ACES-RADAR-001 · Rev F · 2026-10-09 · status: fast tier live, verification tier live on gprMax AND Palace — patch_xband, wr90_through, tile_coupon, tile_multiport PASS on workstation, in the `aces-em:0.1` rig image, and wr90_through cross-checked FEM-vs-FDTD (S21 agreement 0.005 dB); patch far-field CLOSED with a verified matched-feed realized gain **5.33 dBi @ 9.88 GHz** (job22: stacked-source port fix, probe-inset match 1.42 mm, η_rad 0.79, S11 ≈ −9.7 dB); remaining: KiCad-layout import
 
 This adds the AERIS-X64 X-band phased-array radar as an ACES domain
 (`radar.phased_array`) and wires the simulation pipeline that carries a radar
@@ -158,8 +158,24 @@ trustworthy), radiation efficiency **0.74** (NTFF radiated/accepted) with a
 port-independent ringdown upper bound **0.82** (Q = 45.2 from a textbook
 exponential tail, R² = 0.9997, vs Q_diel = 250; the ~8-point gap is the
 surface-wave fraction the infinite slab traps).  **Gain at a matched feed:
-5.5–5.9 dBi.**  job14's 2.34 dBi @ 10.5 GHz is superseded — it measured the
-mismatch, not the antenna.
+5.5–5.9 dBi (estimate) — VERIFIED by job22 at 5.33 dBi realized.**
+job14's 2.34 dBi @ 10.5 GHz is superseded — it measured the mismatch, not
+the antenna.
+
+job22 (matched feed, verified realized gain): the ~35 fF artifact is the
+single-point probe source sitting mid-substrate with series grid gaps to
+ground and patch.  Replacing it with **stacked z-directed sources on every
+substrate Ez node plane** (2 × 25 Ω, port IDs grouped in
+`#ntff_antenna_ports`) removes the gap: the detuned 9.75 GHz resonance
+returns to ~10.0 GHz (the job21 finer-mesh value), and a probe-inset sweep
+shows a clean match plateau at 1.2–1.7 mm from the radiating edge with
+rad/acc stable at 0.79 across all positions.  Confirmation run at the
+1.42 mm inset (25 ns window, NTFF at the 9.874 GHz resonance): directivity
+6.83 dBi, radiation efficiency 0.792, mismatch acceptance 0.894
+(S11 ≈ −9.7 dB) → **verified realized gain 5.33 dBi @ 9.88 GHz**, realized
+efficiency 0.708.  Deck rule: never feed a patch through a single
+mid-substrate point source — stack sources on every substrate Ez node
+plane or the port total-reflects.
 
 Why 5 % and not 2 %: the cavity model is the *approximate* side of the
 comparison — closed magnetic walls, no feed, no surface waves — good to ~3–5 %
@@ -276,10 +292,11 @@ records factors and provenance, not geometry.
   the band is 9.5–12.4 GHz.  Palace paths for the other structures remain
   unimplemented (honest raise).  gprMax CPU-only (no `-gpu` build) — large
   domains queue behind wall-time budgets.
-- Patch far-field gain is resolved at the antenna's resonance (job20 audit):
-  directivity 6.78 dBi, efficiency 0.74–0.82, gain-at-match 5.5–5.9 dBi.  A
-  *verified* gain needs a matched feed (probe-position or inset redesign) —
-  antenna design work, not pipeline work.
+- Patch far-field gain is CLOSED (job20 audit + job22 matched feed):
+  directivity 6.83 dBi, radiation efficiency 0.79, **verified realized gain
+  5.33 dBi @ 9.88 GHz** with a stacked-source probe feed at the 1.42 mm
+  match inset (S11 ≈ −9.7 dB).  Further antenna-gain work (inset-fed or
+  aperture-coupled redesigns) is antenna design, not pipeline work.
 - tile_multiport is the machinery + a 2-port through-line validation; parsing
   the real KiCad RF layout (board 1/3/9) into multiport geometry is future
   work.  The gprMax eigenmode-port sweep beta degrades mid-anchor (up to
