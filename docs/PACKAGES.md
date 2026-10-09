@@ -22,7 +22,7 @@ is a development key: rotate it before anything is distributed.
 | `effectcraft-bin` | 0.4.0-1 | same | built | same |
 | `designcraft-bin` | 0.2.1-1 | same | built | same |
 | `aces-consoles` | 0.1.0-2 | `aces-console <key>` launcher (now also `webodm`) (reads the URL from the aces config; Omarchy web-app window or `xdg-open`) and desktop entries for GRID CONTROL, SIMLAB, MLflow | built | Installed; the three desktop entries are present. The launcher itself was not exercised (no browser in the container) |
-| `aces-omarchy` | 0.1.0-2 | Overlay for Omarchy: `post-boot.d` and `post-update.d` hooks, the `aces-engineering` agent skill, the `aces-fabric` bar-widget plugin, `aces-omarchy-setup` (links every skill any ACES package ships under `/usr/share/aces/*/skills`, and copies the plugin: a symlinked plugin directory fails `omarchy plugin validate`, found by the rehearsal kit) | built | Installed; `aces-omarchy-setup` linked the hooks and the skills into `~/.claude/skills` and `~/.agents/skills`, copied the plugin, then `--remove` cleared all of it. **The plugin QML is unvalidated**: there is no `omarchy-shell` on the build host, so it was written against the published manifest contract and the first-party port-forward plugin; run `omarchy plugin validate` on the Omarchy host |
+| `aces-omarchy` | 0.1.0-3 | Overlay for Omarchy: `post-boot.d` and `post-update.d` hooks, the `aces-engineering` agent skill, the `aces-fabric` bar-widget plugin, `aces-omarchy-setup` (links every skill any ACES package ships under `/usr/share/aces/*/skills`, and copies the plugin: a symlinked plugin directory fails `omarchy plugin validate`, found by the rehearsal kit) | built | Installed on a real Omarchy 4.0.4 (the rehearsal VM, 2026-10-09): `aces-omarchy-setup` linked the hooks and the skills into `~/.claude`, `~/.codex`, `~/.pi/agent` and `~/.agents`, copied the plugin, and **`omarchy plugin validate` passed on both the copy and the packaged directory**. `qmllint` against Omarchy's own `qs.Commons`/`qs.Ui` modules found two real defects, fixed in -3 (a `state` property shadowing Item's, and an unresolvable parameter type in the `Process.exited` handler); the remaining warning classes also occur in Omarchy's first-party plugins. Not yet seen rendering live: nobody has logged into the VM's desktop session, and Hyprland on Hyper-V's display is itself unverified |
 | `aces-field` | 0.1.0-1 | Meta-package over the Arch-packaged field tools (RF receive and analysis, firmware analysis, device access over SSH, CAN, serial); AUR-only members are optional until forked | built with `--nodeps` | Not installed (multi-GB); `pacman -Sp aces-field` resolves a 372-package transaction against the official repos, so every hard dependency exists |
 | `aces-survey` | 0.1.0-1 | Survey and photogrammetry: `aces-survey-setup` (installs the vendored FlyPath 3.0.0 QGIS plugin into the user's QGIS profile and enables it; creates the WebODM tree), `aces-webodm` (start/stop/status/open/update/logs over the pinned WebODM v3.3.0 tree under Docker, GPU node when nvidia-smi and the Docker nvidia runtime are present), a WebODM desktop entry, README with the DJI Fly mission-loading procedure, LICENSES.md. Depends on `qgis`, `python-shapely`, `python-pyproj`, `docker`, `docker-compose`; `cloudcompare`, `colmap`, `meshroom` (AUR) and `nvidia-container-toolkit` optional. FlyPath zip and WebODM release tarball are fetched at build time with pinned sha256s (34.7 MB package) | built with `--nodeps` (QGIS is not needed to build an `any` package) | Clean container: installed with `-Sdd`; `aces-survey-setup` placed FlyPath 3.0.0 and wrote `[PythonPlugins] FlyPath=true`, created the WebODM 3.3.0 tree; `aces-webodm --help` prints usage and `status` reports that docker is missing instead of crashing; `--remove` cleared both. `pacman -Sp aces-survey` resolves a 256-package transaction. On DARKNESS (Windows, Docker Desktop) the same stack runs outside the package: `GPU_NVIDIA=true ./webodm.sh start --port 8090 --detached` brought up webapp, worker, db, broker and `node-odx-1` (`webodm/nodeodx:gpu`), the node sees the RTX PRO 4000, the console answers HTTP 302 on :8090; FlyPath 3.0.0 imports under QGIS 3.44.15 (OSGeo4W, user-profile install) with shapely 2.1.2 and pyproj 3.8.0 |
 | `aces-os` | 0.1.0-3 | The meta-package: `aces-base`, `aces-creative`, `aces-field`, `aces-consoles`, `aces-omarchy`, `aces-survey`, `aces-engineering`, `aces-voxel`; `aces-studio` stays optional until the rig's video lane exists | built with `--nodeps` | `pacman -Sp aces-os` resolves in a clean signed container: 508 packages when aces-base, aces-creative, aces-consoles and aces-omarchy are already installed, 529 when aces-base, aces-engineering and aces-voxel are (qgis, docker and the engineering venv's libraries included) |
@@ -73,7 +73,8 @@ manifest under `server.discovered`: `mc_console` on the rig's loopback (`127.0.0
   Hub at first start, not shipped; `aces-webodm` has not been run on an Omarchy host yet (the Docker path was
   exercised on DARKNESS under Docker Desktop); the DJI Fly loading step is manual by design (the app has no import).
 - Git, CI and signing landed on 2026-10-09 (day-14 gate items in VISION.md §11); the key is a development key. The Omarchy
-  rehearsal (ISO download, VM, `omarchy plugin validate` on a real shell) has not run yet; see `rehearsal/README.md`.
+  rehearsal ran the same afternoon and passed (below); what it did not cover is the desktop session itself (Hyprland and
+  the shell on Hyper-V, the bar widget rendering live) and the VHDX cidata path.
 - `aces-engineering` vendors `simlab` and `gendesign` under `LicenseRef-ACES-undecided` (CPA code with no licence file
   yet), and the OCP wheel it installs bundles OpenCASCADE (LGPL), libjbig (GPL) and FreeImage without licence files:
   both are distribution-gate items, not trial-mode blockers.
@@ -96,15 +97,24 @@ channel).
 
 Scripts that install stock Omarchy 4.0.4 unattended into a Hyper-V VM on DARKNESS (`get-iso.ps1`, `make-cidata.ps1`,
 `new-vm.ps1`), serve this repo to it over the LAN (`serve-repo.ps1`) and run `post-install/aces-install.sh` in it
-(`validate.ps1`); step order, elevation and reset are in `rehearsal/README.md`. No VM has been created and the ISO has
-not been downloaded yet. Tested so far: the cidata ISO loaded by Omarchy's own `omarchy-cidata-load`, and
-`aces-install.sh` end to end in an Arch container against the served repo (10 PASS, 1 FAIL, idempotent on re-run) and
-in signed mode with a throwaway key. Two findings for the packages:
+(`validate.ps1`); step order, elevation and reset are in `rehearsal/README.md`.
 
-- `omarchy plugin validate` (the upstream script, run in a container) passes on `/usr/share/aces/omarchy/plugins/aces-fabric`
-  but fails on the symlink `aces-omarchy-setup` creates in `~/.config/omarchy/plugins` ("symlinks are not allowed inside
-  a plugin folder"). That is the one FAIL; `aces-omarchy` should copy the plugin directory instead of linking it.
+**Run on 2026-10-09 (afternoon):** `omarchy-4.0.4.iso` downloaded and verified (3.5 min), Omarchy installed itself
+from the cidata ISO in under 2 min, and the ACES step passed **13 PASS, 0 FAIL** on its third attempt
+(`rehearsal/reports/2026-10-09-aces-rehearsal-report.txt`): `omarchy update -y`, then all 16 packages from the signed
+LAN repo under `SigLevel = Required DatabaseOptional` in 75 s, `aces doctor` reaching every rig endpoint from the VM,
+`aces fabric refresh` reading the rig's `sim-lab-4` mode and five lanes, the engineering and voxel self-tests passing in
+the venv, and `omarchy plugin validate` passing on the real host (the predicted symlink failure is gone: the plugin is
+copied). Two checkpoints exist on the VM, `omarchy-clean` and `aces-installed`. The first two attempts found three kit
+defects, all fixed: `get-iso.ps1` died on curl's stderr under PowerShell 5.1's error handling; `sudo -v` prompts on a
+NOPASSWD host when the stock `%wheel` rule lacks NOPASSWD (`verifypw=all`), stalling an unattended run; and
+`omarchy update` aborts with `OMARCHY_PATH` unbound in a plain ssh command, because Arch's bash reads no rc file there
+(`validate.ps1` now uses a login shell and `aces-install.sh` sources Omarchy's `env-bootstrap`). Earlier container-stage
+findings that still hold:
+
 - `repo-add` in the build container leaves `aces.db` and `aces.files` as WSL symlinks that Windows programs cannot open,
   so `repo/` cannot be served as it is from Windows (`aces.db` answers 404); `serve-repo.ps1` serves real copies. The
   signing key is published to the VM only once every package has a `.sig`: with the key and no signatures,
   `SigLevel = Required` refuses every package.
+- The cidata format has no post-install hook (archinstall's `packages` and `custom_commands` are not acted on by the
+  Omarchy orchestrator), so the ACES overlay stays a post-install step over SSH or the console.

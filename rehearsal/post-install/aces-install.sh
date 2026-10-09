@@ -17,6 +17,12 @@ url="${1:-${ACES_REPO_URL:-}}"; url="${url%/}"
 [[ -n $url ]] || { echo "usage: bash aces-install.sh http://HOST:PORT" >&2; exit 2; }
 [[ $EUID -ne 0 ]] || { echo "run this as the desktop user, not root; it calls sudo where needed" >&2; exit 2; }
 pkgs="${ACES_PKGS:-aces-os}"; update="${ACES_UPDATE:-omarchy}"
+# Omarchy's tools need OMARCHY_PATH (omarchy-update-dev runs under set -u and aborts without it). A login shell gets it
+# from ~/.bashrc, which sources Omarchy's env-bootstrap before its interactive guard; a plain ssh command on Arch's bash
+# reads no rc file at all, so do the same here when it is missing.
+if [[ -z ${OMARCHY_PATH:-} && -r /usr/share/omarchy/default/bash/env-bootstrap ]]; then
+  set +u; source /usr/share/omarchy/default/bash/env-bootstrap; set -u
+fi
 cfg="${XDG_CONFIG_HOME:-$HOME/.config}"
 report="$HOME/aces-rehearsal-report.txt"; log="$HOME/aces-rehearsal.log"; tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
@@ -38,7 +44,9 @@ note "ACES rehearsal report  $(date -Is)"
 note "host     $(uname -n)  kernel $(uname -r)"
 note "omarchy  $(pacman -Q omarchy 2>/dev/null || echo 'not installed')"
 note "repo     $url/x86_64  packages: $pkgs  update: $update"
-sudo -v || stop "sudo is needed for the repo setup and pacman"
+# Unattended hosts (NOPASSWD) first: `sudo -v` alone prompts there too when any other rule for the user, such as the
+# stock %wheel line, lacks NOPASSWD (sudoers verifypw=all); a prompt with nobody at the keyboard just fails the run.
+sudo -n true 2>/dev/null || sudo -v || stop "sudo is needed for the repo setup and pacman"
 
 run "the [aces] repo answers" curl -fsS -o /dev/null -w '%{http_code}, %{size_download} bytes\n' "$url/x86_64/aces.db" ||
   stop "the repo is not reachable from here; is serve-repo.ps1 running, and does the host firewall let this VM in?"

@@ -62,7 +62,14 @@ if (Test-Path -LiteralPath $iso) {
 if ($PSCmdlet.ShouldProcess($iso, "download $url ($size bytes) via $name.partial, verify SHA-256, keep the .sha256 beside it")) {
   New-Item -ItemType Directory -Force $dir | Out-Null
   $partial = "$iso.partial"
-  & $curl -fL --retry 5 --retry-delay 5 -C - -o $partial $url
+  # curl writes its progress meter to stderr. When stderr is not a console (a log file, a calling process), PowerShell
+  # 5.1 wraps every stderr line in an error record, which $ErrorActionPreference = 'Stop' treats as fatal, so the first
+  # meter line killed the download here. Without a console there is nobody to watch the meter: drop it, and run the
+  # call under Continue so stray stderr output never aborts it; the exit code is what decides.
+  $meter = @(); if ([Console]::IsErrorRedirected) { $meter = @('--no-progress-meter') }
+  $eap = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+  & $curl -fL --retry 5 --retry-delay 5 -C - @meter -o $partial $url
+  $ErrorActionPreference = $eap
   if ($LASTEXITCODE) { throw "download failed (curl exit $LASTEXITCODE); re-run to resume $partial" }
   Write-Host 'verifying SHA-256'
   $have = (Get-FileHash -LiteralPath $partial -Algorithm SHA256).Hash.ToLower()

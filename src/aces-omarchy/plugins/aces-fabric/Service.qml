@@ -1,7 +1,6 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import qs.Commons
 
 // Headless reader for the ACES lane manifest.
 //
@@ -19,7 +18,10 @@ Item {
   readonly property int staleAfterMs: 15 * 60 * 1000
 
   property var manifest: ({})
-  property string state: "missing"
+  // "status", not "state": Item already has a `state` property (the States mechanism), and shadowing it is a
+  // property-override lint error on the Omarchy host. (Comments must not start a sentence with the linter's own
+  // name followed by a word: it reads that as a directive.)
+  property string status: "missing"
   property string modeName: ""
   property string modeLabel: "no manifest yet; run `aces fabric refresh`"
   property string detected: ""
@@ -64,10 +66,10 @@ Item {
     var h = m.health || {}
     var gc = String(h.grid_control || "")
     var ageMs = generated ? (Date.now() - Date.parse(generated)) : NaN
-    if (!m.generated) state = "missing"
-    else if (gc.indexOf("ok") !== 0) state = "unreachable"
-    else if (!isNaN(ageMs) && ageMs > staleAfterMs) state = "stale"
-    else state = "ok"
+    if (!m.generated) status = "missing"
+    else if (gc.indexOf("ok") !== 0) status = "unreachable"
+    else if (!isNaN(ageMs) && ageMs > staleAfterMs) status = "stale"
+    else status = "ok"
     changed()
   }
 
@@ -78,7 +80,7 @@ Item {
     } catch (e) {
       manifest = {}
       modeLabel = "manifest is not valid JSON: " + e
-      state = "missing"
+      status = "missing"
       changed()
       return
     }
@@ -111,7 +113,7 @@ Item {
     onLoaded: root.parse(text())
     onLoadFailed: function(error) {
       root.manifest = {}
-      root.state = "missing"
+      root.status = "missing"
       root.modeLabel = "no manifest yet; run `aces fabric refresh`"
       root.changed()
     }
@@ -120,7 +122,7 @@ Item {
   Process {
     id: refreshProc
     command: ["aces", "fabric", "refresh"]
-    onExited: function(exitCode, exitStatus) {
+    onExited: function(exitCode) {
       root.refreshing = false
       root.notice = exitCode === 0 ? "" : "aces fabric refresh failed (exit " + exitCode + ")"
       file.reload()

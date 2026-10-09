@@ -74,7 +74,9 @@ if ($Install) {
   if (Test-Path -LiteralPath (Join-Path $serve 'www\aces-pkgs.pub.asc')) {
     $prefix = 'ACES_KEY_FPR=' + (Get-Content -LiteralPath (Join-Path $aces 'keys\FINGERPRINT') | Select-Object -First 1).Trim() + ' '
   }
-  & ssh.exe -t @opts "${User}@${ip}" "${prefix}bash ~/aces-install.sh $base"
+  # A login shell, as a terminal in the VM would be: Arch's bash reads no rc file for a plain ssh command, so without
+  # -l the environment Omarchy's ~/.bashrc sets up (OMARCHY_PATH, PATH) is missing and `omarchy update` aborts.
+  & ssh.exe -t @opts "${User}@${ip}" "bash -lc '${prefix}bash ~/aces-install.sh $base'"
   Write-Host "aces-install.sh exited with $LASTEXITCODE"
 }
 

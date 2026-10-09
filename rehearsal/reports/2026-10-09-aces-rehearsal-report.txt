@@ -1,0 +1,116 @@
+ACES rehearsal report  2026-10-09T13:15:11+10:00
+host     aces-rehearsal  kernel 7.2.5-3-omarchy
+omarchy  omarchy 4.0.4-1
+repo     http://192.168.1.171:8930/x86_64  packages: aces-os  update: omarchy
+PASS  the [aces] repo answers
+      200, 4543 bytes
+PASS  trust the ACES signing key 7440615C3448092FFBB31FE2F9A33E038D72D9DA (local signature)
+      ==> Updating trust database...
+      gpg: next trustdb check due at 2026-10-21
+        -> Locally signed 1 key.
+      ==> Updating trust database...
+      gpg: next trustdb check due at 2026-10-21
+key      7440615C3448092FFBB31FE2F9A33E038D72D9DA (matches ACES_KEY_FPR)
+siglevel Required DatabaseOptional
+PASS  add [aces]: /etc/pacman.d/aces.conf, included from /etc/pacman.conf
+      28:Include = /etc/pacman.d/aces.conf
+      # ACES rehearsal repo, written by aces-install.sh
+      [aces]
+      SigLevel = Required DatabaseOptional
+      Server = http://192.168.1.171:8930/x86_64
+hook     /home/aces/.config/omarchy/hooks/pre-refresh-pacman.d/aces-repo
+PASS  omarchy update -y (snapshot, full upgrade, migrations; syncs [aces] too)
+      (3/3) Updating the desktop file MIME type cache...
+      
+      Update mise tools
+      mise by @jdx  ░░░░░░░░░░░░░░░░░░░░░░░░  0/1
+       node                                                                          ◜
+      mise by @jdx  ░░░░░░░░░░░░░░░░░░░░░░░░  0/1
+       core:node@26.8.2                                                              ◜
+      mise Newer versions are available but do not match the configured version ranges:
+        node 26.8.2 → 26.11.1 (~/.config/mise/config.toml)
+      Run `mise outdated --bump` to view all, or `mise upgrade --bump` to update the configuration and upgrade.
+      
+      
+      Restarting shell
+      All plugins have been reloaded
+      Omarchy shell did not become ready after restart.
+PASS  install aces-os
+      Creating group 'rdma' with GID 959.
+      Creating group 'rtlsdr' with GID 958.
+      Creating group 'brltty' with GID 957.
+      Creating user 'brltty' (Braille Device Daemon) with UID 957 and GID 957.
+      Creating group 'qemu' with GID 956.
+      Creating user 'qemu' (QEMU user) with UID 956 and GID 956.
+      ( 2/10) Creating temporary files...
+      ( 3/10) Reloading system manager configuration...
+      ( 4/10) Reloading user manager configuration...
+      ( 5/10) Updating the MIME type database...
+      ( 6/10) Reloading device manager configuration...
+      ( 7/10) Arming ConditionNeedsUpdate...
+      ( 8/10) Updating icon theme caches...
+      ( 9/10) Updating the info directory file...
+      (10/10) Updating the desktop file MIME type cache...
+PASS  packages in [aces]
+      aces aces-consoles 0.1.0-2 [installed]
+      aces aces-creative 0.1.0-1 [installed]
+      aces aces-engineering 0.1.0-1 [installed]
+      aces aces-field 0.1.0-1 [installed]
+      aces aces-omarchy 0.1.0-2 [installed]
+      aces aces-os 0.1.0-3 [installed]
+      aces aces-survey 0.1.0-1 [installed]
+      aces aces-voxel 0.1.0-1 [installed]
+      aces designcraft-bin 0.2.1-1 [installed]
+      aces effectcraft-bin 0.4.0-1 [installed]
+      aces filmcraft-bin 0.2.1-1 [installed]
+      aces lightcraft-bin 0.2.1-1 [installed]
+      aces photocraft-bin 0.3.0-1 [installed]
+      aces printcraft-bin 0.2.1-1 [installed]
+      aces vectorcraft-bin 0.4.0-1 [installed]
+PASS  aces --version
+      aces 0.1.0
+PASS  aces doctor 
+      config          ok       /etc/aces/aces.toml
+      policy          ok       mode=trial default_class=personal overrides=0
+      ledger          ok       0 entries, ledger empty
+      fabric          missing  run `aces fabric refresh`
+      grid_control    ok       http://192.168.1.65:3200 (http 200)
+      rig_state       ok       http://192.168.1.65:8010/mcp (http 406)
+      simlab_mcp      ok       http://192.168.1.65:8022/mcp (http 200)
+      simlab_console  ok       http://192.168.1.65:8032 (http 200)
+      mlflow          ok       http://192.168.1.65:5000 (http 200)
+      docker          ok       
+      gpu             none     nvidia-smi not found (fine on a laptop)
+      omarchy         ok       /usr/bin/omarchy
+      agent           ok       claude
+      skills          absent   /home/aces/.claude/skills/aces-engineering
+      work            ok       /home/aces/Work
+PASS  aces-omarchy-setup
+      linked /home/aces/.config/omarchy/hooks/post-boot.d/aces-fabric -> /usr/share/aces/omarchy/hooks/post-boot.d/aces-fabric
+      linked /home/aces/.config/omarchy/hooks/post-update.d/aces-fabric -> /usr/share/aces/omarchy/hooks/post-update.d/aces-fabric
+      linked /home/aces/.claude/skills/aces-engineering -> /usr/share/aces/omarchy/skills/aces-engineering
+      linked /home/aces/.claude/skills/aces-voxel -> /usr/share/aces/voxel/skills/aces-voxel
+      linked /home/aces/.codex/skills/aces-engineering -> /usr/share/aces/omarchy/skills/aces-engineering
+      linked /home/aces/.codex/skills/aces-voxel -> /usr/share/aces/voxel/skills/aces-voxel
+      linked /home/aces/.pi/agent/skills/aces-engineering -> /usr/share/aces/omarchy/skills/aces-engineering
+      linked /home/aces/.pi/agent/skills/aces-voxel -> /usr/share/aces/voxel/skills/aces-voxel
+      linked /home/aces/.agents/skills/aces-engineering -> /usr/share/aces/omarchy/skills/aces-engineering
+      linked /home/aces/.agents/skills/aces-voxel -> /usr/share/aces/voxel/skills/aces-voxel
+      copied /home/aces/.config/omarchy/plugins/aces-fabric <- /usr/share/aces/omarchy/plugins/aces-fabric
+      aces-omarchy-setup: done
+PASS  ACES hooks linked
+      /home/aces/.config/omarchy/hooks/post-boot.d:
+      total 8
+      lrwxrwxrwx 1 aces aces  53 Oct  9 13:16 aces-fabric -> /usr/share/aces/omarchy/hooks/post-boot.d/aces-fabric
+      -rw-r--r-- 1 aces aces 306 Sep 16 07:04 weather.sample
+      
+      /home/aces/.config/omarchy/hooks/post-update.d:
+      total 8
+      lrwxrwxrwx 1 aces aces  55 Oct  9 13:16 aces-fabric -> /usr/share/aces/omarchy/hooks/post-update.d/aces-fabric
+      -rw-r--r-- 1 aces aces 295 Sep 16 07:04 show-update-notification.sample
+PASS  omarchy plugin validate on the linked plugin
+PASS  omarchy plugin validate on the packaged copy
+PASS  aces-creative-labels
+      aces-creative-labels: 7 launcher entries labelled in /home/aces/.local/share/applications
+
+summary: 13 passed, 0 failed

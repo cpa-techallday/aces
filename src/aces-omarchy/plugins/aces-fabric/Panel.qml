@@ -1,7 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Layouts
-import Quickshell
 import Quickshell.Io
 import qs.Commons
 import qs.Ui
@@ -30,8 +28,8 @@ Panel {
   readonly property string iconGlyph: "󰒋"      // server
 
   function glyphColor() {
-    if (svc.state === "ok") return barForegroundColor
-    if (svc.state === "unreachable") return urgent
+    if (svc.status === "ok") return barForegroundColor
+    if (svc.status === "unreachable") return urgent
     return Qt.darker(barForegroundColor, 1.55)
   }
 
@@ -49,7 +47,7 @@ Panel {
     function toggle(): void { root.toggle() }
     function refresh(): string { svc.refresh(); return "ok" }
     function mode(): string { return svc.modeName }
-    function state(): string { return svc.state }
+    function state(): string { return svc.status }
     function manifest(): string { return JSON.stringify(svc.manifest) }
   }
 
@@ -147,7 +145,7 @@ Panel {
             iconComponent: Component {
               Text {
                 text: root.iconGlyph
-                color: svc.state === "ok" ? root.foreground : root.dim
+                color: svc.status === "ok" ? root.foreground : root.dim
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.display
               }
@@ -156,15 +154,15 @@ Panel {
 
           // Notice, health and detected-mode line.
           Text {
-            visible: svc.notice !== "" || svc.state !== "ok" || svc.detected !== ""
+            visible: svc.notice !== "" || svc.status !== "ok" || svc.detected !== ""
             width: parent.width
             text: svc.notice !== "" ? svc.notice
-                : svc.state === "missing" ? svc.modeLabel
-                : svc.state === "unreachable" ? "server unreachable when the manifest was written: " + svc.healthText()
-                : svc.state === "stale" ? "manifest is stale (generated " + svc.generated + "); press r to refresh"
+                : svc.status === "missing" ? svc.modeLabel
+                : svc.status === "unreachable" ? "server unreachable when the manifest was written: " + svc.healthText()
+                : svc.status === "stale" ? "manifest is stale (generated " + svc.generated + "); press r to refresh"
                 : (svc.detected !== "" ? "detected: " + svc.detected : "")
             textFormat: Text.PlainText
-            color: (svc.state === "unreachable") ? root.urgent : root.dim
+            color: (svc.status === "unreachable") ? root.urgent : root.dim
             font.family: root.fontFamily
             font.pixelSize: Style.font.bodySmall
             wrapMode: Text.WordWrap
