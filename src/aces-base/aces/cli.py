@@ -131,6 +131,25 @@ def cmd_lane(args, cfg) -> int:
         r = lane.test_model_lane(cfg, l)
         _print_json(r)
         return 0 if r.get("ok") else 1
+    if args.action == "bench":
+        if fabric.read(cfg) is None or args.refresh:
+            fabric.refresh(cfg)
+        report = lane.bench(cfg)
+        if args.json:
+            _print_json(report)
+        else:
+            print(lane.bench_markdown(report), end="")
+        if args.out:
+            from pathlib import Path
+            p = Path(args.out)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            header = "# ACES lane benchmarks\n\nAppended by `aces lane bench`; every row is also a `lane.test` ledger entry.\n\n"
+            text = p.read_text(encoding="utf-8") if p.exists() else header
+            p.write_text(text + lane.bench_markdown(report), encoding="utf-8")
+            print(f"appended to {p}")
+        usable = [r for r in report["results"] if r.get("tool_calling")]
+        print(f"{len(report['results'])} model lane(s) probed; {len(usable)} return structured tool calls")
+        return 0
     return 2
 
 
@@ -167,6 +186,10 @@ def build_parser() -> argparse.ArgumentParser:
     las = la.add_subparsers(dest="action", required=True)
     las.add_parser("list")
     s = las.add_parser("test"); s.add_argument("lane")
+    s = las.add_parser("bench", help="probe every model lane and record the table (ACES 0.1 Bench)")
+    s.add_argument("--out", default=None, help="markdown file to append to (e.g. docs/BENCHMARKS.md)")
+    s.add_argument("--refresh", action="store_true", help="refresh the manifest first")
+    s.add_argument("--json", action="store_true")
 
     d = sub.add_parser("doctor", help="check the installation")
     d.add_argument("--offline", action="store_true")

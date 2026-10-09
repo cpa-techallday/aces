@@ -1,0 +1,20 @@
+# Build order for `bin/build` with no arguments: one package per line, members before the packages that depend on
+# them. A second word `nodeps` builds that package with --nodeps (meta-packages whose runtime dependencies are large
+# or are only installed on a real desktop). Packages present in pkgbuilds/ but missing here are built last, with a
+# warning, in alphabetical order.
+photocraft-bin
+vectorcraft-bin
+filmcraft-bin
+lightcraft-bin
+printcraft-bin
+effectcraft-bin
+designcraft-bin
+aces-base
+aces-consoles
+aces-creative nodeps
+aces-field nodeps
+aces-omarchy
+aces-survey nodeps
+aces-engineering
+aces-voxel nodeps
+aces-os nodeps

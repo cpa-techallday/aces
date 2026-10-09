@@ -87,3 +87,65 @@ def test_model_lane(cfg: dict, lane: dict[str, Any], prompt: str = "Reply with t
     result["tool_calling"] = bool((result.get("tool_call") or {}).get("structured"))
     ledger.append("lane.test", result)
     return result
+
+
+def bench(cfg: dict) -> dict[str, Any]:
+    """Probe every model lane in the manifest (the "ACES 0.1 Bench" lane qualification) and return a report.
+
+    Lanes without an endpoint are listed as untested rather than skipped silently. Every probe is a ledger entry.
+    """
+    from datetime import datetime, timezone
+
+    m = fabric.read(cfg) or {}
+    results: list[dict[str, Any]] = []
+    for lane in m.get("lanes") or []:
+        if lane.get("kind") != "model":
+            continue
+        if lane.get("endpoint"):
+            results.append(test_model_lane(cfg, lane))
+        else:
+            results.append({"lane": lane.get("id"), "model": lane.get("model"), "endpoint": None, "ok": False,
+                            "error": "no endpoint configured", "tool_calling": False})
+    return {
+        "generated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "server": (m.get("server") or {}).get("host"),
+        "mode": (m.get("mode") or {}).get("name"),
+        "manifest_generated": m.get("generated"),
+        "results": results,
+    }
+
+
+def bench_markdown(report: dict[str, Any]) -> str:
+    """One dated section with a table, suitable for appending to docs/BENCHMARKS.md."""
+    lines = [
+        f"## {report['generated']}  server {report.get('server')}  mode {report.get('mode')}",
+        "",
+        f"Manifest generated {report.get('manifest_generated')}. Probe: list models, one 32-token completion at temperature 0, "
+        "one request with a tool definition. Tool calling counts only when the server returns a structured tool call.",
+        "",
+        "| Lane | Model | Endpoint | Models list | Completion | Reply | Tool call |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    for r in report["results"]:
+        c = r.get("completion") or {}
+        t = r.get("tool_call") or {}
+        if r.get("error") and not c:
+            completion = f"failed: {r['error']}"
+        elif c:
+            tps = c.get("tokens_per_s")
+            completion = f"{c.get('latency_s')} s" + (f", {tps} tok/s" if tps else "")
+        else:
+            completion = "n/a"
+        reply = (c.get("text") or "").replace("|", "/").replace("\n", " ")[:40] if c else ""
+        if t.get("structured"):
+            tool = f"structured ({t.get('name')}) in {t.get('latency_s')} s"
+        elif t.get("error"):
+            tool = f"rejected: {t.get('error')}" + (f" ({t.get('server_says')[:90]})" if t.get("server_says") else "")
+        elif t:
+            tool = f"no structured call (answered in text, {t.get('latency_s')} s)"
+        else:
+            tool = "not probed"
+        models = f"{r.get('models_latency_s')} s" if r.get("models_latency_s") is not None else "n/a"
+        lines.append(f"| {r.get('lane')} | {r.get('model')} | {r.get('endpoint')} | {models} | {completion} | {reply} | {tool} |")
+    lines.append("")
+    return "\n".join(lines) + "\n"

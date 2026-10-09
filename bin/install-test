@@ -1,15 +1,33 @@
 #!/usr/bin/env bash
 # Install-test the built packages in a clean Arch container: enable the [aces] repo, install the named packages,
 # exercise the CLI, and dry-run dependency resolution for the big meta-packages (no multi-GB downloads).
-# Usage: bin/install-test [pkg ...]   (default: aces-base aces-creative aces-consoles)
+# Usage: bin/install-test [pkg ...]   (default: aces-base aces-creative aces-consoles aces-omarchy)
+#
+# Signed repo: when keys/aces-pkgs.pub.asc exists and the repo database carries a signature, the container trusts
+# that key through pacman-key and installs with SigLevel = Required DatabaseRequired, which is exactly what a
+# customer machine will do. Otherwise it falls back to SigLevel = Optional TrustAll and says so.
 set -euo pipefail
 here="$(cd "$(dirname "$0")/.." && pwd)"
 hostpath() { if command -v cygpath >/dev/null 2>&1; then cygpath -w "$1"; else printf '%s' "$1"; fi; }
 repo="$(hostpath "$here/repo")"
+keys="$(hostpath "$here/keys")"
 pkgs="${*:-aces-base aces-creative aces-consoles aces-omarchy}"
+sigmode="Optional TrustAll"
+if [ -f "$here/keys/aces-pkgs.pub.asc" ] && [ -f "$here/keys/FINGERPRINT" ] && [ -f "$here/repo/x86_64/aces.db.tar.zst.sig" ]; then
+  sigmode="Required DatabaseRequired"
+fi
+mkdir -p "$here/keys"
 export MSYS_NO_PATHCONV=1
-docker run --rm -v "$repo:/repo:ro" -e PKGS="$pkgs" archlinux:base bash -euo pipefail -c '
-printf "\n[aces]\nSigLevel = Optional TrustAll\nServer = file:///repo/x86_64\n" >> /etc/pacman.conf
+docker run --rm -v "$repo:/repo:ro" -v "$keys:/keys:ro" -e PKGS="$pkgs" -e SIGMODE="$sigmode" archlinux:base bash -euo pipefail -c '
+if [ "$SIGMODE" != "Optional TrustAll" ]; then
+  pacman-key --init >/dev/null 2>&1
+  pacman-key --add /keys/aces-pkgs.pub.asc >/dev/null 2>&1
+  pacman-key --lsign-key "$(cat /keys/FINGERPRINT)" >/dev/null 2>&1
+  echo "== signed repo: key $(cat /keys/FINGERPRINT) trusted; SigLevel = $SIGMODE"
+else
+  echo "== unsigned repo (no key or no database signature); SigLevel = $SIGMODE"
+fi
+printf "\n[aces]\nSigLevel = %s\nServer = file:///repo/x86_64\n" "$SIGMODE" >> /etc/pacman.conf
 pacman -Sy --noconfirm >/dev/null
 echo "== [aces] repo contents"; pacman -Sl aces
 echo "== install: $PKGS"
