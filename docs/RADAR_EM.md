@@ -1,6 +1,6 @@
 # ACES radar domain — the AERIS-X64 EM simulation pipeline
 
-Doc: CPA-ACES-RADAR-001 · Rev F · 2026-10-09 · status: fast tier live, verification tier live on gprMax AND Palace — patch_xband, wr90_through, tile_coupon, tile_multiport PASS on workstation, in the `aces-em:0.1` rig image, and wr90_through cross-checked FEM-vs-FDTD (S21 agreement 0.005 dB); patch far-field CLOSED with a verified matched-feed realized gain **5.33 dBi @ 9.88 GHz** (job22: stacked-source port fix, probe-inset match 1.42 mm, η_rad 0.79, S11 ≈ −9.7 dB); remaining: KiCad-layout import
+Doc: CPA-ACES-RADAR-001 · Rev G · 2026-10-09 · status: fast tier live, verification tier live on gprMax AND Palace — patch_xband, wr90_through, tile_coupon, tile_multiport PASS on workstation, in the `aces-em:0.1` rig image, and wr90_through cross-checked FEM-vs-FDTD (S21 agreement 0.005 dB); patch far-field CLOSED with a verified matched-feed realized gain **5.33 dBi @ 9.88 GHz** (job22); **KiCad-layout import LIVE** (job23: `kicad_net` case, RXO_1 PASS — measured Z0 76.5 Ω vs 50 Ω spec: a real design finding)
 
 This adds the AERIS-X64 X-band phased-array radar as an ACES domain
 (`radar.phased_array`) and wires the simulation pipeline that carries a radar
@@ -143,6 +143,29 @@ RO4350B): S11/S22 −21…−22.4 dB, S21/S12 −0.01…−0.04 dB, reciprocity
 Arbitrary N-port layouts from the KiCad RF layout are future work; the
 machinery (feed, load, wave-split, sequential excitation) is what was missing.
 
+**KiCad-layout import (job23, LIVE):** `structure: "kicad_net"` parses a
+`.kicad_pcb` (S-expressions: nets, segments, vias, pads, zones), chains a
+net's copper into an axis-aligned polyline, and builds a grid-snapped
+multiport deck from the *real routed geometry* — stacked-source feed on
+every substrate Ez node plane (job22 rule) and a stacked zero-excitation
+string as a true 50 Ω Thevenin termination (the 2×2 resistive column does
+not generalise off its home recipe).  Two solver findings, pinned by a
+straight-line control run: with Thevenin ports the wave-split S11 *is* the
+far-end interface reflection, so Z0 comes from the complex
+termination-interface reflection (`Z0 = 50(1−Γ)/(1+Γ)`); and the
+thickness-corrected Hammerstad (35 µm, stackup.py form) is the model FDTD
+agrees with (~3 %), not the bare one (−9 Ω bias at w/h = 0.75).  First
+real net, `RXO_1` (12.0 mm U-trace, w = 0.22 mm, two unmitered bends):
+**PASS** — Z0 **76.5 Ω** vs 80.5 Ω model (5.0 %), er_eff 2.561 vs 2.683
+(4.6 %, i.e. 0.28 mm of corner path-saving, 0.7·w per unmitered bend),
+reciprocity 0.17 dB, residuals 0.24 %.  **Design finding: RXO_1 (and
+TXD_1..4 / ANT_1..4 / CAL_* at 0.20–0.30 mm) is a ~76 Ω line against the
+50 Ω ±7 % fab note — 50 Ω needs w ≈ 0.51 mm on this stackup.**  CAL_*
+additionally drops to In2.Cu (vias raise honestly in the importer; the
+stackup note already flags inner-layer RF as not-50 Ω).  Limitations:
+F.Cu GND pour (GCPW) not modelled, axis-aligned routes only, width snaps
+to the cell grid.
+
 **Patch far-field (job14 + job20 audit, resolved):** gprMax 4.x
 layered-background NTFF (`#ntff_layered_background` with the PEC-terminated
 RO4350B stack — the Sommerfeld formulation; a conventional Huygens box is
@@ -277,7 +300,7 @@ records factors and provenance, not geometry.
 | Domain package | `src/aces/domains/radar/` (`array`, `cascade`, `linkbudget`, `model`, `calibrate`, `em_adapter`) |
 | Registration | `src/aces/domains/__init__.py` (`MODELS`) |
 | Spec template | `specs/templates/radar_phased_array.yaml` (X64 baseline values, datasheet-cited chain) |
-| Tests | `tests/test_radar.py` (16 tests), `tests/test_em_adapter.py` (17 tests) |
+| Tests | `tests/test_radar.py` (16 tests), `tests/test_em_adapter.py` (17 tests), `tests/test_kicad_import.py` (9 tests) |
 
 ## 6. What this does not do yet
 
@@ -297,9 +320,10 @@ records factors and provenance, not geometry.
   5.33 dBi @ 9.88 GHz** with a stacked-source probe feed at the 1.42 mm
   match inset (S11 ≈ −9.7 dB).  Further antenna-gain work (inset-fed or
   aperture-coupled redesigns) is antenna design, not pipeline work.
-- tile_multiport is the machinery + a 2-port through-line validation; parsing
-  the real KiCad RF layout (board 1/3/9) into multiport geometry is future
-  work.  The gprMax eigenmode-port sweep beta degrades mid-anchor (up to
+- tile_multiport + kicad_net cover the 2-port machinery and real-layout
+  import (job23, RXO_1 PASS); via transitions (CAL_* nets), 45°/arbitrary
+  angles, N-port decomposition, and the F.Cu pour remain future work.
+  The gprMax eigenmode-port sweep beta degrades mid-anchor (up to
   6.9 % at 9.5 GHz vs theory, observed in the job18 Palace comparison) while
   S-magnitudes are unaffected — phase-sensitive uses should re-anchor.
 - SI sign-off (DDR skew, JESD lanes) stays in HyperLynx/ADS/Sigrity class tools —

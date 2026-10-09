@@ -594,6 +594,8 @@ class Adapter:
         validate = case.get("validate")
         if case.get("structure") == "tile_multiport":
             return self._run_multiport(case, rd)
+        if case.get("structure") == "kicad_net":
+            return self._run_kicad_net(case, rd)
         margins = {"margin_cells": int(case.get("margin_cells", 30)),
                    "air_cells": int(case.get("air_cells", 40))}
         if validate == "patch_xband" or (not validate and case.get("structure") in (None, "antenna_plate")):
@@ -817,6 +819,166 @@ class Adapter:
         (rd / "validation.json").write_text(json.dumps(validation, indent=2), encoding="utf-8")
         return {"kind": "tile_multiport", "sparams": sparams, "validation": validation,
                 "geometry": runs[1][0], "converged": 1}
+
+    def _run_kicad_net(self, case: dict, rd: Path) -> dict:
+        """2-port S-parameters of an imported KiCad RF net (real routed copper).
+
+        Same sequential-excitation / wave-split machinery as tile_multiport,
+        but the geometry comes from the layout (kicad_import): polyline
+        segments, grid-snapped width, pad boxes, stacked-source feed on every
+        substrate Ez node plane (job22 rule), 2x2 resistive column load.
+
+        Wave frames are per end, measured along each end's inward direction:
+        at the fed end the incident wave is a and the reflected wave is b
+        (S_ff = b/a); at the loaded end the transmitted wave travels OUTWARD
+        (= b in that frame) so S_tf = b_far/a_near.  The complex ratio
+        a_far/b_far is the termination-interface reflection, from which the
+        line Z0 is extracted (Z0 = 50 (1-G)/(1+G), job23 control finding).
+
+        Validation is layout-vs-model, not self-consistency: group delay ->
+        er_eff vs Hammerstad (3 %), |S21| at f0 vs dielectric-loss model
+        (PEC conductors; extra loss 0..1 dB allowed for bends/pads), Z0 from
+        the S11/S22 ripple extrema vs the microstrip model at the snapped
+        width (10 %), reciprocity 0.2 dB.  The F.Cu GND pour (GCPW effect)
+        is NOT modelled and is a documented limitation.
+        """
+        from . import kicad_import as ki
+        from .linkbudget import C0
+
+        st = case.get("stackup", ki.TILE_L1L2)
+        er, h, tand = st["substrate_er"], st["substrate_h_m"], st["loss_tan"]
+        f0 = case.get("f0_hz", 10.5e9)
+        flo, fhi = case.get("freq_lo_hz", 8e9), case.get("freq_hi_hz", 13e9)
+        cell = float(case.get("cell_m", h / 4))
+        window = float(case.get("time_window_s", 4e-9))
+        n_freq = int(case.get("n_freq", 21))
+        timeout = int(case.get("timeout_seconds", 1800))
+        margins = {"margin_cells": int(case.get("margin_cells", 16)),
+                   "air_cells": int(case.get("air_cells", 16))}
+        pcb_path, net = case.get("pcb"), case.get("net")
+        if not pcb_path or not net:
+            raise ValueError("kicad_net needs case['pcb'] (path) and case['net'] (name)")
+
+        pcb = ki.parse_pcb(pcb_path)
+        poly = ki.net_polyline(pcb, net, case.get("layer", "F.Cu"))
+        poly["net"] = net
+
+        runs = {}
+        for stem, feed_end in (("case_p1", 1), ("case_p2", 2)):
+            deck, geom = ki.deck_kicad_net(poly, cell, window, f0, er, h, tand,
+                                           feed_end=feed_end, **margins)
+            (rd / f"{stem}.in").write_text(deck, encoding="utf-8")
+            self._gprmax_exec(rd, stem, timeout)
+            runs[feed_end] = (geom, self._read_probes(rd / f"{stem}.h5"))
+
+        er_eff = runs[1][0]["er_eff_model"]
+        freqs = np.linspace(flo, fhi, n_freq)
+
+        def spectra(probes: dict) -> tuple[np.ndarray, list[np.ndarray]]:
+            t, _ = probes["rx1"]
+            n = len(t)
+            dt = float(t[1] - t[0])
+            fr = np.fft.rfftfreq(n, d=dt)
+            specs = [np.fft.rfft(np.asarray(probes[f"rx{i}"][1], dtype=float)
+                                 - np.mean(probes[f"rx{i}"][1]))
+                     for i in range(1, 7)]
+            return fr, specs
+
+        rows = []
+        for ghz in freqs:
+            beta = 2 * math.pi * ghz * math.sqrt(er_eff) / C0
+            row = {"frequency_hz": float(ghz)}
+            for feed_end, (gm, probes) in runs.items():
+                fr, specs = spectra(probes)
+                k = int(np.argmin(np.abs(fr - ghz)))
+                near = np.array([s[k] for s in specs[:3]])
+                far = np.array([s[k] for s in specs[3:]])
+                a1, b1, r1 = wave_split_ab(near, np.asarray(gm["probes_near_m"]), beta)
+                a2, b2, r2 = wave_split_ab(far, np.asarray(gm["probes_far_m"]), beta)
+                s_ff, s_tf = b1 / a1, b2 / a1
+                if feed_end == 1:
+                    row.update(s11=s_ff, s21=s_tf, resid=r1,
+                               load_gamma_c=a2 / b2 if abs(b2) > 1e-30 else 0j)
+                else:
+                    row.update(s22=s_ff, s12=s_tf, resid2=r1,
+                               load_gamma2_c=a2 / b2 if abs(b2) > 1e-30 else 0j)
+            rows.append(row)
+
+        def db(x: complex) -> float:
+            return 20 * math.log10(max(abs(x), 1e-30))
+
+        sparams = [{
+            "frequency_hz": r["frequency_hz"],
+            "s11_db": db(r["s11"]), "s21_db": db(r["s21"]),
+            "s22_db": db(r["s22"]), "s12_db": db(r["s12"]),
+            "wave_split_residual": r["resid"],
+        } for r in rows]
+
+        f_arr = np.array([r["frequency_hz"] for r in rows])
+        # group delay -> er_eff (phase slope of the average transmission)
+        taus = []
+        for key in ("s21", "s12"):
+            ph = np.unwrap(np.angle([r[key] for r in rows]))
+            slope = np.polyfit(2 * math.pi * f_arr, ph, 1)[0]
+            taus.append(-slope)
+        tau_meas = float(np.mean(taus))
+        er_eff_meas = (C0 * tau_meas / runs[1][0]["length_m"]) ** 2
+        # corner length saving: the electrical length the delay implies vs
+        # the geometric polyline length (unmitered corners cut the path)
+        l_eff = C0 * tau_meas / math.sqrt(er_eff)
+        corner_saving_mm = (runs[1][0]["length_m"] - l_eff) * 1e3
+
+        # loss at the point nearest f0 vs the dielectric model
+        k0 = int(np.argmin(np.abs(f_arr - f0)))
+        loss_meas_db = -float(np.mean([db(rows[k0]["s21"]), db(rows[k0]["s12"])]))
+        expct = ki.expectations(runs[1][0], er, h, tand, float(f_arr[k0]))
+
+        # Z0 from the complex termination-interface reflection
+        # (job23 control: S11 of a Thevenin-fed line IS the far-end interface
+        # reflection, flat in magnitude):  Z0 = 50 (1-G)/(1+G)
+        gammas = []
+        for r in rows[2:-2]:
+            gammas.append(complex(r["load_gamma_c"]))
+            gammas.append(complex(r["load_gamma2_c"]))
+        g = complex(np.mean([g_.real for g_ in gammas]),
+                    np.mean([g_.imag for g_ in gammas]))
+        z0_meas = abs(50.0 * (1 - g) / (1 + g))
+
+        recip_db = max(abs(db(r["s21"]) - db(r["s12"])) for r in rows)
+        worst_resid = max(max(r["resid"], r["resid2"]) for r in rows)
+        mean_gamma = float(np.mean([abs(g_) for g_ in gammas]))
+        err_er_eff = abs(er_eff_meas - er_eff) / er_eff
+        err_z0 = abs(z0_meas - expct["z0_model_ohm"]) / expct["z0_model_ohm"]
+        extra_loss_db = loss_meas_db - expct["loss_db_model"]
+        passed = (recip_db <= 0.2 and worst_resid <= 0.05
+                  and err_er_eff <= 0.05 and err_z0 <= 0.10
+                  and -0.3 <= extra_loss_db <= 1.0)
+        validation = {
+            "case": "kicad_net", "net": net, "pcb": str(pcb_path),
+            "method": ("gprMax FDTD, imported KiCad polyline (axis-aligned, "
+                       "grid-snapped), stacked-source feed on every substrate "
+                       "Ez node plane (job22 rule), stacked zero-excitation "
+                       "50 ohm Thevenin termination, 3-probe wave split per end; "
+                       "Z0 from the complex termination-interface reflection, "
+                       "thickness-corrected Hammerstad reference (job23 control)"),
+            "reciprocity_db": recip_db, "bar_reciprocity_db": 0.2,
+            "worst_fit_residual": worst_resid, "bar_residual": 0.05,
+            "termination_interface_gamma": mean_gamma,
+            "er_eff_measured": er_eff_meas, "er_eff_model": er_eff,
+            "er_eff_err_pct": 100 * err_er_eff, "bar_er_eff_pct": 5.0,
+            "corner_length_saving_mm": corner_saving_mm,
+            "z0_measured_ohm": z0_meas, "z0_model_ohm": expct["z0_model_ohm"],
+            "z0_err_pct": 100 * err_z0, "bar_z0_pct": 10.0,
+            "loss_measured_db": loss_meas_db, "loss_model_db": expct["loss_db_model"],
+            "extra_loss_db": extra_loss_db, "bar_extra_loss_db": [-0.3, 1.0],
+            "f_Cu_pour_modelled": False,
+            "pass": int(passed),
+        }
+        (rd / "sparams.json").write_text(json.dumps(sparams, indent=2), encoding="utf-8")
+        (rd / "validation.json").write_text(json.dumps(validation, indent=2), encoding="utf-8")
+        return {"kind": "kicad_net", "net": net, "sparams": sparams,
+                "validation": validation, "geometry": runs[1][0],
+                "expectations": expct, "converged": 1}
 
     def _run_wr90(self, case: dict, rd: Path) -> dict:
         """WR-90 through validation on gprMax eigenmode ports.
