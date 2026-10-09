@@ -66,15 +66,20 @@ def test_polyline_chains_l_shape(pcb):
     assert len(poly["pads"]) == 2
 
 
-def test_polyline_rejects_wrong_layer_via_and_angle(pcb):
+def test_polyline_rejects_wrong_layer_via(pcb):
     with pytest.raises(ValueError, match="no segments"):
         ki.net_polyline(pcb, "RF_B", layer="F.Cu")   # RF_B is on In2.Cu
     with pytest.raises(ValueError, match="via"):
         ki.net_polyline(pcb, "RF_VIA")
-    with pytest.raises(ValueError, match="non-axis-aligned"):
-        ki.net_polyline(pcb, "RF_ANGLE")
     with pytest.raises(ValueError, match="no segments"):
         ki.net_polyline(pcb, "DOES_NOT_EXIST")
+
+
+def test_polyline_accepts_diagonal(pcb):
+    # job26: non-axis-aligned segments import (staircase-rasterised in the
+    # deck builder) and are counted, not rejected
+    poly = ki.net_polyline(pcb, "RF_ANGLE")
+    assert poly["n_diagonal"] >= 1
 
 
 def _deck(poly, feed_end=1):

@@ -518,10 +518,11 @@ def expectations_via_coupon(geom: dict, f_hz: float) -> dict:
 def net_polyline(pcb: Pcb, net_name: str, layer: str = "F.Cu") -> dict:
     """Chain a net's segments on one layer into an ordered polyline.
 
-    Returns {"points_mm": [(x, y), ...], "width_mm": w, "pads": [Pad, ...]}.
-    Raises on anything the deck builder cannot represent exactly: no
-    segments, branching, vias inside the net on this layer, or
-    non-axis-aligned segments.
+    Returns {"points_mm": [(x, y), ...], "width_mm": w, "pads": [Pad, ...],
+             "n_diagonal": int}.  Raises on anything the deck builder cannot
+    represent: no segments, branching, or vias inside the net on this layer.
+    Non-axis-aligned segments are accepted (job26): the deck builder
+    rasterises them as a face-connected staircase of cells.
     """
     segs = [s for s in pcb.segments if s.net == net_name and s.layer == layer]
     if not segs:
@@ -533,10 +534,9 @@ def net_polyline(pcb: Pcb, net_name: str, layer: str = "F.Cu") -> dict:
     widths = {s.width for s in segs}
     if len(widths) != 1:
         raise ValueError(f"net {net_name!r}: mixed widths {sorted(widths)} on {layer}")
-    for s in segs:
-        if abs(s.start[0] - s.end[0]) > 1e-9 and abs(s.start[1] - s.end[1]) > 1e-9:
-            raise ValueError(f"net {net_name!r}: non-axis-aligned segment "
-                             f"{s.start} -> {s.end} (staircase-exact import only)")
+    n_diag = sum(1 for s in segs
+                 if abs(s.start[0] - s.end[0]) > 1e-9
+                 and abs(s.start[1] - s.end[1]) > 1e-9)
 
     # chain end-to-end
     def key(p):
@@ -560,7 +560,78 @@ def net_polyline(pcb: Pcb, net_name: str, layer: str = "F.Cu") -> dict:
         prev, cur = cur, nxt[0]
         path.append(cur)
     pads = [p for p in pcb.pads if p.net == net_name]
-    return {"points_mm": path, "width_mm": segs[0].width, "pads": pads}
+    return {"points_mm": path, "width_mm": segs[0].width, "pads": pads,
+            "n_diagonal": n_diag}
+
+
+# ------------------------------------------------------------- rasterisation
+def rasterize_capsule_cells(p1: tuple[float, float], p2: tuple[float, float],
+                            half_w: float, cell: float) -> set[tuple[int, int]]:
+    """Grid cells whose centres lie within ``half_w`` of the segment
+    p1->p2 (capsule: round end disks included).  Coordinates in metres on
+    the deck grid (origin 0,0); returns {(i, j)} cell indices.
+
+    Used for non-axis-aligned trace segments (job26): the voxelised union
+    is what FDTD actually solves, so the deck emits exactly these cells.
+    """
+    x1, y1 = p1
+    x2, y2 = p2
+    dx, dy = x2 - x1, y2 - y1
+    ll = dx * dx + dy * dy
+    i0 = math.floor((min(x1, x2) - half_w) / cell)
+    i1 = math.floor((max(x1, x2) + half_w) / cell)
+    j0 = math.floor((min(y1, y2) - half_w) / cell)
+    j1 = math.floor((max(y1, y2) + half_w) / cell)
+    cells = set()
+    for i in range(i0, i1 + 1):
+        cx = (i + 0.5) * cell
+        for j in range(j0, j1 + 1):
+            cy = (j + 0.5) * cell
+            if ll > 0:
+                t = max(0.0, min(1.0, ((cx - x1) * dx + (cy - y1) * dy) / ll))
+            else:
+                t = 0.0
+            d = math.hypot(cx - (x1 + t * dx), cy - (y1 + t * dy))
+            if d <= half_w + 1e-12:
+                cells.add((i, j))
+    return cells
+
+
+def make_face_connected(cells: set[tuple[int, int]]) -> set[tuple[int, int]]:
+    """Add bridge cells so the union is face-connected: two marked cells
+    touching only at a corner (diagonal) get one orthogonal neighbour
+    filled.  FDTD edge continuity across a shared face is unambiguous;
+    corner-only contact is not (marginal Ez edge sharing) — never emit it.
+    """
+    cells = set(cells)
+    changed = True
+    while changed:
+        changed = False
+        for (i, j) in sorted(cells):
+            for di, dj in ((1, 1), (1, -1)):
+                if ((i + di, j + dj) in cells
+                        and (i + di, j) not in cells and (i, j + dj) not in cells):
+                    cells.add((i + di, j))
+                    changed = True
+    return cells
+
+
+def merge_cell_runs(cells: set[tuple[int, int]]) -> list[tuple[int, int, int, int]]:
+    """Merge marked cells into boxes: one (i0, j, i1, j) row-run per
+    contiguous x-run (cell ranges, inclusive i0..i1)."""
+    boxes = []
+    rows: dict[int, list[int]] = {}
+    for i, j in cells:
+        rows.setdefault(j, []).append(i)
+    for j, cols in rows.items():
+        cols.sort()
+        i0 = prev = cols[0]
+        for i in cols[1:] + [None]:
+            if i is None or i != prev + 1:
+                boxes.append((i0, j, prev, j))
+                i0 = i
+            prev = i
+    return boxes
 
 
 # ------------------------------------------------------------------ deck
@@ -653,7 +724,11 @@ def deck_kicad_net(polyline: dict, cell: float, window_s: float, f0: float,
              f"#box: 0 0 {z_gnd:.7f} {dom_x:.7f} {dom_y:.7f} {z_gnd + cell:.7f} pec",
              f"#box: 0 0 {z_sub:.7f} {dom_x:.7f} {dom_y:.7f} {z_trace:.7f} sub"]
 
-    # trace: one pec box per segment, snapped, w_cells wide
+    # trace: axis-aligned segments emit exact snapped boxes; diagonal
+    # segments are rasterised (capsule cells + face-connectivity bridges,
+    # job26) and merged into x-run boxes
+    diag_cells: set[tuple[int, int]] = set()
+    n_diag = 0
     for i in range(len(pts_m) - 1):
         p1, p2 = pts_m[i], pts_m[i + 1]
         (ax, ay), (bx, by) = rel(*p1), rel(*p2)
@@ -661,9 +736,19 @@ def deck_kicad_net(polyline: dict, cell: float, window_s: float, f0: float,
         y0, y1 = sorted((ay, by))
         if abs(y1 - y0) < 1e-12:   # x-running
             y0, y1 = y0 - w_used / 2, y1 + w_used / 2
-        else:                      # y-running
+            lines.append(f"#box: {x0:.7f} {y0:.7f} {z_trace:.7f} {x1:.7f} {y1:.7f} {z_trace + cell:.7f} pec")
+        elif abs(x1 - x0) < 1e-12:  # y-running
             x0, x1 = x0 - w_used / 2, x1 + w_used / 2
-        lines.append(f"#box: {x0:.7f} {y0:.7f} {z_trace:.7f} {x1:.7f} {y1:.7f} {z_trace + cell:.7f} pec")
+            lines.append(f"#box: {x0:.7f} {y0:.7f} {z_trace:.7f} {x1:.7f} {y1:.7f} {z_trace + cell:.7f} pec")
+        else:                       # diagonal: rasterise onto the cell grid
+            n_diag += 1
+            diag_cells |= rasterize_capsule_cells((ax, ay), (bx, by),
+                                                  w_used / 2, cell)
+    if diag_cells:
+        diag_cells = make_face_connected(diag_cells)
+        for i0, j, i1, _ in merge_cell_runs(diag_cells):
+            lines.append(f"#box: {i0 * cell:.7f} {j * cell:.7f} {z_trace:.7f} "
+                         f"{(i1 + 1) * cell:.7f} {(j + 1) * cell:.7f} {z_trace + cell:.7f} pec")
 
     # pad boxes at the ends (extend outward along the end axis)
     for i, (ex, ey) in enumerate((pts_m[0], pts_m[-1])):
@@ -700,11 +785,20 @@ def deck_kicad_net(polyline: dict, cell: float, window_s: float, f0: float,
                      f"{r_each:.3f} term")
 
     # probe triads: three points per end along the end-section, starting
-    # 0.35 mm inside, 0.40 mm spacing (snapped), kept clear of the corner
+    # 0.35 mm inside, 0.40 mm spacing (snapped), kept clear of the corner.
+    # job26: the end section must be AXIS-ALIGNED — on a staircase the
+    # cell-scale field ripple leaks into the ill-conditioned 3-probe split
+    # (triad phase span ~0.2 rad) and fakes non-reciprocity (>1 dB,
+    # including >0 dB "gain" on a passive line).
     probes = {"near": [], "far": []}
     refs = {}
     for lbl, i in (("near", feed_idx), ("far", load_idx)):
         d = ends[i]["dir"]
+        if abs(d[0]) > 1e-9 and abs(d[1]) > 1e-9:
+            raise ValueError(
+                "end section is diagonal — the probe triad needs an "
+                "axis-aligned end section (staircase ripple contaminates "
+                "the wave split, job26)")
         ex, ey = pts_m[0] if i == 0 else pts_m[-1]
         sec = math.hypot(pts_m[1][0] - pts_m[0][0], pts_m[1][1] - pts_m[0][1]) if i == 0 \
             else math.hypot(pts_m[-1][0] - pts_m[-2][0], pts_m[-1][1] - pts_m[-2][1])
@@ -729,6 +823,8 @@ def deck_kicad_net(polyline: dict, cell: float, window_s: float, f0: float,
             "probes_near_m": probes["near"], "probes_far_m": probes["far"],
             "feed_end": feed_end, "termination": "stacked 50 ohm Thevenin",
             "z0_model_ohm": z0_microstrip_t(er, h, w_used),
+            "n_diagonal_segments": n_diag,
+            "rasterised_cells": len(diag_cells),
             "stacked_feed": True}
     return deck, geom
 

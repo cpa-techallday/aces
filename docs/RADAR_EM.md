@@ -1,6 +1,6 @@
 # ACES radar domain — the AERIS-X64 EM simulation pipeline
 
-Doc: CPA-ACES-RADAR-001 · Rev H · 2026-10-09 · status: fast tier live, verification tier live on gprMax AND Palace — patch_xband, wr90_through, tile_coupon, tile_multiport PASS on workstation, in the `aces-em:0.1` rig image, and wr90_through cross-checked FEM-vs-FDTD (S21 agreement 0.005 dB); patch far-field CLOSED with a verified matched-feed realized gain **5.33 dBi @ 9.88 GHz** (job22); **KiCad-layout import LIVE** (job23: `kicad_net` case, RXO_1 PASS — measured Z0 76.5 Ω vs 50 Ω spec: a real design finding); **50 Ω redesign verified** (job24: w = 0.51 mm → measured 52.7 Ω, inside the ±7 % fab band); **via transitions LIVE** (job25: `via_coupon` case PASS — stitched F.Cu→In2→F.Cu transition, delay 0.3 %, S21 0.30 dB vs cascade)
+Doc: CPA-ACES-RADAR-001 · Rev I · 2026-10-09 · status: fast tier live, verification tier live on gprMax AND Palace — patch_xband, wr90_through, tile_coupon, tile_multiport PASS on workstation, in the `aces-em:0.1` rig image, and wr90_through cross-checked FEM-vs-FDTD (S21 agreement 0.005 dB); patch far-field CLOSED with a verified matched-feed realized gain **5.33 dBi @ 9.88 GHz** (job22); **KiCad-layout import LIVE** (job23: `kicad_net` case, RXO_1 PASS — measured Z0 76.5 Ω vs 50 Ω spec: a real design finding); **50 Ω redesign verified** (job24: w = 0.51 mm → measured 52.7 Ω, inside the ±7 % fab band); **via transitions LIVE** (job25: `via_coupon` case PASS — stitched F.Cu→In2→F.Cu transition, delay 0.3 %, S21 0.30 dB vs cascade); **arbitrary-angle routes LIVE** (job26: staircase-rasterised diagonal import, coupon PASS — Z0 bias ≤ 0.02 %, er_eff fringe +3.1 % at h/4 → +1.7 % at h/5)
 
 This adds the AERIS-X64 X-band phased-array radar as an ACES domain
 (`radar.phased_array`) and wires the simulation pipeline that carries a radar
@@ -163,8 +163,9 @@ TXD_1..4 / ANT_1..4 / CAL_* at 0.20–0.30 mm) is a ~76 Ω line against the
 50 Ω ±7 % fab note — 50 Ω needs w ≈ 0.51 mm on this stackup.**  CAL_*
 additionally drops to In2.Cu (vias raise honestly in the importer; the
 stackup note already flags inner-layer RF as not-50 Ω).  Limitations:
-F.Cu GND pour (GCPW) not modelled, axis-aligned routes only, width snaps
-to the cell grid.
+F.Cu GND pour (GCPW) not modelled, width snaps to the cell grid.
+(Diagonal routes were added in job26 — staircase-rasterised, probe
+triads need axis-aligned end sections.)
 
 **50 Ω redesign verification (job24, PASS):** the job23 finding drove a
 respinnable fix — RXO_1 re-routed at w = 0.51 mm.  The kicad_net run on
@@ -206,6 +207,30 @@ between the planes launches parallel-plate modes (S21 −13 dB junk) —
 feed stripline coupons via microstrip transitions, never directly.
 CAL_* nets stay deferred: their 0.6 mm end sections cannot host a probe
 triad and the CPL pad offsets are odd — recorded finding, not a blocker.
+
+**Arbitrary-angle routes (job26, LIVE):** the board has no 45° routes but
+several shallow-angle RF fan-outs (RF_IN 10.5°, PAI_1..4 18.4°,
+TR_CH1..4 ~6–7°) — these import now.  Diagonal segments are rasterised
+as capsules (`rasterize_capsule_cells`: cell centres within w/2 of the
+centreline, round end disks for joint continuity), bridged to
+face-connected unions (corner-only cell contact is marginal Ez edge
+sharing — never emitted), and merged into x-run boxes.  Coupon
+(12 mm lines, 9 mm diagonal middle + 1.5 mm straight lead-ins, w =
+0.51 mm) vs a straight control: **Z0 bias ≤ 0.02 %, loss bias ≤
+0.002 dB**, er_eff +2.4 % (10.5°) / +3.1 % (18.4°).  The er_eff residual
+is the physical voxel sawtooth edge fringe — mesh-convergent, +3.1 % at
+h/4 → **+1.7 % at h/5** — not import error.  Two findings, both pinned
+by tests:
+
+- **Probe triads must never sit on a staircase.**  v1 of the coupon used
+  diagonal end sections: the ~0.2 rad triad phase span makes the 3-probe
+  split ill-conditioned and the cell-scale stair-edge ripple leaks in
+  coherently — apparent non-reciprocity 1.3 dB and >0 dB "gain" on a
+  passive line.  `deck_kicad_net` now raises on a diagonal end section.
+- **`RF_IN` stays blocked honestly** (19.0 mm straight + 1.37 mm 10.5°
+  tail — the tail can't host a triad); measurable after a layout tweak.
+  `PAI_*`/`TR_CH_*` raise on vias (multi-layer import is future work;
+  `net_sections` + the job25 via coupon are the pieces).
 
 **Patch far-field (job14 + job20 audit, resolved):** gprMax 4.x
 layered-background NTFF (`#ntff_layered_background` with the PEC-terminated
@@ -345,7 +370,7 @@ records factors and provenance, not geometry.
 | Domain package | `src/aces/domains/radar/` (`array`, `cascade`, `linkbudget`, `model`, `calibrate`, `em_adapter`) |
 | Registration | `src/aces/domains/__init__.py` (`MODELS`) |
 | Spec template | `specs/templates/radar_phased_array.yaml` (X64 baseline values, datasheet-cited chain) |
-| Tests | `tests/test_radar.py` (16 tests), `tests/test_em_adapter.py` (25 tests), `tests/test_kicad_import.py` (10 tests), `tests/test_via_coupon.py` (13 tests) |
+| Tests | `tests/test_radar.py` (16 tests), `tests/test_em_adapter.py` (25 tests), `tests/test_kicad_import.py` (11 tests), `tests/test_via_coupon.py` (13 tests), `tests/test_staircase_import.py` (8 tests) |
 
 ## 6. What this does not do yet
 
@@ -367,10 +392,14 @@ records factors and provenance, not geometry.
   aperture-coupled redesigns) is antenna design, not pipeline work.
 - tile_multiport + kicad_net cover the 2-port machinery and real-layout
   import (job23, RXO_1 PASS), the 50 Ω redesign is verified (job24,
-  w = 0.51 mm → 52.7 Ω), and via transitions are validated (job25,
-  via_coupon PASS — stitched F.Cu→In2→F.Cu); 45°/arbitrary-angle routes,
-  N-port decomposition of full layouts, and the F.Cu pour remain future
-  work.  CAL_* nets are deferred (0.6 mm end sections cannot host a probe
+  w = 0.51 mm → 52.7 Ω), via transitions are validated (job25,
+  via_coupon PASS — stitched F.Cu→In2→F.Cu), and arbitrary-angle routes
+  import as face-connected staircases (job26 coupon PASS — Z0/loss
+  unbiased, er_eff fringe +3.1 % at h/4 → +1.7 % at h/5; probe triads
+  require axis-aligned end sections).  Multi-layer net import
+  (PAI_*/TR_CH_* via chaining), N-port decomposition of full layouts,
+  and the F.Cu pour remain future work.  CAL_* nets are deferred (0.6 mm
+  end sections cannot host a probe
   triad, CPL pad offsets odd — recorded finding).  The gprMax
   eigenmode-port sweep beta degrades mid-anchor (up to
   6.9 % at 9.5 GHz vs theory, observed in the job18 Palace comparison) while

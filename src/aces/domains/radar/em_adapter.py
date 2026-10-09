@@ -858,12 +858,20 @@ class Adapter:
         margins = {"margin_cells": int(case.get("margin_cells", 16)),
                    "air_cells": int(case.get("air_cells", 16))}
         pcb_path, net = case.get("pcb"), case.get("net")
-        if not pcb_path or not net:
-            raise ValueError("kicad_net needs case['pcb'] (path) and case['net'] (name)")
-
-        pcb = ki.parse_pcb(pcb_path)
-        poly = ki.net_polyline(pcb, net, case.get("layer", "F.Cu"))
-        poly["net"] = net
+        if case.get("polyline"):
+            # synthetic polyline (staircase/diagnostic coupons, job26):
+            # {"points_mm": [...], "width_mm": w, optional "pads", "net"}
+            poly = dict(case["polyline"])
+            poly.setdefault("pads", [])
+            poly["points_mm"] = [tuple(p) for p in poly["points_mm"]]
+            net = net or poly.get("net", "polyline")
+            poly["net"] = net
+        else:
+            if not pcb_path or not net:
+                raise ValueError("kicad_net needs case['pcb'] (path) and case['net'] (name)")
+            pcb = ki.parse_pcb(pcb_path)
+            poly = ki.net_polyline(pcb, net, case.get("layer", "F.Cu"))
+            poly["net"] = net
 
         runs = {}
         for stem, feed_end in (("case_p1", 1), ("case_p2", 2)):
@@ -956,13 +964,17 @@ class Adapter:
                   and err_er_eff <= 0.05 and err_z0 <= 0.10
                   and -0.3 <= extra_loss_db <= 1.0)
         validation = {
-            "case": "kicad_net", "net": net, "pcb": str(pcb_path),
-            "method": ("gprMax FDTD, imported KiCad polyline (axis-aligned, "
-                       "grid-snapped), stacked-source feed on every substrate "
-                       "Ez node plane (job22 rule), stacked zero-excitation "
-                       "50 ohm Thevenin termination, 3-probe wave split per end; "
-                       "Z0 from the complex termination-interface reflection, "
-                       "thickness-corrected Hammerstad reference (job23 control)"),
+            "case": "kicad_net", "net": net,
+            "pcb": str(pcb_path) if pcb_path else "synthetic polyline",
+            "n_diagonal_segments": runs[1][0].get("n_diagonal_segments", 0),
+            "method": ("gprMax FDTD, imported KiCad polyline (axis-aligned "
+                       "segments exact, diagonals staircase-rasterised with "
+                       "face-connected cells, job26), stacked-source feed on "
+                       "every substrate Ez node plane (job22 rule), stacked "
+                       "zero-excitation 50 ohm Thevenin termination, 3-probe "
+                       "wave split per end; Z0 from the complex "
+                       "termination-interface reflection, thickness-corrected "
+                       "Hammerstad reference (job23 control)"),
             "reciprocity_db": recip_db, "bar_reciprocity_db": 0.2,
             "worst_fit_residual": worst_resid, "bar_residual": 0.05,
             "termination_interface_gamma": mean_gamma,
