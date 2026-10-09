@@ -3,14 +3,15 @@
 # so the meta-package resolves honestly; they move into depends as they land.
 pkgname=aces-os
 pkgver=0.1.0
-pkgrel=3
+pkgrel=4
 pkgdesc="ACES OS: the ACES computational-engineering platform on Omarchy (meta-package)"
 arch=('any')
 url="file:///usr/share/doc/aces-os"
 license=('MIT')
 depends=('aces-base' 'aces-creative' 'aces-field' 'aces-consoles' 'aces-omarchy' 'aces-survey' 'aces-engineering' 'aces-voxel')
 optdepends=('aces-studio: ACES Video Studio client and LoRA registry (not packaged yet; the rig video lane is not deployed)'
-            'omarchy: the desktop this is designed for; the engine also runs without it')
+            'omarchy: the desktop this is designed for; the engine also runs without it'
+            'aces-cad-onshape: Onshape FeatureScript adapter (cloud)')
 
 package() {
   install -dm755 "$pkgdir/usr/share/doc/$pkgname"

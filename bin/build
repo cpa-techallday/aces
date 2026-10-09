@@ -24,19 +24,23 @@ for a in "$@"; do
     *) PKGS+=("$a") ;;
   esac
 done
+# pkgbuilds/ORDER: members before dependants; "<pkg> nodeps" marks meta-packages built with --nodeps. The flag is
+# honoured whether the package is named on the command line or taken from ORDER: `bin/build aces-os` used to run
+# makepkg -s on the meta-package, which started a 2.3 GB download of its real dependencies into the build container.
+ORDERED=()
+if [ -f "$ROOT/pkgbuilds/ORDER" ]; then
+  while read -r name flag _; do
+    case "$name" in ""|\#*) continue ;; esac
+    if [ "${flag:-}" = "nodeps" ]; then PKG_NODEPS["$name"]=1; fi
+    if [ -d "$ROOT/pkgbuilds/$name" ]; then
+      ORDERED+=("$name")
+    else
+      echo "!! ORDER names $name but pkgbuilds/$name does not exist"
+    fi
+  done < "$ROOT/pkgbuilds/ORDER"
+fi
 if [ ${#PKGS[@]} -eq 0 ]; then
-  # pkgbuilds/ORDER: members before dependants; "<pkg> nodeps" marks meta-packages built with --nodeps
-  if [ -f "$ROOT/pkgbuilds/ORDER" ]; then
-    while read -r name flag _; do
-      case "$name" in ""|\#*) continue ;; esac
-      if [ -d "$ROOT/pkgbuilds/$name" ]; then
-        PKGS+=("$name")
-        if [ "${flag:-}" = "nodeps" ]; then PKG_NODEPS["$name"]=1; fi
-      else
-        echo "!! ORDER names $name but pkgbuilds/$name does not exist"
-      fi
-    done < "$ROOT/pkgbuilds/ORDER"
-  fi
+  PKGS=("${ORDERED[@]}")
   while IFS= read -r d; do
     n="$(basename "$d")"
     listed=0

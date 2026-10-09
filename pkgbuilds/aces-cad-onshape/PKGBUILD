@@ -1,0 +1,38 @@
+# Maintainer: Carbon Project Australia
+# The Onshape adapter: a standard-library REST client, the aces-onshape CLI, the aces-onshape-mcp stdio MCP server and
+# the text -> FeatureScript -> CAD -> STEP agent skill. Onshape is a cloud service: writes, evaluation, exports and
+# pulls run the project class gate and are refused for sovereign and controlled projects. Sources are packed from
+# src/aces-cad-onshape by bin/build.
+pkgname=aces-cad-onshape
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="ACES Onshape adapter: FeatureScript MCP server, aces-onshape CLI and CadSource pull (STEP + parameters + sha256) over the Onshape REST API"
+arch=('any')
+url="file:///usr/share/doc/aces-cad-onshape"
+license=('MIT')
+depends=('aces-base' 'python')
+makedepends=('python-build' 'python-installer' 'python-wheel' 'python-setuptools')
+source=("$pkgname-src.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "$srcdir/$pkgname"
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd "$srcdir/$pkgname"
+  # unit tests against the in-process fake Onshape server: loopback only, no credentials, nothing under the real home
+  mkdir -p "$srcdir/home"
+  HOME="$srcdir/home" PYTHONPATH="$srcdir/$pkgname" PYTHONDONTWRITEBYTECODE=1 NO_COLOR=1 python -m unittest discover -s tests -v
+}
+
+package() {
+  cd "$srcdir/$pkgname"
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -Dm644 skills/aces-cad-onshape/SKILL.md -t "$pkgdir/usr/share/aces/cad-onshape/skills/aces-cad-onshape"
+  install -Dm644 mcp.json.example -t "$pkgdir/usr/share/aces/cad-onshape"
+  install -Dm644 tests/*.py -t "$pkgdir/usr/share/aces/cad-onshape/tests"
+  install -Dm644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+}
