@@ -22,8 +22,13 @@ Deck recipe (all rules earned in earlier jobs):
   Z0-from-ripple estimate.
 - 3-probe travelling-wave decomposition per port (wave_split_ab) on each
   end's straight section; reference plane = pad/trace junction.
-- Only axis-aligned polylines are accepted (staircase-exact on the Yee
-  grid); 45-degree or arbitrary-angle routes raise honestly.
+- Non-axis-aligned segments are staircase-rasterised onto the grid
+  (job26: capsule cells + face-connectivity bridging); end sections must
+  stay axis-aligned — a probe triad on a staircase reads cell-scale
+  ripple through the ill-conditioned split.
+- Multi-layer chains (net_sections) import with via barrels + In1
+  antipads + diagonal stitching vias (job27, the job25 coupon recipe);
+  chain ends must be on F.Cu.
 
 Model expectations use Hammerstad/Wheeler **with the 1 oz (35 um) copper
 thickness correction** (same form as stackup.py: w_eff = w + (t/pi)(1 +
@@ -206,17 +211,14 @@ def net_sections(pcb: Pcb, net_name: str) -> dict:
     Returns {"sections": [{"layer": str, "points_mm": [...], "width_mm": w}],
              "vias_mm": [(x, y, size, drill)], "pads": [...]}.
     Sections are ordered end-to-end; a via joins the end of one section to
-    the start of the next.  Same honesty rules as net_polyline: branches,
-    loops and non-axis-aligned segments raise.
+    the start of the next.  Same honesty rules as net_polyline: branches
+    and loops raise.  Non-axis-aligned segments are accepted (job26
+    rasteriser handles them in the deck builder).
     """
     segs = [s for s in pcb.segments if s.net == net_name]
     if not segs:
         raise ValueError(f"net {net_name!r}: no segments")
     vias = [v for v in pcb.vias if v["net"] == net_name]
-    for s in segs:
-        if abs(s.start[0] - s.end[0]) > 1e-9 and abs(s.start[1] - s.end[1]) > 1e-9:
-            raise ValueError(f"net {net_name!r}: non-axis-aligned segment "
-                             f"{s.start} -> {s.end} (staircase-exact import only)")
 
     def key(p):
         return (round(p[0], 4), round(p[1], 4))
@@ -510,6 +512,242 @@ def expectations_via_coupon(geom: dict, f_hz: float) -> dict:
     delay = sum(s.get("length_m", 0.0) * math.sqrt(s["er_eff"]) / C0
                 for s in sections if "er_eff" in s)
     delay += 2 * geom.get("via_transit_s", 0.0)
+    return {"s11_model": sp["s11"], "s21_model": sp["s21"],
+            "delay_s_model": delay, "sections": sections}
+
+
+# ------------------------------------------------------- multi-layer import
+def deck_kicad_net_ml(chain: dict, cell: float, window_s: float, f0: float,
+                      feed_end: int = 1, margin_cells: int = 16,
+                      air_cells: int = 16, lift_cells: int = 12,
+                      er_ro: float = 3.66, tand_ro: float = 0.0037,
+                      er_fr4: float = 4.10, tand_fr4: float = 0.021,
+                      via_cells: int = 4, antipad_cells: int = 10,
+                      stitch_cells: int = 2,
+                      stitch_off: float = 0.508e-3) -> tuple[str, dict]:
+    """Multi-layer net deck (job27) from a ``net_sections`` chain:
+    F.Cu microstrip sections and In2.Cu stripline sections joined by via
+    barrels, on the board-1 hybrid stack (the job25 via_coupon stack:
+    RO4350B 5 cells, FR4 3+trace+3 cells, In3 solid, In1 antipads).
+
+    Every via gets the job25 treatment: square PEC barrel + In1 antipad +
+    4 diagonal stitching vias (45 deg rule).  Chain ends must be on F.Cu
+    (feed/term strings cross the RO4350B gap; stripline ends would launch
+    parallel-plate modes — job25) and must be axis-aligned and long enough
+    for the probe triad (job26 rule).  Diagonal middle segments are
+    rasterised (job26).  Other layers (In5 etc.) raise honestly.
+    """
+    n_ro = round(0.254e-3 / cell)
+    n_fr4 = round(0.162e-3 / cell)
+    if abs(n_ro * cell - 0.254e-3) > 1e-9:
+        raise ValueError("cell must divide the 0.254 mm RO4350B core")
+
+    sections = chain["sections"]
+    vias = chain["vias_mm"]
+    if len(vias) != len(sections) - 1:
+        raise ValueError(f"chain has {len(sections)} sections but "
+                         f"{len(vias)} vias")
+    for s in sections:
+        if s["layer"] not in ("F.Cu", "In2.Cu"):
+            raise ValueError(f"layer {s['layer']!r} not modelled "
+                             "(F.Cu and In2.Cu only — deeper layers sit in "
+                             "a different stack region)")
+    if sections[0]["layer"] != "F.Cu" or sections[-1]["layer"] != "F.Cu":
+        raise ValueError("chain ends must be on F.Cu — feed/termination "
+                         "strings cross the RO4350B gap (job22/job25 rule)")
+
+    def snap(v: float) -> float:
+        return round(v / cell) * cell
+
+    # ---- geometry frame ------------------------------------------------
+    pts_m = []          # per section: [(x, y), ...] in metres
+    widths = []
+    for s in sections:
+        pts_m.append([(x * 1e-3, y * 1e-3) for x, y in s["points_mm"]])
+        widths.append(max(1, round(s["width_mm"] * 1e-3 / cell)) * cell)
+    via_xy = [(snap(v[0] * 1e-3), snap(v[1] * 1e-3)) for v in vias]
+    ap = antipad_cells * cell / 2
+    all_x = [p[0] for pts in pts_m for p in pts] + [x for x, _ in via_xy]
+    all_y = [p[1] for pts in pts_m for p in pts] + [y for _, y in via_xy]
+    w_max = max(widths)
+    ext = w_max / 2 + ap + stitch_off      # trace half-width + antipad/stitch
+    ox = snap(min(all_x) - ext) - margin_cells * cell
+    oy = snap(min(all_y) - ext) - margin_cells * cell
+    dom_x = snap(max(all_x) + ext) + margin_cells * cell - ox
+    dom_y = snap(max(all_y) + ext) + margin_cells * cell - oy
+
+    z_in3 = lift_cells * cell
+    z_in2 = z_in3 + cell + n_fr4 * cell
+    z_in1 = z_in2 + cell + n_fr4 * cell
+    z_fc = z_in1 + cell + n_ro * cell
+    dom_z = z_fc + cell + air_cells * cell
+    z_probe = z_in1 + cell + (n_ro // 2) * cell
+    layer_z = {"F.Cu": z_fc, "In2.Cu": z_in2}
+
+    def rel(x: float, y: float) -> tuple[float, float]:
+        return snap(x - ox), snap(y - oy)
+
+    sigma_ro = 2 * math.pi * f0 * EPS0 * er_ro * tand_ro
+    sigma_fr4 = 2 * math.pi * f0 * EPS0 * er_fr4 * tand_fr4
+    lines = [f"#title: aces-tile-em kicad_net_ml import ({chain.get('net', '?')}, "
+             f"feed end {feed_end})",
+             f"#domain: {dom_x:.7f} {dom_y:.7f} {dom_z:.7f}",
+             f"#dx_dy_dz: {cell:.7f} {cell:.7f} {cell:.7f}",
+             f"#time_window: {window_s:.6e}",
+             f"#material: {er_ro:.4f} {sigma_ro:.5f} 1.0 0.0 subro",
+             f"#material: {er_fr4:.4f} {sigma_fr4:.5f} 1.0 0.0 subfr4",
+             f"#waveform: gaussiandot 1.0 {f0:.6e} feed",
+             f"#waveform: gaussiandot 1.0e-30 {f0:.6e} term",
+             f"#box: 0 0 {z_in3 + cell:.7f} {dom_x:.7f} {dom_y:.7f} {z_in2:.7f} subfr4",
+             f"#box: 0 0 {z_in2 + cell:.7f} {dom_x:.7f} {dom_y:.7f} {z_in1:.7f} subfr4",
+             f"#box: 0 0 {z_in1 + cell:.7f} {dom_x:.7f} {dom_y:.7f} {z_fc:.7f} subro",
+             f"#box: 0 0 {z_in3:.7f} {dom_x:.7f} {dom_y:.7f} {z_in3 + cell:.7f} pec",
+             f"#box: 0 0 {z_in1:.7f} {dom_x:.7f} {dom_y:.7f} {z_in1 + cell:.7f} pec"]
+    # antipads: re-stamp dielectric through the In1 plane at each via
+    for xv, yv in via_xy:
+        ax_, ay_ = snap(xv - ox), snap(yv - oy)
+        lines.append(f"#box: {ax_ - ap:.7f} {ay_ - ap:.7f} {z_in1:.7f} "
+                     f"{ax_ + ap:.7f} {ay_ + ap:.7f} {z_in1 + cell:.7f} subfr4")
+
+    # ---- traces: per section, rasterising diagonals (job26 rules) ------
+    n_diag = 0
+    raster_total = 0
+    for s, pts, w_used in zip(sections, pts_m, widths):
+        zt = layer_z[s["layer"]]
+        diag_cells: set[tuple[int, int]] = set()
+        for i in range(len(pts) - 1):
+            (ax, ay), (bx, by) = rel(*pts[i]), rel(*pts[i + 1])
+            x0, x1 = sorted((ax, bx))
+            y0, y1 = sorted((ay, by))
+            if abs(y1 - y0) < 1e-12:
+                y0, y1 = y0 - w_used / 2, y1 + w_used / 2
+                lines.append(f"#box: {x0:.7f} {y0:.7f} {zt:.7f} {x1:.7f} {y1:.7f} {zt + cell:.7f} pec")
+            elif abs(x1 - x0) < 1e-12:
+                x0, x1 = x0 - w_used / 2, x1 + w_used / 2
+                lines.append(f"#box: {x0:.7f} {y0:.7f} {zt:.7f} {x1:.7f} {y1:.7f} {zt + cell:.7f} pec")
+            else:
+                n_diag += 1
+                diag_cells |= rasterize_capsule_cells((ax, ay), (bx, by),
+                                                      w_used / 2, cell)
+        if diag_cells:
+            diag_cells = make_face_connected(diag_cells)
+            raster_total += len(diag_cells)
+            for i0, j, i1, _ in merge_cell_runs(diag_cells):
+                lines.append(f"#box: {i0 * cell:.7f} {j * cell:.7f} {zt:.7f} "
+                             f"{(i1 + 1) * cell:.7f} {(j + 1) * cell:.7f} {zt + cell:.7f} pec")
+
+    # ---- via barrels + diagonal stitching (job25 rules) -----------------
+    hv = via_cells * cell / 2
+    hs = stitch_cells * cell / 2
+    d45 = stitch_off / math.sqrt(2)
+    for xv, yv in via_xy:
+        bx_, by_ = snap(xv - ox), snap(yv - oy)
+        lines.append(f"#box: {bx_ - hv:.7f} {by_ - hv:.7f} {z_in2:.7f} "
+                     f"{bx_ + hv:.7f} {by_ + hv:.7f} {z_fc + cell:.7f} pec")
+        for dx, dy in ((d45, d45), (d45, -d45), (-d45, d45), (-d45, -d45)):
+            xs_, ys_ = snap(bx_ + dx), snap(by_ + dy)
+            lines.append(f"#box: {xs_ - hs:.7f} {ys_ - hs:.7f} {z_in3:.7f} "
+                         f"{xs_ + hs:.7f} {ys_ + hs:.7f} {z_in1 + cell:.7f} pec")
+
+    # ---- feed / termination + probe triads on the F.Cu end sections ----
+    def end_dir(idx: int) -> tuple[float, float]:
+        if idx == 0:
+            (x1, y1), (x2, y2) = pts_m[0][0], pts_m[0][1]
+        else:
+            (x1, y1), (x2, y2) = pts_m[-1][-1], pts_m[-1][-2]
+        dx, dy = x2 - x1, y2 - y1
+        n = math.hypot(dx, dy)
+        return dx / n, dy / n
+
+    ends_m = [(pts_m[0][0]), (pts_m[-1][-1])]
+    r_each = 50.0 / n_ro
+    ends = []
+    for i, (ex, ey) in enumerate(ends_m):
+        d = end_dir(i)
+        if abs(d[0]) > 1e-9 and abs(d[1]) > 1e-9:
+            raise ValueError("end section is diagonal — the probe triad "
+                             "needs an axis-aligned end section (job26)")
+        fx, fy = rel(ex + d[0] * cell, ey + d[1] * cell)
+        ends.append({"dir": d, "feed_xy": (fx, fy)})
+
+    feed_idx, load_idx = (0, 1) if feed_end == 1 else (1, 0)
+    fx, fy = ends[feed_idx]["feed_xy"]
+    for k in range(n_ro):
+        lines.append(f"#voltage_source: z {fx:.7f} {fy:.7f} {z_in1 + cell + k * cell:.7f} "
+                     f"{r_each:.3f} feed")
+    lx, ly = ends[load_idx]["feed_xy"]
+    for k in range(n_ro):
+        lines.append(f"#voltage_source: z {lx:.7f} {ly:.7f} {z_in1 + cell + k * cell:.7f} "
+                     f"{r_each:.3f} term")
+
+    spacing = 4 * cell if 4 * cell < 0.45e-3 else cell
+    probes = {"near": [], "far": []}
+    for lbl, i in (("near", feed_idx), ("far", load_idx)):
+        d = ends[i]["dir"]
+        ex, ey = ends_m[i]
+        sec = math.hypot(pts_m[0][1][0] - pts_m[0][0][0],
+                         pts_m[0][1][1] - pts_m[0][0][1]) if i == 0 else \
+            math.hypot(pts_m[-1][-1][0] - pts_m[-1][-2][0],
+                       pts_m[-1][-1][1] - pts_m[-1][-2][1])
+        w_end = widths[0] if i == 0 else widths[-1]
+        for j in range(3):
+            dist = 0.35e-3 + j * spacing
+            if dist > sec - w_end:
+                raise ValueError(f"end section too short for probe triad "
+                                 f"({sec * 1e3:.2f} mm)")
+            px, py = rel(ex + d[0] * dist, ey + d[1] * dist)
+            lines.append(f"#rx: {px:.7f} {py:.7f} {z_probe:.7f}")
+            probes[lbl].append(dist)
+
+    # ---- model geometry --------------------------------------------------
+    b_sl = (2 * n_fr4 + 1) * cell
+    via_transit = ((n_fr4 + 1) * cell * math.sqrt(er_fr4)
+                   + n_ro * cell * math.sqrt(er_ro)) / C0
+    sec_models = []
+    total_len = 0.0
+    for s, pts, w_used in zip(sections, pts_m, widths):
+        length = sum(math.hypot(pts[i + 1][0] - pts[i][0],
+                                pts[i + 1][1] - pts[i][1])
+                     for i in range(len(pts) - 1))
+        total_len += length
+        if s["layer"] == "F.Cu":
+            sec_models.append({"layer": "F.Cu", "length_m": length,
+                               "w_m": w_used,
+                               "z0_ohm": z0_microstrip_t(er_ro, n_ro * cell, w_used),
+                               "er_eff": er_eff_microstrip_t(er_ro, n_ro * cell, w_used),
+                               "kind": "microstrip", "er": er_ro, "tand": tand_ro})
+        else:
+            sec_models.append({"layer": "In2.Cu", "length_m": length,
+                               "w_m": w_used,
+                               "z0_ohm": stripline_z0_cohn(er_fr4, b_sl, w_used, t=cell),
+                               "er_eff": er_fr4,
+                               "kind": "stripline", "er": er_fr4, "tand": tand_fr4})
+    geom = {"net": chain.get("net"), "cell_m": cell, "n_sub_cells": n_ro,
+            "n_fr4_cells": n_fr4, "b_sl_modelled_m": b_sl,
+            "sections_model": sec_models, "n_vias": len(vias),
+            "via_cells": via_cells, "antipad_cells": antipad_cells,
+            "stitch_cells": stitch_cells, "stitch_off_m": stitch_off,
+            "via_transit_s": via_transit,
+            "er_ro": er_ro, "tand_ro": tand_ro, "er_fr4": er_fr4, "tand_fr4": tand_fr4,
+            "n_diagonal_segments": n_diag, "rasterised_cells": raster_total,
+            "probes_near_m": probes["near"], "probes_far_m": probes["far"],
+            "feed_end": feed_end, "length_m": total_len,
+            "stacked_feed": True}
+    return "\n".join(lines) + "\n", geom
+
+
+def expectations_kicad_net_ml(geom: dict, f_hz: float) -> dict:
+    """Cascade reference for a multi-layer chain: lossy per-section lines
+    (microstrip Hammerstad / stripline Cohn) in chain order; stitched via
+    loop-L neglected (job25), delay includes one via vertical transit per
+    via."""
+    sections = [{"z0": s["z0_ohm"], "er_eff": s["er_eff"],
+                 "length_m": s["length_m"], "kind": s["kind"],
+                 "er": s["er"], "tand": s["tand"]}
+                for s in geom["sections_model"]]
+    sp = cascade_sparams([f_hz], sections)[0]
+    delay = sum(s["length_m"] * math.sqrt(s["er_eff"]) / C0 for s in sections)
+    delay += geom["n_vias"] * geom.get("via_transit_s", 0.0)
     return {"s11_model": sp["s11"], "s21_model": sp["s21"],
             "delay_s_model": delay, "sections": sections}
 

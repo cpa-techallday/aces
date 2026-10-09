@@ -598,6 +598,8 @@ class Adapter:
             return self._run_kicad_net(case, rd)
         if case.get("structure") == "via_coupon":
             return self._run_via_coupon(case, rd)
+        if case.get("structure") == "kicad_net_ml":
+            return self._run_kicad_net_ml(case, rd)
         margins = {"margin_cells": int(case.get("margin_cells", 30)),
                    "air_cells": int(case.get("air_cells", 40))}
         if validate == "patch_xband" or (not validate and case.get("structure") in (None, "antenna_plate")):
@@ -1132,6 +1134,145 @@ class Adapter:
         (rd / "sparams.json").write_text(json.dumps(sparams, indent=2), encoding="utf-8")
         (rd / "validation.json").write_text(json.dumps(validation, indent=2), encoding="utf-8")
         return {"kind": "via_coupon", "sparams": sparams, "validation": validation,
+                "geometry": geom, "converged": 1}
+
+    def _run_kicad_net_ml(self, case: dict, rd: Path) -> dict:
+        """2-port S-parameters of a multi-layer KiCad net (job27).
+
+        Chain from ``net_sections`` (or a synthetic ``case["chain"]`` for
+        coupons): F.Cu microstrip + In2.Cu stripline sections joined by
+        stitched via barrels (job25 rules), diagonals rasterised (job26),
+        probe triads on the axis-aligned F.Cu end sections.  Reference =
+        ABCD cascade of the per-section lossy line models (microstrip
+        Hammerstad / stripline Cohn) with via vertical transits in the
+        delay; stitched via loop-L neglected (job25 fit).  Bars are the
+        via_coupon contract: S21 0.5 dB, |S11| 0.15 (documented cascade
+        residual), delay 5 %, reciprocity 0.2 dB, residuals 5 %.
+        """
+        from . import kicad_import as ki
+        from .linkbudget import C0
+
+        f0 = case.get("f0_hz", 10.5e9)
+        flo, fhi = case.get("freq_lo_hz", 8e9), case.get("freq_hi_hz", 13e9)
+        cell = float(case.get("cell_m", 0.0508e-3))
+        window = float(case.get("time_window_s", 4e-9))
+        n_freq = int(case.get("n_freq", 11))
+        timeout = int(case.get("timeout_seconds", 1800))
+        kwargs = {k: case[k] for k in ("margin_cells", "air_cells",
+                                       "via_cells", "antipad_cells") if k in case}
+
+        if case.get("chain"):
+            chain = dict(case["chain"])
+            chain["sections"] = [dict(s) for s in chain["sections"]]
+            chain.setdefault("net", case.get("net", "chain"))
+        else:
+            pcb_path, net = case.get("pcb"), case.get("net")
+            if not pcb_path or not net:
+                raise ValueError("kicad_net_ml needs case['pcb'] + case['net'], "
+                                 "or a synthetic case['chain']")
+            chain = ki.net_sections(ki.parse_pcb(pcb_path), net)
+            chain["net"] = net
+
+        runs = {}
+        for stem, feed_end in (("case_p1", 1), ("case_p2", 2)):
+            deck, geom = ki.deck_kicad_net_ml(chain, cell, window, f0,
+                                              feed_end=feed_end, **kwargs)
+            (rd / f"{stem}.in").write_text(deck, encoding="utf-8")
+            self._gprmax_exec(rd, stem, timeout)
+            runs[feed_end] = (geom, self._read_probes(rd / f"{stem}.h5"))
+
+        geom = runs[1][0]
+        # wave-split beta uses the F.Cu microstrip er_eff (triads live there)
+        er_eff_ms = geom["sections_model"][0]["er_eff"] \
+            if geom["sections_model"][0]["layer"] == "F.Cu" \
+            else geom["sections_model"][-1]["er_eff"]
+        freqs = np.linspace(flo, fhi, n_freq)
+
+        def spectra(probes: dict) -> tuple[np.ndarray, list[np.ndarray]]:
+            t, _ = probes["rx1"]
+            dt = float(t[1] - t[0])
+            fr = np.fft.rfftfreq(len(t), d=dt)
+            specs = [np.fft.rfft(np.asarray(probes[f"rx{i}"][1], dtype=float)
+                                 - np.mean(probes[f"rx{i}"][1]))
+                     for i in range(1, 7)]
+            return fr, specs
+
+        rows = []
+        for ghz in freqs:
+            beta = 2 * math.pi * ghz * math.sqrt(er_eff_ms) / C0
+            row = {"frequency_hz": float(ghz)}
+            for feed_end, (gm, probes) in runs.items():
+                fr, specs = spectra(probes)
+                k = int(np.argmin(np.abs(fr - ghz)))
+                near = np.array([s[k] for s in specs[:3]])
+                far = np.array([s[k] for s in specs[3:]])
+                a1, b1, r1 = wave_split_ab(near, np.asarray(gm["probes_near_m"]), beta)
+                a2, b2, r2 = wave_split_ab(far, np.asarray(gm["probes_far_m"]), beta)
+                if feed_end == 1:
+                    row.update(s11=b1 / a1, s21=b2 / a1, resid=r1, resid2=r2)
+                else:
+                    row.update(s22=b1 / a1, s12=b2 / a1, resid=r1, resid2=r2)
+            rows.append(row)
+
+        def db(x: complex) -> float:
+            return 20 * math.log10(max(abs(x), 1e-30))
+
+        exp0 = ki.expectations_kicad_net_ml(geom, float(freqs[0]))
+        model = ki.cascade_sparams(freqs, exp0["sections"])
+
+        sparams = []
+        worst_s21_db = 0.0
+        worst_s11 = 0.0
+        for r, mrow in zip(rows, model):
+            s21_m = 0.5 * (db(r["s21"]) + db(r["s12"]))
+            s11_m = 0.5 * (db(r["s11"]) + db(r["s22"]))
+            worst_s21_db = max(worst_s21_db, abs(s21_m - db(mrow["s21"])))
+            worst_s11 = max(worst_s11, abs(abs(r["s11"]) - abs(mrow["s11"])))
+            sparams.append({"frequency_hz": r["frequency_hz"],
+                            "s11_db": db(r["s11"]), "s21_db": db(r["s21"]),
+                            "s22_db": db(r["s22"]), "s12_db": db(r["s12"]),
+                            "s21_model_db": db(mrow["s21"]),
+                            "s11_model_mag": abs(mrow["s11"]),
+                            "wave_split_residual": r["resid"]})
+
+        taus = []
+        f_arr = np.array([r["frequency_hz"] for r in rows])
+        for key in ("s21", "s12"):
+            ph = np.unwrap(np.angle([r[key] for r in rows]))
+            taus.append(-np.polyfit(2 * math.pi * f_arr, ph, 1)[0])
+        tau_meas = float(np.mean(taus))
+        tau_model = exp0["delay_s_model"]
+        err_tau = abs(tau_meas - tau_model) / tau_model
+
+        recip_db = max(abs(db(r["s21"]) - db(r["s12"])) for r in rows)
+        worst_resid = max(max(r["resid"], r["resid2"]) for r in rows)
+        passed = (worst_s21_db <= 0.5 and worst_s11 <= 0.15
+                  and err_tau <= 0.05 and recip_db <= 0.2 and worst_resid <= 0.05)
+        validation = {
+            "case": "kicad_net_ml", "net": chain.get("net"),
+            "pcb": str(case.get("pcb", "synthetic chain")),
+            "method": ("gprMax FDTD, multi-layer chain import (net_sections): "
+                       "F.Cu microstrip + In2.Cu stripline sections, via "
+                       "barrels + In1 antipads + 4 diagonal stitching vias "
+                       "per signal via (job25), rasterised diagonals (job26), "
+                       "stacked-source feed/term across the RO4350B gap; "
+                       "reference = ABCD cascade of per-section lossy line "
+                       "models (Hammerstad microstrip / Cohn stripline), "
+                       "stitched via-L neglected, delay incl. via transits"),
+            "n_sections": len(geom["sections_model"]),
+            "n_vias": geom["n_vias"],
+            "worst_s21_vs_cascade_db": worst_s21_db, "bar_s21_db": 0.5,
+            "worst_s11_vs_cascade": worst_s11, "bar_s11": 0.15,
+            "delay_measured_ps": tau_meas * 1e12, "delay_model_ps": tau_model * 1e12,
+            "delay_err_pct": 100 * err_tau, "bar_delay_pct": 5.0,
+            "reciprocity_db": recip_db, "bar_reciprocity_db": 0.2,
+            "worst_fit_residual": worst_resid, "bar_residual": 0.05,
+            "pass": int(passed),
+        }
+        (rd / "sparams.json").write_text(json.dumps(sparams, indent=2), encoding="utf-8")
+        (rd / "validation.json").write_text(json.dumps(validation, indent=2), encoding="utf-8")
+        return {"kind": "kicad_net_ml", "net": chain.get("net"),
+                "sparams": sparams, "validation": validation,
                 "geometry": geom, "converged": 1}
 
     def _run_wr90(self, case: dict, rd: Path) -> dict:

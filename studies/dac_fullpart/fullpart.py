@@ -217,7 +217,11 @@ def build_part(p: dict, voxel_m: float = 0.003, keep_field: bool = False):
     half = 0.5 * ratio
     inC = ((X >= Lp) & (X <= Lp + Lc) & (Y >= yc0) & (Y <= yc0 + Wc)
            & (Z >= zc0) & (Z <= zc0 + Hc))
-    sheet = np.where(inC, half - np.abs(d), -1.0)
+    # fusion rim: gyroid walls thicken continuously to near-dense over 3 cells at the
+    # gallery (water header) faces, so sheet and end-tank wall are one graded body
+    dy = np.minimum(Y - yc0, yc0 + Wc - Y)
+    half_g = np.minimum(0.45, half * (1.0 + 3.0 * np.clip(1.0 - dy / (3.0 * a), 0.0, 1.0)))
+    sheet = np.where(inC, half_g - np.abs(d), -1.0)
     slab = a
     fA = ((X < Lp + slab) | (X > Lp + Lc - slab)) & inC
     sealA = np.where(fA, half - d, -1.0)                    # air faces: open A (d > half) only
@@ -233,8 +237,10 @@ def build_part(p: dict, voxel_m: float = 0.003, keep_field: bool = False):
     voids = [
         box(x0 + tc, Lp, yc0 + tc, yc0 + Wc - tc, zc0 + tc, zc0 + Hc - tc),        # air plenum in
         box(Lp + Lc, x1 - tc, yc0 + tc, yc0 + Wc - tc, zc0 + tc, zc0 + Hc - tc),   # air plenum out
-        box(Lp + tc, Lp + Lc - tc, y0 + tc, yc0 - tc, zc0 + tc, zc0 + Hc - tc),    # water gallery -
-        box(Lp + tc, Lp + Lc - tc, yc0 + Wc + tc, y1 - tc, zc0 + tc, zc0 + Hc - tc),  # gallery +
+        # water end-tank headers: galleries run the FULL part length, fused into the
+        # casing ends (no separate manifold parts, no gaskets)
+        box(x0 + tc, x1 - tc, y0 + tc, yc0 - tc, zc0 + tc, zc0 + Hc - tc),         # end tank -
+        box(x0 + tc, x1 - tc, yc0 + Wc + tc, y1 - tc, zc0 + tc, zc0 + Hc - tc),    # end tank +
         # buffer tank in two lobes -> the uncarved strip between them is the baffle
         box(x0 + tc, L_tot / 2 - tc / 2, y0 + tc, y1 - tc, z0 + tc, -tc),
         box(L_tot / 2 + tc / 2, x1 - tc, y0 + tc, y1 - tc, z0 + tc, -tc),
@@ -247,14 +253,14 @@ def build_part(p: dict, voxel_m: float = 0.003, keep_field: bool = False):
     V = voids[0]
     for v in voids[1:]:
         V = np.maximum(V, v)
-    # water ports: cylinders along y, from the outer y-face into each gallery
+    # water ports: one per end tank, on the x casing faces (hot in at air-out side,
+    # cold out at air-in side -> counterflow along x)
     rp_w = 0.4 * wg
-    for xp, sgn in ((Lp + 0.25 * Lc, -1.0), (Lp + 0.75 * Lc, +1.0)):
-        cyl = rp_w ** 2 - ((X - xp) ** 2 + (Z - zmid) ** 2)
-        if sgn < 0:   # y-minus side: pierce shell y in [y0-h, y0+tc], gallery at yc0 side
-            reach = np.minimum(Y - (y0 - h), (yc0 - tc) - Y)
-        else:         # y-plus side
-            reach = np.minimum((y1 + h) - Y, Y - (yc0 + Wc + tc))
+    yg_m = 0.5 * (y0 + tc + yc0 - tc)      # centre of minus end tank
+    yg_p = 0.5 * (yc0 + Wc + tc + y1 - tc)  # centre of plus end tank
+    for (xc, yg, sgn) in ((x1, yg_m, +1.0), (x0, yg_p, -1.0)):
+        cyl = rp_w ** 2 - ((Y - yg) ** 2 + (Z - zmid) ** 2)
+        reach = np.minimum(sgn * (X - xc) + h + tc, 2 * tc + 2 * h)  # through the end shell
         V = np.maximum(V, np.minimum(cyl, reach))
     # tank fill + drain necks: cylinders along y through the y-minus shell into the tank
     for xp, rr in ((L_tot / 4, 0.03), (3 * L_tot / 4, 0.03)):
@@ -319,22 +325,23 @@ def main():
     print(f"mesh: {len(faces)} triangles, enclosed {vol:.4f} m3")
     if vol < 0:
         faces = faces[:, ::-1]
-    write_stl(out / "dac-fullpart-winner.stl", verts, faces,
-              header="ACES holistic DAC full part (study, not verified)", scale=1000.0)
-    with open(out / "winner.json", "w") as fh:
+    write_stl(out / "dac-fullpart-v2-endtanks.stl", verts, faces,
+              header="ACES holistic DAC full part v2 fused end tanks (study, not verified)",
+              scale=1000.0)
+    with open(out / "winner-v2.json", "w") as fh:
         json.dump({"params": win.params, "objectives": win.objectives,
                    "metrics": {k: v for k, v in win.metrics.items() if k != "core"},
                    "warnings": win.warnings, "uncalibrated": win.uncalibrated,
                    "mesh": info}, fh, indent=2, default=float)
-    rec = {"type": "design_run", "project": "dac-fullpart-holistic", "company": "CPA",
+    rec = {"type": "design_run", "project": "dac-fullpart-holistic-v2-endtanks", "company": "CPA",
            "owner": "Aaron",
-           "model": {"id": model.id, "version": model.version},
+           "model": {"id": model.id, "version": model.version + "+endtanks"},
            "domain": "hx.two_fluid core + study manifold/casing/tank heuristics",
            "uncalibrated": win.uncalibrated,
            "status": "fast-tier ranking + study heuristics; NOT VERIFIED",
            "objectives": win.objectives, "params": win.params,
-           "evidence_files": ["out/dac-fullpart/pareto.json", "out/dac-fullpart/winner.json",
-                              "out/dac-fullpart/dac-fullpart-winner.stl"]}
+           "evidence_files": ["out/dac-fullpart/pareto.json", "out/dac-fullpart/winner-v2.json",
+                              "out/dac-fullpart/dac-fullpart-v2-endtanks.stl"]}
     written = evidence.Ledger(ROOT / "out" / "evidence" / "ledger.jsonl").append(rec)
     print("ledger record", written["record_hash"][:12])
 

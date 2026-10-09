@@ -1,0 +1,48 @@
+# ACES spec: H70-T40 hydrogen precooler for a heavy-duty fuel-cell truck stop.
+# Sizing basis (stated assumptions, Aaron to confirm):
+#   - Vehicle: 250 kW fuel-cell truck, ~40 kg usable H2 (typical 250-350 kW class
+#     truck tanks 35-50 kg); target ~10 min fill -> 4.2 kg/min average H2.
+#   - Dispenser class H70-T40 (SAE J2601): H2 delivered at -40 C, peak 87.5 MPa.
+#   - Duty: 4.2 kg/min x cp~14.5 kJ/kgK x dT 60 K (293 -> 233 K) ~ 61 kW.
+#   - Cold side: 60 wt% MEG brine at -45 C inlet, 24:1 brine:H2 mass ratio carried
+#     from the verified 15 kW study (h2-precooler-700bar).
+#   - H2-side dP allowance 1 MPa (J2601 station budget); brine side 80 kPa.
+#   - Core cell FIXED at the CFD-measured geometry (3.115 mm, t/a 0.1646, LPBF 316L):
+#     per-geometry Forchheimer sweeps are mandatory (report S9); the search varies
+#     only core L/W/H and manifold sizing. FEA at 87.5 MPa carries over (S8).
+aces: 1
+domain: hx.two_fluid
+project: h2-precooler-250fc
+owner: Aaron
+company: CPA
+rd_activity: "RDTI core: TPMS heat-exchanger design-space characterisation (hypothesis -> experiment -> observation)"
+hypothesis: "A fixed-cell (CFD-measured) sheet-gyroid LPBF 316L core can precool 4.2 kg/min of 87.5 MPa hydrogen from 293 K to below 233 K (T40) with a -45 C 60% MEG brine loop, inside 0.6 x 0.35 x 0.35 m, within a 1 MPa H2-side pressure-drop allowance, at ~61 kW duty."
+requirements:
+  duty_W: 61000.0
+  hot:
+    fluid: Hydrogen
+    mass_flow_kg_s: 0.070
+    inlet_temperature_K: 293.15
+    inlet_pressure_Pa: 87500000.0
+    max_pressure_drop_Pa: 1000000.0
+  cold:
+    fluid: INCOMP::MEG[0.6]
+    mass_flow_kg_s: 1.68
+    inlet_temperature_K: 228.15
+    inlet_pressure_Pa: 400000.0
+    max_pressure_drop_Pa: 80000.0
+  material:
+    name: 316L LPBF as-built
+    thermal_conductivity_W_mK: 14.6
+    density_kg_m3: 7950.0
+    source: "AK Steel 316/316L product data bulletin: k ~14.6 W/mK at 100 degC, rho ~7950 kg/m3 (as-built LPBF)"
+  manufacturing:
+    process: lpbf
+    min_wall_m: 0.0004
+    min_channel_m: 0.0005
+    envelope_length_m: 0.6
+    envelope_width_m: 0.35
+    envelope_height_m: 0.35
+  tpms_types: [gyroid]
+  calibration_file: null
+notes: "Cell fixed at 3.115 mm / t-a 0.1646 (CFD-measured Forchheimer + Nu, FEA-verified at 87.5 MPa). Fast tier used for DUTY ranking only; dP from the measured law. Brine freezing margin ~3 K carried from the 15 kW study."
