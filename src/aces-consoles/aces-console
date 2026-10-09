@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# aces-console <key>: open one of the ACES consoles in the desktop's web-app window (Omarchy) or the default browser.
+# Keys are [server] entries in the aces configuration: grid_control, simlab_console, mlflow, webodm, video_studio.
+# The URL comes from /etc/aces/aces.toml overridden by ~/.config/aces/aces.toml; nothing is hard-coded here.
+set -euo pipefail
+key="${1:-}"
+if [[ -z "$key" || "$key" == "-h" || "$key" == "--help" ]]; then
+  echo "usage: aces-console <grid_control|simlab_console|mlflow|webodm|video_studio|...>" >&2
+  exit 2
+fi
+url="$(python3 -c 'import sys; from aces import config; print(config.load()["server"].get(sys.argv[1]) or "")' "$key")"
+if [[ -z "$url" ]]; then
+  msg="aces-console: no URL configured for server.$key; set it in ~/.config/aces/aces.toml"
+  echo "$msg" >&2
+  if command -v notify-send >/dev/null 2>&1; then notify-send "ACES" "$msg" || true; fi
+  exit 1
+fi
+if command -v omarchy-launch-webapp >/dev/null 2>&1; then
+  exec omarchy-launch-webapp "$url"
+fi
+exec xdg-open "$url"

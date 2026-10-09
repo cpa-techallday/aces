@@ -1,0 +1,44 @@
+aces-survey 0.1.0: survey and photogrammetry on ACES OS
+
+Stack
+  Plan     QGIS (Arch extra) + the FlyPath plugin (vendored; aces-survey-setup installs it per user): draw the survey
+           area, set altitude and overlap, export a DJI WPML KMZ for the DJI Fly app. 2D grid, corridor and orbit
+           missions, terrain follow, cross-hatch, battery splitting; semi-automatic (timed shot) or full-automatic
+           (one waypoint per photo) capture.
+  Fly      DJI Fly on the RC 2 or a phone. Consumer DJI aircraft (Mini 5 Pro, Mavic 4 Pro, Flip, Neo, Lito) have no
+           Mobile SDK (DJI "Product SDK Compatibility", read 2026-10-09), so no third-party app can fly them; the
+           aircraft's own waypoint engine flies the KMZ instead.
+  Process  WebODM (webodm.org, AGPL-3.0) with the ODX engine (AGPL-3.0): orthomosaic, DSM/DTM, point cloud, textured
+           mesh, Gaussian splats, ground control points. aces-webodm runs the pinned stack under Docker; the GPU node
+           (webodm/nodeodx:gpu) is used when nvidia-container-toolkit is installed.
+  Deliver  QGIS (contours, cut-and-fill volumes, map layouts) and CloudCompare (AUR package cloudcompare, optional) for
+           point-cloud cleaning, cloud-to-cloud comparison and volumes.
+
+Loading a mission into DJI Fly (the app has no import button)
+  1. In DJI Fly create any small waypoint mission and save it; note the name it gets (Waypoint_YYYYMMDD_HHMMSS).
+  2. Export the FlyPath KMZ and rename it to exactly that name.
+  3. Copy it over the dummy file:
+       RC 2 or Android phone:  Android/data/dji.go.v5/files/waypoint/  (USB file transfer; older installs use dji.go.v2)
+       iPhone:                 Files app > On My iPhone > DJI Fly > files > waypoint
+     The thumbnail in the app does not refresh; the route does.
+  4. Open DJI Fly > Waypoint > My Routes, check the route and the speed (the app sometimes resets the speed from the
+     KMZ), then fly.
+
+Camera for mapping (Mini 5 Pro)
+  50 MP, 4:3 (the full 8192x6144 frame, never 16:9), JPEG, a fixed shutter of 1/1000 s or faster with auto ISO, gimbal
+  set by the mission (-90 degrees). Semi-automatic capture uses the timed-shot interval; check the minimum interval
+  at 50 MP in your firmware before planning the speed, or use full-automatic capture. No RTK on the Mini series:
+  expect 1 to 3 m absolute error without ground control; tag GCPs in WebODM for survey-grade work.
+
+Commands
+  aces-survey-setup [--remove]   install FlyPath into the QGIS profile and create the WebODM tree (per user).
+                                 If the FlyPath menu is missing after the very first QGIS start, tick it once under
+                                 Plugins > Manage and Install Plugins > Installed; QGIS then keeps it enabled.
+  aces-webodm start|stop|status|open|update|logs|path
+  aces-console webodm            open the console URL from the aces configuration (server.webodm)
+
+Policy
+  The stack processes imagery the operator captured or is authorised to process. Imagery of other people's property
+  and of controlled sites follows the project class and the end-use gate (aces policy show). Flight rules are the
+  pilot's responsibility (CASA for Australia: registration and accreditation for any commercial flight, whatever the
+  aircraft weighs).

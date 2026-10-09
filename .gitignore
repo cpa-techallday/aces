@@ -1,0 +1,18 @@
+# build outputs of bin/build (the local [aces] repo, pacman and source caches, logs)
+repo/
+cache/
+logs/
+# source tarballs are packed from src/<pkg>/ on every build
+pkgbuilds/*/*-src.tar.gz
+# makepkg leftovers if a PKGBUILD is ever built outside the container
+pkgbuilds/*/src/
+pkgbuilds/*/pkg/
+pkgbuilds/*/*.pkg.tar.zst
+__pycache__/
+*.pyc
+# package signing: the public key is committed, the secret key and the GnuPG home never are
+keys/gnupg/
+keys/*.sec.asc
+keys/gen.params
+# Omarchy rehearsal VM downloads
+rehearsal/iso/

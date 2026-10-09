@@ -1,0 +1,20 @@
+# Maintainer: Carbon Project Australia
+# The seven ArtCraft apps (pinned rebuilds of the AUR -bin recipes in this repo) plus the status labels that the
+# launcher shows: upstream's own words (early alpha / in development), refreshed each release.
+pkgname=aces-creative
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="ACES creative suite: PhotoCraft, VectorCraft, FilmCraft, LightCraft, PdfCraft (printcraft), EffectCraft, DesignCraft with upstream status labels"
+arch=('any')
+url="file:///usr/share/doc/aces-creative"
+license=('MIT')
+depends=('photocraft-bin' 'vectorcraft-bin' 'filmcraft-bin' 'lightcraft-bin' 'printcraft-bin' 'effectcraft-bin' 'designcraft-bin')
+source=("$pkgname-src.tar.gz")
+sha256sums=('SKIP')
+
+package() {
+  cd "$srcdir/$pkgname"
+  install -Dm644 status.json "$pkgdir/usr/share/aces/creative/status.json"
+  install -Dm755 aces-creative-labels "$pkgdir/usr/bin/aces-creative-labels"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}

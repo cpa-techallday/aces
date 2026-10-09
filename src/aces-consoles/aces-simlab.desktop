@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=SIMLAB
+Comment=ACES simulation console: experiments, GPU leases, evidence and reports
+Exec=aces-console simlab_console
+Icon=applications-science
+Terminal=false
+Categories=Development;Science;Engineering;
+Keywords=ACES;simulation;experiment;evidence;

@@ -1,0 +1,140 @@
+{
+ "key": "survey-photogrammetry",
+ "domain": "Survey and photogrammetry: mission planning for DJI consumer aircraft, open photogrammetry engines, point-cloud and GIS deliverables (hand-verified 2026-10-09 against plugins.qgis.org, GitHub, archlinux.org and the AUR)",
+ "notes": "Capture constraint read from DJI's Product SDK Compatibility page on 2026-10-09: the Mini 5 Pro, Mavic 4 Pro, Flip, Neo, Neo 2, Avata 360, Lito X1 and Lito 1 have no Mobile SDK, so Dronelink, Litchi, Map Pilot Pro, DroneDeploy and Pix4Dcapture cannot fly them; missions are DJI WPML KMZ files flown by the aircraft's own waypoint engine and loaded by overwriting a dummy mission in the DJI Fly waypoint folder. WebODM decoupled from the OpenDroneMap organisation on 2026-04-06 and processes with its own ODX engine (both AGPL-3.0); OpenDroneMap's ODM continues separately. AGPL and GPL components run as containers, processes or user-profile plugins, never linked into aces-* code. Packaged as aces-survey (QGIS + FlyPath + pinned WebODM tree; CloudCompare, COLMAP and Meshroom optional until their AUR recipes are forked).",
+ "unverified_candidates": ["MicMac (IGN, CeCILL-B) packaging on Arch", "Potree web point-cloud viewer", "GLOMAP global SfM", "Nerfstudio and gsplat (Apache-2.0) for splat visualisation", "RTKLIB with a u-blox ZED-F9P as a GCP survey kit", "NodeODX on the rig as a remote processing node", "OpenDroneMap Desktop as an alternative GUI", "IPGP/waypoints_generator (DJI KML generator, Python)", "DJI Mini 5 Pro minimum timed-shot interval at 50 MP"],
+ "rows": [
+  {
+   "name": "QGIS",
+   "repo_or_url": "https://github.com/qgis/QGIS",
+   "pillar": "Survey: planning and deliverables",
+   "adds": "Desktop GIS that hosts the FlyPath planner and produces the deliverables: orthomosaic styling, contours, cut-and-fill volumes, map layouts",
+   "licence": "GPL-2.0-or-later",
+   "verified_via": "arch",
+   "packaging": "arch:extra 4.2.2",
+   "fit": "day-one",
+   "gotcha": "GPL: separate process; plugins live in the user profile (QGIS 4 still uses the QGIS3 profile folder)"
+  },
+  {
+   "name": "FlyPath",
+   "repo_or_url": "https://github.com/dronnix-io/FlyPath",
+   "pillar": "Survey: mission planning",
+   "adds": "QGIS plugin that exports DJI WPML KMZ missions for DJI Fly: 2D grid, corridor and orbit, terrain follow, cross-hatch, battery splitting, semi-automatic (timed shot) or full-automatic (waypoint per photo) capture; Mini 5 Pro community-verified",
+   "licence": "GPL-3.0 (plugin); Apache-2.0 flypath_engine (NOTICE: Copyright 2026 Dronnix)",
+   "verified_via": "web",
+   "packaging": "qgis plugin zip 3.0.0 (plugins.qgis.org, 6 Oct 2026; sha256 2c9f6046…5579), vendored in aces-survey and installed per user",
+   "fit": "day-one",
+   "gotcha": "needs python-shapely and python-pyproj; DJI Fly has no import button, so the KMZ overwrites a dummy mission in the app's waypoint folder and the app may reset the flight speed"
+  },
+  {
+   "name": "WebODM",
+   "repo_or_url": "https://github.com/WebODM/WebODM",
+   "pillar": "Survey: processing",
+   "adds": "Web console over the ODX engine: orthomosaics, DSM/DTM, point clouds, textured meshes, Gaussian splats, ground control points, task queue and processing nodes",
+   "licence": "AGPL-3.0",
+   "verified_via": "gh",
+   "packaging": "docker (webodm/webodm_webapp, webodm/webodm_db, redis, webodm/nodeodx); release tree v3.3.0 (5 Sep 2026, sha256 c2d72ca2…4ae6) pinned in aces-survey",
+   "fit": "day-one",
+   "gotcha": "decoupled from OpenDroneMap on 2026-04-06 (same name, different organisation); the GPU node needs nvidia-container-toolkit; webodm.sh only adds the NVIDIA compose file when GPU_NVIDIA=true and its own detection is Linux-only"
+  },
+  {
+   "name": "ODX",
+   "repo_or_url": "https://github.com/WebODM/ODX",
+   "pillar": "Survey: processing engine",
+   "adds": "Photogrammetry engine behind WebODM: fork of ODM with OpenSfM 1.0, GPU feature matching, RTX 50 series support and checkpoints",
+   "licence": "AGPL-3.0",
+   "verified_via": "gh",
+   "packaging": "docker webodm/nodeodx and webodm/nodeodx:gpu (pulled at run time)",
+   "fit": "day-one",
+   "gotcha": "no Arch package; usable from the CLI with docker run as well"
+  },
+  {
+   "name": "OpenDroneMap ODM",
+   "repo_or_url": "https://github.com/OpenDroneMap/ODM",
+   "pillar": "Survey: processing engine (alternative)",
+   "adds": "The original command-line photogrammetry toolkit, with an OpenDroneMap Desktop GUI from opendronemap.org",
+   "licence": "AGPL-3.0",
+   "verified_via": "gh",
+   "packaging": "docker opendronemap/odm (v3.6.2)",
+   "fit": "optional",
+   "gotcha": "separate project from WebODM since 2026-04; attach NodeODM to WebODM as another processing node if ever needed"
+  },
+  {
+   "name": "CloudCompare",
+   "repo_or_url": "https://github.com/CloudCompare/CloudCompare",
+   "pillar": "Survey: deliverables",
+   "adds": "Point-cloud and mesh processing: cleaning, cloud-to-cloud and cloud-to-mesh distances, volumes, registration, sections",
+   "licence": "GPL-2.0-or-later",
+   "verified_via": "aur",
+   "packaging": "aur cloudcompare 2.13.2-4 and cloudcompare-git (bartus); upstream portable Windows 7z",
+   "fit": "day-one (optional until the recipe is forked)",
+   "gotcha": "AUR only; 2.14 in beta; GPL separate process"
+  },
+  {
+   "name": "COLMAP",
+   "repo_or_url": "https://github.com/colmap/colmap",
+   "pillar": "Survey: structure-from-motion engine (research)",
+   "adds": "SfM and MVS pipeline with full control of matching and bundle adjustment; the usual front end for Gaussian splatting",
+   "licence": "BSD-3-Clause",
+   "verified_via": "aur",
+   "packaging": "aur colmap 4.2.0-4 (bartus)",
+   "fit": "optional",
+   "gotcha": "CUDA build; AUR only"
+  },
+  {
+   "name": "Meshroom",
+   "repo_or_url": "https://github.com/alicevision/Meshroom",
+   "pillar": "Survey: 3D reconstruction",
+   "adds": "AliceVision node graph for textured 3D models of buildings and objects",
+   "licence": "MPL-2.0",
+   "verified_via": "aur",
+   "packaging": "aur meshroom 2025.1.8-1 (sfn)",
+   "fit": "optional",
+   "gotcha": "depth maps need CUDA; AUR only"
+  },
+  {
+   "name": "DroneRoute",
+   "repo_or_url": "https://github.com/fcsonline/droneroute",
+   "pillar": "Survey: mission planning (alternative)",
+   "adds": "Self-hosted web mission planner with a grid-survey template, WPML KMZ export and import, and a CLI that pushes a KMZ to a USB-connected DJI RC over adb",
+   "licence": "MIT",
+   "verified_via": "gh",
+   "packaging": "source / docker fcsonline/droneroute (0.7.2, Jul 2026)",
+   "fit": "optional",
+   "gotcha": "lists Mini 4 Pro, not yet the Mini 5 Pro; same KMZ format"
+  },
+  {
+   "name": "YMapper",
+   "repo_or_url": "https://github.com/YLabs-FPV/YMapper",
+   "pillar": "Survey: mission planning (alternative)",
+   "adds": "Cross-platform (desktop and Android) survey-mission generator for DJI Fly and Litchi, formerly DJI-Mapper",
+   "licence": "MIT",
+   "verified_via": "gh",
+   "packaging": "source (Flutter) and GitHub releases",
+   "fit": "optional",
+   "gotcha": "no Arch package"
+  },
+  {
+   "name": "NVIDIA Container Toolkit",
+   "repo_or_url": "https://github.com/NVIDIA/nvidia-container-toolkit",
+   "pillar": "Survey: GPU processing node runtime",
+   "adds": "Docker nvidia runtime that webodm/nodeodx:gpu needs",
+   "licence": "Apache-2.0",
+   "verified_via": "arch",
+   "packaging": "arch:extra 1.20.1",
+   "fit": "day-one",
+   "gotcha": "optional dependency of aces-survey; without it the stack falls back to the CPU node"
+  },
+  {
+   "name": "Shapely and pyproj",
+   "repo_or_url": "https://github.com/shapely/shapely",
+   "pillar": "Survey: FlyPath dependencies",
+   "adds": "Geometry and projection libraries the FlyPath engine imports",
+   "licence": "BSD-3-Clause (shapely), MIT (pyproj)",
+   "verified_via": "arch",
+   "packaging": "arch:extra python-shapely 2.1.2, python-pyproj 3.8.0",
+   "fit": "day-one",
+   "gotcha": "QGIS on Arch uses the system Python, so these must be system packages"
+  }
+ ]
+}

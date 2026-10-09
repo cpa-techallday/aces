@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=WebODM
+Comment=ACES survey processing: WebODM with the ODX engine (orthomosaics, elevation models, point clouds, meshes)
+Exec=aces-webodm open
+Icon=applications-science
+Terminal=false
+Categories=Science;Geography;Engineering;
+Keywords=ACES;survey;photogrammetry;drone;orthomosaic;point cloud;

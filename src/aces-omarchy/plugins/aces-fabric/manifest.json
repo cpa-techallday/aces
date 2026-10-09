@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "aces-fabric",
+  "name": "ACES Fabric",
+  "version": "0.1.0",
+  "author": "Carbon Project Australia",
+  "license": "MIT",
+  "description": "The ACES Server at a glance: active GPU mode, per-card load and the lanes this desktop can use, read from the manifest that `aces fabric refresh` writes. Read-only; mode switching stays in GRID CONTROL.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "ACES Fabric",
+    "description": "Server mode, GPU load and lanes from ~/.config/aces/fabric.json. Middle-click refreshes.",
+    "category": "System",
+    "defaultSection": "right",
+    "allowMultiple": false,
+    "defaults": {},
+    "schema": []
+  }
+}

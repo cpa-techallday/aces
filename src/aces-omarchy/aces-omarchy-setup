@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Per-user Omarchy integration for ACES: hooks, agent skill symlinks and the aces-fabric shell plugin.
+# Idempotent; re-run after upgrades (the post-update hook does). Writes only under $HOME. `--remove` undoes it.
+# Hard line, same as Omarchy's own: /usr/share is read-only, ~/.config is yours. Existing non-symlink files are kept.
+set -euo pipefail
+share=/usr/share/aces/omarchy
+cfg="${XDG_CONFIG_HOME:-$HOME/.config}/omarchy"
+remove=0
+if [[ "${1:-}" == "--remove" ]]; then remove=1; fi
+
+link() {  # link <target> <linkpath>
+  local t="$1" l="$2"
+  if (( remove )); then
+    if [[ -L "$l" ]]; then rm -f "$l"; echo "removed $l"; fi
+    return 0
+  fi
+  mkdir -p "$(dirname "$l")"
+  if [[ -e "$l" && ! -L "$l" ]]; then echo "kept existing $l (not a symlink)"; return 0; fi
+  ln -sfn "$t" "$l"
+  echo "linked $l -> $t"
+}
+
+# Hooks: ~/.config/omarchy/hooks/<event>.d/<script>
+for d in "$share"/hooks/*.d; do
+  [[ -d "$d" ]] || continue
+  ev="$(basename "$d")"
+  for h in "$d"/*; do
+    [[ -f "$h" ]] || continue
+    link "$h" "$cfg/hooks/$ev/$(basename "$h")"
+  done
+done
+
+# Agent skills: the same directories Omarchy symlinks its own skill into, only where that agent's home exists.
+for base in "$HOME/.claude" "$HOME/.codex" "$HOME/.pi/agent" "$HOME/.agents"; do
+  [[ -d "$base" ]] || continue
+  link "$share/skills/aces-engineering" "$base/skills/aces-engineering"
+done
+
+# Shell plugin: third-party plugins land disabled; enable aces-fabric in the Omarchy plugin menu (or `omarchy plugin add --yes`).
+if [[ -d "$share/plugins/aces-fabric" ]]; then
+  link "$share/plugins/aces-fabric" "$cfg/plugins/aces-fabric"
+  if (( ! remove )) && command -v omarchy >/dev/null 2>&1; then
+    if ! omarchy plugin validate "$cfg/plugins/aces-fabric"; then
+      echo "aces-omarchy-setup: omarchy plugin validate reported problems for aces-fabric (see above); the plugin stays disabled"
+    fi
+  fi
+fi
+
+if (( remove )); then echo "aces-omarchy-setup: removed"; else echo "aces-omarchy-setup: done"; fi

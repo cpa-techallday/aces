@@ -1,0 +1,25 @@
+# ACES OS defaults (owned by the aces-base package). Override in ~/.config/aces/aces.toml.
+
+[server]
+name = "rig"
+host = "192.168.1.65"
+grid_control = "http://192.168.1.65:3200"
+rig_state = "http://192.168.1.65:8010/mcp"
+# simlab MCP is on 8022 (8020 on the rig serves the Univer workbench; verified 2026-10-09 against docs/UI-INTEGRATION.md in the aces repo)
+simlab_mcp = "http://192.168.1.65:8022/mcp"
+# SIMLAB console runs on the rig (verified 2026-10-09: "SIMLAB · Fleet", JSON under /api/summary, /api/experiments, /api/registry)
+simlab_console = "http://192.168.1.65:8032"
+mlflow = "http://192.168.1.65:5000"
+# WebODM (aces-survey) runs on the desktop itself; aces-webodm reads this URL for its port.
+webodm = "http://127.0.0.1:8090"
+timeout_s = 4
+
+[fabric]
+max_age_s = 900
+
+# Local lanes on this machine (none by default). Example:
+# [lanes."model/local"]
+# kind = "model"
+# endpoint = "http://127.0.0.1:11434/v1"
+# model = "gpt-oss:20b"
+# class = "local"

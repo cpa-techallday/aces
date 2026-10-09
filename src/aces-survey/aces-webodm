@@ -1,0 +1,157 @@
+#!/usr/bin/env bash
+# aces-webodm: run the pinned WebODM stack (ODX engine) for this user under Docker.
+#
+#   aces-webodm start [--cpu] [--port N]   start WebODM; the NVIDIA GPU processing node is used when nvidia-smi and
+#                                          the Docker nvidia runtime (nvidia-container-toolkit) are both present
+#   aces-webodm stop                        stop the containers (media and database stay in the docker volumes)
+#   aces-webodm status                      containers, console URL and whether the web app answers
+#   aces-webodm open                        start if needed, then open the console (Omarchy web-app window or browser)
+#   aces-webodm update                      pull newer images for the pinned stack and restart
+#   aces-webodm logs                        follow the web app log
+#   aces-webodm path                        print the user tree (run ./webodm.sh there for anything else)
+#
+# The vendored tree /usr/share/aces-survey/webodm is copied to $XDG_DATA_HOME/aces/webodm on first start, and again
+# when the package ships a newer WebODM (the old tree is kept as webodm.prev). Nothing persistent lives in the tree:
+# media and the database are the docker volumes appmedia and dbdata. The console URL is server.webodm in the aces
+# configuration (aces-base), default http://127.0.0.1:8090; --port overrides it for one start.
+set -euo pipefail
+share=/usr/share/aces-survey/webodm
+home="${XDG_DATA_HOME:-$HOME/.local/share}/aces/webodm"
+vendored="$(cat /usr/share/aces-survey/WEBODM_VERSION 2>/dev/null || echo unknown)"
+
+usage() { sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; }
+
+config_url() {  # server.webodm from the aces configuration; empty when unset or aces-base is missing
+  python3 - <<'PY' 2>/dev/null || true
+try:
+    from aces import config
+    print(config.load().get("server", {}).get("webodm") or "")
+except Exception:
+    print("")
+PY
+}
+
+cmd="${1:-}"
+if [[ $# -gt 0 ]]; then shift; fi
+cpu=false
+port=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --cpu) cpu=true ;;
+    --port) port="${2:-}"; shift ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "aces-webodm: unknown option $1" >&2; usage >&2; exit 2 ;;
+  esac
+  shift
+done
+
+url="$(config_url)"
+url="${url:-http://127.0.0.1:8090}"
+if [[ -n "$port" ]]; then
+  url="http://127.0.0.1:$port"
+else
+  port="${url##*:}"; port="${port%%/*}"
+  [[ "$port" =~ ^[0-9]+$ ]] || port=8000
+fi
+
+need_docker() {
+  command -v docker >/dev/null 2>&1 || { echo "aces-webodm: docker is not installed (pacman -S docker docker-compose)" >&2; exit 1; }
+  docker info >/dev/null 2>&1 || { echo "aces-webodm: the Docker daemon is not reachable: sudo systemctl enable --now docker; sudo usermod -aG docker $USER, then log in again" >&2; exit 1; }
+}
+
+gpu_available() {
+  command -v nvidia-smi >/dev/null 2>&1 || return 1
+  nvidia-smi -L >/dev/null 2>&1 || return 1
+  docker info --format '{{json .Runtimes}}' 2>/dev/null | grep -q nvidia
+}
+
+ensure_tree() {
+  local have
+  have="$(cat "$home/.aces-vendored" 2>/dev/null || true)"
+  if [[ ! -d "$home" ]]; then
+    install -dm755 "$(dirname "$home")"
+    cp -a "$share" "$home"
+    printf '%s\n' "$vendored" > "$home/.aces-vendored"
+    echo "aces-webodm: WebODM $vendored tree created at $home"
+  elif [[ "$have" != "$vendored" ]]; then
+    rm -rf "$home.prev"
+    mv "$home" "$home.prev"
+    cp -a "$share" "$home"
+    printf '%s\n' "$vendored" > "$home/.aces-vendored"
+    echo "aces-webodm: tree updated to WebODM $vendored (previous tree kept at $home.prev)"
+  fi
+}
+
+select_gpu() {  # webodm.sh adds the NVIDIA compose file whenever GPU_NVIDIA=true; its own detection is Linux-only
+  if [[ "$cpu" == false ]] && gpu_available; then
+    export GPU_NVIDIA=true
+    echo "aces-webodm: NVIDIA GPU and Docker nvidia runtime found: GPU processing node (webodm/nodeodx:gpu)"
+  else
+    export GPU_NVIDIA=false
+    echo "aces-webodm: CPU processing node (no NVIDIA GPU, no nvidia-container-toolkit runtime, or --cpu)"
+  fi
+}
+
+compose_images() {  # images the pinned stack uses: the main file, the default node, the GPU node when selected
+  local files=("$home/docker-compose.yml" "$home/docker-compose.nodeodm.yml")
+  if [[ "${GPU_NVIDIA:-false}" == true ]]; then files+=("$home/docker-compose.nodeodm.gpu.nvidia.yml"); fi
+  grep -h -E '^\s*image:' "${files[@]}" | awk '{print $2}' | sort -u
+}
+
+start() {
+  need_docker; ensure_tree; select_gpu
+  cd "$home"
+  ./webodm.sh start --port "$port" --detached
+  echo "aces-webodm: console at $url (the first start pulls the images and runs migrations; allow a minute)"
+}
+
+stop() {
+  need_docker
+  if [[ ! -d "$home" ]]; then echo "aces-webodm: nothing to stop (no tree at $home)"; return 0; fi
+  cd "$home"
+  ./webodm.sh stop
+}
+
+status() {
+  need_docker
+  docker ps --filter 'name=^(webapp|worker|db|broker|node-odx-1)$' \
+    --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
+  local code
+  code="$(curl -s -o /dev/null -w '%{http_code}' -m 5 "$url/" 2>/dev/null || true)"
+  echo "console $url -> HTTP ${code:-000} (tree: $home, WebODM $(cat "$home/.aces-vendored" 2>/dev/null || echo 'not created yet'))"
+}
+
+open_console() {
+  if ! curl -s -o /dev/null -m 3 "$url/" 2>/dev/null; then
+    start
+    for _ in $(seq 1 45); do
+      if curl -s -o /dev/null -m 3 "$url/" 2>/dev/null; then break; fi
+      sleep 2
+    done
+  fi
+  if command -v omarchy-launch-webapp >/dev/null 2>&1; then exec omarchy-launch-webapp "$url"; fi
+  exec xdg-open "$url"
+}
+
+update() {
+  need_docker; ensure_tree; select_gpu
+  cd "$home"
+  ./webodm.sh stop || true
+  compose_images | while read -r img; do
+    if [[ -n "$img" ]]; then docker pull "$img"; fi
+  done
+  ./webodm.sh start --port "$port" --detached
+  echo "aces-webodm: images refreshed for the pinned WebODM $vendored tree; console at $url"
+}
+
+case "$cmd" in
+  start) start ;;
+  stop) stop ;;
+  status) status ;;
+  open) open_console ;;
+  update) update ;;
+  logs) need_docker; exec docker logs -f webapp ;;
+  path) echo "$home" ;;
+  ""|-h|--help) usage ;;
+  *) echo "aces-webodm: unknown command $cmd" >&2; usage >&2; exit 2 ;;
+esac

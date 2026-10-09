@@ -1,0 +1,7 @@
+{
+ "mode": "trial",
+ "default_project_class": "personal",
+ "classes": ["personal", "open", "commercial", "sovereign", "controlled"],
+ "end_use_gate": "No component is restricted while a project is personal, education or research use with no contract, customer, paid deliverable or defence end use. When a project changes class, the terms of every component recorded against its runs are re-read at that moment.",
+ "distribution_policy": "The audited licence rules in research/INTEGRATIONS.md apply only to what ACES ships to a customer; nothing is distributed from a trial-mode installation."
+}

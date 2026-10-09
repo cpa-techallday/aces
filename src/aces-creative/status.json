@@ -1,0 +1,12 @@
+{
+ "_source": "getartcraft.com/apps and the storytold GitHub READMEs, read 2026-10-08; refresh each release",
+ "apps": {
+  "photocraft": {"name": "PhotoCraft", "status": "early alpha", "version": "0.3.0", "licence": "MIT OR Apache-2.0", "desktop": "photocraft"},
+  "vectorcraft": {"name": "VectorCraft", "status": "in development", "version": "0.4.0", "licence": "MIT OR Apache-2.0", "desktop": "vectorcraft"},
+  "filmcraft": {"name": "FilmCraft", "status": "in development", "version": "0.2.1", "licence": "MIT OR Apache-2.0", "desktop": "filmcraft"},
+  "lightcraft": {"name": "LightCraft", "status": "in development", "version": "0.2.1", "licence": "MIT OR Apache-2.0", "desktop": "lightcraft"},
+  "printcraft": {"name": "PdfCraft (published as PrintCraft 0.2.1)", "status": "early alpha", "version": "0.2.1", "licence": "MIT OR Apache-2.0", "desktop": "printcraft"},
+  "effectcraft": {"name": "EffectCraft", "status": "in development", "version": "0.4.0", "licence": "MIT OR Apache-2.0", "desktop": "effectcraft"},
+  "designcraft": {"name": "DesignCraft", "status": "in development", "version": "0.2.1", "licence": "MIT OR Apache-2.0", "desktop": "designcraft"}
+ }
+}

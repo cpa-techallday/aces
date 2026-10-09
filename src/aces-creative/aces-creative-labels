@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Write per-user launcher overrides that show each ArtCraft app's upstream status in its Comment line.
+# Run once per user (the aces-omarchy post-boot hook runs it); safe to re-run. Removes nothing upstream installs.
+set -euo pipefail
+status="/usr/share/aces/creative/status.json"
+out="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+mkdir -p "$out"
+python3 - "$status" "$out" <<'EOF'
+import json, os, sys, glob
+status, out = sys.argv[1], sys.argv[2]
+apps = json.load(open(status, encoding="utf-8"))["apps"]
+written = 0
+for key, app in apps.items():
+    desktop = app.get("desktop") or key
+    src = None
+    for cand in glob.glob(f"/usr/share/applications/*{desktop}*.desktop"):
+        src = cand
+        break
+    if not src:
+        continue
+    text = open(src, encoding="utf-8").read().splitlines()
+    label = f"{app['name']} ({app['status']}, v{app['version']})"
+    seen_comment = False
+    new = []
+    for line in text:
+        if line.startswith("Comment="):
+            new.append(f"Comment={label}")
+            seen_comment = True
+        else:
+            new.append(line)
+    if not seen_comment:
+        for i, line in enumerate(new):
+            if line.startswith("[Desktop Entry]"):
+                new.insert(i + 1, f"Comment={label}")
+                break
+    dst = os.path.join(out, os.path.basename(src))
+    with open(dst, "w", encoding="utf-8") as fh:
+        fh.write("\n".join(new) + "\n")
+    written += 1
+print(f"aces-creative-labels: {written} launcher entries labelled in {out}")
+EOF

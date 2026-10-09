@@ -1,0 +1,48 @@
+# Maintainer: Carbon Project Australia
+# The aces command line and the /etc/aces defaults. Sources are packed from src/aces-base by bin/build.
+pkgname=aces-base
+pkgver=0.1.0
+pkgrel=2
+pkgdesc="ACES OS base: the aces CLI (fabric manifest, policy and ledger, projects, doctor, lane tests) and /etc/aces defaults"
+arch=('any')
+url="file:///usr/share/doc/aces-base"
+license=('MIT')
+depends=('python>=3.11')
+makedepends=('python-build' 'python-installer' 'python-wheel' 'python-setuptools')
+backup=('etc/aces/aces.toml' 'etc/aces/policy.json' 'etc/aces/modes.json')
+source=("$pkgname-src.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "$srcdir/$pkgname"
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd "$srcdir/$pkgname"
+  # the CLI must import and the ledger must round-trip without touching the real home directory
+  PYTHONPATH="$srcdir/$pkgname" ACES_ETC="$srcdir/$pkgname/etc" ACES_USER_CONFIG="$srcdir/t/cfg" ACES_STATE="$srcdir/t/state" ACES_WORK="$srcdir/t/work" \
+    python - <<'EOF'
+import os
+from aces import cli, ledger, policy, project
+assert cli.main(["policy", "show"]) == 0
+assert cli.main(["project", "new", "check-project"]) == 0
+assert cli.main(["project", "add-component", "check-project", "example-component"]) == 0
+assert cli.main(["project", "classify", "check-project", "commercial", "--reason", "packaging check"]) == 0
+assert cli.main(["policy", "override", "example-component", "--reason", "packaging check"]) == 0
+ok, n, msg = ledger.verify()
+assert ok and n == 3, (ok, n, msg)
+assert cli.main(["doctor", "--offline"]) == 0
+print("aces self-check passed:", n, "ledger entries")
+EOF
+}
+
+package() {
+  cd "$srcdir/$pkgname"
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -Dm644 etc/aces.toml "$pkgdir/etc/aces/aces.toml"
+  install -Dm644 etc/policy.json "$pkgdir/etc/aces/policy.json"
+  install -Dm644 etc/modes.json "$pkgdir/etc/aces/modes.json"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

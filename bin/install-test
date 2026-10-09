@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# Install-test the built packages in a clean Arch container: enable the [aces] repo, install the named packages,
+# exercise the CLI, and dry-run dependency resolution for the big meta-packages (no multi-GB downloads).
+# Usage: bin/install-test [pkg ...]   (default: aces-base aces-creative aces-consoles)
+set -euo pipefail
+here="$(cd "$(dirname "$0")/.." && pwd)"
+hostpath() { if command -v cygpath >/dev/null 2>&1; then cygpath -w "$1"; else printf '%s' "$1"; fi; }
+repo="$(hostpath "$here/repo")"
+pkgs="${*:-aces-base aces-creative aces-consoles aces-omarchy}"
+export MSYS_NO_PATHCONV=1
+docker run --rm -v "$repo:/repo:ro" -e PKGS="$pkgs" archlinux:base bash -euo pipefail -c '
+printf "\n[aces]\nSigLevel = Optional TrustAll\nServer = file:///repo/x86_64\n" >> /etc/pacman.conf
+pacman -Sy --noconfirm >/dev/null
+echo "== [aces] repo contents"; pacman -Sl aces
+echo "== install: $PKGS"
+pacman -S --noconfirm $PKGS >/dev/null
+echo "== aces --version"; aces --version
+echo "== aces doctor --offline"; aces doctor --offline || true
+echo "== aces policy show"; aces policy show
+echo "== project + ledger"
+aces project new demo --hypothesis "install test"
+aces project add-component demo fluidx3d
+aces project classify demo commercial --reason "install test end-use gate"
+aces policy override fluidx3d --reason "install test"
+aces ledger verify
+aces ledger show
+echo "== fabric (the server is not reachable from this container; the manifest must say so, not invent lanes)"
+aces fabric refresh || true
+aces lane list || true
+echo "== creative labels"; aces-creative-labels; ls /root/.local/share/applications 2>/dev/null || true
+echo "== desktop entries"; ls /usr/share/applications | grep -i -E "aces|craft" || true
+echo "== omarchy setup (no Omarchy in the container: hooks and skill links only)"
+mkdir -p /root/.claude /root/.agents
+aces-omarchy-setup || true
+ls -la /root/.config/omarchy/hooks/*.d /root/.claude/skills /root/.agents/skills 2>/dev/null || true
+aces doctor --offline | grep -E "^(skills|omarchy)" || true
+aces-omarchy-setup --remove || true
+echo "== survey (no docker or QGIS in the container: install without deps, setup, help, status)"
+pacman -Sdd --noconfirm aces-survey >/dev/null
+ls /usr/share/aces-survey; cat /usr/share/aces-survey/WEBODM_VERSION; ls /usr/share/aces-survey/webodm | head -5
+aces-survey-setup || true
+ls /root/.local/share/QGIS/QGIS3/profiles/default/python/plugins/FlyPath | head -3; cat /root/.local/share/QGIS/QGIS3/profiles/default/QGIS3.ini
+ls /root/.local/share/aces/webodm | head -3
+aces-webodm --help | head -3
+aces-webodm status || true
+aces-survey-setup --remove || true
+cat /usr/share/licenses/aces-survey/LICENSES.md | head -5
+pacman -Rdd --noconfirm aces-survey >/dev/null   # so the dry-runs below resolve aces-survey and its deps from scratch
+echo "== dependency dry-run for the meta-packages (resolution only, nothing downloaded)"
+for m in aces-field aces-survey aces-os; do
+  if pacman -Sp "$m" >/tmp/out 2>/tmp/err; then echo "$m: resolves, $(wc -l </tmp/out) packages in the transaction"; else echo "$m: FAILS"; cat /tmp/err; fi
+done
+'

@@ -1,0 +1,61 @@
+{
+ "_comment": "GRID CONTROL mode -> lanes. Endpoints were discovered on the rig on 2026-10-09 by probing /v1/models (GRID CONTROL does not publish them); null means not deployed or not yet discovered, and aces fabric reports such lanes as 'no endpoint' rather than inventing one. Lanes under _always are offered in every mode. Mode switching is a human act in GRID CONTROL.",
+ "_always": {
+  "lanes": [
+   {"id": "embed/qwen3", "kind": "embed", "gpus": [], "model": "Qwen/Qwen3-Embedding-0.6B", "endpoint": "http://192.168.1.65:8005/v1", "note": "CPU-resident embedding server (owned_by embed-cpu); observed in sim-lab-4, assumed mode-independent"}
+  ]
+ },
+ "aces-work": {
+  "label": "ACES work: GPUs 0-3 simulation, GPUs 4-7 DeepSeek-V4-Flash-0731",
+  "lanes": [
+   {"id": "sim/pool", "kind": "sim", "gpus": [0, 1, 2, 3], "endpoint": null},
+   {"id": "model/coder", "kind": "model", "gpus": [4, 5, 6, 7], "model": "deepseek-v4-flash-0731", "endpoint": null, "note": "mode not deployed yet"}
+  ]
+ },
+ "aces-studio": {
+  "label": "ACES studio: GPUs 0-3 LTX-2.5 workers, GPUs 4-7 DeepSeek-V4-Flash-0731",
+  "lanes": [
+   {"id": "video/ltx", "kind": "video", "gpus": [0, 1, 2, 3], "endpoint": null},
+   {"id": "model/coder", "kind": "model", "gpus": [4, 5, 6, 7], "model": "deepseek-v4-flash-0731", "endpoint": null, "note": "mode not deployed yet"}
+  ]
+ },
+ "sim-lab-4": {
+  "label": "Sim Lab 4: GPUs 0-3 simulation; GLM-Flash on 4,5 + GPT-OSS on 7; 6 rests",
+  "lanes": [
+   {"id": "sim/pool", "kind": "sim", "gpus": [0, 1, 2, 3], "endpoint": null},
+   {"id": "model/glm-flash", "kind": "model", "gpus": [4, 5], "model": "QuantTrio/GLM-4.7-Flash-AWQ", "endpoint": "http://192.168.1.65:8016/v1", "note": "first of two GLM-4.7-Flash instances on GPUs 4-5; per-instance GPU not published"},
+   {"id": "model/glm-flash-2", "kind": "model", "gpus": [4, 5], "model": "QuantTrio/GLM-4.7-Flash-AWQ", "endpoint": "http://192.168.1.65:8017/v1", "note": "second GLM-4.7-Flash instance"},
+   {"id": "model/gpt-oss", "kind": "model", "gpus": [7], "model": "openai/gpt-oss-20b", "endpoint": "http://192.168.1.65:8018/v1"}
+  ]
+ },
+ "sim-lab-8": {
+  "label": "Sim Lab 8: all GPUs simulation; no local LLM",
+  "lanes": [
+   {"id": "sim/pool", "kind": "sim", "gpus": [0, 1, 2, 3, 4, 5, 6, 7], "endpoint": null}
+  ]
+ },
+ "general-flagship": {
+  "label": "General Flagship: GLM-5.2 ik_llama.cpp GPU offload on cards 0-5+7",
+  "lanes": [
+   {"id": "model/flagship", "kind": "model", "gpus": [0, 1, 2, 3, 4, 5, 7], "model": "glm-5.2", "endpoint": null, "note": "endpoint not discovered in this mode yet"}
+  ]
+ },
+ "video-studio": {
+  "label": "Video Studio: LTX-2.5 x6 + editor + director",
+  "lanes": [
+   {"id": "video/ltx", "kind": "video", "gpus": [0, 1, 2, 3, 4, 5], "endpoint": null, "note": "endpoint not discovered in this mode yet"}
+  ]
+ },
+ "general-fleet-v2": {
+  "label": "General Fleet v2: 2x 122B PP2 + 2x GLM-4.7-Flash + GPT-OSS-20B",
+  "lanes": [
+   {"id": "model/fleet", "kind": "model", "gpus": [0, 1, 2, 3, 4, 5, 6, 7], "model": null, "endpoint": null, "note": "endpoints not discovered in this mode yet"}
+  ]
+ },
+ "batch-overnight": {
+  "label": "Batch Overnight: 8 throughput workers (ports 8040-8047 per GRID CONTROL)",
+  "lanes": [
+   {"id": "model/batch", "kind": "model", "gpus": [0, 1, 2, 3, 4, 5, 6, 7], "model": null, "endpoint": null, "note": "GRID CONTROL lists workers on 8040-8047; not probed in this mode yet"}
+  ]
+ }
+}

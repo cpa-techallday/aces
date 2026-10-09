@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=GRID CONTROL
+Comment=ACES Server GPU modes and status. Mode switching is a human act done here, never by an agent.
+Exec=aces-console grid_control
+Icon=utilities-system-monitor
+Terminal=false
+Categories=Development;Science;Engineering;
+Keywords=ACES;GPU;rig;modes;lanes;

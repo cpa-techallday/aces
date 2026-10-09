@@ -1,0 +1,21 @@
+# Maintainer: Carbon Project Australia
+# Meta-package: everything an ACES OS desktop installs. Members that are not packaged yet are listed as optional
+# so the meta-package resolves honestly; they move into depends as they land.
+pkgname=aces-os
+pkgver=0.1.0
+pkgrel=2
+pkgdesc="ACES OS: the ACES computational-engineering platform on Omarchy (meta-package)"
+arch=('any')
+url="file:///usr/share/doc/aces-os"
+license=('MIT')
+depends=('aces-base' 'aces-creative' 'aces-field' 'aces-consoles' 'aces-omarchy' 'aces-survey')
+optdepends=('aces-engineering: simlab client and gendesign over cudax-sim-runtime (not packaged yet)'
+            'aces-voxel: the voxel kernel standard (not packaged yet)'
+            'aces-studio: ACES Video Studio client and LoRA registry (not packaged yet)'
+            'omarchy: the desktop this is designed for; the engine also runs without it')
+
+package() {
+  install -dm755 "$pkgdir/usr/share/doc/$pkgname"
+  printf '%s\n' "ACES OS $pkgver" "Members: ${depends[*]}" "Pending: aces-engineering aces-voxel aces-studio" \
+    "Policy mode and project classes: /etc/aces (aces policy show)" > "$pkgdir/usr/share/doc/$pkgname/README"
+}

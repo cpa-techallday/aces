@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# ACES post-boot hook: refresh the lane manifest from the ACES Server and label the creative launchers.
+# Runs in the background and never blocks the session; a server that is down just leaves the manifest stale.
+(
+  if command -v aces >/dev/null 2>&1; then aces fabric refresh >/dev/null 2>&1 || true; fi
+  if command -v aces-creative-labels >/dev/null 2>&1; then aces-creative-labels >/dev/null 2>&1 || true; fi
+) &

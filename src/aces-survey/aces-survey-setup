@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# aces-survey-setup [--remove]: per-user setup for the ACES survey stack.
+#   installs the vendored FlyPath plugin into the QGIS default profile and enables it (QGIS3.ini [PythonPlugins]),
+#   and creates the WebODM user tree without touching Docker. --remove deletes the plugin and the tree; the docker
+#   volumes (appmedia, dbdata) are left alone.
+set -euo pipefail
+share=/usr/share/aces-survey
+profile="${XDG_DATA_HOME:-$HOME/.local/share}/QGIS/QGIS3/profiles/default"
+plugins="$profile/python/plugins"
+ini="$profile/QGIS3.ini"
+tree="${XDG_DATA_HOME:-$HOME/.local/share}/aces/webodm"
+zip="$(ls "$share"/FlyPath-*.zip 2>/dev/null | head -1 || true)"
+
+set_plugin_flag() {  # [PythonPlugins] FlyPath=<true|false>; QSettings INI, keys keep their case
+  python3 - "$ini" "$1" <<'PY'
+import configparser, io, os, sys
+ini, value = sys.argv[1], sys.argv[2]
+cp = configparser.RawConfigParser(strict=False)
+cp.optionxform = str
+if os.path.exists(ini):
+    cp.read(ini, encoding="utf-8")
+if not cp.has_section("PythonPlugins"):
+    cp.add_section("PythonPlugins")
+cp.set("PythonPlugins", "FlyPath", value)
+os.makedirs(os.path.dirname(ini), exist_ok=True)
+with io.open(ini, "w", encoding="utf-8") as f:
+    cp.write(f, space_around_delimiters=False)
+PY
+}
+
+if [[ "${1:-}" == "--remove" ]]; then
+  rm -rf "$plugins/FlyPath"
+  if [[ -f "$ini" ]]; then set_plugin_flag false; fi
+  rm -rf "$tree" "$tree.prev"
+  echo "aces-survey-setup: FlyPath removed from $plugins; WebODM tree removed (docker volumes appmedia and dbdata kept)"
+  exit 0
+fi
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then sed -n '2,5p' "$0" | sed 's/^# \{0,1\}//'; exit 0; fi
+
+if [[ -z "$zip" ]]; then echo "aces-survey-setup: no FlyPath zip under $share" >&2; exit 1; fi
+mkdir -p "$plugins"
+rm -rf "$plugins/FlyPath"
+python3 -m zipfile -e "$zip" "$plugins"
+set_plugin_flag true
+fp_version="$(grep -m1 '^version=' "$plugins/FlyPath/metadata.txt" | cut -d= -f2)"
+echo "aces-survey-setup: FlyPath $fp_version installed in $plugins and enabled in $ini"
+
+if [[ ! -d "$tree" ]]; then
+  install -dm755 "$(dirname "$tree")"
+  cp -a "$share/webodm" "$tree"
+  cat "$share/WEBODM_VERSION" > "$tree/.aces-vendored"
+  echo "aces-survey-setup: WebODM $(cat "$share/WEBODM_VERSION") tree created at $tree"
+fi
+
+console="$(python3 -c 'from aces import config; print(config.load()["server"].get("webodm") or "")' 2>/dev/null || true)"
+cat <<EOF
+Next:
+  qgis                     Plugins > FlyPath: draw the survey area, set altitude and overlap, export the DJI WPML KMZ
+                           (if the menu is missing after the very first QGIS start, tick FlyPath once under
+                           Plugins > Manage and Install Plugins > Installed; QGIS then keeps it enabled)
+  aces-webodm start        WebODM (ODX engine) at ${console:-http://127.0.0.1:8090}; aces-webodm open for the console
+  cloudcompare             point-cloud and mesh deliverables (AUR package, optional)
+See /usr/share/doc/aces-survey/README for loading a mission into DJI Fly and the Mini 5 Pro camera settings.
+EOF

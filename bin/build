@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# Build one or more ACES packages inside the Arch builder container and add them to the local [aces] repo.
+#
+#   bin/build                 build every package under pkgbuilds/
+#   bin/build aces-base       build one
+#   bin/build --nodeps pkg    skip dependency checks (meta-packages whose deps are not built yet)
+#
+# Works from Git Bash on Windows (Docker Desktop) and from Linux. Sources for packages that have a matching
+# src/<name>/ directory are tarred into the package directory as <name>-src.tar.gz before the build, so the
+# PKGBUILD can declare source=("$pkgname-src.tar.gz").
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+IMAGE="aces-builder:latest"
+NODEPS=""
+PKGS=()
+for a in "$@"; do
+  case "$a" in
+    --nodeps) NODEPS="--nodeps" ;;
+    *) PKGS+=("$a") ;;
+  esac
+done
+if [ ${#PKGS[@]} -eq 0 ]; then
+  while IFS= read -r d; do PKGS+=("$(basename "$d")"); done < <(find "$ROOT/pkgbuilds" -mindepth 1 -maxdepth 1 -type d | sort)
+fi
+
+hostpath() {  # docker needs a Windows path from Git Bash; MSYS_NO_PATHCONV keeps docker's own args intact
+  if command -v cygpath >/dev/null 2>&1; then cygpath -w "$1"; else printf '%s' "$1"; fi
+}
+
+if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
+  echo "== building builder image"
+  docker build -t "$IMAGE" -f "$ROOT/docker/builder.Dockerfile" "$ROOT/docker"
+fi
+mkdir -p "$ROOT/repo/x86_64" "$ROOT/cache/pacman" "$ROOT/cache/sources" "$ROOT/logs"
+
+status=0
+for p in "${PKGS[@]}"; do
+  dir="$ROOT/pkgbuilds/$p"
+  if [ ! -f "$dir/PKGBUILD" ]; then echo "!! no PKGBUILD in $dir"; status=1; continue; fi
+  if [ -d "$ROOT/src/$p" ]; then
+    echo "== packing sources for $p"
+    tar -C "$ROOT/src" -czf "$dir/$p-src.tar.gz" "$p"
+  fi
+  echo "== building $p"
+  log="$ROOT/logs/$p.log"
+  if MSYS_NO_PATHCONV=1 docker run --rm \
+      -v "$(hostpath "$dir"):/build/pkg:ro" \
+      -v "$(hostpath "$ROOT/repo"):/repo" \
+      -v "$(hostpath "$ROOT/cache/pacman"):/var/cache/pacman/pkg" \
+      -v "$(hostpath "$ROOT/cache/sources"):/srcdest" \
+      -e NODEPS="$NODEPS" \
+      "$IMAGE" bash -lc '
+        set -euo pipefail
+        sudo chown -R builder /repo /srcdest /var/cache/pacman/pkg
+        rm -rf /build/work && cp -r /build/pkg /build/work && cd /build/work
+        if [ ! -f /repo/x86_64/aces.db.tar.zst ]; then repo-add /repo/x86_64/aces.db.tar.zst >/dev/null; fi
+        sudo pacman -Sy --noconfirm >/dev/null
+        SRCDEST=/srcdest PKGDEST=/repo/x86_64 makepkg -sfC --noconfirm --skippgpcheck $NODEPS
+        cd /repo/x86_64 && repo-add -R aces.db.tar.zst "$(ls -t ./*.pkg.tar.zst | head -1)" >/dev/null
+        namcap /build/work/PKGBUILD || true
+        echo "== built: $(ls -t /repo/x86_64/*.pkg.tar.zst | head -1)"
+      ' > "$log" 2>&1; then
+    tail -n 3 "$log"
+  else
+    echo "!! $p failed; see logs/$p.log"; tail -n 25 "$log"; status=1
+  fi
+done
+exit $status

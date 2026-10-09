@@ -1,0 +1,34 @@
+# Maintainer: Carbon Project Australia
+# Field and device integration: the Arch-packaged tools the plan's section 5b names. Packages that only exist on the
+# AUR are optional until their recipes are forked into this repo (can-utils, python-cantools, python-udsoncan,
+# python-snap7, python-pyvisa, openems). Policy (read-only sessions, approvals, transcripts) lives in aces-base.
+pkgname=aces-field
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="ACES field and device integration: RF receive and analysis, firmware analysis, device access, CAN, serial, instruments (meta-package)"
+arch=('any')
+url="file:///usr/share/doc/aces-field"
+license=('MIT')
+depends=(
+  'gnuradio' 'soapysdr' 'rtl-sdr' 'hackrf' 'gqrx' 'sigdigger' 'urh' 'libuhd'
+  'ghidra' 'rizin' 'binwalk' 'qemu-full'
+  'openssh' 'python-paramiko' 'ansible' 'python-pyserial' 'python-can'
+)
+optdepends=(
+  'can-utils: candump, cansend, replay (AUR; fork pending)'
+  'python-cantools: DBC decode and encode (AUR; fork pending)'
+  'python-udsoncan: UDS diagnostics (AUR; fork pending)'
+  'python-snap7: Siemens S7 access (AUR; fork pending)'
+  'python-pyvisa: bench instruments (AUR; fork pending)'
+  'openems: FDTD electromagnetic solver (AUR; fork pending)'
+  'wireshark-qt: packet and bus analysis'
+  'sigrok-cli: logic analysers'
+)
+
+package() {
+  install -dm755 "$pkgdir/usr/share/doc/$pkgname"
+  printf '%s\n' "aces-field $pkgver" \
+    "Tools for equipment the operator owns or is authorised to work on." \
+    "Sessions start read-only; writes, motion, flashing and transmit are approval-gated by the ACES broker and recorded in the ledger." \
+    "Members: ${depends[*]}" > "$pkgdir/usr/share/doc/$pkgname/README"
+}

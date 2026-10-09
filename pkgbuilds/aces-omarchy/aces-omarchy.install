@@ -1,0 +1,13 @@
+post_install() {
+  echo "aces-omarchy: run 'aces-omarchy-setup' as your user to link the hooks, the aces-engineering skill and the"
+  echo "aces-fabric plugin under ~/.config and your agents' skill directories (idempotent; --remove undoes it)."
+  echo "The plugin lands disabled; enable it from the Omarchy plugin menu."
+}
+
+post_upgrade() {
+  echo "aces-omarchy: re-run 'aces-omarchy-setup' as your user (the post-update hook does this on the next Omarchy update)."
+}
+
+pre_remove() {
+  echo "aces-omarchy: per-user links under ~/.config/omarchy and ~/.*/skills are left in place; 'aces-omarchy-setup --remove' clears them."
+}

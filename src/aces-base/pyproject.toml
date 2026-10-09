@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aces"
+version = "0.1.0"
+description = "ACES OS command line: fabric manifest, policy and ledger, projects, doctor, lane tests"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Carbon Project Australia" }]
+
+[project.scripts]
+aces = "aces.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aces*"]

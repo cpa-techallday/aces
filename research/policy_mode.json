@@ -1,0 +1,7 @@
+{
+ "mode": "trial",
+ "set_by": "Aaron, 2026-10-09",
+ "reason": "First iteration is a trial on the operator's own installation; every catalog row is installable and items are excluded as testing matures. The audited licence rules exist only as the distribution policy for a future shipped product; nothing is distributed today.",
+ "default_project_class": "personal",
+ "end_use_gate": "No component is restricted while a project is personal, education or research use with no contract, customer, paid deliverable or defence end use (all current projects). When a project changes class, the terms of every component recorded against its runs are re-read at that moment; the ledger supplies the component list."
+}

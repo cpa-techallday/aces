@@ -1,0 +1,26 @@
+# Maintainer: Carbon Project Australia
+# Launcher entries for the ACES web consoles. URLs come from the aces configuration (aces-base), so the same
+# package serves any ACES Server; on Omarchy the consoles open as web-app windows, elsewhere in the browser.
+pkgname=aces-consoles
+pkgver=0.1.0
+pkgrel=2
+pkgdesc="ACES consoles: GRID CONTROL, SIMLAB and MLflow launcher entries that open the configured ACES Server"
+arch=('any')
+url="file:///usr/share/doc/aces-consoles"
+license=('MIT')
+depends=('aces-base' 'xdg-utils' 'python')
+optdepends=('omarchy: opens the consoles as web-app windows'
+            'libnotify: desktop notice when a console URL is not configured')
+source=("$pkgname-src.tar.gz")
+sha256sums=('SKIP')
+
+package() {
+  cd "$srcdir/$pkgname"
+  install -Dm755 aces-console "$pkgdir/usr/bin/aces-console"
+  for f in aces-grid-control aces-simlab aces-mlflow; do
+    install -Dm644 "$f.desktop" "$pkgdir/usr/share/applications/$f.desktop"
+  done
+  install -dm755 "$pkgdir/usr/share/doc/$pkgname"
+  printf '%s\n' "aces-consoles $pkgver" "Entries: GRID CONTROL (server.grid_control), SIMLAB (server.simlab_console), ACES Runs (server.mlflow)" \
+    "Configure URLs in /etc/aces/aces.toml or ~/.config/aces/aces.toml" > "$pkgdir/usr/share/doc/$pkgname/README"
+}

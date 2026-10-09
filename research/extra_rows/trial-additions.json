@@ -1,0 +1,10 @@
+{
+ "key": "trial-additions",
+ "domain": "Trial additions (Aaron, 2026-10-09): components the licence audit excluded from distribution but which the operator includes in the first iteration under the operator override",
+ "notes": "Included on the operator's own installation only. Each carries its terms as a label; none may be redistributed in an ACES ISO, image or bundle. Verified against the GitHub API on 2026-10-09.",
+ "unverified_candidates": [],
+ "rows": [
+  {"name": "FluidX3D", "repo_or_url": "https://github.com/ProjectPhysX/FluidX3D", "pillar": "Simulation: lattice-Boltzmann CFD (trial)", "adds": "Very fast GPU lattice-Boltzmann CFD with free-surface, thermal and multi-GPU support, for benchmarking the CFD lane against PyFR and OpenFOAM", "licence": "custom (see gotcha)", "verified_via": "gh", "packaging": "source", "fit": "trial", "gotcha": "licence terms (read 2026-10-09): free for research, education and personal use; no commercial use, no military or defence-industry use, no AI training on its source. Unrestricted on the current hobby projects; terms re-read at the end-use gate"},
+  {"name": "OpenSees", "repo_or_url": "https://github.com/OpenSees/OpenSees", "pillar": "Simulation: structural and earthquake engineering (trial)", "adds": "Nonlinear structural analysis framework with a Python interface, for the building and mezzanine projects", "licence": "custom non-commercial (see gotcha)", "verified_via": "gh", "packaging": "source / pip openseespy", "fit": "trial", "gotcha": "non-commercial and internal use only under its licence; no redistribution; results for paying clients need a licensed solver instead"}
+ ]
+}

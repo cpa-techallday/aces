@@ -1,0 +1,42 @@
+# Maintainer: Carbon Project Australia
+# Survey and photogrammetry: mission planning in QGIS with the FlyPath plugin (DJI WPML KMZ for the DJI Fly app;
+# Mini 5 Pro community-verified), processing in WebODM (ODX engine, NVIDIA GPU node) under Docker, deliverables in
+# QGIS and CloudCompare. QGIS and Docker come from the official repos; CloudCompare, COLMAP and Meshroom exist only on
+# the AUR, so they are optional until their recipes are forked. FlyPath and WebODM are pinned upstream releases
+# fetched at build time, so the package carries the exact corresponding source for each GPL/AGPL component it ships.
+pkgname=aces-survey
+pkgver=0.1.0
+pkgrel=1
+_flypath=3.0.0
+_webodm=3.3.0
+pkgdesc="ACES survey and photogrammetry: QGIS + FlyPath mission planning, WebODM (ODX, GPU) processing, CloudCompare deliverables"
+arch=('any')
+url="file:///usr/share/doc/aces-survey"
+license=('MIT')  # the aces-survey scripts; the vendored FlyPath is GPL-3.0 (engine Apache-2.0) and WebODM is AGPL-3.0
+depends=('aces-base' 'qgis' 'python-shapely' 'python-pyproj' 'docker' 'docker-compose' 'curl' 'pciutils' 'xdg-utils' 'python')
+optdepends=('nvidia-container-toolkit: GPU processing node (webodm/nodeodx:gpu)'
+            'cloudcompare: point-cloud and mesh deliverables (AUR; fork pending)'
+            'colmap: structure-from-motion engine for research pipelines (AUR)'
+            'meshroom: AliceVision 3D reconstruction (AUR)'
+            'omarchy: opens the WebODM console as a web-app window')
+source=("$pkgname-src.tar.gz"
+        "FlyPath-$_flypath.zip::https://plugins.qgis.org/plugins/FlyPath/version/$_flypath/download/"
+        "WebODM-$_webodm.tar.gz::https://github.com/WebODM/WebODM/archive/refs/tags/v$_webodm.tar.gz")
+noextract=("FlyPath-$_flypath.zip")
+sha256sums=('SKIP'
+            '2c9f6046fb2396b978e8494de53dc58f5c88f34635332da8a4cd567acfe05579'
+            'c2d72ca2c8502ecb8b08561614a3fd1fefaf3a0d39a48c03ef063bbd58284ae6')
+
+package() {
+  cd "$srcdir/$pkgname"
+  install -Dm755 aces-webodm "$pkgdir/usr/bin/aces-webodm"
+  install -Dm755 aces-survey-setup "$pkgdir/usr/bin/aces-survey-setup"
+  install -Dm644 aces-webodm.desktop "$pkgdir/usr/share/applications/aces-webodm.desktop"
+  install -Dm644 README "$pkgdir/usr/share/doc/$pkgname/README"
+  install -Dm644 LICENSES.md "$pkgdir/usr/share/licenses/$pkgname/LICENSES.md"
+  install -Dm644 "$srcdir/FlyPath-$_flypath.zip" "$pkgdir/usr/share/$pkgname/FlyPath-$_flypath.zip"
+  install -dm755 "$pkgdir/usr/share/$pkgname/webodm"
+  cp -a "$srcdir/WebODM-$_webodm/." "$pkgdir/usr/share/$pkgname/webodm/"
+  printf '%s\n' "$_webodm" > "$pkgdir/usr/share/$pkgname/WEBODM_VERSION"
+  install -Dm644 "$srcdir/WebODM-$_webodm/LICENSE.md" "$pkgdir/usr/share/licenses/$pkgname/WebODM-LICENSE.md"
+}
