@@ -1210,6 +1210,22 @@ def cmd_voxel_measure(args) -> int:
     return 0
 
 
+def cmd_propose_dataset(args) -> int:
+    """Build a (grid, conditioning) training dataset from a verified corpus."""
+    from .propose import learned
+    try:
+        rows = learned.load_corpus_rows(args.corpus)
+        grids, cond, manifest = learned.build_dataset(rows, resolution=args.resolution)
+    except ValueError as e:
+        print(f"REFUSED: {e}")
+        return 2
+    with safeio.OutDir(args.out) as od:
+        learned.write_dataset(grids, cond, manifest, od)
+    print(f"training dataset -> {args.out} ({manifest['n']} rows, resolution {args.resolution}, "
+          f"cond dim {cond.shape[1]}); provenance in manifest.json")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="aces", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -1418,6 +1434,13 @@ def build_parser() -> argparse.ArgumentParser:
                         "measurement RESEARCH ONLY")
     s.add_argument("--out", required=True, help="output folder (created; never overwritten)")
     s.set_defaults(fn=cmd_voxel_measure)
+
+    s = sub.add_parser("propose-dataset", help="(grid, conditioning) training dataset from a verified "
+                                               "corpus, for the clean-room learned proposer")
+    s.add_argument("corpus", help="corpus JSONL from aces corpus")
+    s.add_argument("--resolution", type=int, default=32, help="unit-cell voxel resolution")
+    s.add_argument("--out", required=True, help="output folder (created; never overwritten)")
+    s.set_defaults(fn=cmd_propose_dataset)
     return ap
 
 

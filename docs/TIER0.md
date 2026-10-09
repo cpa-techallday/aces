@@ -76,10 +76,21 @@ The diffusion proposer registers against the same contract:
    workspace under `research/xcube-env/`).
 2. Conditioning: target stiffness/thermal tensors and the spec envelope, not text prompts.
    Text-to-3D is a demo feature; tensor-to-cell is the product.
-3. Output decodes to the level-set grid → measured by `aces.domains.hx.tpms` → DfAM checks →
-   NSGA-II → Tier 3 verification. No path around the ladder.
+3. Output decodes to the level-set grid → measured by `aces.propose.voxel_measure` →
+   DfAM checks → NSGA-II → Tier 3 verification. No path around the ladder.
 4. Training happens on the rig as a container image (no PyPI on the rig); the corpus grows with
    every calibrated campaign and coupon test.
+
+### Dataset scaffold (done 2026-10-09)
+
+`aces propose-dataset corpus.jsonl --resolution 32 --out DIR` builds the training set:
+each corpus row is re-rasterised into its TPMS unit cell on the domain's own level set
+(`aces.propose.learned.rasterize_cell` — the training grid *is* the geometry the factors were
+measured on), paired with a conditioning vector (one-hot kind + wall ratio, cell size,
+log10 Reynolds, temperature). The manifest carries per-row source and licence — the D18
+provenance gate applies to training data too, and sourceless rows are refused. First build:
+17 rows at 32³ from `hx-corpus-v1.jsonl`. Model training starts when the corpus has the
+spread to support it; the scaffold exists so that day is a config change, not a project.
 
 ## What Tier 0 must never do
 
