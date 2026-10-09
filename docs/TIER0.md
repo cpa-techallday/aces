@@ -56,6 +56,10 @@ The diffusion proposer registers against the same contract:
    generator — never in a product or deliverable, and replaced by the clean-room proposer
    before Gate 2. Permissive substrates: PyTorch (BSD-style) on the rig; fVDB/OpenVDB
    (MPL-2.0 family) for the sparse hierarchy.
+   Status 2026-10-09: XCube is operational on the rig as image `research-xcube:0.1`
+   (sm_80 build; chair checkpoint verified end-to-end, 2 meshes sampled). Build recipe
+   and runbook live in the research lane (`~/research/` on the rig; mirror in the
+   workspace under `research/xcube-env/`).
 2. Conditioning: target stiffness/thermal tensors and the spec envelope, not text prompts.
    Text-to-3D is a demo feature; tensor-to-cell is the product.
 3. Output decodes to the level-set grid → measured by `aces.domains.hx.tpms` → DfAM checks →
