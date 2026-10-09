@@ -181,7 +181,9 @@ class McpTest(AdapterTestCase):
         self.fake.seed_document(name=name)
         with self.server() as srv:
             srv.request("initialize", {"protocolVersion": "2025-11-25"})
-            # nesting deeper than json takes: a parse error, and the server reads on
+            # 200,000 open brackets: a parse error on every platform (RecursionError where json gives up on the
+            # nesting, JSONDecodeError on the unterminated array where the C stack allows the depth), and the server
+            # reads on
             srv.write(b"[" * 200_000 + b"\n")
             self.assertEqual(srv.recv()["error"], {"code": -32700, "message": "Parse error"})
             self.assertEqual(srv.request("ping")["result"], {})
@@ -206,9 +208,12 @@ class McpTest(AdapterTestCase):
             self.assertTrue(line.isascii(), line[:80])
 
     def test_34c_a_reply_that_cannot_be_encoded_is_an_error_not_an_exit(self):
-        deep: list = []
-        for _ in range(100_000):
-            deep = [deep]
+        # Two replies json cannot encode on any platform: a set (TypeError) and a circular reference (ValueError).
+        # A list nested 100,000 deep was used for the second before; whether json raises RecursionError on it depends
+        # on the C stack the interpreter gets (it encoded fine on the GitHub runner, whose containers run with an
+        # unlimited stack), so the test now avoids depth altogether.
+        circular: list = []
+        circular.append(circular)
         real = mcp_server.handle
 
         def handle(msg):
@@ -216,7 +221,7 @@ class McpTest(AdapterTestCase):
             if msg.get("id") == 1:
                 reply["result"] = {"not json": {1, 2}}
             elif msg.get("id") == 2:
-                reply["result"] = {"too deep": deep}
+                reply["result"] = {"circular": circular}
             return reply, redactor
 
         lines = b"".join(b'{"jsonrpc": "2.0", "id": %d, "method": "ping"}\n' % n for n in (1, 2, 3))

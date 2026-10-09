@@ -5,7 +5,7 @@
 # src/aces-cad-onshape by bin/build.
 pkgname=aces-cad-onshape
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="ACES Onshape adapter: FeatureScript MCP server, aces-onshape CLI and CadSource pull (STEP + parameters + sha256) over the Onshape REST API"
 arch=('any')
 url="file:///usr/share/doc/aces-cad-onshape"
