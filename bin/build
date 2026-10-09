@@ -27,7 +27,7 @@ done
 if [ ${#PKGS[@]} -eq 0 ]; then
   # pkgbuilds/ORDER: members before dependants; "<pkg> nodeps" marks meta-packages built with --nodeps
   if [ -f "$ROOT/pkgbuilds/ORDER" ]; then
-    while IFS= read -r name flag _; do
+    while read -r name flag _; do
       case "$name" in ""|\#*) continue ;; esac
       if [ -d "$ROOT/pkgbuilds/$name" ]; then
         PKGS+=("$name")
@@ -94,6 +94,12 @@ for p in "${PKGS[@]}"; do
           KEY="$(cat /keys/FINGERPRINT)"
           SIGNARGS=(--sign --key "$KEY")
           REPOSIGN=(--sign --key "$KEY")
+        fi
+        # pacman must know the key to read a signed [aces] database, even with SigLevel Optional
+        if [ -f /keys/aces-pkgs.pub.asc ] && [ -f /keys/FINGERPRINT ]; then
+          sudo pacman-key --init >/dev/null 2>&1
+          sudo pacman-key --add /keys/aces-pkgs.pub.asc >/dev/null 2>&1
+          sudo pacman-key --lsign-key "$(cat /keys/FINGERPRINT)" >/dev/null 2>&1
         fi
         if [ ! -f /repo/x86_64/aces.db.tar.zst ]; then repo-add "${REPOSIGN[@]}" /repo/x86_64/aces.db.tar.zst >/dev/null; fi
         sudo pacman -Sy --noconfirm >/dev/null
