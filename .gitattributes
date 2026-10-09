@@ -1,0 +1,6 @@
+# Linux-targeted repo: every text file is LF on every platform (bash scripts, PKGBUILDs and QML break with CRLF)
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.tar.gz binary
+*.zst binary

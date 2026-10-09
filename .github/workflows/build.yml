@@ -1,0 +1,52 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  packages:
+    name: Build and install-test every package
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the signing key when the secret is set
+        env:
+          ACES_SIGNING_KEY: ${{ secrets.ACES_SIGNING_KEY }}
+        run: |
+          if [ -n "$ACES_SIGNING_KEY" ]; then
+            mkdir -p keys
+            printf '%s' "$ACES_SIGNING_KEY" > keys/aces-pkgs.sec.asc
+            echo "signing key installed"
+          else
+            echo "no ACES_SIGNING_KEY secret: packages are built unsigned"
+          fi
+
+      - name: Build every package in the Arch builder container
+        run: bash bin/build
+
+      - name: Install-test in a clean Arch container
+        run: bash bin/install-test
+
+      - name: Keep the build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: logs/
+          retention-days: 14
+
+      - name: Keep the package repo
+        uses: actions/upload-artifact@v4
+        with:
+          name: aces-repo
+          path: repo/x86_64/
+          retention-days: 14
