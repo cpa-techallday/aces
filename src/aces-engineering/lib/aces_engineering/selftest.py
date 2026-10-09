@@ -32,8 +32,18 @@ DESKTOP_MODULES = [
     "gendesign.parametric", "gendesign.nozzle", "gendesign.fusion_bridge", "gendesign.progress",
     "gendesign.lattice_opt", "gendesign.warp_fea", "aces_engineering.simlab_cli", "aces_engineering.evidence_cli",
     "aces_engineering.mcp_client", "aces_engineering.gendesign_cli",
+    # the golden path (aces golden): the command, the package and every stage module
+    "aces_engineering.golden_cli", "aces_engineering.golden", "aces_engineering.golden.rundir",
+    "aces_engineering.golden.progress", "aces_engineering.golden.acescli", "aces_engineering.golden.pipeline",
+    "aces_engineering.golden.spec", "aces_engineering.golden.demo", "aces_engineering.golden.domain",
+    "aces_engineering.golden.generator", "aces_engineering.golden.organic", "aces_engineering.golden.fea",
+    "aces_engineering.golden.case", "aces_engineering.golden.sweep", "aces_engineering.golden.export",
+    "aces_engineering.golden.render", "aces_engineering.golden.compute", "aces_engineering.golden.surrogate",
+    "aces_engineering.golden.optimise", "aces_engineering.golden.verify", "aces_engineering.golden.evidence",
+    "aces_engineering.golden.report",
     "numpy", "scipy", "skimage.measure", "trimesh", "rtree", "optuna", "matplotlib", "yaml", "pydantic", "docx",
-    "markdown", "sklearn.gaussian_process", "sklearn.ensemble", "joblib", "build123d", "embreex"]
+    "markdown", "sklearn.gaussian_process", "sklearn.ensemble", "joblib", "build123d", "embreex",
+    "tqdm", "threadpoolctl", "psutil"]
 RIG_ONLY_MODULES = ["simlab.leases", "simlab.queue", "simlab.mcp_server"]
 
 

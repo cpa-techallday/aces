@@ -5,12 +5,12 @@
 # skill. No second venv. Sources are packed from src/aces-voxel by bin/build.
 pkgname=aces-voxel
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="ACES voxel kernel command: voxel H8 FEA of STEP parts, 3-D SIMP, rod lattices and density to STL, run in the aces-engineering venv"
 arch=('any')
 url="file:///usr/share/doc/aces-voxel"
 license=('MIT')  # the command, the description and the skill; the kernel code itself ships in aces-engineering
-depends=('aces-engineering')
+depends=('aces-engineering>=0.1.0-2')  # the skill points at aces golden (aces-engineering 0.1.0-2)
 source=("$pkgname-src.tar.gz")
 sha256sums=('SKIP')
 

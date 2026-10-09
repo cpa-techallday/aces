@@ -27,14 +27,16 @@ def _root(arg: str | None) -> str:
     return os.path.abspath(arg or os.environ["SIMLAB_EVIDENCE_ROOT"])
 
 
-def verify(root: str) -> int:
+def verify_result(root: str) -> dict:
+    """The verification `verify` prints, as a dict: {"root", "relocated", "entries", "ok", "problems", "head"}, or
+    {"root", "entries": 0, "ok": False, "problems": [...]} when ROOT has no ledger. Callers (aces golden) read it
+    directly instead of capturing stdout. Leaves simlab.evidence_bundle.EVIDENCE_ROOT pointing at ROOT."""
     import simlab.evidence_bundle as eb
 
     eb.EVIDENCE_ROOT = root
     entries = eb.read_ledger()
     if not entries:
-        print(json.dumps({"root": root, "entries": 0, "ok": False, "problems": [{"problem": "no ledger.jsonl here"}]}, indent=2))
-        return 1
+        return {"root": root, "entries": 0, "ok": False, "problems": [{"problem": "no ledger.jsonl here"}]}
     relocated = 0
     for ent in entries:
         if not os.path.isfile(ent["path"]):
@@ -50,7 +52,12 @@ def verify(root: str) -> int:
             res = eb.verify_ledger()
         finally:
             eb.EVIDENCE_ROOT = root
-    print(json.dumps({"root": root, "relocated": relocated, **res}, indent=2))
+    return {"root": root, "relocated": relocated, **res}
+
+
+def verify(root: str) -> int:
+    res = verify_result(root)
+    print(json.dumps(res, indent=2))
     return 0 if res["ok"] else 1
 
 

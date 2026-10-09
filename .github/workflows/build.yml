@@ -36,6 +36,9 @@ jobs:
       - name: Install-test in a clean Arch container
         run: bash bin/install-test
 
+      - name: Install-test the engineering stack and the golden path
+        run: bash bin/install-test aces-base aces-engineering aces-voxel
+
       - name: Keep the build logs
         if: always()
         uses: actions/upload-artifact@v4

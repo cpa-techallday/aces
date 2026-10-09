@@ -2,8 +2,8 @@
 # The aces command line and the /etc/aces defaults. Sources are packed from src/aces-base by bin/build.
 pkgname=aces-base
 pkgver=0.1.0
-pkgrel=2
-pkgdesc="ACES OS base: the aces CLI (fabric manifest, policy and ledger, projects, doctor, lane tests) and /etc/aces defaults"
+pkgrel=3
+pkgdesc="ACES OS base: the aces CLI (fabric manifest, policy and ledger with ledger record, projects, doctor, lane tests, the aces golden passthrough) and /etc/aces defaults"
 arch=('any')
 url="file:///usr/share/doc/aces-base"
 license=('MIT')
@@ -21,8 +21,10 @@ build() {
 check() {
   cd "$srcdir/$pkgname"
   # the CLI must import and the ledger must round-trip without touching the real home directory
-  PYTHONPATH="$srcdir/$pkgname" ACES_ETC="$srcdir/$pkgname/etc" ACES_USER_CONFIG="$srcdir/t/cfg" ACES_STATE="$srcdir/t/state" ACES_WORK="$srcdir/t/work" \
-    python - <<'EOF'
+  local e=(PYTHONPATH="$srcdir/$pkgname" ACES_ETC="$srcdir/$pkgname/etc" ACES_USER_CONFIG="$srcdir/t/cfg"
+           ACES_STATE="$srcdir/t/state" ACES_WORK="$srcdir/t/work")
+  rm -rf "$srcdir/t"; mkdir -p "$srcdir/t"
+  env "${e[@]}" python - <<'EOF'
 import os
 from aces import cli, ledger, policy, project
 assert cli.main(["policy", "show"]) == 0
@@ -34,6 +36,42 @@ ok, n, msg = ledger.verify()
 assert ok and n == 3, (ok, n, msg)
 assert cli.main(["doctor", "--offline"]) == 0
 print("aces self-check passed:", n, "ledger entries")
+EOF
+  # unit tests: ledger.record and its checks, the CLI, two concurrent writers, the golden passthrough (their own
+  # temporary state; the 3-entry ledger above is not touched)
+  env "${e[@]}" python -m unittest discover -s tests
+  # 0.1.0-3 in the same environment: ledger record, refused kinds, verify, add-evidence, show --json, aces golden
+  env "${e[@]}" python - "$srcdir/t" <<'EOF'
+import contextlib, io, json, os, sys, tempfile
+from aces import cli, ledger, project
+t = sys.argv[1]
+payload = os.path.join(t, "golden-payload.json")
+with open(payload, "w", encoding="utf-8") as fh:
+    json.dump({"project": "check-project", "run_id": "check", "verdict": "PASS"}, fh)
+out = io.StringIO()
+with contextlib.redirect_stdout(out):
+    assert cli.main(["ledger", "record", "golden.run", "--json", payload, "--print", "json"]) == 0
+rec = json.loads(out.getvalue())
+assert rec["n"] == 4 and rec["kind"] == "golden.run" and rec["recorded"] is True, rec
+assert cli.main(["ledger", "record", "policy.override", "--json", payload]) == 2
+assert cli.main(["ledger", "record", "Bad Kind", "--json", payload]) == 2
+ok, n, msg = ledger.verify()
+assert ok and n == 4, (ok, n, msg)
+assert cli.main(["project", "add-evidence", "check-project", "golden/check"]) == 0
+assert "golden/check" in project.show("check-project")["evidence"]
+out = io.StringIO()
+with contextlib.redirect_stdout(out):
+    assert cli.main(["ledger", "show", "--json", "-n", "1"]) == 0
+shown = json.loads(out.getvalue())
+assert len(shown) == 1 and shown[0]["n"] == 4, shown
+os.environ.pop("ACES_GOLDEN_CMD", None)
+saved_path = os.environ.get("PATH", "")
+os.environ["PATH"] = tempfile.mkdtemp(prefix="empty-path-")
+assert cli.main(["golden", "run", "--demo"]) == 127
+os.environ["PATH"] = saved_path
+os.environ["ACES_GOLDEN_CMD"] = json.dumps([sys.executable, "-c", "import sys; sys.exit(len(sys.argv))"])
+assert cli.main(["golden", "a", "b"]) == 3
+print("aces 0.1.0-3 checks passed:", n, "ledger entries, golden passthrough 127 and 3")
 EOF
 }
 

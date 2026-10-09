@@ -14,6 +14,7 @@ desktop command line or wrap it, as listed below.
 | `/opt/aces/engineering/lib` | the vendored `simlab` and `gendesign`, the `aces_engineering` wrappers, `aces_engineering_site.py` (put on the venv's path by `aces-engineering.pth`) |
 | `/opt/aces/engineering/SNAPSHOT` | source path and commit, sync time, content sha256 and per-file manifest of the vendored code |
 | `/usr/bin/aces-simlab`, `aces-evidence`, `aces-gendesign` | shims that run `python -m aces_engineering.<cli>` in the venv |
+| `/usr/bin/aces-golden` | the golden path (`aces golden ...` through aces-base's passthrough): `python -m aces_engineering.golden_cli` in the venv |
 | `/usr/share/aces/engineering/mcp.json.example` | MCP client entries for the rig: simlab `:8022/mcp` (bearer `${SIMLAB_MCP_TOKEN}`) and rig-state `:8010/mcp` |
 | `/usr/share/aces/engineering/examples` | generic structural cases from `cases/` (cantilever, wall bracket, beam validation, L-bracket parametric study) |
 
@@ -31,6 +32,14 @@ desktop command line or wrap it, as listed below.
 | `aces-gendesign list` | evaluators, solver adapters and what runs on this machine |
 | `aces-gendesign selftest` | the packaged self-test (same as the package build's `check()`) |
 | `aces-gendesign topopt\|parametric\|nozzle\|fusion ...` | SIMP, Optuna studies, Angelino aerospike contour, push STL/STEP to Fusion |
+| `aces golden run --demo [--json]` | the golden path end to end on the built-in root mount (below); exit 0 only when verification passed and both ledgers verify |
+| `aces golden run --spec FILE --project P [--new]` / `--project P` | the same on your own spec (`$ACES_WORK/P/golden/spec.json` when no `--spec`) |
+| `aces golden compute [--json]` | what would compute where: CPUs, CuPy GPU, Warp, torch/PhysicsNeMo, conforming-mesh solvers, rig lanes, and the plan; computes nothing |
+| `aces golden init P --step part.step` | create project P, copy the STEP to `P/cad/`, record it as a CAD source, write a spec template to fill in |
+| `aces golden spec --demo root-mount --out spec.json` / `--schema` | the demo spec as a starting point; the JSON schema of `aces-golden-spec/1` |
+| `aces golden show [RUN] [--json] [--bench-out FILE]` | list runs (newest first) or show one; `--bench-out` appends its wall-time row to a benchmarks file |
+| `aces golden verify [RUN] [--json] [--no-model] [--resolve]` | audit a run: anchored files, bundle, both ledgers, sweep table, surrogate models, verdict, report provenance, compute-used rows, manifest |
+| `aces golden report RUN` | rebuild `report.*` and `manifest.sha256` from the run's records |
 
 `aces-simlab capacity` without `--local` and every `aces-simlab remote` call go to the rig: `remote call sim_submit`
 queues real GPU work there, and the simlab server audits every call against the token's principal.
@@ -59,6 +68,66 @@ GPU extras on a desktop with an NVIDIA GPU (untested on ACES OS; TODO: verify th
 | `gendesign.lattice_opt`, `gendesign.warp_fea` | cupy, warp inside functions | importable; running them needs the GPU extras |
 | `simlab.solvers.pyfr_solver`, `simlab.meshing` | gmsh, PyFR inside functions | importable; run in the `simlab-pyfr` image on the rig |
 | `simlab run --docker` | docker + a repo checkout mounted at `/work` | refused by the wrapper; submit to the rig instead |
+
+## Golden path (`aces golden`)
+
+Parts are computed, not drawn. A design space (a STEP file, or a build123d function) with its supports, loads,
+keep-in interfaces and material goes in; what comes out is an organic part: each design is a SIMP topology
+optimisation (`gendesign.topopt3d.run_case`) turned into an implicit signed-distance skin (smooth unions with the
+preserved interfaces, clipped to the design space, Taubin-smoothed; a gyroid-sheet core inside a shell in the `bone`
+variant), and every design is solved on the real voxel FEA (the step-structures adapter, H8, Jacobi-PCG, FP64). The
+built-in demo is a six-foot root mount computed inside a disc 100 mm across and 40 mm tall (`aces golden spec --demo`
+prints it; the disc is the input domain only).
+
+`aces golden run` runs nine stages and says what it is doing on stderr (a bar on a terminal, plain lines otherwise,
+JSON lines with `--progress jsonl`, a heartbeat from the solvers' progress beacons when nothing else was printed for
+10 s):
+
+1. **compute**: detect what can run here (CPU workers and BLAS, the kernel self-test, a CuPy GPU with a patch test,
+   Warp, torch and PhysicsNeMo, CalculiX and Code_Aster, the rig's simulation lanes from the fabric manifest).
+2. **inputs**: the spec as given and as resolved, the design-space STEP, the grid, the compute plan.
+3. **domain**: the design space voxelised through the step-structures adapter.
+4. **sweep**: N designs (Latin hypercube over the generator's variables, seeded), each generated, skinned and solved.
+5. **loop**: a GP surrogate fitted to the sweep (K-fold error per output), the predicted-feasible optimum with
+   margins, and that design solved for real; up to three rounds.
+6. **check**: the winner re-solved at a finer resolution (on the GPU when one is usable, else on the CPU within a time
+   budget), and re-solved on CuPy and on Warp, when they are usable, for device parity.
+7. **export**: the winner's STL (the mesh that was solved), renders, density and field slices, the sweep gallery, the
+   compute-used table.
+8. **evidence**: every anchored file hashed (`evidence/files.sha256`), a simlab evidence bundle chained into the
+   per-user simlab ledger (`~/.local/share/aces/simlab/evidence`), a `golden.run` entry in the aces ledger, and the
+   run recorded in the project's `aces.yaml`.
+9. **report**: `report.md`, `report.html`, `report.json` (every number in the verdict line and the tables has a
+   provenance pointer to the record it came from).
+
+The run directory is `$ACES_WORK/<project>/golden/<run-id>/` (`~/Work/...`; the demo uses project `golden-demo`).
+The run id is a UTC stamp and six hex digits of the inputs' hash, so the same spec, design space and seed give the
+same suffix on any machine. `result.json` there is exactly what `--json` prints; `run.json` has the stages and wall
+times; `log.txt` collects everything libraries printed; `manifest.sha256` covers the rest.
+
+Grades: every desktop solve is `preview-grade`. A winner is `verified-desktop` only when the finer-resolution check
+agreed within the tolerance and the constraints held at the finer resolution. `rig-verified` (a rig run plus a
+conforming-mesh second discretisation) is reserved and never produced here. `--strict` makes anything short of
+`verified-desktop` exit 1.
+
+Exit codes of `run`: 0 pass, 1 verification failed (or `--strict` without `verified-desktop`), 2 usage (including
+`--lane`, which is not wired yet), 3 thin sweep, 4 under-resolved, 5 infeasible, 6 evidence or ledger failure,
+7 internal error (traceback in `log.txt`; also a kernel that fails its element and patch self-test, which stops the
+run before the project or the run directory is touched), 130 interrupted. Check a run with `aces golden verify RUN`;
+the ledgers with `aces-evidence verify` and `aces ledger verify`.
+
+Spec rules the grids enforce (exit 2 before anything is solved): every face of every support and load box sits on the
+grid that `gen_mm`, `fea_mm` and each planned check level share, so the generator, the solves and the independent check
+fix and load the same patch (the refusal names the nearest box on that grid); a traction plane is an envelope face (the
+vendored traction loads both sides of an interior plane); a spec has one load case (v0: one spec per case); the seed is
+a 32-bit unsigned integer. The stress-exclusion width is rounded up to the grid of `fea_mm` and the check levels, so
+every resolution ignores the same zone (`domain/domain.json` records the effective width; the demo's 6 mm becomes 8 mm).
+
+What it does not claim: a desktop result is evidence, not sign-off. The solver is linear static voxel FEA in a
+fictitious domain; stresses next to supports and loads are excluded (the constrained stress is the 99th percentile
+outside those zones; the maximum is recorded and is resolution-sensitive); no fatigue, buckling or conforming-mesh
+check; the material is nominal; rig lanes are detected and reported but nothing is submitted to the rig (v0); an
+organic part is shipped as STL, never as a pretend STEP; gyroid cores enclose powder (drain holes are not modelled).
 
 ## Desktop defaults
 

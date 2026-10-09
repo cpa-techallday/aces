@@ -23,6 +23,7 @@ stress or buckling constraints, linear statics only, Jacobi only, lattices need 
 | What runs here | `aces-gendesign list` |
 | Sweep with evidence | `aces-simlab run spec.yaml --out out/exp` then `aces-simlab evidence build out/exp/<id>` and `aces-evidence verify` |
 | Push to Fusion | `aces-gendesign fusion out/x/design.stl --new-doc` (Fusion bridge on :9876) |
+| End-to-end generative loop | `aces golden run --demo` (see the aces-engineering skill) |
 
 ## Rules
 

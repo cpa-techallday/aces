@@ -1,14 +1,16 @@
 # Maintainer: Carbon Project Australia
 # The desktop engineering stack: one locked Python venv at /opt/aces/engineering/venv (requirements.txt: every
 # distribution hash-pinned, binary wheels only), a vendored snapshot of simlab and gendesign from cudax-sim-runtime
-# (SNAPSHOT: source commit and content hash) on the venv's path, and aces-simlab, aces-evidence, aces-gendesign.
-# CPU paths run on the desktop; GPU solving stays on the rig, reached through its MCP servers (mcp.json.example).
+# (SNAPSHOT: source commit and content hash) on the venv's path, and aces-simlab, aces-evidence, aces-gendesign and
+# aces-golden (the golden path: a design space in, a computed organic part out, verified on the voxel FEA and recorded
+# in the simlab evidence ledger and the aces ledger). CPU paths run on the desktop; CuPy and Warp are used when present;
+# rig solving stays on the rig, reached through its MCP servers (mcp.json.example).
 # Sources are packed from src/aces-engineering by bin/build; pip downloads the wheels inside the build container.
 pkgname=aces-engineering
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 _py=3.14  # the venv belongs to this interpreter minor version (the aces-builder image's python, 3.14.7 on 2026-10-09)
-pkgdesc="ACES engineering: locked Python venv with the simlab client and gendesign CPU paths (aces-simlab, aces-evidence, aces-gendesign)"
+pkgdesc="ACES engineering: locked Python venv with the simlab client, gendesign CPU paths and the golden path (aces-simlab, aces-evidence, aces-gendesign, aces-golden)"
 arch=('x86_64')
 url="file:///usr/share/doc/aces-engineering"
 # MIT: the aces-engineering wrappers. The vendored simlab/gendesign have no licence yet (LicenseRef-ACES-undecided).
@@ -18,7 +20,8 @@ license=('MIT' 'LicenseRef-ACES-undecided' 'Apache-2.0' 'BSD-2-Clause' 'BSD-3-Cl
          'FreeImage')
 # libglvnd and libx11: the OpenCASCADE libraries in the OCP wheel link libGL.so.1 and libX11.so.6, which manylinux
 # wheels leave to the system (ldd on a clean archlinux:base reports them missing; build123d then fails to import)
-depends=('aces-base' "python>=$_py" 'python<3.15' 'gcc-libs' 'glibc' 'libglvnd' 'libx11')
+# aces-base 0.1.0-3: `aces ledger record` (the golden.run entry) and project add-evidence / add-cad-source
+depends=('aces-base>=0.1.0-3' "python>=$_py" 'python<3.15' 'gcc-libs' 'glibc' 'libglvnd' 'libx11')
 optdepends=('libreoffice-fresh: PDF reports (simlab report runs soffice --headless)'
             'nvidia-utils: GPU rows in aces-simlab capacity --local (nvidia-smi)')
 options=('!strip' '!debug' 'staticlibs')  # keep the wheels byte-identical to PyPI (their RECORD hashes stay valid)
@@ -44,10 +47,27 @@ build() {
 
 check() {
   cd "$srcdir/$pkgname"
+  local py="$srcdir/root/$_root/venv/bin/python"
   # imports, the element patch test, the workstation beam record, SIMP, the STEP path, evidence chain and report
   HOME="$srcdir/home" XDG_DATA_HOME="$srcdir/home/share" ACES_ENGINEERING_EXAMPLES="$PWD/vendor/examples" \
   PYTHONPATH="$PWD/vendor:$PWD/lib" PYTHONDONTWRITEBYTECODE=1 \
-    "$srcdir/root/$_root/venv/bin/python" -m aces_engineering.selftest
+    "$py" -m aces_engineering.selftest
+  # the golden path: its unit tests, then the demo end to end and the audit of its run (needs aces-base >= 0.1.0-3
+  # installed in the build container, which makepkg -s does from the [aces] repo)
+  local g="$srcdir/golden"; rm -rf "$g"; mkdir -p "$g"
+  local e=(HOME="$srcdir/home" XDG_DATA_HOME="$g/share" ACES_WORK="$g/work" ACES_STATE="$g/state"
+           ACES_USER_CONFIG="$g/cfg" PYTHONPATH="$PWD/vendor:$PWD/lib" PYTHONDONTWRITEBYTECODE=1 MPLBACKEND=Agg
+           MLFLOW_DISABLE_AGENT_HINT=1)
+  env "${e[@]}" "$py" -m unittest discover -s tests -p 'test_g*.py'
+  if command -v aces >/dev/null 2>&1 && aces ledger record --help >/dev/null 2>&1; then
+    # on failure, the run's log (the traceback) is printed before makepkg discards the container
+    env "${e[@]}" "$py" -m aces_engineering.golden_cli run --demo --progress lines --json > "$g/result.json" ||
+      { local rc=$?; tail -n 80 "$g"/work/*/golden/*/log.txt 2>/dev/null || true; return $rc; }
+    "$py" -c 'import json, sys; json.load(open(sys.argv[1]))' "$g/result.json"  # --json: exactly one JSON document
+    env "${e[@]}" "$py" -m aces_engineering.golden_cli verify latest
+  else
+    echo "check: aces (aces-base >= 0.1.0-3) is not installed here; the golden demo was NOT exercised"
+  fi
 }
 
 package() {
@@ -76,7 +96,7 @@ package() {
     return 1
   fi
 
-  install -Dm755 bin/aces-simlab bin/aces-evidence bin/aces-gendesign -t "$pkgdir/usr/bin"
+  install -Dm755 bin/aces-simlab bin/aces-evidence bin/aces-gendesign bin/aces-golden -t "$pkgdir/usr/bin"
   install -Dm644 mcp.json.example -t "$pkgdir/usr/share/aces/engineering"
   install -Dm644 vendor/examples/* -t "$pkgdir/usr/share/aces/engineering/examples"
   install -Dm644 README.md -t "$pkgdir/usr/share/doc/$pkgname"

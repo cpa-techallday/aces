@@ -61,7 +61,28 @@ def checks(cfg: dict, offline: bool = False) -> list[tuple[str, str, str]]:
     skills = os.path.expanduser("~/.claude/skills/aces-engineering")
     rows.append(("skills", "ok" if os.path.exists(skills) else "absent", skills))
     rows.append(("work", "ok" if config.WORK.exists() else "absent", str(config.WORK)))
+    rows.append(golden_row())
     return rows
+
+
+def golden_row() -> tuple[str, str, str]:
+    """Informational: is `aces golden` runnable here, and the last golden.run in the ledger (date, project, run id,
+    verdict) when there is one."""
+    exe = shutil.which("aces-golden")
+    env_cmd = os.environ.get("ACES_GOLDEN_CMD")
+    last = None
+    try:
+        last = next((e for e in reversed(ledger.entries()) if e.get("kind") == "golden.run"), None)
+    except SystemExit:  # an unreadable ledger is reported by the ledger row
+        pass
+    tail = ""
+    if last:
+        p = last.get("payload") if isinstance(last.get("payload"), dict) else {}
+        tail = (f"; last run {str(last.get('ts') or '-')[:10]} {p.get('project') or '-'}/{p.get('run_id') or '-'} "
+                f"{p.get('verdict') or '-'}")
+    if exe or env_cmd:
+        return ("golden", "ok", (exe or f"ACES_GOLDEN_CMD={env_cmd}") + tail)
+    return ("golden", "absent", "install aces-engineering" + tail)
 
 
 def render(rows: list[tuple[str, str, str]]) -> str:

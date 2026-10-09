@@ -2,7 +2,8 @@
 
 A project starts in the policy's default class (personal). Reclassifying it is the end-use gate: the change is
 recorded in the ledger with the reason, and the components the project used (as recorded by tools that write to
-aces.yaml's `components` list) are listed so their terms can be re-read.
+aces.yaml's `components` list) are listed so their terms can be re-read. Tools also record the project's evidence
+references (`evidence`, e.g. aces golden runs with their bundle hash) and its CAD sources (`cad_sources`).
 """
 from __future__ import annotations
 
@@ -157,14 +158,33 @@ def classify(name: str, cls: str, reason: str) -> dict[str, Any]:
     return entry
 
 
-def add_component(name: str, component: str) -> None:
+def _append_list(name: str, key: str, value: str) -> bool:
+    """Add `value` to the list `key` of the project's aces.yaml unless it is already there (idempotent).
+    Returns True when the value was added."""
     p = path(name)
     data = show(name)
-    comps = list(data.get("components") or [])
-    if component not in comps:
-        comps.append(component)
-    data["components"] = comps
-    p.write_text(_dump(data), encoding="utf-8")
+    items = list(data.get(key) or [])
+    if value in items:
+        return False
+    items.append(value)
+    data[key] = items
+    p.write_text(_dump(data), encoding="utf-8", newline="\n")
+    return True
+
+
+def add_component(name: str, component: str) -> bool:
+    """Record a solver, model or tool the project used (the end-use gate lists these)."""
+    return _append_list(name, "components", component)
+
+
+def add_evidence(name: str, ref: str) -> bool:
+    """Record an evidence reference, e.g. `golden/<run-id> bundle:<sha16> PASS` written by aces golden."""
+    return _append_list(name, "evidence", ref)
+
+
+def add_cad_source(name: str, ref: str) -> bool:
+    """Record a CAD source of the project, e.g. `cad/part.step` (relative to the project directory)."""
+    return _append_list(name, "cad_sources", ref)
 
 
 def list_projects() -> list[Path]:

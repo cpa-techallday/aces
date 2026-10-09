@@ -17,8 +17,10 @@ if [ -f "$here/keys/aces-pkgs.pub.asc" ] && [ -f "$here/keys/FINGERPRINT" ] && [
   sigmode="Required DatabaseRequired"
 fi
 mkdir -p "$here/keys"
+# the golden path copies its report, result and winner renders to logs/golden/ (CI uploads logs/)
+mkdir -p "$here/logs"
 export MSYS_NO_PATHCONV=1
-docker run --rm -v "$repo:/repo:ro" -v "$keys:/keys:ro" -e PKGS="$pkgs" -e SIGMODE="$sigmode" archlinux:base bash -euo pipefail -c '
+docker run --rm -v "$repo:/repo:ro" -v "$keys:/keys:ro" -v "$(hostpath "$here/logs"):/logs" -e PKGS="$pkgs" -e SIGMODE="$sigmode" archlinux:base bash -euo pipefail -c '
 if [ "$SIGMODE" != "Optional TrustAll" ]; then
   pacman-key --init >/dev/null 2>&1
   pacman-key --add /keys/aces-pkgs.pub.asc >/dev/null 2>&1
@@ -82,6 +84,36 @@ if command -v aces-voxel >/dev/null 2>&1; then
   aces-gendesign selftest 2>&1 | tail -3 || true
   aces-voxel fea --self-test 2>&1 | tail -3 || true
   ls -la /root/.claude/skills 2>/dev/null | grep -i voxel || true
+fi
+if pacman -Q aces-engineering >/dev/null 2>&1; then
+  command -v aces-golden >/dev/null 2>&1 || { echo "golden: aces-engineering is installed but aces-golden is missing"; exit 1; }
+  echo "== golden path: aces golden run --demo (computed organic part -> real voxel FEA -> sweep -> surrogate -> verify -> evidence -> report)"
+  rm -rf /logs/golden
+  aces golden compute
+  t0=$(date +%s); rc=0
+  aces golden run --demo --json --progress lines > /tmp/golden.json || rc=$?
+  echo "golden: exit $rc after $(( $(date +%s) - t0 )) s"
+  json_ok=1; python3 -c "import json; d=json.load(open(\"/tmp/golden.json\")); print(d.get(\"verdict_line\") or d.get(\"message\"))" || { echo "golden: stdout was not one JSON document"; json_ok=0; }
+  run_dir="$(python3 -c "import json; print(json.load(open(\"/tmp/golden.json\")).get(\"run_dir\") or \"\")" 2>/dev/null || true)"
+  [ -n "$run_dir" ] || run_dir="$(ls -td /root/Work/*/golden/*/ 2>/dev/null | head -n 1 || true)"
+  aces golden show || true
+  if [ -n "$run_dir" ] && [ -d "$run_dir" ]; then
+    ls -la "$run_dir"; head -n 40 "$run_dir/report.md" || true
+    mkdir -p /logs/golden
+    cp /tmp/golden.json /logs/golden/stdout.json
+    for f in report.md report.html report.json result.json run.json validation.json compute_used.json log.txt; do
+      if [ -f "$run_dir/$f" ]; then cp "$run_dir/$f" /logs/golden/; fi
+    done
+    for d in winner candidate figures; do
+      if [ -d "$run_dir/$d" ]; then cp -r "$run_dir/$d" /logs/golden/; fi
+    done
+  fi
+  if [ "$rc" -ne 0 ] || [ "$json_ok" -ne 1 ]; then echo "golden: FAILED (exit $rc, one JSON document: $json_ok)"; exit 1; fi
+  aces golden verify latest
+  aces ledger verify
+  aces-evidence verify
+else
+  echo "== golden path: aces-engineering not in this run"
 fi
 echo "== dependency dry-run for the meta-packages (resolution only, nothing downloaded)"
 for m in aces-field aces-survey aces-os; do

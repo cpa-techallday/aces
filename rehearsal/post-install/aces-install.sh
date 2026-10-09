@@ -109,6 +109,12 @@ run "ACES hooks linked" ls -l "$cfg/omarchy/hooks/post-boot.d" "$cfg/omarchy/hoo
 run "omarchy plugin validate on the linked plugin" omarchy plugin validate "$cfg/omarchy/plugins/aces-fabric"
 run "omarchy plugin validate on the packaged copy" omarchy plugin validate /usr/share/aces/omarchy/plugins/aces-fabric
 run "aces-creative-labels" aces-creative-labels
+if pacman -Q aces-engineering >/dev/null 2>&1; then  # the golden path from the ACES boot: computed part, verified, in both ledgers
+  TAIL=25 run "aces golden run --demo" aces golden run --demo --progress lines
+  run "aces golden verify latest" aces golden verify latest
+else
+  note "SKIP  aces golden (aces-engineering not installed)"
+fi
 [[ -d /usr/lib/modules/$(uname -r) ]] || note "note     no /usr/lib/modules/$(uname -r): the kernel was replaced, reboot before using the desktop"
 note ""
 note "summary: $(grep -c '^PASS' "$report") passed, $fails failed"

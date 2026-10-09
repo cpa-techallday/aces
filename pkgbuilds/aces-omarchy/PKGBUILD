@@ -4,12 +4,12 @@
 # agents' skill directories. Everything the package owns lives under /usr/share/aces/omarchy.
 pkgname=aces-omarchy
 pkgver=0.1.0
-pkgrel=4
+pkgrel=5
 pkgdesc="ACES on Omarchy: hooks, agent skill, aces-fabric shell plugin and the per-user aces-omarchy-setup"
 arch=('any')
 url="file:///usr/share/doc/aces-omarchy"
 license=('MIT')
-depends=('aces-base')
+depends=('aces-base>=0.1.0-3')  # the skill documents ledger record, verify --json, show --kind, add-evidence, aces golden
 optdepends=('omarchy: the desktop these hooks and the plugin are for; without it only the skill links are useful'
             'aces-creative: the post-boot hook labels its launcher entries'
             'aces-consoles: console launcher entries')

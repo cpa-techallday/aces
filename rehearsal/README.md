@@ -133,12 +133,28 @@ is in a bar section of `~/.config/omarchy/shell.json` (`omarchy plugin enable` a
 entry and answers "omarchy-shell is not running" over SSH). `aces-omarchy` 0.1.0-4's setup script now does the
 placement itself, and on this VM the entry was added by hand before the first desktop login.
 
-Still unverified: Hyprland and omarchy-shell on Hyper-V's synthetic display, and therefore the bar widget rendering live
-(nobody has logged into the desktop session; `omarchy plugin validate` and `qmllint` against Omarchy's own `qs.Commons`
-and `qs.Ui` modules are the checks that ran). `qmllint` found two real defects in the plugin, fixed in `aces-omarchy`
+Verified later the same evening: Hyprland and omarchy-shell do come up on Hyper-V's synthetic display. The desktop user
+signed in at the console, the bar rendered with the `aces-fabric` widget on its right section, and `vm-shot.ps1`
+captured it (the automated console sign-in attempt before that failed PAM authentication and is not retried: the
+password is typed by a person). Before that, `omarchy plugin validate` and `qmllint` against Omarchy's own `qs.Commons`
+and `qs.Ui` modules were the only checks. `qmllint` found two real defects in the plugin, fixed in `aces-omarchy`
 0.1.0-3: `Service.qml` declared a `state` property, shadowing Item's built-in one, and the `Process.exited` handler
 named a parameter type the shell cannot resolve. The remaining warning classes (`unqualified`, `missing-property` on the
 untyped `bar` object) occur in Omarchy's first-party plugins in the same numbers.
+
+## The golden path on the VM (2026-10-10, after midnight)
+
+After the four golden-path packages were rebuilt and `serve-repo.ps1` re-synced the web root (checked byte for byte
+against `repo\x86_64`), the VM upgraded aces-base 0.1.0-3, aces-engineering 0.1.0-2, aces-voxel 0.1.0-2 and
+aces-omarchy 0.1.0-5 from the signed LAN repo with `pacman -Sy` and ran `aces golden run --demo` from a login shell
+over SSH, as a user would: **PASS, verified-desktop, exit 0, 23.7 s** (25 s with interpreter start) on 4 vCPUs with no
+GPU, run `20261009T144006Z-b3ac99`, bundle `070c439672c8`, simlab ledger entry 1, aces ledger entry 2. The same seed
+gives the same winner and the same numbers as the workstation and the clean container (volfrac 0.23, rmin 11.55 mm,
+0.177 kg, vm_p99 54.47 MPa against 60, umax 0.0312 mm against 0.035; the 2 mm check ran on the CPU, +4.4 % on vm_p99).
+`aces golden verify latest` passed its ten checks (the eleventh, `resolve`, is opt-in), `aces-evidence verify` was ok,
+`aces doctor` showed the golden row as ok with that run, and the linked agent skill carried the new text. The run
+directory was copied to `D:\HyperV\aces-rehearsal\reports\golden-20261010-013959\` (report, renders, evidence). The
+`aces-install.sh` kit script runs the same two commands as steps 12 and 13 on a fresh install.
 
 ## Known problems to expect
 
@@ -147,7 +163,19 @@ untyped `bar` object) occur in Omarchy's first-party plugins in the same numbers
 - On HA-External the VM is a LAN host: `aces doctor` makes read-only GETs to the rig, and the ACES post-boot and
   post-update hooks run `aces fabric refresh`, which also POSTs a tool call to rig-state `:8010`. Use
   `ACES_DOCTOR_ARGS=--offline` and point `~/.config/aces/aces.toml` elsewhere if the rig must not be contacted.
-- Whether Hyprland and omarchy-shell come up on Hyper-V's synthetic display is unverified; the SSH path does not need them.
+- The VM's disks (`D:\HyperV\aces-rehearsal\vm`) sit on a USB SSD (Samsung T7 Shield). On the evening of 2026-10-09 the
+  drive stalled for a moment (System log, provider `disk`, event 153 "IO operation ... was retried", four in one second;
+  three more the day before), the Hyper-V worker passed the failed I/O into the guest, and the guest's btrfs root went
+  read-only: `pacman -Q` listed nothing, `sudo` asked for a password (its drop-in could not be read), binaries returned
+  "Input/output error", and `/sys/fs/btrfs/*/devinfo/1/error_stats` showed 125 write and 101 read errors with no
+  corruption or generation errors. VMMS logged 16400/16420 "cannot access the data folder" and Hyper-V showed the VM as
+  RunningCritical. The repair was `Stop-VM aces-rehearsal -Force` (the guest went Off in seconds) and `Start-VM`: the
+  root remounted read-write at the last committed transaction with every package, the sudo drop-in, `shell.json` and
+  the agent configuration intact. Do not restore a checkpoint for this. The `serve-repo.ps1` http.server wedged in the
+  same stall (connections accepted, empty replies) and needed `-Stop` and a restart. Disable USB selective suspend or
+  the drive's power-off in Windows power management, or move the VM to an internal disk, to stop it recurring.
+- Hyprland and omarchy-shell on Hyper-V's synthetic display: verified on 2026-10-09 (see above); the SSH path does not
+  need them.
 
 ## Reset
 
