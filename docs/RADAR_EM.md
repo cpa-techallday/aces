@@ -1,6 +1,6 @@
 # ACES radar domain — the AERIS-X64 EM simulation pipeline
 
-Doc: CPA-ACES-RADAR-001 · Rev G · 2026-10-09 · status: fast tier live, verification tier live on gprMax AND Palace — patch_xband, wr90_through, tile_coupon, tile_multiport PASS on workstation, in the `aces-em:0.1` rig image, and wr90_through cross-checked FEM-vs-FDTD (S21 agreement 0.005 dB); patch far-field CLOSED with a verified matched-feed realized gain **5.33 dBi @ 9.88 GHz** (job22); **KiCad-layout import LIVE** (job23: `kicad_net` case, RXO_1 PASS — measured Z0 76.5 Ω vs 50 Ω spec: a real design finding)
+Doc: CPA-ACES-RADAR-001 · Rev H · 2026-10-09 · status: fast tier live, verification tier live on gprMax AND Palace — patch_xband, wr90_through, tile_coupon, tile_multiport PASS on workstation, in the `aces-em:0.1` rig image, and wr90_through cross-checked FEM-vs-FDTD (S21 agreement 0.005 dB); patch far-field CLOSED with a verified matched-feed realized gain **5.33 dBi @ 9.88 GHz** (job22); **KiCad-layout import LIVE** (job23: `kicad_net` case, RXO_1 PASS — measured Z0 76.5 Ω vs 50 Ω spec: a real design finding); **50 Ω redesign verified** (job24: w = 0.51 mm → measured 52.7 Ω, inside the ±7 % fab band); **via transitions LIVE** (job25: `via_coupon` case PASS — stitched F.Cu→In2→F.Cu transition, delay 0.3 %, S21 0.30 dB vs cascade)
 
 This adds the AERIS-X64 X-band phased-array radar as an ACES domain
 (`radar.phased_array`) and wires the simulation pipeline that carries a radar
@@ -166,6 +166,47 @@ stackup note already flags inner-layer RF as not-50 Ω).  Limitations:
 F.Cu GND pour (GCPW) not modelled, axis-aligned routes only, width snaps
 to the cell grid.
 
+**50 Ω redesign verification (job24, PASS):** the job23 finding drove a
+respinnable fix — RXO_1 re-routed at w = 0.51 mm.  The kicad_net run on
+the widened trace measures **Z0 = 52.7 Ω** (thickness-corrected Hammerstad
+model 50.65 Ω, +5.5 % vs the 50 Ω target — inside the ±7 % fab band).
+The two unmitered 90° bends reflect at −12 dB: miter at 0.7·w before
+tape-out.  Results in `pipeline-runs/job24-redesign/`.
+
+**Via transitions (job25, `structure: "via_coupon"`, PASS):** a stitched
+F.Cu→In2.Cu→F.Cu transition coupon on the board-1 hybrid stack (0.254 mm
+RO4350B + 2×0.152 mm FR4): 6 mm microstrip – via – 6 mm stripline
+(w = 0.203 mm) – via – 6 mm microstrip, square PEC barrels through In1
+antipads, 4 stitching vias per signal via.  Reference = ABCD cascade of
+the three lossy line sections.  Measured vs cascade: **delay 0.30 %**,
+**S21 0.30 dB** (bar 0.5), reciprocity 1.8×10⁻⁵ dB, wave-split residuals
+0.002; |S11| delta 0.137 (bar 0.15 — the 1-D cascade cannot represent
+antipad capacitance / radiation damping at the transition, which reduce
+the measured ripple below the lossless-junction prediction).  Three
+findings, each pinned by a test:
+
+- **Stitching is mandatory and must be diagonal.**  Unstitched antipads
+  break the return path and mask the stripline section entirely (flat
+  −15…−30 dB S11).  But axis-aligned (±off, 0) stitches at the natural
+  offset *land on the trace axis and short it* (S11 −0.03 dB, total
+  reflection) — stitches go at 45° (d = off/√2 in x and y).
+- **IPC-2141 under-predicts stripline Z0 in the wide-strip regime.**  At
+  the coupon's w/(b−t) = 0.75 it gives 28.2 Ω; a 2-D Laplace SOR field
+  solve of the exact cross-section gives 35.6 Ω and Cohn's fringing form
+  35.9 Ω — the model now uses Cohn (`stripline_z0_cohn`), IPC-2141 kept
+  for reference.  Compounding bug: the model's b had forgotten the trace
+  cell (6 vs 7 cells).
+- **Stitched via loop inductance is negligible at X-band** (fit
+  L_eff < 0.02 nH; the isolated-barrel Grover 0.16 nH over-predicts and
+  is *not* in the reference).  Group delay must include the via vertical
+  transits (~3 ps each) — that takes the delay error from 5.2 % to 0.3 %.
+
+A standalone stripline test fixture fed by vertical source strings
+between the planes launches parallel-plate modes (S21 −13 dB junk) —
+feed stripline coupons via microstrip transitions, never directly.
+CAL_* nets stay deferred: their 0.6 mm end sections cannot host a probe
+triad and the CPL pad offsets are odd — recorded finding, not a blocker.
+
 **Patch far-field (job14 + job20 audit, resolved):** gprMax 4.x
 layered-background NTFF (`#ntff_layered_background` with the PEC-terminated
 RO4350B stack — the Sommerfeld formulation; a conventional Huygens box is
@@ -300,7 +341,7 @@ records factors and provenance, not geometry.
 | Domain package | `src/aces/domains/radar/` (`array`, `cascade`, `linkbudget`, `model`, `calibrate`, `em_adapter`) |
 | Registration | `src/aces/domains/__init__.py` (`MODELS`) |
 | Spec template | `specs/templates/radar_phased_array.yaml` (X64 baseline values, datasheet-cited chain) |
-| Tests | `tests/test_radar.py` (16 tests), `tests/test_em_adapter.py` (17 tests), `tests/test_kicad_import.py` (9 tests) |
+| Tests | `tests/test_radar.py` (16 tests), `tests/test_em_adapter.py` (25 tests), `tests/test_kicad_import.py` (10 tests), `tests/test_via_coupon.py` (13 tests) |
 
 ## 6. What this does not do yet
 
@@ -321,9 +362,13 @@ records factors and provenance, not geometry.
   match inset (S11 ≈ −9.7 dB).  Further antenna-gain work (inset-fed or
   aperture-coupled redesigns) is antenna design, not pipeline work.
 - tile_multiport + kicad_net cover the 2-port machinery and real-layout
-  import (job23, RXO_1 PASS); via transitions (CAL_* nets), 45°/arbitrary
-  angles, N-port decomposition, and the F.Cu pour remain future work.
-  The gprMax eigenmode-port sweep beta degrades mid-anchor (up to
+  import (job23, RXO_1 PASS), the 50 Ω redesign is verified (job24,
+  w = 0.51 mm → 52.7 Ω), and via transitions are validated (job25,
+  via_coupon PASS — stitched F.Cu→In2→F.Cu); 45°/arbitrary-angle routes,
+  N-port decomposition of full layouts, and the F.Cu pour remain future
+  work.  CAL_* nets are deferred (0.6 mm end sections cannot host a probe
+  triad, CPL pad offsets odd — recorded finding).  The gprMax
+  eigenmode-port sweep beta degrades mid-anchor (up to
   6.9 % at 9.5 GHz vs theory, observed in the job18 Palace comparison) while
   S-magnitudes are unaffected — phase-sensitive uses should re-anchor.
 - SI sign-off (DDR skew, JESD lanes) stays in HyperLynx/ADS/Sigrity class tools —

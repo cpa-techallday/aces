@@ -47,6 +47,8 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import numpy as np
+
 from .em_adapter import microstrip_er_eff, microstrip_z0
 
 C0 = 299792458.0
@@ -196,6 +198,320 @@ def parse_pcb(path) -> Pcb:
         if nm and lay:
             pcb.zones.append((nm[1], lay[1]))
     return pcb
+
+
+def net_sections(pcb: Pcb, net_name: str) -> dict:
+    """Chain a multi-layer net into ordered sections + vias (CAL_* topology).
+
+    Returns {"sections": [{"layer": str, "points_mm": [...], "width_mm": w}],
+             "vias_mm": [(x, y, size, drill)], "pads": [...]}.
+    Sections are ordered end-to-end; a via joins the end of one section to
+    the start of the next.  Same honesty rules as net_polyline: branches,
+    loops and non-axis-aligned segments raise.
+    """
+    segs = [s for s in pcb.segments if s.net == net_name]
+    if not segs:
+        raise ValueError(f"net {net_name!r}: no segments")
+    vias = [v for v in pcb.vias if v["net"] == net_name]
+    for s in segs:
+        if abs(s.start[0] - s.end[0]) > 1e-9 and abs(s.start[1] - s.end[1]) > 1e-9:
+            raise ValueError(f"net {net_name!r}: non-axis-aligned segment "
+                             f"{s.start} -> {s.end} (staircase-exact import only)")
+
+    def key(p):
+        return (round(p[0], 4), round(p[1], 4))
+
+    # nodes: segment endpoints and via sites; edges: segments (layered) and vias
+    adj: dict = {}
+    for s in segs:
+        a, b = key(s.start), key(s.end)
+        adj.setdefault(a, []).append((b, s))
+        adj.setdefault(b, []).append((a, s))
+    via_sites = {key(v["at"]) for v in vias}
+    ends = [p for p, nbrs in adj.items() if len(nbrs) == 1]
+    if len(ends) != 2:
+        raise ValueError(f"net {net_name!r}: not a simple chain ({len(ends)} endpoints)")
+
+    # walk, emitting a new section whenever the layer changes; a layer change
+    # is only legal at a via site (copper on different layers cannot touch)
+    sections = []
+    prev, cur = None, ends[0]
+    cur_layer = None
+    hops = 0
+    visited = {ends[0]}
+    while True:
+        nxt = [(n, s) for n, s in adj.get(cur, [])
+               if not (n == prev) and not (n in visited and n != ends[1])]
+        if not nxt:
+            break
+        n, s = nxt[0]
+        if s.layer != cur_layer:
+            if cur_layer is not None:
+                if cur not in via_sites:
+                    raise ValueError(f"net {net_name!r}: layer change at {cur} "
+                                     "without a via")
+                hops += 1
+            sections.append({"layer": s.layer, "points_mm": [cur], "width_mm": s.width})
+            cur_layer = s.layer
+        sections[-1]["points_mm"].append(n)
+        visited.add(n)
+        prev, cur = cur, n
+        if cur == ends[1]:
+            break
+    if not sections or sections[-1]["points_mm"][-1] != ends[1]:
+        raise ValueError(f"net {net_name!r}: chain did not reach the far end")
+    if hops != len(vias):
+        raise ValueError(f"net {net_name!r}: {len(vias)} via(s) but the chain "
+                         f"uses {hops} — stub vias or unrouted sections")
+    pads = [p for p in pcb.pads if p.net == net_name]
+    return {"sections": sections,
+            "vias_mm": [(v["at"][0], v["at"][1], v["size"], v["drill"]) for v in vias],
+            "n_vias_used": hops, "pads": pads}
+
+
+# ------------------------------------------------------------------ via coupon
+def stripline_z0_t(er: float, b: float, w: float, t: float = CU_T_M) -> float:
+    """Symmetric stripline, IPC-2141 form with thickness correction
+    (stackup.py z0_stripline).  ``b`` is the full plane-to-plane spacing."""
+    we = w + (t / math.pi) * (1 - 0.5 * math.log((t / (2 * b + t)) ** 2
+                                                 + (0.0796 * t / (w + 1.1 * t)) ** 2))
+    return (60 / math.sqrt(er)) * math.log(4 * b / (0.67 * math.pi * (0.8 * we + t)))
+
+
+def stripline_z0_cohn(er: float, b: float, w: float, t: float = CU_T_M) -> float:
+    """Symmetric stripline, Cohn (1955) fringing form — accurate to ~1-2 %
+    for w/(b-t) >= 0.35 where IPC-2141 increasingly under-predicts
+    (job25: coupon cross-section w/(b-t) = 0.75, IPC-2141 27.1 ohm vs
+    Cohn 35.9 ohm vs 2-D Laplace SOR field solve 35.6 ohm).
+    ``b`` is the plane-to-plane spacing."""
+    u = 1.0 - t / b
+    cf = ((2.0 / u) * math.log(1.0 / u + 1.0)
+          - (1.0 / u - 1.0) * math.log(1.0 / u ** 2 - 1.0)) / math.pi
+    return 94.15 / (math.sqrt(er) * ((w / b) / u + cf))
+
+
+def cascade_sparams(freqs_hz, sections, z_port: float = 50.0) -> list[dict]:
+    """ABCD cascade between z_port ports.  Element kinds:
+      - line: {"z0": ohm, "er_eff": float, "length_m": float,
+               optional "tand": float, "er": float, "kind": "microstrip"|"stripline"}
+        (dielectric loss included when tand is given; PEC conductors)
+      - series inductance: {"series_l_h": float}   (via barrel model)
+    Returns per-frequency {"s11": c, "s21": c}.
+    """
+    out = []
+    for f in freqs_hz:
+        m = np.eye(2, dtype=complex)
+        for s in sections:
+            if "series_l_h" in s:
+                z = 1j * 2 * math.pi * f * s["series_l_h"]
+                ms = np.array([[1, z], [0, 1]], dtype=complex)
+            else:
+                beta = 2 * math.pi * f * math.sqrt(s["er_eff"]) / C0
+                alpha = 0.0
+                tand = s.get("tand", 0.0)
+                if tand:
+                    er, ee = s["er"], s["er_eff"]
+                    if s.get("kind") == "stripline":
+                        alpha = (math.pi * f * math.sqrt(er) / C0) * tand
+                    else:
+                        alpha = (math.pi * f / C0) * (er / math.sqrt(ee)) * \
+                            ((ee - 1) / (er - 1)) * tand
+                g = alpha + 1j * beta
+                gl = g * s["length_m"]
+                z0 = s["z0"]
+                ch, sh = np.cosh(gl), np.sinh(gl)
+                ms = np.array([[ch, z0 * sh], [sh / z0, ch]], dtype=complex)
+            m = m @ ms
+        a, b, c_, d = m[0, 0], m[0, 1], m[1, 0], m[1, 1]
+        denom = a + b / z_port + c_ * z_port + d
+        s21 = 2 / denom
+        s11 = (a + b / z_port - c_ * z_port - d) / denom
+        out.append({"frequency_hz": float(f), "s11": s11, "s21": s21})
+    return out
+
+
+def via_inductance_h(length_m: float, radius_m: float) -> float:
+    """Via barrel series inductance (Grover wire form, isolated-barrel
+    approximation): L = 2e-7 * h * (ln(2h/r) - 0.75)."""
+    return 2e-7 * length_m * (math.log(2 * length_m / radius_m) - 0.75)
+
+
+def deck_via_coupon(cell: float, window_s: float, f0: float,
+                    l_ms: float = 6e-3, l_sl: float = 6e-3,
+                    w_ms: float = 0.508e-3, w_sl: float = 0.2032e-3,
+                    via_cells: int = 4, antipad_cells: int = 10,
+                    stitch_cells: int = 2, stitch_off: float = 0.508e-3,
+                    feed_end: int = 1, margin_cells: int = 16,
+                    air_cells: int = 16, lift_cells: int = 12,
+                    er_ro: float = 3.66, tand_ro: float = 0.0037,
+                    er_fr4: float = 4.10, tand_fr4: float = 0.021) -> tuple[str, dict]:
+    """Via-transition coupon on the board-1 hybrid stack (TILE_8L L1..L3):
+
+      F.Cu microstrip (RO4350B, h = 0.254 mm = 5 cells @ 0.0508) -- via -->
+      In2.Cu stripline (FR4, b = 7 cells = 0.356 mm plane inner-face
+      spacing incl. the trace cell; 0.324 mm layout) -- via --> F.Cu.
+
+    Solid In3 GND below, In1 GND with square antipads at the vias, via
+    barrels as square PEC columns (drill 0.20 mm -> 4 cells = 0.2032 mm),
+    4 diagonal stitching vias per signal via (45 deg offsets — axis-aligned
+    stitches land on the trace and short it).  Stacked-source
+    feed/termination across the 5-cell RO4350B gap (5 x 10 ohm, job22
+    rule).  Reference = ABCD cascade of the three lossy line sections
+    (Cohn stripline Z0; stitched via loop-L negligible at X-band).
+    """
+    n_ro = round(0.254e-3 / cell)
+    n_fr4 = round(0.162e-3 / cell)
+    if abs(n_ro * cell - 0.254e-3) > 1e-9:
+        raise ValueError("cell must divide the 0.254 mm RO4350B core")
+
+    def snap(v: float) -> float:
+        return round(v / cell) * cell
+
+    l_ms, l_sl = snap(l_ms), snap(l_sl)
+    w_ms_c, w_sl_c = round(w_ms / cell), round(w_sl / cell)
+    w_ms_u, w_sl_u = w_ms_c * cell, w_sl_c * cell
+    total = 2 * l_ms + l_sl
+
+    dom_x = total + 2 * margin_cells * cell
+    y_span = max(w_ms_u, w_sl_u, antipad_cells * cell)
+    dom_y = y_span + 2 * margin_cells * cell
+    yc = snap(dom_y / 2)
+    z_in3 = lift_cells * cell
+    z_in2 = z_in3 + cell + n_fr4 * cell
+    z_in1 = z_in2 + cell + n_fr4 * cell
+    z_fc = z_in1 + cell + n_ro * cell
+    dom_z = z_fc + cell + air_cells * cell
+    z_probe = z_in1 + cell + (n_ro // 2) * cell
+
+    sigma_ro = 2 * math.pi * f0 * EPS0 * er_ro * tand_ro
+    sigma_fr4 = 2 * math.pi * f0 * EPS0 * er_fr4 * tand_fr4
+
+    x0 = margin_cells * cell
+    x_v1 = snap(x0 + l_ms)
+    x_v2 = snap(x0 + l_ms + l_sl)
+    x_end = snap(x0 + total)
+
+    lines = ["#title: aces-tile-em via_coupon (F.Cu -> via -> In2 -> via -> F.Cu)",
+             f"#domain: {dom_x:.7f} {dom_y:.7f} {dom_z:.7f}",
+             f"#dx_dy_dz: {cell:.7f} {cell:.7f} {cell:.7f}",
+             f"#time_window: {window_s:.6e}",
+             f"#material: {er_ro:.4f} {sigma_ro:.5f} 1.0 0.0 subro",
+             f"#material: {er_fr4:.4f} {sigma_fr4:.5f} 1.0 0.0 subfr4",
+             f"#waveform: gaussiandot 1.0 {f0:.6e} feed",
+             f"#waveform: gaussiandot 1.0e-30 {f0:.6e} term",
+             # dielectrics
+             f"#box: 0 0 {z_in3 + cell:.7f} {dom_x:.7f} {dom_y:.7f} {z_in2:.7f} subfr4",
+             f"#box: 0 0 {z_in2 + cell:.7f} {dom_x:.7f} {dom_y:.7f} {z_in1:.7f} subfr4",
+             f"#box: 0 0 {z_in1 + cell:.7f} {dom_x:.7f} {dom_y:.7f} {z_fc:.7f} subro",
+             # reference planes
+             f"#box: 0 0 {z_in3:.7f} {dom_x:.7f} {dom_y:.7f} {z_in3 + cell:.7f} pec",
+             f"#box: 0 0 {z_in1:.7f} {dom_x:.7f} {dom_y:.7f} {z_in1 + cell:.7f} pec"]
+    # antipads: re-stamp dielectric through the In1 plane at each via
+    for xv in (x_v1, x_v2):
+        ap = antipad_cells * cell / 2
+        lines.append(f"#box: {xv - ap:.7f} {yc - ap:.7f} {z_in1:.7f} "
+                     f"{xv + ap:.7f} {yc + ap:.7f} {z_in1 + cell:.7f} subfr4")
+    # traces
+    hw_m, hw_s = w_ms_u / 2, w_sl_u / 2
+    lines.append(f"#box: {x0:.7f} {yc - hw_m:.7f} {z_fc:.7f} {x_v1:.7f} {yc + hw_m:.7f} {z_fc + cell:.7f} pec")
+    lines.append(f"#box: {x_v2:.7f} {yc - hw_m:.7f} {z_fc:.7f} {x_end:.7f} {yc + hw_m:.7f} {z_fc + cell:.7f} pec")
+    lines.append(f"#box: {x_v1:.7f} {yc - hw_s:.7f} {z_in2:.7f} {x_v2:.7f} {yc + hw_s:.7f} {z_in2 + cell:.7f} pec")
+    # via barrels: square columns through the whole stack between the traces
+    hv = via_cells * cell / 2
+    for xv in (x_v1, x_v2):
+        lines.append(f"#box: {xv - hv:.7f} {yc - hv:.7f} {z_in2:.7f} "
+                     f"{xv + hv:.7f} {yc + hv:.7f} {z_fc + cell:.7f} pec")
+    # stitching vias: 4 ground barrels (In1 <-> In3) at 45-degree offsets
+    # around each signal via — closing the return path across the transition
+    # WITHOUT landing on the trace axis (job25: (±off, 0) stitches short the
+    # stripline trace, total reflection)
+    hs = stitch_cells * cell / 2
+    d45 = stitch_off / math.sqrt(2)
+    for xv in (x_v1, x_v2):
+        for dx, dy in ((d45, d45), (d45, -d45), (-d45, d45), (-d45, -d45)):
+            xs_, ys_ = snap(xv + dx), snap(yc + dy)
+            lines.append(f"#box: {xs_ - hs:.7f} {ys_ - hs:.7f} {z_in3:.7f} "
+                         f"{xs_ + hs:.7f} {ys_ + hs:.7f} {z_in1 + cell:.7f} pec")
+
+    # feed / termination strings across the RO4350B gap (job22 rule)
+    r_each = 50.0 / n_ro
+    x_p1 = snap(x0 + cell)
+    x_p2 = snap(x_end - cell)
+    fx, tx = (x_p1, x_p2) if feed_end == 1 else (x_p2, x_p1)
+    for k in range(n_ro):
+        lines.append(f"#voltage_source: z {fx:.7f} {yc:.7f} {z_in1 + cell + k * cell:.7f} "
+                     f"{r_each:.3f} feed")
+    for k in range(n_ro):
+        lines.append(f"#voltage_source: z {tx:.7f} {yc:.7f} {z_in1 + cell + k * cell:.7f} "
+                     f"{r_each:.3f} term")
+
+    # probe triads on the two F.Cu sections; the FED end's triad comes first
+    # (rx1-3) so the runner's near/far split matches every feed_end
+    spacing = 4 * cell if 4 * cell < 0.45e-3 else cell
+    x_feed_end = x0 if feed_end == 1 else x_end
+    x_term_end = x_end if feed_end == 1 else x0
+    sgn = 1.0 if feed_end == 1 else -1.0
+    near, far = [], []
+    for j in range(3):
+        d = 0.35e-3 + j * spacing
+        lines.append(f"#rx: {snap(x_feed_end + sgn * d):.7f} {yc:.7f} {z_probe:.7f}")
+        near.append(d)
+    for j in range(3):
+        d = 0.35e-3 + j * spacing
+        lines.append(f"#rx: {snap(x_term_end - sgn * d):.7f} {yc:.7f} {z_probe:.7f}")
+        far.append(d)
+
+    er_eff_ms = er_eff_microstrip_t(er_ro, n_ro * cell, w_ms_u)
+    # plane inner-face spacing: FR4 cells below + trace cell + FR4 cells above
+    # (job25: modelling b as 2*n_fr4 cells forgot the trace cell -> 27 ohm
+    #  IPC-2141 instead of the correct 36 ohm Cohn)
+    b_sl = (2 * n_fr4 + 1) * cell
+    z0_sl = stripline_z0_cohn(er_fr4, b_sl, w_sl_u, t=cell)
+    via_l = z_fc - z_in2                       # barrel length (full stack)
+    via_r = via_cells * cell / 2               # square barrel half-width
+    # via vertical transit: FR4 (trace cell + n_fr4) + RO4350B (n_ro) cells;
+    # the plane cells are PEC.  Per via; the delay model adds 2x.
+    via_transit = ((n_fr4 + 1) * cell * math.sqrt(er_fr4)
+                   + n_ro * cell * math.sqrt(er_ro)) / C0
+    geom = {"cell_m": cell, "l_ms_m": l_ms, "l_sl_m": l_sl,
+            "w_ms_m": w_ms_u, "w_sl_m": w_sl_u,
+            "via_cells": via_cells, "antipad_cells": antipad_cells,
+            "via_l_m": via_l, "via_r_m": via_r,
+            "via_l_h": via_inductance_h(via_l, via_r),
+            "stitch_cells": stitch_cells, "stitch_off_m": stitch_off,
+            "er_ro": er_ro, "tand_ro": tand_ro, "er_fr4": er_fr4, "tand_fr4": tand_fr4,
+            "er_eff_ms_model": er_eff_ms,
+            "z0_ms_model_ohm": z0_microstrip_t(er_ro, n_ro * cell, w_ms_u),
+            "z0_sl_model_ohm": z0_sl, "er_sl": er_fr4,
+            "z0_sl_ipc2141_ohm": stripline_z0_t(er_fr4, b_sl, w_sl_u, t=cell),
+            "via_transit_s": via_transit,
+            "b_sl_modelled_m": b_sl, "b_sl_layout_m": 0.324e-3,
+            "probes_near_m": near, "probes_far_m": far,
+            "feed_end": feed_end, "length_m": total,
+            "stacked_feed": True}
+    return "\n".join(lines) + "\n", geom
+
+
+def expectations_via_coupon(geom: dict, f_hz: float) -> dict:
+    """Cascade-model reference for the via coupon: lossy line sections
+    (dielectric only, PEC conductors).  With >= 4 stitching vias per signal
+    via the loop inductance of the transition is negligible at X-band
+    (job25 fit: L_eff < 0.02 nH; isolated-barrel Grover 0.16 nH
+    over-predicts), so no series-L elements.  Group delay includes the
+    two via vertical transits."""
+    ms = {"z0": geom["z0_ms_model_ohm"], "er_eff": geom["er_eff_ms_model"],
+          "length_m": geom["l_ms_m"], "kind": "microstrip",
+          "er": geom["er_ro"], "tand": geom["tand_ro"]}
+    sl = {"z0": geom["z0_sl_model_ohm"], "er_eff": geom["er_sl"],
+          "length_m": geom["l_sl_m"], "kind": "stripline",
+          "er": geom["er_fr4"], "tand": geom["tand_fr4"]}
+    sections = [ms, sl, ms]
+    sp = cascade_sparams([f_hz], sections)[0]
+    delay = sum(s.get("length_m", 0.0) * math.sqrt(s["er_eff"]) / C0
+                for s in sections if "er_eff" in s)
+    delay += 2 * geom.get("via_transit_s", 0.0)
+    return {"s11_model": sp["s11"], "s21_model": sp["s21"],
+            "delay_s_model": delay, "sections": sections}
 
 
 # ------------------------------------------------------------------ polyline
