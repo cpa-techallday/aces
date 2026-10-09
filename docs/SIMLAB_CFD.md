@@ -149,14 +149,19 @@ residual of 0.010 (sd of log) for friction and 0.002 for Nusselt.
   - `aces-cfd-validation`
   - `aces-cfd-resolution`
   - `aces-cal-air-01`
-- **Not run yet:** the rig is in mode `general-flagship`, so the simulation pool is empty and every card holds LLM
-  weights. In a `sim-lab` mode, run these in order:
+  - `aces-cal-air-02p` (primitive Mach probe: Re 1/3/10 — every campaign-1 primitive case exceeded
+    Mach 0.15, so its factors were never fitted; the probe finds the Mach-safe Re range)
+  - `aces-cal-air-02r` (wall-ratio extension: gyroid + diamond at t/a 0.20/0.24/0.28, Re 10/30/100 —
+    widens the calibrated 0.08–0.16 range)
+- **Run state (2026-10-09):** validation, resolution and `aces-cal-air-01` are complete; the D25 fit is in
+  `data/calibration/hx.json`. `aces-cal-air-02p` and `aces-cal-air-02r` are enqueued (27 cases, n = 96,
+  air 320 K) and running in the sim-lab-4 window. When they finish:
+  `aces cfd-collect` both experiments, rebuild the corpus, re-fit with `aces calibrate`, then rebuild the
+  Tier-0 training dataset (`aces propose-dataset`).
 
 ```bash
-docker exec -w /work simlab-queue-1 python -m simlab enqueue cases/aces/aces-cfd-validation.yaml --docker
-docker exec -w /work simlab-queue-1 python -m simlab enqueue cases/aces/aces-cfd-resolution.yaml --docker
-# after storage is sorted (docs/WORKFLOW.md section B):
-docker exec -w /work simlab-queue-1 python -m simlab enqueue cases/aces/aces-cal-air-01.yaml --docker
+docker exec -w /work simlab-queue-1 python -m simlab enqueue cases/aces/aces-cal-air-02p.yaml --docker
+docker exec -w /work simlab-queue-1 python -m simlab enqueue cases/aces/aces-cal-air-02r.yaml --docker
 ```
 
 ## Building and registering from scratch
