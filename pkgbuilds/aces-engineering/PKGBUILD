@@ -1,0 +1,86 @@
+# Maintainer: Carbon Project Australia
+# The desktop engineering stack: one locked Python venv at /opt/aces/engineering/venv (requirements.txt: every
+# distribution hash-pinned, binary wheels only), a vendored snapshot of simlab and gendesign from cudax-sim-runtime
+# (SNAPSHOT: source commit and content hash) on the venv's path, and aces-simlab, aces-evidence, aces-gendesign.
+# CPU paths run on the desktop; GPU solving stays on the rig, reached through its MCP servers (mcp.json.example).
+# Sources are packed from src/aces-engineering by bin/build; pip downloads the wheels inside the build container.
+pkgname=aces-engineering
+pkgver=0.1.0
+pkgrel=1
+_py=3.14  # the venv belongs to this interpreter minor version (the aces-builder image's python, 3.14.7 on 2026-10-09)
+pkgdesc="ACES engineering: locked Python venv with the simlab client and gendesign CPU paths (aces-simlab, aces-evidence, aces-gendesign)"
+arch=('x86_64')
+url="file:///usr/share/doc/aces-engineering"
+# MIT: the aces-engineering wrappers. The vendored simlab/gendesign have no licence yet (LicenseRef-ACES-undecided).
+# The venv's third-party wheels and the native libraries they bundle are listed in LICENSES.md.
+license=('MIT' 'LicenseRef-ACES-undecided' 'Apache-2.0' 'BSD-2-Clause' 'BSD-3-Clause' 'ISC' 'MPL-2.0' 'PSF-2.0'
+         'MIT-CMU' 'LGPL-2.1-only' 'LGPL-2.1-or-later' 'GPL-2.0-or-later' 'GPL-3.0-or-later WITH GCC-exception-3.1'
+         'FreeImage')
+# libglvnd and libx11: the OpenCASCADE libraries in the OCP wheel link libGL.so.1 and libX11.so.6, which manylinux
+# wheels leave to the system (ldd on a clean archlinux:base reports them missing; build123d then fails to import)
+depends=('aces-base' "python>=$_py" 'python<3.15' 'gcc-libs' 'glibc' 'libglvnd' 'libx11')
+optdepends=('libreoffice-fresh: PDF reports (simlab report runs soffice --headless)'
+            'nvidia-utils: GPU rows in aces-simlab capacity --local (nvidia-smi)')
+options=('!strip' '!debug' 'staticlibs')  # keep the wheels byte-identical to PyPI (their RECORD hashes stay valid)
+source=("$pkgname-src.tar.gz")
+sha256sums=('SKIP')
+_root=opt/aces/engineering
+
+build() {
+  cd "$srcdir/$pkgname"
+  local have
+  have="$(/usr/bin/python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])')"
+  if [[ "$have" != "$_py" ]]; then
+    echo "builder python is $have but the lock is for $_py: re-run src/aces-engineering/lock.sh and bump _py" >&2
+    return 1
+  fi
+  rm -rf "$srcdir/root"
+  # built at its final absolute path under $srcdir/root; package() drops the prefix
+  /usr/bin/python$_py -m venv "$srcdir/root/$_root/venv"
+  PIP_CONFIG_FILE=/dev/null PIP_CACHE_DIR="${SRCDEST:-$srcdir}/pip-cache" \
+    "$srcdir/root/$_root/venv/bin/python" -m pip install --disable-pip-version-check --no-input --no-compile \
+      --require-hashes --only-binary=:all: -r requirements.txt
+}
+
+check() {
+  cd "$srcdir/$pkgname"
+  # imports, the element patch test, the workstation beam record, SIMP, the STEP path, evidence chain and report
+  HOME="$srcdir/home" XDG_DATA_HOME="$srcdir/home/share" ACES_ENGINEERING_EXAMPLES="$PWD/vendor/examples" \
+  PYTHONPATH="$PWD/vendor:$PWD/lib" PYTHONDONTWRITEBYTECODE=1 \
+    "$srcdir/root/$_root/venv/bin/python" -m aces_engineering.selftest
+}
+
+package() {
+  cd "$srcdir/$pkgname"
+  local venv="$pkgdir/$_root/venv" site="$pkgdir/$_root/venv/lib/python$_py/site-packages"
+  install -dm755 "$pkgdir/opt"
+  cp -a "$srcdir/root/opt/." "$pkgdir/opt/"
+  # relocate: scripts' shebangs, activate files and pyvenv.cfg named $srcdir/root/opt/...
+  grep -rlI --null "$srcdir/root" "$venv" | xargs -0 -r sed -i "s|$srcdir/root||g"
+  # Python 3.14's venv adds a joke symlink with a non-ASCII name (U+1D70B "thon"); bsdtar cannot store it portably
+  find "$venv/bin" -maxdepth 1 -type l -name '*thon' ! -name 'python*' -delete
+
+  # vendored snapshot + wrappers on the venv's path, and the start-up hook for the per-user registry
+  install -dm755 "$pkgdir/$_root/lib"
+  cp -r vendor/simlab vendor/gendesign lib/aces_engineering "$pkgdir/$_root/lib/"
+  install -m644 lib/aces_engineering_site.py -t "$pkgdir/$_root/lib"
+  install -m644 SNAPSHOT requirements.txt -t "$pkgdir/$_root"
+  printf '%s\n' "/$_root/lib" "import aces_engineering_site" > "$site/aces-engineering.pth"
+
+  # bytecode compiled once, at the final paths; checked-hash pycs do not depend on file times
+  find "$pkgdir/$_root" -name __pycache__ -type d -prune -exec rm -rf {} +
+  /usr/bin/python$_py -m compileall -q -j0 --invalidation-mode checked-hash -s "$pkgdir" -p / "$pkgdir/$_root" \
+    > "$srcdir/compileall.log" 2>&1 || echo "compileall: $(grep -c Error "$srcdir/compileall.log") files did not compile (as with pip)"
+  if grep -rl --binary-files=text "$srcdir" "$pkgdir" | head -3 | grep .; then
+    echo "build paths are still present in the files above" >&2
+    return 1
+  fi
+
+  install -Dm755 bin/aces-simlab bin/aces-evidence bin/aces-gendesign -t "$pkgdir/usr/bin"
+  install -Dm644 mcp.json.example -t "$pkgdir/usr/share/aces/engineering"
+  install -Dm644 vendor/examples/* -t "$pkgdir/usr/share/aces/engineering/examples"
+  install -Dm644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+  ln -s "/$_root/SNAPSHOT" "$pkgdir/usr/share/doc/$pkgname/SNAPSHOT"
+  install -Dm644 LICENSE LICENSES.md -t "$pkgdir/usr/share/licenses/$pkgname"
+  echo "venv size: $(du -sh "$venv" | cut -f1) ($(ls -d "$site"/*.dist-info | wc -l) distributions)"
+}

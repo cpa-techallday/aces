@@ -1,0 +1,3 @@
+#!/bin/sh
+# aces-evidence: aces_engineering.evidence_cli in the aces-engineering venv (the vendored simlab and gendesign are on its path).
+exec /opt/aces/engineering/venv/bin/python -m aces_engineering.evidence_cli "$@"

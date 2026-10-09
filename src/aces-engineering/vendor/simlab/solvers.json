@@ -1,0 +1,764 @@
+{
+  "gendesign-topopt": {
+    "module": "simlab.solvers.gendesign_topopt",
+    "physics": [
+      "structures"
+    ],
+    "precision": [
+      "float32",
+      "float64"
+    ],
+    "image": "gendesign:0.3",
+    "description": "3-D SIMP topology optimisation on a voxel grid (GPU, matrix-free PCG)",
+    "validation": {
+      "status": "pass",
+      "date": "2026-10-05",
+      "cases": [
+        {
+          "case": "cantilever3d, 1 mm voxels (12k elements), 30 iterations, float64, volfrac 0.2/0.3/0.4",
+          "compliance_Nmm": [
+            3.589,
+            1.956,
+            1.286
+          ],
+          "volume_held": true,
+          "note": "float32 run agreed within 0.1 %; monotone compliance decrease; box-section topology",
+          "record": "out/exp/cantilever-volfrac-sweep, MLflow simlab-validation"
+        },
+        {
+          "case": "wall_bracket_topopt (240k elements, bosses + holes, 2 kN, 15 %)",
+          "workstation_fp32": {
+            "compliance_Nmm": 202.3,
+            "wall_s": 105.8
+          },
+          "rig_fp64_gpu7": {
+            "compliance_Nmm": 202.03,
+            "wall_s": 56.25,
+            "device": "NVIDIA CMP 170HX"
+          },
+          "note": "identical topology on both machines (docs/BENCHMARKS.md)"
+        },
+        {
+          "case": "kernel: uniaxial bar and solid cantilever vs closed forms",
+          "see": "gendesign-beam-check"
+        }
+      ],
+      "note": "Compliance-only SIMP, Jacobi-PCG with true-residual acceptance; use float64."
+    }
+  },
+  "gendesign-beam-check": {
+    "module": "simlab.solvers.gendesign_beam_check",
+    "physics": [
+      "structures"
+    ],
+    "precision": [
+      "float32",
+      "float64"
+    ],
+    "image": "gendesign:0.3",
+    "description": "Solid cantilever beam on the voxel FEA kernel vs Euler-Bernoulli and Timoshenko closed forms",
+    "validation": {
+      "status": "pass",
+      "date": "2026-10-05",
+      "device": "NVIDIA RTX PRO 4000 Blackwell SFF (workstation)",
+      "dtype": "float64",
+      "tol": 1e-08,
+      "cases": [
+        {
+          "case": "solid cantilever 100x10x10 mm, 100 N consistent end traction, root clamped, 1.0 mm voxels (10k elements)",
+          "delta_fea_mm": 0.19891,
+          "delta_timoshenko_mm": 0.20153,
+          "delta_euler_bernoulli_mm": 0.2,
+          "err_vs_timoshenko_pct": -1.3,
+          "err_vs_eb_pct": -0.55,
+          "pcg_iters": 401
+        },
+        {
+          "case": "same at 0.5 mm voxels (80k elements)",
+          "delta_fea_mm": 0.19985,
+          "delta_timoshenko_mm": 0.20153,
+          "delta_euler_bernoulli_mm": 0.2,
+          "err_vs_timoshenko_pct": -0.84,
+          "err_vs_eb_pct": -0.08,
+          "pcg_iters": 804
+        }
+      ],
+      "note": "Converges toward the closed form with refinement and sits slightly stiff, as a fully clamped root face should. float32 cannot converge this problem (true residual floor ~0.4): float64 is mandatory for accuracy-sensitive work.",
+      "record": "out/exp/beam-validation-v1 (evidence.json per case, MLflow experiment simlab-validation)"
+    }
+  },
+  "gendesign-parametric": {
+    "module": "simlab.solvers.gendesign_parametric",
+    "physics": [
+      "structures"
+    ],
+    "precision": [
+      "float32",
+      "float64"
+    ],
+    "image": "gendesign:0.3",
+    "description": "Optuna parametric generative loop over a ParametricProblem with the GPU voxel-FEA evaluator",
+    "validation": {
+      "status": "pass",
+      "date": "2026-10-05",
+      "cases": [
+        {
+          "case": "lbracket_v1, NSGA-II, 120 trials, float64, 1 mm voxels",
+          "n_feasible": 30,
+          "n_pareto": 7,
+          "front": "0.285 kg/105 N.mm to 0.343 kg/61 N.mm under 150 MPa",
+          "record": "out/bracket_param_fp64"
+        },
+        {
+          "case": "build123d bracket vs analytic mask (same evaluator)",
+          "voxel_agreement_pct": 99.95,
+          "compliance_ratio": 1.022,
+          "vm_ratio": 0.987,
+          "record": "out/bracket_b3d/check.json"
+        }
+      ],
+      "note": "Evaluator reports pcg_relres and a converged flag; float32 evaluations were under-converged (front 10-40 % worse)."
+    }
+  },
+  "nozzle-angelino": {
+    "module": "simlab.solvers.nozzle_angelino",
+    "physics": [
+      "geometry"
+    ],
+    "precision": [
+      "float64"
+    ],
+    "image": "gendesign:0.3",
+    "description": "Angelino aerospike contour generator with ideal performance and STEP output",
+    "validation": {
+      "status": "pass",
+      "date": "2026-10-05",
+      "cases": [
+        {
+          "case": "gamma 1.22, eps 25, Re 40 mm",
+          "Me": 4.0069,
+          "nu_e_deg": 85.49,
+          "throat_gap_mm": 0.801,
+          "At_mm2": 201.06,
+          "throat_line_annulus_over_At": 1.0,
+          "L_full_mm": 155.21,
+          "check": "L_full = Re*sqrt(Me^2-1) and throat annulus = A* to 4 decimals"
+        }
+      ],
+      "note": "Ideal frozen-flow performance only; CFD correction is the purpose of the sweep layer.",
+      "record": "out/exp/aerospike-eps-sweep (6 cases, MLflow experiment rato-motor)"
+    }
+  },
+  "pyfr": {
+    "module": "simlab.solvers.pyfr_solver",
+    "physics": [
+      "cfd"
+    ],
+    "precision": [
+      "single",
+      "double"
+    ],
+    "image": "simlab-pyfr:0.3",
+    "description": "PyFR 3.x flux-reconstruction CFD (CUDA backend); mesh stage copies a case .msh or builds one from a STEP body with gmsh (box minus body, PyFR boundary names); solve stage imports, runs and post-processes forces (Cd, Cl rms, Strouhal)",
+    "validation": {
+      "status": "pass",
+      "date": "2026-10-05",
+      "image": "simlab-pyfr:0.3 (PyFR 3.1 + gmsh 4.15.2, CUDA backend)",
+      "cases": [
+        {
+          "case": "PyFR-Test-Cases 2d-inc-cylinder: incompressible NS, order 3, Re 200 (nu 0.005, U 1, D 1), t 0-75, single precision on the workstation RTX PRO 4000",
+          "St_fft": 0.2015,
+          "St_zero_crossing": 0.2,
+          "Cd_mean_last_half": 1.354,
+          "Cl_rms_last_half": 0.433,
+          "Cl_peak": 0.707,
+          "reference": "2-D simulations at Re 200 in the literature cluster at St 0.19-0.20, Cd 1.3-1.4, Cl amplitude 0.6-0.7",
+          "wall_s_run": 732.6,
+          "force_sampling": "every 10 steps (0.5 time units); use force_nsteps 2 on the rig for finer spectra",
+          "record": "out/exp/pyfr-inc-cylinder-2d-single (results.json, evidence.json); rig double-precision spec: cases/exp_cylinder.yaml"
+        },
+        {
+          "case": "CAD-to-CFD smoke: D = 1 sphere STEP -> gmsh mesh stage (box [-3,-3,-3]-[9,3,3], lc 0.12/1.0, 7026 tets) -> PyFR ac-navier-stokes order 2, Re 100, single precision, t 0-1 (dt 0.01, pseudo-dt 5e-4, <= 12 pseudo-iterations)",
+          "status": "pipeline pass, physics not converged",
+          "Cd_last_t1": 1.273,
+          "Cd_mean_last_half": 1.325,
+          "reference_steady_Cd_Re100": 1.09,
+          "wall_s_run": 36.3,
+          "image": "simlab-pyfr:0.3",
+          "note": "proves STEP -> mesh -> import -> run -> forces inside the container; impulsive start diverges at dt 0.05 / pseudo-dt 5e-3 on this mesh; validation-quality drag is a rig job (finer mesh, t_end ~100, double)",
+          "record": "out/exp/pyfr-sphere3d-smoke"
+        }
+      ],
+      "note": "Validated through the runtime in --docker mode; MLflow logging from inside the container needs the server started with the container host allowed (see compose.yaml)."
+    },
+    "stages": {
+      "mesh": "cpu",
+      "solve": "sim"
+    }
+  },
+  "step-structures": {
+    "module": "simlab.solvers.step_structures",
+    "physics": [
+      "structures"
+    ],
+    "precision": [
+      "float32",
+      "float64"
+    ],
+    "image": "gendesign:0.3",
+    "stages": {
+      "mesh": "cpu",
+      "solve": "sim",
+      "post": "cpu"
+    },
+    "description": "STEP -> centre-point voxelisation -> GPU voxel FEA -> von Mises / displacement fields (PNG, VTK), the CAD-to-result path",
+    "validation": {
+      "status": "pass",
+      "date": "2026-10-05",
+      "device": "NVIDIA RTX PRO 4000 Blackwell SFF (workstation)",
+      "cases": [
+        {
+          "case": "L-bracket STEP (out/bracket_b3d/bracket.step, build123d) through mesh -> solve -> post at 1 mm vs the evaluator reference in out/bracket_b3d/check.json",
+          "mask": "26694 solid voxels from the STEP round trip = 26694 in the reference (identical mask); voxel/B-rep volume 1.0011",
+          "float32_pipeline": {
+            "compliance_Nmm": 435.29,
+            "umax_mm": 0.5888,
+            "vm_max_MPa": 291.8,
+            "pcg_iters": 20000,
+            "converged": false
+          },
+          "float32_reference_check_json": {
+            "compliance_Nmm": 435.09,
+            "umax_mm": 0.5885,
+            "vm_max_MPa": 291.6,
+            "pcg_iters": 2219
+          },
+          "float64_pipeline": {
+            "compliance_Nmm": 425.85,
+            "umax_mm": 0.5757,
+            "vm_max_MPa": 284.9,
+            "pcg_iters": 1291,
+            "pcg_relres": 9.95e-09,
+            "converged": true
+          },
+          "note": "float32 reproduces the float32 reference to 0.05 % but is under-converged by 2.2 % in compliance (the Phase 2 finding again); float64 converges in 1291 iterations and is the citable number",
+          "record": "out/exp/step-bracket-validation (direct run) and out/queue/step-bracket-validation (3-stage queue run, identical float64 result); report in out/exp/step-bracket-validation/report"
+        },
+        {
+          "case": "HERMES chord bay 40x40x2 RHS, 500 mm, fixed ends, 2 kN mid-span patch; plain / solid 40x20 doubler / RHS 40x20x2 doubler (cases/hermes_chord, Fusion export, 1 mm voxels, float64)",
+          "compliance_Nmm": [
+            291.7,
+            132.8,
+            161.7
+          ],
+          "umax_mm": [
+            0.1827,
+            0.1017,
+            0.1165
+          ],
+          "vm_max_MPa": [
+            51.2,
+            50.8,
+            50.6
+          ],
+          "beam_reference_I_gain": [
+            1.0,
+            4.07,
+            2.78
+          ],
+          "note": "global stiffness gain 2.2x / 1.8x vs 4.1x / 2.8x bending-only theory: shear + local top-wall dimpling under the patch dominate; peak stress unchanged (local wall bending next to the load patch)",
+          "record": "out/exp/hermes-chord-doubler"
+        }
+      ],
+      "note": "Fictitious-domain voxel FEA (void stiffness 1e-9 E) on a centre-point voxelisation; 2 or more voxels through every wall; load patches excluded from the stress read-out via vm_exclude."
+    }
+  },
+  "surrogate-bracket-gp": {
+    "module": "simlab.solvers.surrogate_predict",
+    "physics": [
+      "surrogate"
+    ],
+    "precision": [
+      "float64"
+    ],
+    "image": "simlab-ml:0.1",
+    "description": "tabular gp surrogate of cases/bracket_param.py:Bracket: ['t_base', 't_wall', 'gusset', 'gusset_t'] -> ['mass_kg', 'compliance_Nmm', 'vm_max_MPa']",
+    "surrogate": {
+      "kind": "tabular",
+      "path": "C:\\Users\\shedm\\cudax-sim-runtime\\out\\surrogate\\bracket-gp",
+      "inputs": [
+        "t_base",
+        "t_wall",
+        "gusset",
+        "gusset_t"
+      ],
+      "outputs": [
+        "mass_kg",
+        "compliance_Nmm",
+        "vm_max_MPa"
+      ],
+      "problem": "cases/bracket_param.py:Bracket",
+      "model": "gp"
+    },
+    "validation": {
+      "status": "fail",
+      "date": "2026-10-05",
+      "n_train": 120,
+      "folds": 5,
+      "cv": {
+        "mass_kg": {
+          "rmse": 0.0069219904936753535,
+          "mae": 0.0056944117886105405,
+          "mape_pct": 2.3106319249259366,
+          "r2": 0.9770830087487326,
+          "y_range": [
+            0.1426816,
+            0.3451645
+          ]
+        },
+        "compliance_Nmm": {
+          "rmse": 190.2768947671345,
+          "mae": 75.74879987643405,
+          "mape_pct": 12.718643737319422,
+          "r2": 0.8370995263057506,
+          "y_range": [
+            60.74148376128321,
+            3681.955344314266
+          ]
+        },
+        "vm_max_MPa": {
+          "rmse": 70.04972165156406,
+          "mae": 43.96363140326307,
+          "mape_pct": 13.813250879839742,
+          "r2": 0.8358401658556485,
+          "y_range": [
+            109.89988035871632,
+            812.2132338075994
+          ]
+        }
+      },
+      "dataset": {
+        "sources": [
+          {
+            "kind": "trials_csv",
+            "path": "C:\\Users\\shedm\\cudax-sim-runtime\\out\\bracket_param_fp64\\trials.csv",
+            "sha256": "040784c9a30fbdbbcf1da8388029d53eb2107baed6ef6de8c9d1efc4a176440f",
+            "rows": 120
+          }
+        ],
+        "inputs": [
+          "t_base",
+          "t_wall",
+          "gusset",
+          "gusset_t"
+        ],
+        "outputs": [
+          "mass_kg",
+          "compliance_Nmm",
+          "vm_max_MPa"
+        ],
+        "n": 120,
+        "dropped": 0
+      },
+      "note": "K-fold error on the original scale; registry status fails when any R2 < 0.9"
+    }
+  },
+  "surrogate-bracket-et": {
+    "module": "simlab.solvers.surrogate_predict",
+    "physics": [
+      "surrogate"
+    ],
+    "precision": [
+      "float64"
+    ],
+    "image": "simlab-ml:0.1",
+    "description": "tabular et surrogate of cases/bracket_param.py:Bracket: ['t_base', 't_wall', 'gusset', 'gusset_t'] -> ['mass_kg', 'compliance_Nmm', 'vm_max_MPa']",
+    "surrogate": {
+      "kind": "tabular",
+      "path": "C:\\Users\\shedm\\cudax-sim-runtime\\out\\surrogate\\bracket-et",
+      "inputs": [
+        "t_base",
+        "t_wall",
+        "gusset",
+        "gusset_t"
+      ],
+      "outputs": [
+        "mass_kg",
+        "compliance_Nmm",
+        "vm_max_MPa"
+      ],
+      "problem": "cases/bracket_param.py:Bracket",
+      "model": "et"
+    },
+    "validation": {
+      "status": "fail",
+      "date": "2026-10-05",
+      "n_train": 120,
+      "folds": 5,
+      "cv": {
+        "mass_kg": {
+          "rmse": 0.01515108872356273,
+          "mae": 0.011785219153640832,
+          "mape_pct": 4.648166418292045,
+          "r2": 0.8902048175561341,
+          "y_range": [
+            0.1426816,
+            0.3451645
+          ]
+        },
+        "compliance_Nmm": {
+          "rmse": 246.76744997356306,
+          "mae": 95.02175341640633,
+          "mape_pct": 18.644964775740164,
+          "r2": 0.7260155071623453,
+          "y_range": [
+            60.74148376128321,
+            3681.955344314266
+          ]
+        },
+        "vm_max_MPa": {
+          "rmse": 68.0444610587755,
+          "mae": 44.11945346009698,
+          "mape_pct": 15.017737344826168,
+          "r2": 0.8451042028372939,
+          "y_range": [
+            109.89988035871632,
+            812.2132338075994
+          ]
+        }
+      },
+      "dataset": {
+        "sources": [
+          {
+            "kind": "trials_csv",
+            "path": "C:\\Users\\shedm\\cudax-sim-runtime\\out\\bracket_param_fp64\\trials.csv",
+            "sha256": "040784c9a30fbdbbcf1da8388029d53eb2107baed6ef6de8c9d1efc4a176440f",
+            "rows": 120
+          }
+        ],
+        "inputs": [
+          "t_base",
+          "t_wall",
+          "gusset",
+          "gusset_t"
+        ],
+        "outputs": [
+          "mass_kg",
+          "compliance_Nmm",
+          "vm_max_MPa"
+        ],
+        "n": 120,
+        "dropped": 0
+      },
+      "note": "K-fold error on the original scale; registry status fails when any R2 < 0.9"
+    }
+  },
+  "surrogate-bracket-gp-lhs": {
+    "module": "simlab.solvers.surrogate_predict",
+    "physics": [
+      "surrogate"
+    ],
+    "precision": [
+      "float64"
+    ],
+    "image": "simlab-ml:0.1",
+    "description": "tabular gp surrogate of cases/bracket_param.py:Bracket: ['t_base', 't_wall', 'gusset', 'gusset_t'] -> ['mass_kg', 'compliance_Nmm', 'vm_max_MPa']",
+    "surrogate": {
+      "kind": "tabular",
+      "path": "C:\\Users\\shedm\\cudax-sim-runtime\\out\\surrogate\\bracket-gp-lhs",
+      "inputs": [
+        "t_base",
+        "t_wall",
+        "gusset",
+        "gusset_t"
+      ],
+      "outputs": [
+        "mass_kg",
+        "compliance_Nmm",
+        "vm_max_MPa"
+      ],
+      "problem": "cases/bracket_param.py:Bracket",
+      "model": "gp"
+    },
+    "validation": {
+      "status": "pass",
+      "date": "2026-10-05",
+      "n_train": 160,
+      "folds": 5,
+      "cv": {
+        "mass_kg": {
+          "rmse": 0.007122408226534481,
+          "mae": 0.0058479332118138464,
+          "mape_pct": 2.6016481664887636,
+          "r2": 0.9823103258843996,
+          "y_range": [
+            0.12679320573806763,
+            0.3709909915924072
+          ]
+        },
+        "compliance_Nmm": {
+          "rmse": 208.87859927752055,
+          "mae": 103.07797899256207,
+          "mape_pct": 10.41232816234523,
+          "r2": 0.9362873447147212,
+          "y_range": [
+            51.16135787963867,
+            4882.61376953125
+          ]
+        },
+        "vm_max_MPa": {
+          "rmse": 56.62344422672273,
+          "mae": 40.46620236971556,
+          "mape_pct": 11.272053207245616,
+          "r2": 0.9347660521638673,
+          "y_range": [
+            110.1447525024414,
+            978.2962036132812
+          ]
+        }
+      },
+      "dataset": {
+        "sources": [
+          {
+            "kind": "fields_npz",
+            "path": "C:\\Users\\shedm\\cudax-sim-runtime\\out\\surrogate\\bracket_fields\\dataset.npz",
+            "sha256": "fbb04e9439447d6d3b60bb440c1e0fbcb84256f867ec26e8e43700ec91b53406",
+            "rows": 160
+          }
+        ],
+        "inputs": [
+          "t_base",
+          "t_wall",
+          "gusset",
+          "gusset_t"
+        ],
+        "outputs": [
+          "mass_kg",
+          "compliance_Nmm",
+          "vm_max_MPa"
+        ],
+        "n": 160,
+        "dropped": 0
+      },
+      "note": "K-fold error on the original scale; registry status fails when any R2 < 0.9",
+      "after_loop": {
+        "rounds": [
+          {
+            "round": 0,
+            "proposal_error": {
+              "mass_kg": {
+                "mape_pct": 1.5455137355684916,
+                "max_abs_err_pct": 4.595074307517006
+              },
+              "compliance_Nmm": {
+                "mape_pct": 5.365629598875291,
+                "max_abs_err_pct": 15.802114654251753
+              },
+              "vm_max_MPa": {
+                "mape_pct": 12.589042475278674,
+                "max_abs_err_pct": 24.364789804427303
+              }
+            },
+            "cv_after_refit": {
+              "mass_kg": {
+                "mape_pct": 2.558454774540648,
+                "r2": 0.9829389983503669
+              },
+              "compliance_Nmm": {
+                "mape_pct": 9.77186706708335,
+                "r2": 0.9546032475451625
+              },
+              "vm_max_MPa": {
+                "mape_pct": 11.289261235890734,
+                "r2": 0.9269013912680723
+              }
+            },
+            "n_train_after": 168
+          },
+          {
+            "round": 1,
+            "proposal_error": {
+              "mass_kg": {
+                "mape_pct": 1.5428635714406627,
+                "max_abs_err_pct": 3.58217839741663
+              },
+              "compliance_Nmm": {
+                "mape_pct": 11.05509185096248,
+                "max_abs_err_pct": 38.85406302572379
+              },
+              "vm_max_MPa": {
+                "mape_pct": 10.03446861751591,
+                "max_abs_err_pct": 29.664618087270345
+              }
+            },
+            "cv_after_refit": {
+              "mass_kg": {
+                "mape_pct": 2.486034551532313,
+                "r2": 0.9852210347322142
+              },
+              "compliance_Nmm": {
+                "mape_pct": 9.930103986111432,
+                "r2": 0.9446983326081885
+              },
+              "vm_max_MPa": {
+                "mape_pct": 11.270899394165701,
+                "r2": 0.928185389527362
+              }
+            },
+            "n_train_after": 176
+          },
+          {
+            "round": 2,
+            "proposal_error": {
+              "mass_kg": {
+                "mape_pct": 1.902227497208174,
+                "max_abs_err_pct": 5.878411392450844
+              },
+              "compliance_Nmm": {
+                "mape_pct": 8.649242630333477,
+                "max_abs_err_pct": 38.91452651043098
+              },
+              "vm_max_MPa": {
+                "mape_pct": 8.74584922017791,
+                "max_abs_err_pct": 24.472618712438127
+              }
+            },
+            "cv_after_refit": {
+              "mass_kg": {
+                "mape_pct": 2.4165154874348027,
+                "r2": 0.9862564670691472
+              },
+              "compliance_Nmm": {
+                "mape_pct": 10.155500876422302,
+                "r2": 0.9402851986525835
+              },
+              "vm_max_MPa": {
+                "mape_pct": 10.844610545186315,
+                "r2": 0.9283957103203995
+              }
+            },
+            "n_train_after": 184
+          }
+        ],
+        "n_verified_front": 9,
+        "loop_dir": "C:\\Users\\shedm\\cudax-sim-runtime\\out\\surrogate\\bracket-gp-lhs\\loop"
+      }
+    }
+  },
+  "surrogate-bracket-fno": {
+    "module": "simlab.solvers.surrogate_predict",
+    "physics": [
+      "surrogate"
+    ],
+    "precision": [
+      "float32"
+    ],
+    "image": "simlab-ml:0.1",
+    "description": "FNO field surrogate (physicsnemo): design mask -> ['vm', 'umag'] fields of the voxel FEA",
+    "surrogate": {
+      "kind": "field",
+      "path": "C:\\Users\\shedm\\cudax-sim-runtime\\out\\surrogate\\bracket-fno",
+      "problem": "cases/bracket_param.py:Bracket",
+      "fields": [
+        "vm",
+        "umag"
+      ],
+      "backend": "physicsnemo"
+    },
+    "validation": {
+      "status": "pass",
+      "date": "2026-10-05",
+      "n_train": 128,
+      "n_val": 32,
+      "held_out": {
+        "vm": 0.07200869917869568,
+        "umag": 0.047118328511714935,
+        "vm_max_mape_pct": 6.681488513946533,
+        "vm_max_r2": 0.9697569608688354
+      },
+      "train_fit": {
+        "vm": 0.0468127466738224,
+        "umag": 0.02469179406762123,
+        "vm_max_mape_pct": 5.931992053985596,
+        "vm_max_r2": 0.9780360460281372
+      },
+      "n_params": 21237734,
+      "epochs": 150,
+      "dataset": {
+        "path": "C:\\Users\\shedm\\cudax-sim-runtime\\out\\surrogate\\bracket_fields\\dataset.npz",
+        "sha256": "fbb04e9439447d6d3b60bb440c1e0fbcb84256f867ec26e8e43700ec91b53406",
+        "n": 160,
+        "shape": [
+          60,
+          40,
+          60
+        ]
+      },
+      "wall_s": 461.13308095932007,
+      "note": "relative L2 over solid cells on held-out designs; status fails when vm rel-L2 > 0.15",
+      "fresh_designs": {
+        "n": 5,
+        "mean_rel_l2_vm": 0.061,
+        "vm_max_mape_pct": 6.52,
+        "vm_max_err_pct": [
+          -3.5,
+          0.15,
+          -10.95,
+          -9.4,
+          -8.61
+        ],
+        "fea_s_mean": 2.43,
+        "fno_s_mean": 0.066,
+        "note": "five grid-point designs outside the training sample vs converged float64 FEA; peaks tend to be under-predicted, so the FEA signs off",
+        "record": "out/surrogate/bracket-fno/verify"
+      }
+    }
+  },
+  "aces-tpms-periodic": {
+    "module": "aces.cfd.simlab_adapter",
+    "physics": [
+      "cfd"
+    ],
+    "precision": [
+      "float64"
+    ],
+    "image": "aces-cfd:0.1",
+    "description": "ACES periodic TPMS calibration samples: FP64 D3Q19/D3Q7 TRT lattice Boltzmann, body-force driven to a target Re, H1 heat transfer; writes measurement.json rows for `aces calibrate`",
+    "validation": {
+      "status": "pass",
+      "date": "2026-10-06",
+      "device": "NVIDIA RTX PRO 4000 Blackwell SFF (workstation), aces-cfd:0.1, CuPy 14.2, float64",
+      "dtype": "float64",
+      "cases": [
+        {
+          "case": "square duct, fully developed laminar, 24 cells across (GPU)",
+          "fRe": 56.814,
+          "fRe_exact": 56.91,
+          "fRe_err_pct": -0.17,
+          "Nu_H1": 3.6251,
+          "Nu_H1_exact": 3.608,
+          "Nu_err_pct": 0.47
+        },
+        {
+          "case": "plane channel, fully developed laminar, 24 cells across (GPU)",
+          "fRe": 95.917,
+          "fRe_exact": 96.0,
+          "fRe_err_pct": -0.09,
+          "Nu_H1": 8.2466,
+          "Nu_H1_exact": 8.235,
+          "Nu_err_pct": 0.14
+        },
+        {
+          "case": "rig build, CPU self-test, 16 cells across (2026-10-07)",
+          "square_duct_fRe_err_pct": -0.37,
+          "square_duct_Nu_err_pct": 1.06,
+          "plane_channel_fRe_err_pct": -0.19,
+          "plane_channel_Nu_err_pct": 0.31
+        }
+      ],
+      "note": "Exact references: Shah & London (1978). Second-order convergence; permeability is viscosity-independent (TRT 3/16); an advected shear wave checks the inertial terms (ACES tests). Gyroid t/a 0.10 Re 20: friction ratio 3.4292 (n=48) / 3.4293 (n=64). The rig GPU validation run is pending: on 2026-10-07 the rig was in mode general-flagship with no simulation GPUs. Re-run cases/aces/aces-cfd-validation.yaml through the queue in a sim-lab mode and replace this record.",
+      "record": "ACES repo (github.com/steeldragon666/aces @ 4c26956): docs/SIMLAB_CFD.md, python -m aces.cfd.selftest",
+      "rig_image_id": "sha256:c95bff6e9d76b5b75ef841b68d766beb0b3b1309b133cd1ca37cb23313bc8000"
+    }
+  }
+}

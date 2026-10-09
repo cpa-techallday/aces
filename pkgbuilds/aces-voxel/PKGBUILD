@@ -1,0 +1,59 @@
+# Maintainer: Carbon Project Australia
+# The ACES voxel kernel as a standard command (decision 4, 2026-10-08: the voxel kernel is standard in every install):
+# aces-voxel (fea, topopt, lattice, export) routed to the gendesign and simlab modules in the aces-engineering venv,
+# the kernel description (docs/VOXEL_KERNEL.md: what is standard, what is not, which module does what) and an agent
+# skill. No second venv. Sources are packed from src/aces-voxel by bin/build.
+pkgname=aces-voxel
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="ACES voxel kernel command: voxel H8 FEA of STEP parts, 3-D SIMP, rod lattices and density to STL, run in the aces-engineering venv"
+arch=('any')
+url="file:///usr/share/doc/aces-voxel"
+license=('MIT')  # the command, the description and the skill; the kernel code itself ships in aces-engineering
+depends=('aces-engineering')
+source=("$pkgname-src.tar.gz")
+sha256sums=('SKIP')
+
+check() {
+  # needs aces-engineering installed in the build container (makepkg -s does that); a --nodeps build skips this
+  cd "$srcdir/$pkgname"
+  export HOME="$srcdir/home" XDG_DATA_HOME="$srcdir/home/share"
+  local py=/opt/aces/engineering/venv/bin/python t="$srcdir/t" rc=0
+  if [[ ! -x "$py" ]]; then
+    echo "check: aces-engineering is not installed here (built with --nodeps?); aces-voxel was NOT exercised"
+    return 0
+  fi
+  mkdir -p "$t"
+  "$py" ./aces-voxel fea --self-test
+  # SIMP: the packaged cantilever at 2 mm voxels for 6 iterations, then its density back to an STL
+  "$py" - /usr/share/aces/engineering/examples/cantilever3d.json "$t/c2.json" <<'EOF'
+import json, sys
+case = json.load(open(sys.argv[1]))
+case.update(name="cantilever-2mm", elem_mm=2.0, rmin_mm=4.0, iterations=6)
+json.dump(case, open(sys.argv[2], "w"))
+EOF
+  "$py" ./aces-voxel topopt "$t/c2.json" --out "$t/simp" --quiet
+  "$py" ./aces-voxel export "$t/simp/density.npy" --out "$t/simp/again.stl" --slices "$t/simp/again.png"
+  # STEP path: a 40 x 10 x 10 mm bar from build123d, clamped at x = 0, 100 N traction on the x = 40 face, 2 mm voxels
+  "$py" - "$t" <<'EOF'
+import json, sys
+from build123d import Align, Box, export_step
+t = sys.argv[1]
+export_step(Box(40, 10, 10, align=(Align.MIN, Align.MIN, Align.MIN)), f"{t}/bar.step")
+json.dump({"step_file": "bar.step", "elem_mm": 2.0, "supports": [{"box": [0, 0, 0, 0, 10, 10]}],
+           "loads": [{"box": [40, 0, 0, 40, 10, 10], "force": [0, 0, -100], "axis": "x"}]}, open(f"{t}/bar.json", "w"))
+EOF
+  "$py" ./aces-voxel fea "$t/bar.json" --out "$t/bar"
+  ls "$t/bar"
+  # without CuPy, a GPU and Warp the lattice path must stop with exit 2 and say why
+  "$py" ./aces-voxel lattice --iters 1 || rc=$?
+  if [[ $rc -ne 2 ]]; then echo "lattice: expected exit 2 on a CPU-only build host, got $rc" >&2; return 1; fi
+}
+
+package() {
+  cd "$srcdir/$pkgname"
+  install -Dm755 aces-voxel -t "$pkgdir/usr/bin"
+  install -Dm644 VOXEL_KERNEL.md -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm644 SKILL.md -t "$pkgdir/usr/share/aces/voxel/skills/aces-voxel"
+  install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+}

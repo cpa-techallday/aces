@@ -1,0 +1,19 @@
+id: cantilever-volfrac-sweep
+project: simlab-validation
+owner: aaron
+physics: structures
+solver: gendesign-topopt
+description: "Fan-out test: the 3-D cantilever topology case at three volume fractions (1 mm voxels, 30 iterations)."
+params:
+  case_file: cantilever3d.json
+  elem_mm: 1.0
+  rmin_mm: 2.0
+  iterations: 30
+sweep:
+  volfrac: [0.2, 0.3, 0.4]
+outputs: [compliance_Nmm, vol, mass_kg, umax_mm, wall_s]
+resources:
+  precision: float64
+  vram_gb: 4
+tags:
+  kind: sweep-test

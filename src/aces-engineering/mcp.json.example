@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "simlab": {
+      "type": "http",
+      "url": "http://192.168.1.65:8022/mcp",
+      "headers": {
+        "Authorization": "Bearer ${SIMLAB_MCP_TOKEN}"
+      }
+    },
+    "rig-state": {
+      "type": "http",
+      "url": "http://192.168.1.65:8010/mcp"
+    }
+  }
+}

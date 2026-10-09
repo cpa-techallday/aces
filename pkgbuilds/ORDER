@@ -16,5 +16,5 @@ aces-field nodeps
 aces-omarchy
 aces-survey nodeps
 aces-engineering
-aces-voxel nodeps
+aces-voxel
 aces-os nodeps

@@ -1,0 +1,23 @@
+id: beam-validation-v1
+project: simlab-validation
+owner: aaron
+physics: structures
+solver: gendesign-beam-check
+description: >-
+  Solid cantilever 100 x 10 x 10 mm, 100 N consistent end traction, root face clamped:
+  voxel FEA tip deflection vs Euler-Bernoulli and Timoshenko closed forms at two voxel sizes.
+params:
+  L_mm: 100
+  b_mm: 10
+  h_mm: 10
+  P_N: 100
+  E: 200000
+  nu: 0.3
+sweep:
+  elem_mm: [1.0, 0.5]
+outputs: [delta_fea_mm, delta_timo_mm, err_vs_timo_pct, err_vs_eb_pct, pcg_iters, wall_s]
+resources:
+  precision: float64
+  vram_gb: 4
+tags:
+  kind: validation

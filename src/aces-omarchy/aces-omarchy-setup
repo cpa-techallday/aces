@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Per-user Omarchy integration for ACES: hooks, agent skill symlinks and the aces-fabric shell plugin.
+# Per-user Omarchy integration for ACES: hooks, agent skill links and the aces-fabric shell plugin.
 # Idempotent; re-run after upgrades (the post-update hook does). Writes only under $HOME. `--remove` undoes it.
-# Hard line, same as Omarchy's own: /usr/share is read-only, ~/.config is yours. Existing non-symlink files are kept.
+# Hard line, same as Omarchy's own: /usr/share is read-only, ~/.config is yours. Existing files we do not own are kept.
 set -euo pipefail
 share=/usr/share/aces/omarchy
 cfg="${XDG_CONFIG_HOME:-$HOME/.config}/omarchy"
@@ -30,18 +30,36 @@ for d in "$share"/hooks/*.d; do
   done
 done
 
-# Agent skills: the same directories Omarchy symlinks its own skill into, only where that agent's home exists.
+# Agent skills: every skill directory any ACES package ships under /usr/share/aces/<pkg>/skills/<name>/SKILL.md,
+# linked into the same directories Omarchy uses for its own skill, only where that agent's home exists.
 for base in "$HOME/.claude" "$HOME/.codex" "$HOME/.pi/agent" "$HOME/.agents"; do
   [[ -d "$base" ]] || continue
-  link "$share/skills/aces-engineering" "$base/skills/aces-engineering"
+  for sd in /usr/share/aces/*/skills/*; do
+    [[ -d "$sd" && -f "$sd/SKILL.md" ]] || continue
+    link "$sd" "$base/skills/$(basename "$sd")"
+  done
 done
 
-# Shell plugin: third-party plugins land disabled; enable aces-fabric in the Omarchy plugin menu (or `omarchy plugin add --yes`).
-if [[ -d "$share/plugins/aces-fabric" ]]; then
-  link "$share/plugins/aces-fabric" "$cfg/plugins/aces-fabric"
-  if (( ! remove )) && command -v omarchy >/dev/null 2>&1; then
-    if ! omarchy plugin validate "$cfg/plugins/aces-fabric"; then
-      echo "aces-omarchy-setup: omarchy plugin validate reported problems for aces-fabric (see above); the plugin stays disabled"
+# Shell plugin: COPIED, not linked (omarchy plugin validate refuses a symlinked plugin directory, found 2026-10-09).
+# The copy carries an .aces-managed marker so re-runs and --remove only ever touch our own copy. Third-party plugins
+# land disabled; enable aces-fabric in the Omarchy plugin menu (or `omarchy plugin add --yes`).
+plug_src="$share/plugins/aces-fabric"
+plug_dst="$cfg/plugins/aces-fabric"
+if [[ -d "$plug_src" ]]; then
+  if (( remove )); then
+    if [[ -L "$plug_dst" || -f "$plug_dst/.aces-managed" ]]; then rm -rf "$plug_dst"; echo "removed $plug_dst"; fi
+  elif [[ -e "$plug_dst" && ! -L "$plug_dst" && ! -f "$plug_dst/.aces-managed" ]]; then
+    echo "kept existing $plug_dst (not managed by aces-omarchy-setup)"
+  else
+    rm -rf "$plug_dst"
+    mkdir -p "$(dirname "$plug_dst")"
+    cp -r "$plug_src" "$plug_dst"
+    : > "$plug_dst/.aces-managed"
+    echo "copied $plug_dst <- $plug_src"
+    if command -v omarchy >/dev/null 2>&1; then
+      if ! omarchy plugin validate "$plug_dst"; then
+        echo "aces-omarchy-setup: omarchy plugin validate reported problems for aces-fabric (see above); the plugin stays disabled"
+      fi
     fi
   fi
 fi

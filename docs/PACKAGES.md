@@ -2,7 +2,11 @@
 
 State as of 2026-10-09. Packages are built by `bin/build` inside the `aces-builder` image (Arch `base-devel`) into the
 local `[aces]` repo at `repo/x86_64/`, and install-tested by `bin/install-test` in a clean `archlinux:base` container.
-Nothing here is signed yet (`SigLevel = Optional TrustAll` on the local repo); signing is a distribution-gate item.
+Every package and the repo database are signed with the development key (`keys/aces-pkgs.pub.asc`, fingerprint in
+`keys/FINGERPRINT`, ed25519, expires 2028-10-08); the install test trusts that key and installs with
+`SigLevel = Required DatabaseRequired`. CI (`.github/workflows/build.yml`) repeats the build and the install test on every
+push to the private repo `github.com/cpa-techallday/aces-os`, signing with the same key from a repository secret. The key
+is a development key: rotate it before anything is distributed.
 
 ## Built and tested
 
@@ -18,20 +22,20 @@ Nothing here is signed yet (`SigLevel = Optional TrustAll` on the local repo); s
 | `effectcraft-bin` | 0.4.0-1 | same | built | same |
 | `designcraft-bin` | 0.2.1-1 | same | built | same |
 | `aces-consoles` | 0.1.0-2 | `aces-console <key>` launcher (now also `webodm`) (reads the URL from the aces config; Omarchy web-app window or `xdg-open`) and desktop entries for GRID CONTROL, SIMLAB, MLflow | built | Installed; the three desktop entries are present. The launcher itself was not exercised (no browser in the container) |
-| `aces-omarchy` | 0.1.0-1 | Overlay for Omarchy: `post-boot.d` and `post-update.d` hooks, the `aces-engineering` agent skill, the `aces-fabric` bar-widget plugin, `aces-omarchy-setup` | built | Installed; `aces-omarchy-setup` linked the hooks, the skill into `~/.claude/skills` and `~/.agents/skills`, and the plugin, then `--remove` cleared all of it. **The plugin QML is unvalidated**: there is no `omarchy-shell` on the build host, so it was written against the published manifest contract and the first-party port-forward plugin; run `omarchy plugin validate` on the Omarchy host |
+| `aces-omarchy` | 0.1.0-2 | Overlay for Omarchy: `post-boot.d` and `post-update.d` hooks, the `aces-engineering` agent skill, the `aces-fabric` bar-widget plugin, `aces-omarchy-setup` (links every skill any ACES package ships under `/usr/share/aces/*/skills`, and copies the plugin: a symlinked plugin directory fails `omarchy plugin validate`, found by the rehearsal kit) | built | Installed; `aces-omarchy-setup` linked the hooks and the skills into `~/.claude/skills` and `~/.agents/skills`, copied the plugin, then `--remove` cleared all of it. **The plugin QML is unvalidated**: there is no `omarchy-shell` on the build host, so it was written against the published manifest contract and the first-party port-forward plugin; run `omarchy plugin validate` on the Omarchy host |
 | `aces-field` | 0.1.0-1 | Meta-package over the Arch-packaged field tools (RF receive and analysis, firmware analysis, device access over SSH, CAN, serial); AUR-only members are optional until forked | built with `--nodeps` | Not installed (multi-GB); `pacman -Sp aces-field` resolves a 372-package transaction against the official repos, so every hard dependency exists |
 | `aces-survey` | 0.1.0-1 | Survey and photogrammetry: `aces-survey-setup` (installs the vendored FlyPath 3.0.0 QGIS plugin into the user's QGIS profile and enables it; creates the WebODM tree), `aces-webodm` (start/stop/status/open/update/logs over the pinned WebODM v3.3.0 tree under Docker, GPU node when nvidia-smi and the Docker nvidia runtime are present), a WebODM desktop entry, README with the DJI Fly mission-loading procedure, LICENSES.md. Depends on `qgis`, `python-shapely`, `python-pyproj`, `docker`, `docker-compose`; `cloudcompare`, `colmap`, `meshroom` (AUR) and `nvidia-container-toolkit` optional. FlyPath zip and WebODM release tarball are fetched at build time with pinned sha256s (34.7 MB package) | built with `--nodeps` (QGIS is not needed to build an `any` package) | Clean container: installed with `-Sdd`; `aces-survey-setup` placed FlyPath 3.0.0 and wrote `[PythonPlugins] FlyPath=true`, created the WebODM 3.3.0 tree; `aces-webodm --help` prints usage and `status` reports that docker is missing instead of crashing; `--remove` cleared both. `pacman -Sp aces-survey` resolves a 256-package transaction. On DARKNESS (Windows, Docker Desktop) the same stack runs outside the package: `GPU_NVIDIA=true ./webodm.sh start --port 8090 --detached` brought up webapp, worker, db, broker and `node-odx-1` (`webodm/nodeodx:gpu`), the node sees the RTX PRO 4000, the console answers HTTP 302 on :8090; FlyPath 3.0.0 imports under QGIS 3.44.15 (OSGeo4W, user-profile install) with shapely 2.1.2 and pyproj 3.8.0 |
-| `aces-os` | 0.1.0-2 | The meta-package: `aces-base`, `aces-creative`, `aces-field`, `aces-consoles`, `aces-omarchy`, `aces-survey` | built with `--nodeps` | `pacman -Sp aces-os` resolves a 551-package transaction in a clean container (qgis and docker included); the install-test container reports 506 because aces-base, aces-creative, aces-consoles and aces-omarchy are already installed there |
+| `aces-os` | 0.1.0-3 | The meta-package: `aces-base`, `aces-creative`, `aces-field`, `aces-consoles`, `aces-omarchy`, `aces-survey`, `aces-engineering`, `aces-voxel`; `aces-studio` stays optional until the rig's video lane exists | built with `--nodeps` | `pacman -Sp aces-os` resolves in a clean signed container: 508 packages when aces-base, aces-creative, aces-consoles and aces-omarchy are already installed, 529 when aces-base, aces-engineering and aces-voxel are (qgis, docker and the engineering venv's libraries included) |
+| `aces-engineering` | 0.1.0-1 | One locked Python 3.14 venv at `/opt/aces/engineering/venv` (76 distributions, each hash-pinned in `requirements.txt`, binary wheels only; 907.6 MiB installed, 255 MB package) with a vendored snapshot of cudax-sim-runtime's `simlab` and `gendesign` (commit `28d92a8`, content sha256 in `SNAPSHOT`) on its path. Commands: `aces-simlab` (validate, local run, report, evidence, surrogate, export, capacity, `remote` MCP client), `aces-evidence` (ledger and bundle verification, relocates ledgers from other machines), `aces-gendesign` (list, selftest, topopt, parametric, nozzle, fusion); `mcp.json.example` for the rig's simlab `:8022` and rig-state `:8010`; LICENSES.md. Not installed: rig-only rq, redis, uvicorn, mcp, starlette, gmsh, rocketcea, physicsnemo, and the GPU packages cupy, warp, torch (mlflow too); the wrappers keep the queue, leases, MCP-server and console commands off the desktop CLI. Depends on `libglvnd` and `libx11` (the OCP wheel links libGL and libX11) | built (x86_64, signed); `check()` = `aces-gendesign selftest` passed | `check()`: 56/56 imports, fea3d element test, the 1 mm cantilever on NumPy reproduces the workstation's GPU record (0.1989054912444315 mm) to 8.3e-13 in 401 PCG iterations, evidence bundle and chain verified, md/html/docx report, 8 SIMP iterations, L-bracket STEP round trip at 26,694 voxels as on the workstation (needs `embreex`; trimesh's rtree fallback gives 26,616, all 78 differences on one 45-degree face). Clean container (own script, `SigLevel = Optional TrustAll`): relocated shebangs, `pyvenv.cfg` and bytecode paths, selftest again, `aces-voxel fea` of the bracket STEP at 2 mm (converged, 1,232 iterations), the workstation's 4-bundle evidence ledger verified (4 entries relocated) and a hand-edited bundle rejected, `aces-simlab remote` against a local mcp 2.0.0 server (JSON and SSE replies, bearer token, 401 on a wrong one), a 10-trial parametric study and a GP surrogate in a per-user registry, `pacman -R` leaves nothing under `/opt/aces`. After the full signed rebuild, `bin/install-test aces-base aces-engineering aces-voxel` passed under `SigLevel = Required DatabaseRequired`: `aces-engineering selftest: all hard checks passed`, `aces-voxel fea --self-test` PASS (STEP round trip at 26,694 voxels in 0.3 s) |
+| `aces-voxel` | 0.1.0-1 | `aces-voxel`: `fea` (STEP to voxel H8 FEA through simlab's step-structures stages, or `--self-test`), `topopt` (3-D SIMP), `lattice` (Warp rod lattices, GPU only), `export` (density to STL); `docs/VOXEL_KERNEL.md` (what is standard, what is not, the source modules) in `/usr/share/doc/aces-voxel`; an `aces-voxel` agent skill in `/usr/share/aces/voxel/skills` (linked by `aces-omarchy-setup` 0.1.0-2). Runs in the aces-engineering venv, no second venv | built (any, signed) with its dependency installed (`pkgbuilds/ORDER` no longer marks it `nodeps`), so `check()` runs against the installed aces-engineering: fea self-test, 6 SIMP iterations, export, a build123d bar STEP through `fea`, `lattice` exits 2 without a GPU | Clean container: `--help`, `fea --self-test`, `fea` of the bracket STEP, `export` of a SIMP density, `lattice` exit 2 with its reason |
 
 ## Not yet written
 
 | Package | What it will be | Why it waits |
 |---|---|---|
-| `aces-engineering` | venv over the cudax-sim-runtime simlab client and gendesign, the SIMLAB console service | needs the cudax-sim-runtime client split out and a rig hand-off of the console |
-| `aces-voxel` | the voxel kernel standard (voxel H8 FEA, SIMP) as an installable library | same source split |
 | `aces-studio` | ACES Video Studio client and LoRA registry client | the server side (ComfyUI + ltx-pipelines workers) is not deployed |
 
-They are listed as optional dependencies of `aces-os` so the meta-package resolves honestly today.
+It is listed as an optional dependency of `aces-os` so the meta-package resolves honestly today.
 
 ## Live lane tests (DARKNESS to the rig, 2026-10-09, mode `sim-lab-4`)
 
@@ -58,9 +62,9 @@ manifest under `server.discovered`: `mc_console` on the rig's loopback (`127.0.0
 
 - Endpoints are known only for `sim-lab-4` (and the CPU embedding lane); the other modes' lanes stay `null` until probed in
   those modes. Per-instance GPU assignment for the two GLM-Flash servers is not published.
-- Corrected 2026-10-09 in `src/aces-base` (rebuild pending): the simlab MCP is on `http://192.168.1.65:8022/mcp` (port 8020
-  serves the Univer workbench) and the SIMLAB console is live on the rig at `http://192.168.1.65:8032`; the earlier defaults
-  (8020 and the workstation's 8030) were wrong.
+- Corrected 2026-10-09 in `aces-base` (rebuilt): the simlab MCP is on `http://192.168.1.65:8022/mcp` (port 8020 serves the
+  Univer workbench) and the SIMLAB console is live on the rig at `http://192.168.1.65:8032`; the earlier defaults (8020 and
+  the workstation's 8030) were wrong. `aces doctor` from DARKNESS now reports all five server endpoints reachable.
 - `aces-field`'s AUR-only members (`can-utils`, `python-cantools`, `python-udsoncan`, `python-snap7`, `python-pyvisa`,
   `openems`) are optional dependencies until their recipes are forked into `pkgbuilds/`.
 - The ArtCraft recipes are byte-for-byte AUR copies; `namcap` warns about a literal `x86_64` in each (upstream style).
@@ -68,7 +72,11 @@ manifest under `server.discovered`: `mc_console` on the rig's loopback (`127.0.0
   the WebODM docker images (`webodm/webodm_webapp`, `webodm_db`, `nodeodx`, `nodeodx:gpu`) are pulled from Docker
   Hub at first start, not shipped; `aces-webodm` has not been run on an Omarchy host yet (the Docker path was
   exercised on DARKNESS under Docker Desktop); the DJI Fly loading step is manual by design (the app has no import).
-- No git repository and no signing key yet (both day-14 gate items in VISION.md §11).
+- Git, CI and signing landed on 2026-10-09 (day-14 gate items in VISION.md §11); the key is a development key. The Omarchy
+  rehearsal (ISO download, VM, `omarchy plugin validate` on a real shell) has not run yet; see `rehearsal/README.md`.
+- `aces-engineering` vendors `simlab` and `gendesign` under `LicenseRef-ACES-undecided` (CPA code with no licence file
+  yet), and the OCP wheel it installs bundles OpenCASCADE (LGPL), libjbig (GPL) and FreeImage without licence files:
+  both are distribution-gate items, not trial-mode blockers.
 
 ## How to reproduce
 
@@ -76,7 +84,27 @@ manifest under `server.discovered`: `mc_console` on the rig's loopback (`127.0.0
 bash bin/build && bash bin/install-test
 ```
 
+`bin/build` with no arguments follows `pkgbuilds/ORDER` (members before dependants; `nodeps` for the meta-packages) and
+signs when `keys/aces-pkgs.sec.asc` is present. The same two commands run in CI on every push.
+
 Logs for every package are in `logs/<pkg>.log` and the install test in `logs/install-test.log`; the repo database is
 `repo/x86_64/aces.db.tar.zst`. Sources under `src/<pkg>/` are packed at build time, so a source edit needs a rebuild; a
 rebuild without a `pkgrel` bump replaces the package in the local repo in place (fine for development, never for a published
 channel).
+
+## Rehearsal VM kit (`rehearsal/`, 2026-10-09)
+
+Scripts that install stock Omarchy 4.0.4 unattended into a Hyper-V VM on DARKNESS (`get-iso.ps1`, `make-cidata.ps1`,
+`new-vm.ps1`), serve this repo to it over the LAN (`serve-repo.ps1`) and run `post-install/aces-install.sh` in it
+(`validate.ps1`); step order, elevation and reset are in `rehearsal/README.md`. No VM has been created and the ISO has
+not been downloaded yet. Tested so far: the cidata ISO loaded by Omarchy's own `omarchy-cidata-load`, and
+`aces-install.sh` end to end in an Arch container against the served repo (10 PASS, 1 FAIL, idempotent on re-run) and
+in signed mode with a throwaway key. Two findings for the packages:
+
+- `omarchy plugin validate` (the upstream script, run in a container) passes on `/usr/share/aces/omarchy/plugins/aces-fabric`
+  but fails on the symlink `aces-omarchy-setup` creates in `~/.config/omarchy/plugins` ("symlinks are not allowed inside
+  a plugin folder"). That is the one FAIL; `aces-omarchy` should copy the plugin directory instead of linking it.
+- `repo-add` in the build container leaves `aces.db` and `aces.files` as WSL symlinks that Windows programs cannot open,
+  so `repo/` cannot be served as it is from Windows (`aces.db` answers 404); `serve-repo.ps1` serves real copies. The
+  signing key is published to the VM only once every package has a `.sig`: with the key and no signatures,
+  `SigLevel = Required` refuses every package.

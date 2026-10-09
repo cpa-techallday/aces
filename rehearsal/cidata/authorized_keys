@@ -1,0 +1,3 @@
+# ACES rehearsal VM (throwaway). No keys are committed here: make-cidata.ps1 appends this workstation's public key
+# (%USERPROFILE%\.ssh\id_ed25519.pub by default, or -PublicKey <file>) to the copy it writes onto the cidata drive.
+# The installer drops blank lines and # comments and stops the install if no key is left, so the drive is checked first.

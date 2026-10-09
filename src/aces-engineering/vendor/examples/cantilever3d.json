@@ -1,0 +1,14 @@
+{
+  "name": "cantilever3d",
+  "description": "Classic 3-D cantilever: fixed at x=0, 100 N down on the free end's bottom edge. Validation case for topopt3d.",
+  "domain_mm": [60, 20, 10],
+  "elem_mm": 0.5,
+  "material": {"E": 200000, "nu": 0.3},
+  "volfrac": 0.3,
+  "penal": 3.0,
+  "rmin_mm": 1.2,
+  "iterations": 60,
+  "change_tol": 0.01,
+  "supports": [{"box": [0, 0, 0, 0, 20, 10], "dofs": [0, 1, 2]}],
+  "loads": [{"case": "tip", "box": [60, 0, 0, 60, 0, 10], "force": [0, -100, 0]}]
+}

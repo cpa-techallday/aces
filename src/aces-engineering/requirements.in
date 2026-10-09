@@ -1,0 +1,22 @@
+# Core of the aces-engineering venv: the top-level pins. lock.sh resolves these inside the aces-builder image
+# (Arch, Python 3.14) with binary wheels only and writes the full hash-pinned lock to requirements.txt.
+# Versions match the packages recorded in cudax-sim-runtime/out/exp/beam-validation-v1/c000/evidence.json
+# (numpy, scipy, optuna, build123d, trimesh, scikit-image) and the workstation Python that its .venv inherits.
+numpy==2.4.6                # voxel H8 FEA, FFT filter, SIMP (gendesign.fea3d, filters, topopt3d)
+scipy==1.17.1               # trimesh voxel fill and smoothing; scikit-image and scikit-learn need it
+scikit-image==0.26.0        # marching cubes, density -> STL (gendesign.export)
+trimesh==5.1.0              # mesh I/O, containment voxelisation (gendesign.evaluators, simlab step-structures)
+rtree==1.4.1                # trimesh ray queries behind mesh.contains()
+embreex==4.4.0              # Embree ray backend trimesh uses when present: the workstation's mesh.contains() ran on it
+                            # (voxel masks of the validation records; without it the Linux mask of the L-bracket
+                            # differed by 78 voxels, ties on a diagonal face, and containment was ~150x slower)
+optuna==5.0.0               # TPE / NSGA-II (gendesign.parametric imports it at import time; surrogate loop)
+matplotlib==3.11.1          # slice and field PNGs (gendesign.export, simlab.post, gendesign.nozzle)
+PyYAML==6.0.3               # experiment.yaml (simlab.spec)
+pydantic==2.13.4            # experiment model (simlab.spec)
+python-docx==1.2.0          # DOCX reports (simlab.report)
+Markdown==3.11              # HTML reports (simlab.report)
+scikit-learn==1.9.0         # tabular surrogates: GP, extra-trees, K-fold (simlab.surrogate.tabular)
+joblib==1.5.3               # surrogate model save/load (simlab.surrogate.tabular)
+build123d==0.11.1           # STEP import/export (step-structures, evaluators, nozzle STEP), parametric B-rep
+cadquery-ocp-novtk==7.9.3.1.1  # OpenCASCADE 7.9.3 bindings for build123d (the workstation runs the same OCP build with VTK)

@@ -1,0 +1,3 @@
+#!/bin/sh
+# aces-gendesign: aces_engineering.gendesign_cli in the aces-engineering venv (the vendored simlab and gendesign are on its path).
+exec /opt/aces/engineering/venv/bin/python -m aces_engineering.gendesign_cli "$@"

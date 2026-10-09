@@ -1,0 +1,31 @@
+{
+  "_doc": "Which GPUs a GRID CONTROL mode releases to simulation. The runtime reads the active mode from GRID CONTROL /api/status and takes the pool from here; SIMLAB_GPU_POOL overrides. The two sim-lab modes are the proposal for GRID CONTROL's mode table (docs/RUNTIME_PHASE3.md section 4).",
+  "sim-lab-4": {
+    "label": "Sim Lab 4 (GPUs 0-3 simulation; CAD + tools LLM lanes on 4,5,7; 6 rests)",
+    "sim_gpus": [0, 1, 2, 3],
+    "llm_gpus": [4, 5, 7],
+    "rest": [6],
+    "keep_services": ["cad", "tools"],
+    "stop_services": ["apodex-1", "apodex-2", "apodex-3", "strategist"]
+  },
+  "sim-lab-8": {
+    "label": "Sim Lab 8 (all GPUs simulation; overnight sweeps and surrogate training)",
+    "sim_gpus": [0, 1, 2, 3, 4, 5, 6, 7],
+    "llm_gpus": [],
+    "rest": [],
+    "keep_services": [],
+    "stop_services": ["apodex-1", "apodex-2", "apodex-3", "strategist", "tools", "cad"]
+  },
+  "batch-overnight": {
+    "label": "existing GRID CONTROL mode; no simulation GPUs unless Aaron assigns some",
+    "sim_gpus": []
+  },
+  "general-fleet-v2": {
+    "label": "existing GRID CONTROL mode (current); all cards hold vLLM weights",
+    "sim_gpus": []
+  },
+  "workstation": {
+    "label": "darkness, single RTX PRO 4000 (used when no GRID CONTROL endpoint is configured)",
+    "sim_gpus": [0]
+  }
+}

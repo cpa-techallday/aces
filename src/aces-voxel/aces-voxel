@@ -1,0 +1,120 @@
+#!/opt/aces/engineering/venv/bin/python
+"""aces-voxel: the ACES voxel kernel (vendored gendesign and simlab, in the aces-engineering venv).
+
+  aces-voxel fea --self-test                  element checks and a uniaxial patch test (gendesign.fea3d.self_test)
+  aces-voxel fea CASE.json [--out DIR]        STEP -> voxels -> FEA -> fields (simlab step-structures: mesh, solve, post)
+  aces-voxel topopt CASE.json [--out DIR] [--iters N] [--dtype float64]   3-D SIMP (gendesign.topopt3d)
+  aces-voxel lattice [--out DIR] [--iters N] [--rods N] [--volfrac F]     rod lattice, Warp gradients (GPU only)
+  aces-voxel export DENSITY.npy [--h MM] --out PART.stl [--level 0.5] [--smooth N] [--slices PNG]
+
+NumPy and FP64 on the CPU unless CuPy and a CUDA GPU are present. Desktop results are preview-grade; rig runs sign
+off. What the kernel does and does not do: /usr/share/doc/aces-voxel/VOXEL_KERNEL.md
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+
+
+def fea(argv: list) -> int:
+    ap = argparse.ArgumentParser(prog="aces-voxel fea")
+    ap.add_argument("case", nargs="?", help="case JSON (keys of simlab/solvers/step_structures.py; paths relative to it)")
+    ap.add_argument("--out", default=None, help="run directory (default out/<case name>)")
+    ap.add_argument("--self-test", action="store_true")
+    a = ap.parse_args(argv)
+    if a.self_test:
+        from gendesign.fea3d import self_test
+
+        return 0 if self_test(verbose=True) else 1
+    if not a.case:
+        ap.error("give a case JSON or --self-test")
+    from simlab.solvers.step_structures import Adapter
+    from simlab.spec import Experiment
+
+    with open(a.case, "r", encoding="utf-8") as f:
+        case = json.load(f)
+    name = case.get("id") or os.path.splitext(os.path.basename(a.case))[0]
+    spec = Experiment(id=name, physics="structures", solver="step-structures", params=case,
+                      resources={"precision": case.get("dtype", "float64")})
+    spec.spec_path = os.path.abspath(a.case)  # step_file and other relative paths resolve against the case file
+    out = os.path.abspath(a.out or os.path.join("out", name))
+    os.makedirs(out, exist_ok=True)
+    res = Adapter().run(case, spec, out)
+    arts = res.pop("artifacts", [])
+    print(json.dumps({"out": out, **res, "artifacts": [os.path.relpath(p, out) for p in arts]}, indent=2, default=str))
+    return 0 if res.get("converged") else 1
+
+
+def topopt(argv: list) -> int:
+    from gendesign.fea3d import have_gpu
+    from gendesign.topopt3d import main as topopt_main
+
+    topopt_main(argv + ([] if have_gpu() or "--cpu" in argv else ["--cpu"]))
+    return 0
+
+
+def lattice(argv: list) -> int:
+    from gendesign.fea3d import have_gpu
+
+    try:
+        import warp  # noqa: F401
+
+        have_warp = True
+    except Exception:
+        have_warp = False
+    if not (have_gpu() and have_warp):
+        print("aces-voxel lattice: needs CuPy with a CUDA GPU and NVIDIA Warp (gendesign.lattice_opt); "
+              f"here: CUDA GPU via CuPy {'yes' if have_gpu() else 'no'}, Warp {'yes' if have_warp else 'no'}. "
+              "Run it on the rig (gendesign image) or add the GPU extras (/usr/share/doc/aces-engineering/README.md).",
+              file=sys.stderr)
+        return 2
+    from gendesign.lattice_opt import main as lattice_main
+
+    lattice_main(argv)
+    return 0
+
+
+def export(argv: list) -> int:
+    import numpy as np
+    from gendesign.export import density_to_stl, plot_slices
+
+    ap = argparse.ArgumentParser(prog="aces-voxel export")
+    ap.add_argument("density", help="(nx, ny, nz) density field, e.g. topopt's density.npy")
+    ap.add_argument("--h", type=float, default=None, help="voxel size in mm (default: grid.h_mm of a report.json beside it)")
+    ap.add_argument("--out", required=True, help="STL path")
+    ap.add_argument("--level", type=float, default=0.5)
+    ap.add_argument("--smooth", type=int, default=0, help="Taubin smoothing passes")
+    ap.add_argument("--slices", default=None, help="also write mid-plane slices to this PNG")
+    a = ap.parse_args(argv)
+    h = a.h
+    if h is None:
+        rep = os.path.join(os.path.dirname(os.path.abspath(a.density)), "report.json")
+        if not os.path.isfile(rep):
+            ap.error("give --h (no report.json next to the density)")
+        with open(rep, "r", encoding="utf-8") as f:
+            h = float(json.load(f)["grid"]["h_mm"])
+    x = np.load(a.density)
+    if x.ndim != 3:
+        ap.error(f"density must be 3-D, got shape {x.shape}")
+    info = density_to_stl(x, h, a.out, a.level, a.smooth)
+    if a.slices:
+        info["slices"] = plot_slices(x, h, a.slices, os.path.basename(a.density))
+    print(json.dumps({"h_mm": h, "level": a.level, "shape": list(x.shape), **info}, indent=2))
+    return 0
+
+
+def main(argv: list) -> int:
+    if not argv or argv[0] in ("-h", "--help", "help"):
+        print(__doc__)
+        return 0
+    cmds = {"fea": fea, "topopt": topopt, "lattice": lattice, "export": export}
+    if argv[0] not in cmds:
+        print(f"aces-voxel: unknown command {argv[0]!r} ({', '.join(cmds)})", file=sys.stderr)
+        return 2
+    return cmds[argv[0]](argv[1:])
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

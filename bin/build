@@ -102,6 +102,8 @@ for p in "${PKGS[@]}"; do
           sudo pacman-key --lsign-key "$(cat /keys/FINGERPRINT)" >/dev/null 2>&1
         fi
         if [ ! -f /repo/x86_64/aces.db.tar.zst ]; then repo-add "${REPOSIGN[@]}" /repo/x86_64/aces.db.tar.zst >/dev/null; fi
+        # a rebuilt package keeps its file name, so a cached copy from an earlier build fails the checksum: drop ours
+        sudo rm -f /var/cache/pacman/pkg/aces-*.pkg.tar.zst* /var/cache/pacman/pkg/*craft-bin-*.pkg.tar.zst*
         sudo pacman -Sy --noconfirm >/dev/null
         SRCDEST=/srcdest PKGDEST=/repo/x86_64 makepkg -sfC --noconfirm --skippgpcheck $NODEPS "${SIGNARGS[@]}"
         cd /repo/x86_64 && repo-add -R "${REPOSIGN[@]}" aces.db.tar.zst "$(ls -t ./*.pkg.tar.zst | head -1)" >/dev/null

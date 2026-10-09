@@ -1,0 +1,24 @@
+{
+  "name": "wall_bracket_topopt",
+  "description": "Wall bracket: two M8 bolt bosses on the back face (x=0) kept solid with through-holes kept void, a solid load pad at the front top edge, 2 kN downward. Mass target 15 % of the 80x50x60 envelope.",
+  "domain_mm": [80, 50, 60],
+  "elem_mm": 1.0,
+  "material": {"E": 200000, "nu": 0.3},
+  "volfrac": 0.15,
+  "penal": 3.0,
+  "rmin_mm": 2.5,
+  "iterations": 50,
+  "change_tol": 0.01,
+  "supports": [
+    {"box": [0, 6, 38.5, 0, 19, 51.5], "dofs": [0, 1, 2]},
+    {"box": [0, 31, 38.5, 0, 44, 51.5], "dofs": [0, 1, 2]}
+  ],
+  "loads": [{"case": "down", "box": [70, 20, 60, 80, 30, 60], "force": [0, 0, -2000]}],
+  "passive": [
+    {"box": [0, 6, 38.5, 12, 19, 51.5], "type": "solid"},
+    {"box": [0, 31, 38.5, 12, 44, 51.5], "type": "solid"},
+    {"cyl": {"axis": "x", "center": [12.5, 45], "r": 4.2, "span": [0, 12]}, "type": "void"},
+    {"cyl": {"axis": "x", "center": [37.5, 45], "r": 4.2, "span": [0, 12]}, "type": "void"},
+    {"box": [70, 20, 55, 80, 30, 60], "type": "solid"}
+  ]
+}
