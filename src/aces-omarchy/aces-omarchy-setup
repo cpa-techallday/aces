@@ -41,12 +41,47 @@ for base in "$HOME/.claude" "$HOME/.codex" "$HOME/.pi/agent" "$HOME/.agents"; do
 done
 
 # Shell plugin: COPIED, not linked (omarchy plugin validate refuses a symlinked plugin directory, found 2026-10-09).
-# The copy carries an .aces-managed marker so re-runs and --remove only ever touch our own copy. Third-party plugins
-# land disabled; enable aces-fabric in the Omarchy plugin menu (or `omarchy plugin add --yes`).
+# The copy carries an .aces-managed marker so re-runs and --remove only ever touch our own copy.
 plug_src="$share/plugins/aces-fabric"
 plug_dst="$cfg/plugins/aces-fabric"
+shell_json="$cfg/shell.json"
+
+# A bar widget is "enabled" when its id sits in a bar section of ~/.config/omarchy/shell.json (the shell's
+# PluginRegistry reads it from there; `omarchy plugin enable` only asks the running shell to write the same entry).
+# So: ask the shell when it runs (it also reloads the bar), else edit the file, which the shell picks up at login.
+widget_on_bar() { [[ -f "$shell_json" ]] && jq -e '[.bar.layout[]?[]? | .id] | index("aces-fabric")' "$shell_json" >/dev/null 2>&1; }
+enable_widget() {
+  if widget_on_bar; then echo "aces-fabric is on the bar already"; return 0; fi
+  if command -v omarchy >/dev/null 2>&1 && omarchy plugin enable aces-fabric right >/dev/null 2>&1; then
+    echo "enabled aces-fabric on the bar (right section) through the running shell"; return 0
+  fi
+  if [[ -f "$shell_json" ]] && command -v jq >/dev/null 2>&1; then
+    local tmp; tmp="$(mktemp)"
+    if jq '.bar.layout.right as $r
+           | ($r | map(.id) | index("omarchy.monitor")) as $i
+           | .bar.layout.right = (if $i == null then $r + [{"id":"aces-fabric"}] else $r[:$i] + [{"id":"aces-fabric"}] + $r[$i:] end)' \
+         "$shell_json" > "$tmp" && jq -e . "$tmp" >/dev/null; then
+      mv "$tmp" "$shell_json"; echo "added aces-fabric to the bar in $shell_json (shown at the next shell start)"; return 0
+    fi
+    rm -f "$tmp"
+  fi
+  echo "aces-fabric is installed but not on the bar yet: run \`omarchy plugin enable aces-fabric right\` in a desktop session"
+}
+disable_widget() {
+  if command -v omarchy >/dev/null 2>&1 && omarchy plugin disable aces-fabric >/dev/null 2>&1; then
+    echo "disabled aces-fabric through the running shell"
+  fi
+  if widget_on_bar && command -v jq >/dev/null 2>&1; then
+    local tmp; tmp="$(mktemp)"
+    if jq '.bar.layout |= with_entries(.value |= map(select(.id != "aces-fabric")))' "$shell_json" > "$tmp" && jq -e . "$tmp" >/dev/null; then
+      mv "$tmp" "$shell_json"; echo "removed aces-fabric from the bar in $shell_json"
+    else rm -f "$tmp"; fi
+  fi
+}
+
 if [[ -d "$plug_src" ]]; then
   if (( remove )); then
+    disable_widget
     if [[ -L "$plug_dst" || -f "$plug_dst/.aces-managed" ]]; then rm -rf "$plug_dst"; echo "removed $plug_dst"; fi
   elif [[ -e "$plug_dst" && ! -L "$plug_dst" && ! -f "$plug_dst/.aces-managed" ]]; then
     echo "kept existing $plug_dst (not managed by aces-omarchy-setup)"
@@ -56,10 +91,10 @@ if [[ -d "$plug_src" ]]; then
     cp -r "$plug_src" "$plug_dst"
     : > "$plug_dst/.aces-managed"
     echo "copied $plug_dst <- $plug_src"
-    if command -v omarchy >/dev/null 2>&1; then
-      if ! omarchy plugin validate "$plug_dst"; then
-        echo "aces-omarchy-setup: omarchy plugin validate reported problems for aces-fabric (see above); the plugin stays disabled"
-      fi
+    if command -v omarchy >/dev/null 2>&1 && ! omarchy plugin validate "$plug_dst"; then
+      echo "aces-omarchy-setup: omarchy plugin validate reported problems for aces-fabric (see above); not putting it on the bar"
+    else
+      enable_widget
     fi
   fi
 fi

@@ -128,6 +128,11 @@ Unattended sudo for this throwaway VM (what the passing run used; the `omarchy-c
 `aces ALL=(ALL) NOPASSWD: ALL` and `Defaults:aces verifypw = any`, then `sudo chmod 440` it. Without that rule step 7
 needs a person to type the password at the `ssh -t` prompts, as the table says.
 
+A fourth finding came from opening the console: a copied plugin is only *discovered*; the bar shows a widget once its id
+is in a bar section of `~/.config/omarchy/shell.json` (`omarchy plugin enable` asks the running shell to write that
+entry and answers "omarchy-shell is not running" over SSH). `aces-omarchy` 0.1.0-4's setup script now does the
+placement itself, and on this VM the entry was added by hand before the first desktop login.
+
 Still unverified: Hyprland and omarchy-shell on Hyper-V's synthetic display, and therefore the bar widget rendering live
 (nobody has logged into the desktop session; `omarchy plugin validate` and `qmllint` against Omarchy's own `qs.Commons`
 and `qs.Ui` modules are the checks that ran). `qmllint` found two real defects in the plugin, fixed in `aces-omarchy`
