@@ -36,7 +36,8 @@ These versions were built in the Arch builder (`bin/build aces-base aces-omarchy
 and install-tested in a clean container (`bin/install-test` and `bin/install-test aces-base aces-engineering
 aces-voxel`) on DARKNESS on 2026-10-09 (UTC), last after the review fixes (the same version-releases: none had been
 published); the rows above describe the previous builds. The rehearsal VM has run these versions (the golden-path table
-below, run `20261009T144006Z-b3ac99`); CI has not run them yet. The rehearsal web root
+below, run `20261009T144006Z-b3ac99`), and CI has built them and passed both install tests (run 37946810947; only its
+log upload failed, on file permissions, fixed with the merge that followed). The rehearsal web root
 (`D:\HyperV\aces-rehearsal\serve\www`) had still served aces-base 0.1.0-2, aces-engineering 0.1.0-1, aces-voxel 0.1.0-1
 and aces-omarchy 0.1.0-4 and an `aces-install.sh` without the golden block; `rehearsal\serve-repo.ps1` re-synced it
 after the last build (signed, the four new versions and their `.sig`, the golden block; checked byte for byte against
@@ -78,7 +79,7 @@ finer resolution, and re-solved on CuPy and Warp when they are usable. The loop 
 | Where | Date | Command | Outcome | Grade | Wall s | Run id | Bundle sha12 | simlab entry | aces entry |
 |---|---|---|---|---|---|---|---|---|---|
 | Clean container (`bin/install-test aces-base aces-engineering aces-voxel`) | 2026-10-09 | `aces golden run --demo --json --progress lines` (packaged venv, Python 3.14.7, CPU only: no CuPy or Warp in the package) | pass (exit 0) | verified-desktop | 22.3 | `20261009T142823Z-b3ac99` | `54b28de54d31` | 1 | 5 |
-| CI (GitHub Actions, same install test) | not yet run | same | not yet run | not yet run | not yet run | not yet run | not yet run | not yet run | not yet run |
+| CI (GitHub Actions run 37946810947 on commit 24e86af, ubuntu-latest: AMD EPYC 9V74, 2 logical CPUs, no GPU) | 2026-10-09 | same (`bin/install-test aces-base aces-engineering aces-voxel`, after the build step's makepkg `check()` had already run the 169 golden tests and the demo; build 7.5 min, default install test 50 s, this step 91 s). The run's only failure was the log upload after the tests: the copied run records were root-owned 0600 and the runner could not read them (fixed in `bin/install-test` with `chmod -R a+rX /logs/golden`) | pass (exit 0, 40 s including interpreter start) | verified-desktop | 40 (command time; result.json not kept) | `20261009T145633Z-b3ac99` | `0dcdf22e36c3` | 1 | 5 |
 | Rehearsal VM (Omarchy 4.0.4, Python 3.14.7, 4 vCPUs, no GPU) | 2026-10-09 | `aces golden run --demo` from a login shell over ssh, after `pacman -Sy` upgraded aces-base, aces-engineering, aces-voxel and aces-omarchy from the signed LAN repo (packaged venv, CPU only; the 2 mm check ran on the CPU, estimate 2.8 s within the 60 s budget); then `aces golden verify latest` (10 PASS, 1 INFO), `aces-evidence verify` ok, `aces doctor` golden row `ok ... PASS`, the linked skills carry the new text | pass (exit 0, 25 s including interpreter start) | verified-desktop | 23.7 | `20261009T144006Z-b3ac99` | `070c439672c8` | 1 | 2 |
 | DARKNESS (workstation) | 2026-10-09 | `python -m aces_engineering.golden_cli run --demo` (workstation dev venv, Python 3.11.9: CPU sweep in 10 workers, check and parity on the RTX PRO 4000 through CuPy and Warp) | pass (exit 0) | verified-desktop | 42.8 | `20261009T143033Z-b3ac99` | `d8977ebb61f8` | 1 | 2 |
 

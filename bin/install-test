@@ -107,6 +107,9 @@ if pacman -Q aces-engineering >/dev/null 2>&1; then
     for d in winner candidate figures; do
       if [ -d "$run_dir/$d" ]; then cp -r "$run_dir/$d" /logs/golden/; fi
     done
+    # the run writes its records 0600 and this container is root: without this the host user (the CI runner that
+    # uploads logs/) cannot read them, and upload-artifact fails on logs/golden/compute_used.json with EACCES
+    chmod -R a+rX /logs/golden
   fi
   if [ "$rc" -ne 0 ] || [ "$json_ok" -ne 1 ]; then echo "golden: FAILED (exit $rc, one JSON document: $json_ok)"; exit 1; fi
   aces golden verify latest
