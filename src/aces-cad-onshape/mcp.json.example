@@ -1,0 +1,16 @@
+{
+  "_comment": "Copy the entries you need into your agent's MCP configuration (for example a project's .mcp.json). aces-onshape is this package's stdio server for the Onshape REST API: it signs in with the API keys in ~/.config/aces/onshape.env (or ONSHAPE_ACCESS_KEY and ONSHAPE_SECRET_KEY); replace <project> with the ACES project the agent works on, so that every tool runs the class gate for it and refuses sovereign and controlled projects. onshape-featurescript is the official Onshape FeatureScript MCP Server (Onshape Labs, early access), as given by Onshape's Tech Tip 'How to Connect the FeatureScript MCP Server and Claude Code' (8 Sep 2026, https://www.onshape.com/en/resource-center/tech-tips/connect-featurescript-mcp-server-claude-code): subscribe to FeatureScript MCP Server in the Onshape App Store first (https://cad.onshape.com/appstore/apps/Onshape%20Labs/6a29aea7c03f8bf659841734), then sign in through the browser (in Claude Code: launching it asks you to authorize the Onshape subscription on an Authorize page, and /mcp brings up the authentication screen that connects the Onshape account). Onshape's texts do not name the protocol: OAuth is inferred from MCP's authorization model and is checked in step 14 of the live check in the aces-os repository's docs/PACKAGES.md. It uses neither the API keys nor onshape.env, and its calls count against your user API allocation, or the company allocation if you ask it to use that. It has not been connected from this machine (no Onshape account here), so its tool list and OAuth scopes are unknown. Never use either server for sovereign or controlled projects: the ACES class gate cannot see the official server's calls, so that rule is yours to keep.",
+  "mcpServers": {
+    "aces-onshape": {
+      "command": "aces-onshape-mcp",
+      "args": [],
+      "env": {
+        "ACES_ONSHAPE_PROJECT": "<project>"
+      }
+    },
+    "onshape-featurescript": {
+      "type": "http",
+      "url": "https://fs-mcp.labs.onshape.app/mcp"
+    }
+  }
+}

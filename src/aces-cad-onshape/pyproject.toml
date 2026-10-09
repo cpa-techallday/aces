@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aces-onshape"
+version = "0.1.0"
+description = "ACES Onshape adapter: standard-library REST client, aces-onshape CLI and aces-onshape-mcp stdio MCP server"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Carbon Project Australia" }]
+
+[project.scripts]
+aces-onshape = "aces_onshape.cli:main"
+aces-onshape-mcp = "aces_onshape.mcp_server:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aces_onshape*"]

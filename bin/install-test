@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Install-test the built packages in a clean Arch container: enable the [aces] repo, install the named packages,
 # exercise the CLI, and dry-run dependency resolution for the big meta-packages (no multi-GB downloads).
-# Usage: bin/install-test [pkg ...]   (default: aces-base aces-creative aces-consoles aces-omarchy)
+# Usage: bin/install-test [pkg ...]   (default: aces-base aces-creative aces-consoles aces-omarchy aces-cad-onshape)
 #
 # Signed repo: when keys/aces-pkgs.pub.asc exists and the repo database carries a signature, the container trusts
 # that key through pacman-key and installs with SigLevel = Required DatabaseRequired, which is exactly what a
@@ -11,7 +11,7 @@ here="$(cd "$(dirname "$0")/.." && pwd)"
 hostpath() { if command -v cygpath >/dev/null 2>&1; then cygpath -w "$1"; else printf '%s' "$1"; fi; }
 repo="$(hostpath "$here/repo")"
 keys="$(hostpath "$here/keys")"
-pkgs="${*:-aces-base aces-creative aces-consoles aces-omarchy}"
+pkgs="${*:-aces-base aces-creative aces-consoles aces-omarchy aces-cad-onshape}"
 sigmode="Optional TrustAll"
 if [ -f "$here/keys/aces-pkgs.pub.asc" ] && [ -f "$here/keys/FINGERPRINT" ] && [ -f "$here/repo/x86_64/aces.db.tar.zst.sig" ]; then
   sigmode="Required DatabaseRequired"
@@ -82,6 +82,19 @@ if command -v aces-voxel >/dev/null 2>&1; then
   aces-gendesign selftest 2>&1 | tail -3 || true
   aces-voxel fea --self-test 2>&1 | tail -3 || true
   ls -la /root/.claude/skills 2>/dev/null | grep -i voxel || true
+fi
+if command -v aces-onshape >/dev/null 2>&1; then
+  echo "== onshape adapter (no Onshape keys in the container: help, whoami must exit 3, unit tests against the fake server)"
+  aces-onshape --help >/tmp/onshape-help
+  head -5 /tmp/onshape-help
+  rc=0; aces-onshape whoami >/tmp/onshape-out 2>&1 || rc=$?
+  cat /tmp/onshape-out
+  if [ "$rc" -ne 3 ]; then echo "aces-onshape whoami: expected exit 3 without credentials, got $rc"; exit 1; fi
+  grep -q "no Onshape API keys" /tmp/onshape-out
+  PYTHONDONTWRITEBYTECODE=1 NO_COLOR=1 python -m unittest discover -s /usr/share/aces/cad-onshape/tests
+  ls /usr/share/aces/cad-onshape /usr/share/aces/cad-onshape/skills/aces-cad-onshape
+else
+  echo "== onshape adapter: aces-cad-onshape not in this run"
 fi
 echo "== dependency dry-run for the meta-packages (resolution only, nothing downloaded)"
 for m in aces-field aces-survey aces-os; do

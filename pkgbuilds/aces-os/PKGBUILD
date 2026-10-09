@@ -10,7 +10,8 @@ url="file:///usr/share/doc/aces-os"
 license=('MIT')
 depends=('aces-base' 'aces-creative' 'aces-field' 'aces-consoles' 'aces-omarchy' 'aces-survey' 'aces-engineering' 'aces-voxel')
 optdepends=('aces-studio: ACES Video Studio client and LoRA registry (not packaged yet; the rig video lane is not deployed)'
-            'omarchy: the desktop this is designed for; the engine also runs without it')
+            'omarchy: the desktop this is designed for; the engine also runs without it'
+            'aces-cad-onshape: Onshape FeatureScript adapter (cloud)')
 
 package() {
   install -dm755 "$pkgdir/usr/share/doc/$pkgname"
