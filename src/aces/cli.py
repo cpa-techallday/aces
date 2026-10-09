@@ -1176,6 +1176,40 @@ def cmd_corpus(args) -> int:
     return 0
 
 
+def cmd_voxel_measure(args) -> int:
+    """Measure a voxelised solid (e.g. a Tier-0 generated grid) on ACES definitions."""
+    import numpy as np
+
+    from .propose import RESEARCH_ONLY, RESEARCH_STAMP
+    from .propose.voxel_measure import measure_voxel_solid
+
+    if args.proposer in RESEARCH_ONLY and not args.research:
+        print(f"REFUSED: proposer {args.proposer!r} is research-only (D29): "
+              f"pass --research for internal R&D use; never in a product or customer deliverable")
+        return 2
+    try:
+        grid = np.load(args.grid)
+    except (OSError, ValueError) as e:
+        print(f"REFUSED: cannot load {args.grid}: {e}")
+        return 2
+    notes: list[str] = list(args.note or [])
+    if args.proposer in RESEARCH_ONLY:
+        notes.append(RESEARCH_STAMP)
+    try:
+        facts = measure_voxel_solid(grid != 0, args.pitch_m, args.proposer, args.seed,
+                                    notes=tuple(notes))
+    except ValueError as e:
+        print(f"REFUSED: {e}")
+        return 2
+    with safeio.OutDir(args.out) as od:
+        od.write_text("measurement.json", json.dumps(facts.to_json(), indent=2))
+    print(f"voxel measurement -> {args.out}/measurement.json "
+          f"(solid {facts.solid_fraction:.3f}, wall min {facts.wall_min_m * 1e3:.3f} mm, "
+          f"neck min {min(facts.neck_m) * 1e3:.3f} mm, isolated void {facts.isolated_void_fraction:.3f})"
+          + (" [RESEARCH ONLY]" if args.proposer in RESEARCH_ONLY else ""))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="aces", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -1371,6 +1405,19 @@ def build_parser() -> argparse.ArgumentParser:
                    choices=("uniform_wall_temperature", "uniform_heat_flux"),
                    help="thermal boundary the rows were measured under")
     s.set_defaults(fn=cmd_corpus)
+
+    s = sub.add_parser("voxel-measure", help="measure a voxelised solid (.npy) on ACES definitions "
+                                             "(solid fraction, min wall, neck, enclosed void)")
+    s.add_argument("grid", help=".npy voxel grid; nonzero voxels are solid")
+    s.add_argument("--pitch-m", type=float, required=True, help="voxel edge length in metres")
+    s.add_argument("--proposer", required=True, help="name of the proposer that emitted the grid")
+    s.add_argument("--seed", type=int, default=0, help="proposer seed for provenance")
+    s.add_argument("--note", action="append", default=None, help="extra provenance note (repeatable)")
+    s.add_argument("--research", action="store_true",
+                   help="required when --proposer is a research-quarantined name (D29); stamps the "
+                        "measurement RESEARCH ONLY")
+    s.add_argument("--out", required=True, help="output folder (created; never overwritten)")
+    s.set_defaults(fn=cmd_voxel_measure)
     return ap
 
 

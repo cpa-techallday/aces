@@ -46,6 +46,20 @@ licence tag, thermal boundary). Rows without a source never load — the gate is
 (gyroid + diamond, Re 9.7–100, air 320 K), committed at `data/corpus/` is *not* done — corpora
 are regenerated from measurements, so the JSONL is a build artifact, not a repo file.
 
+## Voxel measurement (`aces voxel-measure`)
+
+Proposers that emit voxel grids (XCube in the research lane today, the clean-room learned
+proposer later) are measured by `aces.propose.voxel_measure` on the same primitives as the
+analytic TPMS path: solid fraction, local wall thickness (Hildebrand–Rüegsegger, EDT-level
+quantised), per-axis percolation neck, and enclosed-void fraction (AM powder traps). A
+quarantined proposer name requires `--research` and stamps the measurement RESEARCH ONLY.
+
+Closed loop verified 2026-10-09: XCube chair checkpoint → `fine_xyz` voxel centres →
+dense 220×467×178 grid → `aces voxel-measure --research` → solid 0.0175, wall min 0.40 mm,
+neck min 4.22 mm, isolated void 0.0 (at a demonstration 0.2 mm pitch; ShapeNet geometry
+carries no physical scale). The extraction script lives in the research lane
+(`~/research/extract_voxel.py` on the rig; mirror in the workspace `research/xcube-env/`).
+
 ## The learned proposer (next)
 
 The diffusion proposer registers against the same contract:
