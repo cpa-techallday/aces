@@ -214,6 +214,42 @@ def test_cfd_collect_records_the_evidence_hash_and_the_h1_boundary(tmp_path):
     assert hxcal.load(out)[0].evidence_sha256 == rows[0]["evidence_sha256"]
 
 
+def _evidence_simlab(exp_id, case_id, **case_over):
+    """The schema the rig's simlab worker actually writes (found 2026-10-09)."""
+    case = {"case_id": case_id, "tpms": "gyroid", "wall_ratio": 0.1, "cell_m": 0.004,
+            "fluid": "Air", "T_K": 320.0, "p_Pa": 2e5, "n": 96, "thermal": True, "re": 10}
+    case.update(case_over)
+    return {"schema": "simlab-evidence/1",
+            "experiment": {"id": exp_id, "solver": "aces-tpms-periodic",
+                           "spec_sha256": "0" * 64},
+            "case": case, "status": "FINISHED"}
+
+
+def test_cfd_collect_accepts_simlab_run_schema(tmp_path):
+    exp = tmp_path / "exp"
+    d = _case(exp, "c000", evidence=json.dumps(_evidence_simlab("exp", "c000")))
+    out = tmp_path / "m.json"
+    assert main(["cfd-collect", str(exp), "--out", str(out)]) == 0
+    rows = json.loads(out.read_text())
+    assert [r["source"] for r in rows] == ["simlab:exp:c000"]
+    assert rows[0]["evidence_sha256"] == hashlib.sha256((d / "evidence.json").read_bytes()).hexdigest()
+
+
+@pytest.mark.parametrize("evidence, reason", [
+    (json.dumps(_evidence_simlab("another-exp", "c000")), "another-exp"),
+    (json.dumps(_evidence_simlab("exp", "c007")), "c007"),
+    (json.dumps(_evidence_simlab("exp", "c000", wall_ratio=0.5)), "wall_ratio"),
+])
+def test_cfd_collect_simlab_schema_is_still_checked(tmp_path, capsys, evidence, reason):
+    """The run schema is accepted, but its experiment, case id and values are still verified."""
+    exp = tmp_path / "exp"
+    _case(exp, "c000", evidence=evidence)
+    out = tmp_path / "m.json"
+    assert main(["cfd-collect", str(exp), "--out", str(out)]) == 1
+    printed = capsys.readouterr().out
+    assert "SKIPPED c000" in printed and reason in printed
+
+
 def test_a_settled_flux_with_a_moving_field_is_not_steady():
     """A shear wave decays slowly while the mean flux stays constant: not a steady state."""
     nx, U, A, nu = 64, 0.05, 1e-2, 0.002

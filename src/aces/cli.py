@@ -1052,19 +1052,36 @@ def _cfd_evidence(case: Path, exp_id: str, row: dict) -> tuple[str | None, str |
         return None, "evidence.json is not valid JSON"
     if not isinstance(ev, dict):
         return None, "evidence.json is not a JSON object"
-    sp = ev["spec"] if isinstance(ev.get("spec"), dict) else ev
+    # Two evidence schemas carry the same guarantees:
+    #  - ACES-style: a "spec" member with id/solver plus params and the sweep lists
+    #  - simlab per-run (what the rig's worker actually writes): an "experiment" member
+    #    with id/solver, and a "case" member with this run's resolved parameter values.
+    #    Checking the resolved case values against the row is stricter than checking
+    #    sweep membership, so both are accepted. (Found 2026-10-09: campaign 2's real
+    #    evidence failed the spec-schema check; campaign 1 predates it.)
+    if isinstance(ev.get("spec"), dict):
+        sp = ev["spec"]
+        params = sp.get("params") if isinstance(sp.get("params"), dict) else {}
+        sweep = sp.get("sweep") if isinstance(sp.get("sweep"), dict) else {}
+    elif isinstance(ev.get("experiment"), dict):
+        sp = ev["experiment"]
+        case_blk = ev.get("case") if isinstance(ev.get("case"), dict) else {}
+        params = case_blk
+        sweep = {}
+    else:
+        sp = ev
+        params = sp.get("params") if isinstance(sp.get("params"), dict) else {}
+        sweep = sp.get("sweep") if isinstance(sp.get("sweep"), dict) else {}
     if sp.get("id") is None:
         return None, "evidence.json does not name its experiment (no spec id)"
     if sp.get("id") != exp_id:
         return None, f"evidence.json belongs to experiment {sp.get('id')!r}, not {exp_id!r}"
     if sp.get("solver") != CFD_SOLVER:
         return None, f"evidence.json is for solver {sp.get('solver')!r}, not {CFD_SOLVER}"
-    for where in (ev, sp):
+    for where in (ev, sp, ev.get("case") if isinstance(ev.get("case"), dict) else {}):
         cid = where.get("case_id")
         if cid is not None and str(cid) != case.name:
             return None, f"evidence.json is for case {cid!r}, not {case.name!r}"
-    params = sp.get("params") if isinstance(sp.get("params"), dict) else {}
-    sweep = sp.get("sweep") if isinstance(sp.get("sweep"), dict) else {}
     for k in _CASE_KEYS:
         if k in params and not _same(params[k], row.get(k)):
             return None, f"evidence params {k}={params[k]!r}, but the row has {row.get(k)!r}"

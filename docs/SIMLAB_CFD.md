@@ -153,11 +153,10 @@ residual of 0.010 (sd of log) for friction and 0.002 for Nusselt.
     Mach 0.15, so its factors were never fitted; the probe finds the Mach-safe Re range)
   - `aces-cal-air-02r` (wall-ratio extension: gyroid + diamond at t/a 0.20/0.24/0.28, Re 10/30/100 —
     widens the calibrated 0.08–0.16 range)
-- **Run state (2026-10-09):** validation, resolution and `aces-cal-air-01` are complete; the D25 fit is in
-  `data/calibration/hx.json`. `aces-cal-air-02p` and `aces-cal-air-02r` are enqueued (27 cases, n = 96,
-  air 320 K) and running in the sim-lab-4 window. When they finish:
-  `aces cfd-collect` both experiments, rebuild the corpus, re-fit with `aces calibrate`, then rebuild the
-  Tier-0 training dataset (`aces propose-dataset`).
+- **Run state (2026-10-09, evening):** validation, resolution, `aces-cal-air-01` and campaign 2
+  (`aces-cal-air-02p`/`02r`) are all complete and fitted — the registry holds 9 factors (D30),
+  including primitive's first (valid at Re <= ~6 only: Mach/Re ~ 0.023). Corpus v2 (40 rows) and
+  Tier-0 dataset v2 rebuilt from the combined measurements.
 
 ```bash
 docker exec -w /work simlab-queue-1 python -m simlab enqueue cases/aces/aces-cal-air-02p.yaml --docker
