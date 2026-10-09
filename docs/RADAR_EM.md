@@ -321,8 +321,12 @@ here honestly.)
    `-e OMP_NUM_THREADS=<cores>`).  ~~`wr90_through` under Palace~~ — **DONE
    2026-10-08** (job18/job19: FEM-vs-FDTD cross-check PASS; S21 agreement
    0.005 dB, port kₙ within 0.021 % of theory, cutoff 0.012 %).
-3. Register `aces-tile-em` in `solvers.json` (validation passed for gprMax
-   cases, pending for Palace cases).
+3. ~~Register `aces-tile-em` in `solvers.json`~~ — **DONE 2026-10-09**
+   (`scripts/rig/register_em_solver.py` against the rig's
+   `cudax-sim-runtime/simlab/solvers.json`, backup
+   `solvers.json.bak-20261009-192258`; gprMax cases + Palace wr90_through
+   all PASS in the validation record, other Palace paths noted as
+   unimplemented).
 4. Sweep the real tile/rf_dist stackups → `measurement.json` rows →
    `radar.calibrate.fit` → registry with `simlab:<run-id>` provenance
    (four rows landed incl. the real board-1 stackup via job21's finer-mesh
