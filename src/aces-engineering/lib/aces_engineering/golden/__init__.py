@@ -1,9 +1,10 @@
 """aces golden: the ACES golden path, one command from a design space to a verified, evidenced organic part.
 
 Design space (STEP) -> voxel -> SIMP generator -> organic implicit skin -> real voxel FEA -> sweep -> surrogate ->
-verify (+ finer-resolution independent check, + GPU and Warp parity) -> evidence (simlab ledger + aces ledger) ->
-report. This module holds the constants, the error type, the shared protocols and small JSON and hash helpers.
-Standard library only: importing it must stay instant."""
+verify (+ finer-resolution independent check on this desktop or on a rig lane through simlab-mcp, + GPU and Warp
+parity, + a conforming tet10 second discretisation) -> evidence (simlab ledger + aces ledger) -> report. This module
+holds the constants, the error type, the shared protocols and small JSON and hash helpers. Standard library only:
+importing it must stay instant."""
 from __future__ import annotations
 
 import contextlib
@@ -18,10 +19,11 @@ from contextlib import AbstractContextManager
 from pathlib import Path
 from typing import Any, Callable, Protocol
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 SCHEMA = {k: f"aces-golden-{k}/1" for k in (
     "spec", "run", "result", "compute", "compute-used", "inputs", "domain", "case", "skin", "sweep", "surrogate",
-    "optimise", "validation", "winner", "bundle", "ledger", "ledgers", "report", "event")}
+    "optimise", "validation", "winner", "bundle", "ledger", "ledgers", "report", "event", "rig", "rig-session",
+    "rig-case", "outcome", "files", "conforming", "conforming-case")}
 LEDGER_KIND = "golden.run"
 DEMOS = ("root-mount", "bone")
 DEFAULT_DEMO = "root-mount"
@@ -42,15 +44,22 @@ OUTCOMES = {EXIT_OK: "pass", EXIT_FAIL: "verification-failed", EXIT_USAGE: "usag
 
 GRADE_PREVIEW = "preview-grade"
 GRADE_VERIFIED_DESKTOP = "verified-desktop"
-GRADE_RIG = "rig-verified"  # reserved: a rig run plus a conforming-mesh second discretisation; never produced in v0
+# produced (golden 0.2.0) when the level-1 check solved on the rig with a validated golden-check image, the conforming
+# tet10 check ran on the rig with a validated ccx-check image and agrees, the rig ran this desktop's golden code and every
+# pulled file verified (golden.verify.grade, section 13 of the rig build spec)
+GRADE_RIG = "rig-verified"
+GRADES = (GRADE_PREVIEW, GRADE_VERIFIED_DESKTOP, GRADE_RIG)
+GRADE_RANK = {GRADE_PREVIEW: 0, GRADE_VERIFIED_DESKTOP: 1, GRADE_RIG: 2}
 
 METRICS = ("mass_kg", "mass_voxel_kg", "mesh_volume_mm3", "voxel_volume_mm3", "solid_fraction",
            "compliance_Nmm", "umax_mm", "vm_max_MPa", "vm_p99_MPa", "vm_p95_MPa")
 OUTPUTS = tuple(m for m in METRICS if m != "solid_fraction")  # what a spec may name as objective or constraint
 STAGES = ("compute", "inputs", "domain", "sweep", "loop", "check", "export", "evidence", "report")
-ROLES = ("sweep", "verify", "check", "parity")
+ROLES = ("sweep", "verify", "check", "parity", "conforming")
 DESIGN_STATUSES = ("ok", "empty", "not-watertight", "multi-body", "detached-load", "detached-support",
-                   "disconnected", "unconverged", "non-finite", "error")
+                   "disconnected", "unconverged", "non-finite", "error", "rig-error", "rig-timeout", "rig-unreachable",
+                   "rig-cancelled", "rig-integrity")
+RIG_STATUSES = ("rig-error", "rig-timeout", "rig-unreachable", "rig-cancelled", "rig-integrity")
 
 
 class GoldenError(Exception):

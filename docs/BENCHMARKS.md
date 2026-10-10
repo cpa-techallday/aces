@@ -36,3 +36,31 @@ the signed LAN repo. Row written on the VM by `aces golden show 20261009T144006Z
 | Machine | CPU | Devices used | Workers | Designs ok/n | gen/fea/check mm | Sweep s | Loop s | Check s | Total s | Outcome | Grade | Run |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | aces-rehearsal | Intel(R) Core(TM) Ultra 9 285HX (4 logical) | cpu/numpy x4 | 4 | 9/10 | 4/4/2 | 7.7 | 3.4 | 5.9 | 23.7 | pass | verified-desktop | 20261009T144006Z-b3ac99 |
+
+## Golden path with the rig lane (2026-10-10, acceptance of the rig integration)
+
+Rows written by `aces golden show <run> --bench-out` on the machine that ran each run and copied here unchanged. The rig is the ACES Server (8x NVIDIA CMP 170HX, mode sim-lab-4, pool GPUs 0 to 3) reached through simlab-mcp 0.4.0 at `http://192.168.1.65:8022/mcp`; the rig operator's hand-run containers held GPUs 1 to 3 outside the queue during these runs, so the rig cases ran on the free GPUs with lease waits (27.4 s for the first check case; up to 239 s for one sweep case). Check s includes the rig's conforming check (tet10 at 2 mm, CalculiX ccx 2.23 on 16 rig CPU threads, about 54 s). The "Devices used" text of a run that used more than one rig GPU is mis-joined by `report.py` (Known gaps in PACKAGES.md); the records are right.
+
+## 2026-10-10T08:41:20.853+00:00  aces golden root-mount on Darkness
+
+| Machine | CPU | Devices used | Workers | Designs ok/n | gen/fea/check mm | Sweep s | Loop s | Check s | Total s | Outcome | Grade | Run |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Darkness | Intel(R) Core(TM) Ultra 9 285HX (24 logical) | cpu/numpy x10, NVIDIA RTX PRO 4000 Blackwell SFF Edition (cupy, warp), rig: NVIDIA CMP 170HX x1 (cupy, mg), rig cpu (ccx x16) | 10 | 9/10 | 4/4/2 | 15.7 | 8.1 | 65.0 | 109.8 | pass | rig-verified | 20261010T083934Z-b3ac99 |
+
+## 2026-10-10T08:48:20.351+00:00  aces golden root-mount on Darkness
+
+| Machine | CPU | Devices used | Workers | Designs ok/n | gen/fea/check mm | Sweep s | Loop s | Check s | Total s | Outcome | Grade | Run |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Darkness | Intel(R) Core(TM) Ultra 9 285HX (24 logical) | cpu/numpy, NVIDIA RTX PRO 4000 Blackwell SFF Edition (cupy, warp), rig: NVIDIA CMP 170HX), rig gpu 2 (NVIDIA CMP 170HX x1 (cupy), rig: NVIDIA CMP 170HX x2 (cupy, mg), rig cpu (ccx x16) | 1 | 9/10 | 4/4/2 | 247.4 | 10.0 | 64.7 | 340.2 | pass | rig-verified | 20261010T084243Z-b3ac99 |
+
+## 2026-10-10T08:42:23.972+00:00  aces golden root-mount on aces-rehearsal
+
+| Machine | CPU | Devices used | Workers | Designs ok/n | gen/fea/check mm | Sweep s | Loop s | Check s | Total s | Outcome | Grade | Run |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| aces-rehearsal | Intel(R) Core(TM) Ultra 9 285HX (4 logical) | cpu/numpy x4, cpu x4 | 4 | 9/10 | 4/4/2 | 8.1 | 3.4 | 36.3 | 55.0 | pass | verified-desktop | 20261010T084129Z-b3ac99 |
+
+## 2026-10-10T08:50:43.042+00:00  aces golden root-mount on aces-rehearsal
+
+| Machine | CPU | Devices used | Workers | Designs ok/n | gen/fea/check mm | Sweep s | Loop s | Check s | Total s | Outcome | Grade | Run |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| aces-rehearsal | Intel(R) Core(TM) Ultra 9 285HX (4 logical) | cpu/numpy x4, rig: NVIDIA CMP 170HX x2 (cupy, mg), rig cpu (ccx x16) | 4 | 9/10 | 4/4/2 | 8.1 | 3.2 | 65.9 | 83.8 | pass | rig-verified | 20261010T084920Z-b3ac99 |

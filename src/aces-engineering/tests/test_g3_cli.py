@@ -2,9 +2,11 @@
 by minimal fakes that write records in the pinned shapes), each run in a child process so the fd-level stdio guard
 works on real file descriptors:
 
-  --lane exits 2 with no run directory and still one JSON document; --json stays one document while the stages print,
-  write to fds 1 and 2 and import (and initialise) Warp; the exit-code mapping for every outcome and its precedence;
-  the run records of an error after the run directory exists; show, --bench-out, verify and report; help; Ctrl-C (POSIX).
+  a --lane that cannot be used (no fabric manifest here) and the rig usage refusals exit 2 with no run directory and
+  still one JSON document; --json stays one document while the stages print, write to fds 1 and 2 and import (and
+  initialise) Warp; the exit-code mapping for every outcome and its precedence (--strict, --require-grade, a rig
+  integrity error); the run records of an error after the run directory exists; show, --bench-out, verify, report and
+  compute --lane; help; Ctrl-C (POSIX).
 
 The `aces` used is the real one (src/aces-base from this repository, else an installed aces) in temporary state. Every
 spec, metric and record the stubs write is a labelled test input; nothing here is a result of the golden path.
@@ -46,6 +48,7 @@ def aces_command() -> tuple[list[str] | None, str | None]:
 def install_stubs(sc: dict) -> None:
     """Replace the stage modules by fakes driven by the scenario `sc` (test inputs)."""
     import aces_engineering.golden as g
+    import aces_engineering.golden.compute as real_compute  # its manifest reader serves the real lane probe
     from aces_engineering.golden import EXIT_EVIDENCE, GoldenError, sha256_file
 
     verdict = sc.get("verdict", "PASS")
@@ -135,19 +138,28 @@ def install_stubs(sc: dict) -> None:
         def write(self, run):
             return run.write_json("compute_used.json", {"schema": "aces-golden-compute-used/1", "rows": self.rows()})
 
-    def detect(*, device="auto"):
+    def detect(*, device="auto", probe=None, rig_scope=None):
         noise("compute")
         return {"schema": "aces-golden-compute/1", "host": "test-host", "cpu": {"logical": 2, "usable": 2, "model": "test cpu"},
                 "kernel_selftest": sc.get("kernel_selftest") or {"passed": True, "wall_s": 0.01, "source": "stub (test input)"},
                 "gpu": {"usable": False, "reason": "test: no GPU"}, "warp": {"usable": False}, "rig": {"lanes": []}}
 
-    mod("compute", detect=detect, ComputeLog=ComputeLog,
-        plan=lambda detected, eff, *, jobs="auto", device="auto": {
+    def plan_conforming(detected, eff, *, mode="auto", rig=None):
+        return {"mode": mode, "host": None, "fallback": None, "h_mm": 1.0, "threads": None, "max_dof": None,
+                "timeout_s": None, "reason": "stub: not run (test input)"}
+
+    mod("compute", detect=detect, ComputeLog=ComputeLog, CONFORMING_MODES=("auto", "rig", "local", "off"),
+        conforming_available=lambda: dict(sc.get("conforming_available") or {
+            "usable": False, "reason": "stub: gmsh and ccx are not here (test input)"}),
+        _read_manifest=real_compute._read_manifest,
+        plan=lambda detected, eff, *, jobs="auto", device="auto", rig=None, conforming="auto": {
             "sweep": {"device": "cpu", "jobs": 1, "reason": "test"}, "verify": {"device": "cpu"}, "check_mode": "auto",
-            "check_budget_s": 60.0, "parity": [], "rig": {"submit": False, "reason": "test"}},
-        plan_check=lambda detected, eff, *, coarse_solve_s, device="auto": [
-            {"level": 1, "h_mm": 1.0, "device": "cpu", "run": True, "gating": True, "est_s": 0.1, "budget_s": 60.0, "reason": "test"}],
-        lane_refusal=lambda lane: f"rig submission through lane '{lane}' is not wired into the golden path yet (v0); stub",
+            "check_budget_s": 60.0, "parity": [], "rig": {"submit": False, "reason": "test"},
+            "conforming": plan_conforming(detected, eff, mode=conforming)},
+        plan_check=lambda detected, eff, *, coarse_solve_s, device="auto", rig=None: [
+            {"level": 1, "h_mm": 1.0, "device": "cpu", "run": True, "gating": True, "est_s": 0.1, "budget_s": 60.0,
+             "reason": "test", "host": "desktop"}],
+        plan_conforming=plan_conforming,
         summary_lines=lambda detected, plan: ["cpu: test cpu (test input)", "gpu: none (test input)"])
 
     # domain and evidence
@@ -206,7 +218,7 @@ def install_stubs(sc: dict) -> None:
         def close(self):
             pass
 
-    def run_sweep(run, eff, domain, experiment, pool, plan, progress):
+    def run_sweep(run, eff, domain, experiment, pool, plan, progress, *, rig=None):
         noise("sweep")
         n = int(eff["sweep"]["n"])
         n_ok = int(sc.get("n_ok", n))
@@ -242,13 +254,13 @@ def install_stubs(sc: dict) -> None:
                 "passed": passed, "outcome": outcome, "final_round": 1, "final_case": "v001",
                 "winner_case": "v001" if passed else None, "winner_params": {"volfrac": 0.2}}
 
-    def grade(loop, check, eff):
+    def grade(loop, check, eff, *, conforming=None, rig=None):
         if not (loop or {}).get("passed"):
             return "preview-grade", ["check skipped: verification failed"]
         g_ = sc.get("grade", "verified-desktop")
         return g_, ["stub grade reason (test input)"]
 
-    def finalise(run, eff, loop, check, parity, grade_, *, outcome=None):
+    def finalise(run, eff, loop, check, parity, grade_, *, outcome=None, conforming=None, rig=None):
         loop = loop or {"rounds": [], "passed": False, "outcome": None, "final_round": None, "final_case": None,
                         "winner_case": None}
         outcome = outcome or loop["outcome"]
@@ -266,14 +278,26 @@ def install_stubs(sc: dict) -> None:
                "passed": v == "PASS", "final_round": loop.get("final_round"), "final_case": loop.get("final_case"),
                "winner_case": loop.get("winner_case") if v == "PASS" else None,
                "independent_check": check or {"ran": False, "reason": "not run", "passed": None, "levels": []},
-               "device_parity": parity or [], "grade": g_, "grade_reasons": why, "verdict": v, "verdict_reasons": reasons}
+               "device_parity": parity or [], "grade": g_, "grade_reasons": why, "verdict": v, "verdict_reasons": reasons,
+               "conforming": conforming or conforming_block(), "rig": rig}
+        if sc.get("rig_integrity"):  # a rig block with an integrity error (test input; no rig was contacted)
+            doc["rig"] = {"lane": "sim/test", "scope": {"sweep": False, "check": True, "conforming": False},
+                          "experiments": [], "code_identity": {"ok": False}, "integrity_error": sc["rig_integrity"]}
         run.write_json("validation.json", doc)
         return doc
 
-    mod("verify", run_rounds=run_rounds, grade=grade, finalise=finalise,
-        independent_check=lambda run, eff, domain, experiment, loop, levels, pool, progress: {
+    def conforming_block(*args, **kwargs):
+        return {"ran": False, "passed": None, "status": None, "case_id": None, "host": None, "mode": "auto",
+                "reason": "not run: stub (test input)", "h_mm": 1.0, "source_case": None, "reference": None,
+                "record": None, "mesh": None, "solver": None, "bands": None, "rows": [], "constraints_met": None,
+                "rig": None, "rig_attempt": None}
+
+    mod("verify", run_rounds=run_rounds, grade=grade, finalise=finalise, conforming_block=conforming_block,
+        local_conforming=lambda *args, **kwargs: None,
+        independent_check=lambda run, eff, domain, experiment, loop, levels, pool, progress, *, rig=None: {
             "ran": True, "reason": "", "passed": True,
-            "levels": [{"level": 1, "h_mm": 1.0, "device": "cpu", "ran": True, "passed": True, "rows": []}]},
+            "levels": [{"level": 1, "h_mm": 1.0, "device": "cpu", "host": "desktop", "ran": True, "passed": True,
+                        "rows": []}]},
         device_parity=lambda run, eff, domain, experiment, loop, plan, progress: [])
 
     # export, render, report
@@ -409,14 +433,19 @@ class CliTestCase(unittest.TestCase):
 
 class RefusalTests(CliTestCase):
     def test_lane_is_refused_without_a_run_directory(self) -> None:
+        """No fabric manifest in this test's state: the live probe refuses with R1 before anything is computed."""
+        self.need_aces()
         r = self.run_cli(["run", "--demo", "--lane", "sim/pool", "--json"])
         self.assertEqual(r.rc, 2, r.err)
         doc = r.doc()
         self.assertEqual((doc["outcome"], doc["exit_code"], doc["run_dir"], doc["verdict"]), ("usage", 2, None, None))
-        self.assertIn("lane 'sim/pool' is not wired", doc["message"])
-        self.assertIn("aces golden: error: rig submission through lane 'sim/pool'", r.err)
+        self.assertEqual(doc["message"], "lane 'sim/pool' cannot be used: there is no fabric manifest (aces fabric "
+                                         "refresh writes it); nothing was submitted")
+        self.assertIn("aces golden: error: lane 'sim/pool' cannot be used: there is no fabric manifest", r.err)
         self.assertFalse(self.work.exists() and any(self.work.rglob("run.json")))
         self.assertEqual(r.doc()["schema"], "aces-golden-result/1")
+        self.assertIsNone(doc["rig"])
+        self.assertIsNone(doc["conforming"])
 
     def test_argparse_errors_with_json_are_one_document(self) -> None:
         r = self.run_cli(["run", "--demo", "--device", "tpu", "--json"])
@@ -440,6 +469,15 @@ class RefusalTests(CliTestCase):
             (["run", "--project", "no-such-project", "--json"], None, 2, "no spec at"),
             (["run", "--demo", "--device", "gpu", "--json"], None, 2, "no usable CUDA GPU here"),
             (["run", "--demo", "--json"], {"guard": ["rmin_mm 4 is below 1.5 x gen_mm (test input)"]}, 4, "under-resolved: rmin_mm 4"),
+            (["run", "--demo", "--rig-sweep", "--json"], None, 2, "--rig-sweep needs a rig lane"),
+            (["run", "--demo", "--lane", "none", "--rig-sweep", "--json"], None, 2,
+             "--rig-sweep needs a rig lane (--lane none was given)"),
+            (["run", "--demo", "--rig-budget", "600", "--json"], None, 2, "--rig-budget needs a rig lane"),
+            (["run", "--demo", "--conforming", "rig", "--json"], None, 2, "--conforming rig needs a rig lane"),
+            (["run", "--demo", "--conforming", "local", "--json"], None, 2,
+             "--conforming local cannot run on this desktop: stub: gmsh and ccx are not here (test input)"),
+            (["run", "--demo", "--lane", "sim/pool", "--check", "off", "--conforming", "off", "--json"], None, 2,
+             "lane 'sim/pool' cannot be used: there is no fabric manifest"),
         ]
         from concurrent.futures import ThreadPoolExecutor
 
@@ -475,8 +513,8 @@ class RunTests(CliTestCase):
         doc = r.doc()
         self.assertEqual(set(doc), {"schema", "outcome", "verdict", "exit_code", "message", "verdict_line", "grade",
                                     "project", "run_id", "run_dir", "report", "winner", "validation",
-                                    "independent_check", "device_parity", "evidence", "compute_used", "started_utc",
-                                    "finished_utc", "wall_s"})
+                                    "independent_check", "device_parity", "conforming", "rig", "evidence",
+                                    "compute_used", "started_utc", "finished_utc", "wall_s"})
         self.assertEqual((doc["outcome"], doc["verdict"], doc["grade"], doc["exit_code"]), ("pass", "PASS", "verified-desktop", 0))
         self.assertNotIn("noise", r.out)
         self.assertNotIn("initialized", r.out)  # the Warp banner ("Warp 1.x initialized:") stays in log.txt
@@ -493,7 +531,11 @@ class RunTests(CliTestCase):
         self.assertEqual(Path(doc["winner"]["stl"]), run / "winner" / "winner.stl")
         self.assertEqual(doc["validation"], {"tol": 0.1, "rounds": 1, "passed": True, "final_round": 1,
                                              "max_rel_err": {"mass_kg": 0.012, "vm_p99_MPa": 0.031}})
-        self.assertEqual(doc["independent_check"], {"ran": True, "h_mm": 1.0, "device": "cpu", "passed": True, "reason": ""})
+        self.assertEqual(doc["independent_check"], {"ran": True, "h_mm": 1.0, "device": "cpu", "host": "desktop",
+                                                    "passed": True, "reason": ""})
+        self.assertEqual(doc["conforming"], {"ran": False, "passed": None, "host": None, "h_mm": 1.0, "case_id": None,
+                                             "status": None, "reason": "not run: stub (test input)"})
+        self.assertIsNone(doc["rig"])
         self.assertEqual(doc["evidence"]["aces_ledger_entry"], 2)  # entry 1 is project.new for golden-demo
         self.assertTrue(doc["evidence"]["ledgers_ok"])
         meta = json.loads((run / "run.json").read_text(encoding="utf-8"))
@@ -509,7 +551,9 @@ class RunTests(CliTestCase):
         self.assertNotIn(" *log.txt", manifest)
         ev = [json.loads(ln) for ln in (run / "events.jsonl").read_text(encoding="utf-8").splitlines()]
         self.assertEqual(ev[-1]["kind"], "result")
-        self.assertEqual(ev[0]["msg"], "aces-golden 0.1.0 · loading the engineering stack ...")
+        from aces_engineering.golden import VERSION
+
+        self.assertEqual(ev[0]["msg"], f"aces-golden {VERSION} · loading the engineering stack ...")
         self.assertEqual((run / "inputs" / "spec.json").read_text(encoding="utf-8"),
                          json.dumps(json.loads((run / "inputs" / "spec.json").read_text(encoding="utf-8")),
                                     indent=1, ensure_ascii=False) + "\n")
@@ -538,6 +582,16 @@ class RunTests(CliTestCase):
             ({"raise_in": "sweep"}, [], 7, "error", None),
             ({"raise_in": "export", "verdict": "FAIL"}, [], 7, "error", "FAIL"),
             ({"interrupt_in": "loop"}, [], 130, "interrupted", None),
+            ({"verdict": "PASS"}, ["--require-grade", "rig-verified"], 1, "verification-failed", "PASS"),
+            ({"verdict": "PASS"}, ["--require-grade", "verified-desktop"], 0, "pass", "PASS"),
+            ({"verdict": "PASS", "grade": "preview-grade"}, ["--require-grade", "preview-grade"], 0, "pass", "PASS"),
+            ({"verdict": "PASS"}, ["--strict", "--require-grade", "rig-verified"], 1, "verification-failed", "PASS"),
+            ({"verdict": "PASS", "grade": "preview-grade"}, ["--strict", "--require-grade", "preview-grade"], 1,
+             "verification-failed", "PASS"),
+            ({"verdict": "PASS", "rig_integrity": "x001: c000/golden/x001/mask.npy did not verify (test input)"}, [],
+             6, "evidence-failed", "PASS"),
+            ({"verdict": "FAIL", "rig_integrity": "x001: c000/golden/x001/mask.npy did not verify (test input)"}, [],
+             1, "verification-failed", "FAIL"),
         ]
         from concurrent.futures import ThreadPoolExecutor
 
@@ -572,8 +626,20 @@ class RunTests(CliTestCase):
                 self.assertIn("hint: replay with: aces ledger record golden.run", r.err)
             if scenario.get("evidence_fail") and code in (1, 3):
                 self.assertIn("evidence failed too", doc["message"])
-            if "--strict" in extra and code == 1:
+            if extra == ["--strict"] and code == 1:
                 self.assertTrue(doc["message"].startswith("strict: grade preview-grade (stub grade reason"), doc["message"])
+            if "rig-verified" in extra:  # the higher requirement wins, also over --strict
+                self.assertEqual(doc["message"], "required grade rig-verified: grade verified-desktop (stub grade reason "
+                                                 "(test input))")
+            if extra == ["--strict", "--require-grade", "preview-grade"]:
+                self.assertTrue(doc["message"].startswith("strict: grade preview-grade ("), doc["message"])
+            if scenario.get("rig_integrity") and code == 6:
+                self.assertEqual(doc["message"], "rig integrity error: x001: c000/golden/x001/mask.npy did not verify "
+                                                 "(test input)")
+                self.assertFalse(doc["rig"]["code_identity_ok"])
+                self.assertEqual(doc["rig"]["integrity_error"], scenario["rig_integrity"])
+            if scenario.get("rig_integrity") and code == 1:
+                self.assertIn("; rig integrity error too: x001:", doc["message"])
             if verdict == "THIN":
                 st = {s["name"]: s for s in meta["stages"]}
                 self.assertEqual((st["loop"]["status"], st["check"]["status"]), ("skipped", "skipped"))
@@ -671,6 +737,13 @@ class RunTests(CliTestCase):
         r = self.run_cli(["compute", "--json"])
         self.assertEqual(r.rc, 0, r.err)
         self.assertEqual(r.doc()["host"], "test-host")
+        r = self.run_cli(["compute", "--lane", "sim/pool", "--json"])  # no fabric manifest in this test's state
+        self.assertEqual(r.rc, 2, r.err)
+        self.assertEqual(r.doc()["host"], "test-host")
+        self.assertIn("aces golden: error: lane 'sim/pool' cannot be used: there is no fabric manifest", r.err)
+        r = self.run_cli(["compute", "--lane", "none"])
+        self.assertEqual(r.rc, 0, r.err)
+        self.assertNotIn("rig:", r.out)
         r = self.run_cli(["spec", "--schema"])
         self.assertEqual(r.doc(), {"title": "stub schema (test input)"})
 

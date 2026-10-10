@@ -2,14 +2,16 @@
 
 `detect()` looks at everything this machine could compute with and never raises: the CPUs, memory and BLAS, the voxel
 kernel's own element and patch tests, a CuPy GPU (with the same patch test run on the device and a free-memory floor),
-NVIDIA Warp, torch and PhysicsNeMo (looked up, never imported), conforming-mesh solvers on PATH, and the rig's
-simulation lanes as the fabric manifest lists them. It never refreshes the manifest and never contacts the rig: v0
-reports each rig lane and says that golden-path submission is not wired yet.
+NVIDIA Warp, torch and PhysicsNeMo (looked up, never imported), the conforming tet10 pipeline (gmsh in this venv and
+CalculiX ccx, golden.conforming.available()), and the rig's simulation lanes as the fabric manifest lists them. It never
+refreshes the manifest and never contacts the rig itself: the lane probe (golden.rig.probe, in preflight) did that, and
+its record is attached as rig.probe.
 
-`plan()` decides where the sweep, the verification solves and the device-parity re-solves run; `plan_check()` decides
-the finer-resolution independent check levels once the coarse solve time is known. `ComputeLog` turns the records of a
-run into the compute-used table (`compute_used.json`); every row is re-derived from the files it names, which is how
-`aces golden verify` checks it.
+`plan()` decides where the sweep, the verification solves and the device-parity re-solves run, what goes to a rig lane
+(plan.rig) and where the conforming check runs (plan.conforming, `plan_conforming()`); `plan_check()` decides the
+finer-resolution independent check levels once the coarse solve time is known (on the rig with a lane, each level-1 row
+carrying the desktop plan it falls back to). `ComputeLog` turns the records of a run into the compute-used table
+(`compute_used.json`); every row is re-derived from the files it names, which is how `aces golden verify` checks it.
 
 Standard library only at module level; numpy, cupy, warp, psutil and threadpoolctl are imported inside the probes.
 """
@@ -38,11 +40,15 @@ CHECK_MAX_CELLS = 2_000_000       # an independent-check level above this many c
 JOB_MEM_GB = 0.6                  # memory one CPU sweep worker needs (auto --jobs rule)
 PATCH_TOL = 1e-6                  # GPU patch test: tip displacement vs F L / (A E)
 
-NOT_WIRED = "golden-path submission not wired yet (v0); nothing submitted"
-PLAN_RIG_REASON = "golden-path submission not wired yet (v0)"
 FNO_REASON = "a field (FNO) surrogate needs O(100) solved fields; v0 fits a tabular GP"
-CONFORMING_REASON = "not wired in v0; the VISION sign-off path (second discretisation)"
 LATTICE_REASON = "not used: cantilever demonstrator, not wired into the golden path (v0)"
+DESKTOP_ONLY = "desktop only (run with --lane {id} to send the independent check and the conforming check to the rig)"
+OTHER_LANE = "another lane was selected"
+CONFORMING_MODES = ("auto", "rig", "local", "off")
+CONFORMING_LOCAL_THREADS_MAX = 8
+# section 12.1 of the rig build spec (golden.conforming owns them; these are read from it when it is importable)
+CONFORMING_MAX_DOF = {"desktop": 1_500_000, "rig": 3_000_000}
+CONFORMING_TIMEOUT_S = {"desktop": 900.0, "rig": 3000.0}
 
 
 # ----------------------------------------------------------------------------- small helpers
@@ -348,7 +354,29 @@ def _read_manifest() -> tuple[Path, float, dict | None, float | None, str | None
         return path, max_age, None, None, _exc(exc)
 
 
-def _rig() -> dict:
+def _lane_use(lane_id, probe: dict | None, scope: dict | None = None) -> tuple[str, str]:
+    """(use, reason) of one manifest sim lane given the run's lane probe (None: no lane was asked for) and what the run
+    sends to the rig (scope: sweep, check, conforming)."""
+    if not probe:
+        return "not used", DESKTOP_ONLY.format(id=lane_id)
+    if probe.get("lane") != lane_id:
+        return "not used", OTHER_LANE
+    if probe.get("ok"):
+        from .rig import needs_for, sent_text
+
+        sent = sent_text(scope or needs_for("auto", "auto", False))
+        if probe.get("lane_source") == "config":
+            return "used", f"[golden] lane {lane_id} (aces.toml): {sent}"
+        return "used", f"--lane {lane_id}: {sent}"
+    if probe.get("lane_source") == "config":
+        from .rig import refusal_reason
+
+        why = refusal_reason(probe) or "unavailable"
+        return "not used", f"rig lane {lane_id} (from aces.toml) unavailable: {why}; computing on this desktop"
+    return "not used", str(probe.get("refusal") or "unavailable")
+
+
+def _rig(probe: dict | None = None, scope: dict | None = None) -> dict:
     path, max_age, data, age, err = _read_manifest()
     m: dict[str, Any] = {"path": str(path), "present": data is not None, "generated": None, "age_s": None,
                          "stale": None, "mode": None}
@@ -367,26 +395,46 @@ def _rig() -> dict:
     if data is None:
         why = "the fabric manifest could not be read: run aces fabric refresh" if err else \
             "no fabric manifest: run aces fabric refresh"
+        if probe and probe.get("lane"):
+            why += f"; {_lane_use(probe.get('lane'), probe, scope)[1]}"
         lanes.append({"id": None, "kind": "sim", "gpus": None, "endpoint": None, "status": "no-manifest",
-                      "use": "not used", "reason": f"{why}; {NOT_WIRED}"})
+                      "use": "not used", "reason": why})
     else:
         for lane in data.get("lanes") or []:
             if not isinstance(lane, dict) or lane.get("kind") != "sim":
                 continue
+            use, reason = _lane_use(lane.get("id"), probe, scope)
             lanes.append({"id": lane.get("id"), "kind": "sim", "gpus": lane.get("gpus"), "endpoint": lane.get("endpoint"),
-                          "status": _lane_status(lane, m["stale"], mcp["health"]), "use": "not used",
-                          "reason": NOT_WIRED})
+                          "status": _lane_status(lane, m["stale"], mcp["health"]), "use": use, "reason": reason})
         if not lanes:
             lanes.append({"id": None, "kind": "sim", "gpus": None, "endpoint": None, "status": "no-sim-lane",
-                          "use": "not used",
-                          "reason": f"the fabric manifest lists no sim lane (mode {m['mode']}); {NOT_WIRED}"})
-    return {"manifest": m, "simlab_mcp": mcp, "lanes": lanes, "max_age_s": max_age}
+                          "use": "not used", "reason": f"the fabric manifest lists no sim lane (mode {m['mode']})"})
+    return {"manifest": m, "simlab_mcp": mcp, "lanes": lanes, "max_age_s": max_age, "probe": probe}
 
 
-def detect(*, device: str = "auto") -> dict:
+def conforming_available() -> dict:
+    """golden.conforming.available() (gmsh in this venv, CalculiX ccx), or the reason it cannot be asked: the
+    conforming pipeline itself is not importable here."""
+    try:
+        from . import conforming
+    except Exception as exc:  # ImportError: a tree without golden.conforming
+        return {"gmsh": None, "gmsh_reason": None, "ccx": None, "ccx_version": None, "ccx_sha256": None,
+                "usable": False, "reason": f"the conforming pipeline (golden.conforming) is not importable here "
+                                           f"({_exc(exc)})"}
+    try:
+        av = dict(conforming.available() or {})
+    except Exception as exc:
+        return {"gmsh": None, "gmsh_reason": None, "ccx": None, "ccx_version": None, "ccx_sha256": None,
+                "usable": False, "reason": f"golden.conforming.available() failed ({_exc(exc)})"}
+    av["usable"] = bool(av.get("usable"))
+    return av
+
+
+def detect(*, device: str = "auto", probe: dict | None = None, rig_scope: dict | None = None) -> dict:
     """What this machine can compute with, as the `compute.json` snapshot (without "plan"). Never raises: every probe
     is guarded and a failed probe is reported with its reason. `device` is the --device choice; "cpu" skips every GPU
-    probe (reason "excluded by --device cpu")."""
+    probe (reason "excluded by --device cpu"). `probe` is the lane probe of this run (golden.rig.probe), attached as
+    rig.probe and used to mark the lanes used or not used; `rig_scope` is what the run sends to the rig."""
     out: dict[str, Any] = {"schema": SCHEMA["compute"], "detected_utc": None, "host": None, "platform": None,
                            "python": sys.version.split()[0]}
     try:
@@ -413,19 +461,26 @@ def detect(*, device: str = "auto") -> dict:
     for mod in ("torch", "physicsnemo"):
         out[mod] = {"installed": _installed(mod), "use": "not used", "reason": FNO_REASON}
     try:
-        out["conforming_mesh"] = {"ccx": shutil.which("ccx"), "code_aster": shutil.which("as_run"), "use": "not used",
-                                  "reason": CONFORMING_REASON}
-    except Exception as exc:
-        out["conforming_mesh"] = {"ccx": None, "code_aster": None, "use": "not used",
-                                  "reason": f"{CONFORMING_REASON} (lookup failed: {_exc(exc)})"}
+        cm = conforming_available()
+    except Exception as exc:  # belt and braces: conforming_available guards itself
+        cm = {"gmsh": None, "ccx": None, "usable": False, "reason": f"lookup failed ({_exc(exc)})"}
     try:
-        out["rig"] = _rig()
+        cm["code_aster"] = shutil.which("as_run")
+    except Exception as exc:
+        cm["code_aster"] = None
+        cm["code_aster_error"] = _exc(exc)
+    cm["use"] = "available" if cm.get("usable") else "not used"
+    cm["reason"] = cm.get("reason") or ("gmsh and CalculiX ccx found" if cm.get("usable") else "not available")
+    out["conforming_mesh"] = cm
+    try:
+        out["rig"] = _rig(probe, rig_scope)
     except Exception as exc:
         out["rig"] = {"manifest": {"path": None, "present": False, "generated": None, "age_s": None, "stale": None,
                                    "mode": None},
                       "simlab_mcp": {"url": None, "health": None},
                       "lanes": [{"id": None, "kind": "sim", "gpus": None, "endpoint": None, "status": "no-manifest",
-                                 "use": "not used", "reason": f"rig probe failed ({_exc(exc)}); {NOT_WIRED}"}]}
+                                 "use": "not used", "reason": f"rig lane lookup failed ({_exc(exc)})"}],
+                      "probe": probe}
     return out
 
 
@@ -455,14 +510,107 @@ def _jobs(jobs, cpu: dict, n: int) -> int:
     return j
 
 
-def plan(detected: dict, eff: dict, *, jobs: "int | str" = "auto", device: str = "auto") -> dict:
+def _rig_view(rig) -> dict | None:
+    """The parts of a rig session (golden.rig.RigSession, or a dict with the same keys) a plan needs; None: no lane."""
+    if rig is None:
+        return None
+    get = rig.get if isinstance(rig, dict) else (lambda k, default=None: getattr(rig, k, default))
+    scope = get("scope") or {}
+    return {"lane": get("lane"), "lane_source": get("lane_source"), "url": get("url"),
+            "budget_s": get("budget_s"), "scope": {k: bool(scope.get(k)) for k in ("sweep", "check", "conforming")}}
+
+
+def plan_rig(detected: dict, rig=None) -> dict:
+    """plan.rig: what this run submits to a rig lane (section 14.5)."""
+    v = _rig_view(rig)
+    if v is None:
+        probe = ((detected or {}).get("rig") or {}).get("probe") or {}
+        if probe.get("lane") and not probe.get("ok"):
+            from .rig import refusal_reason
+
+            reason = (f"rig lane {probe.get('lane')} (from aces.toml) unavailable: {refusal_reason(probe)}; computing "
+                      "on this desktop") if probe.get("lane_source") == "config" else str(probe.get("refusal"))
+        else:
+            reason = "no rig lane: everything runs on this desktop (--lane LANE sends the independent check and the " \
+                     "conforming check to a rig)"
+        return {"submit": False, "lane": None, "url": None, "sweep": False, "check": False, "conforming": False,
+                "budget_s": None, "reason": reason}
+    from .rig import sent_text
+
+    sc = v["scope"]
+    how = f"[golden] lane {v['lane']} (aces.toml)" if v["lane_source"] == "config" else f"--lane {v['lane']}"
+    return {"submit": any(sc.values()), "lane": v["lane"], "url": v["url"], "sweep": sc["sweep"], "check": sc["check"],
+            "conforming": sc["conforming"], "budget_s": v["budget_s"],
+            "reason": f"{how}: {sent_text(sc)} through simlab-mcp at {v['url']}; budget {float(v['budget_s'] or 0):g} s "
+                      "per experiment"}
+
+
+def _rig_threads() -> int:
+    from .rig import CONFORMING_THREADS_RIG
+
+    return int(CONFORMING_THREADS_RIG)
+
+
+def _conforming_limits() -> tuple[dict, dict]:
+    try:
+        from . import conforming
+
+        return dict(conforming.MAX_DOF), dict(conforming.TIMEOUT_S)
+    except Exception:
+        return dict(CONFORMING_MAX_DOF), dict(CONFORMING_TIMEOUT_S)
+
+
+def plan_conforming(detected: dict, eff: dict, *, mode: str = "auto", rig=None) -> dict:
+    """plan.conforming (section 14.5): where the conforming tet10 check of the final part runs, at the level-1 check
+    resolution (fea_mm x check_factor). auto: on the rig with a lane (this desktop is the fallback when it can run it),
+    else on this desktop when gmsh and ccx are usable; rig: on the rig only; local: on this desktop; off: not run."""
+    d = _derived(eff)
+    if mode not in CONFORMING_MODES:
+        raise GoldenError(EXIT_USAGE, f"--conforming must be auto, rig, local or off, not {mode!r}")
+    h = float(d["fea_mm"]) * float(d.get("check_factor") or 0.5)
+    cm = (detected or {}).get("conforming_mesh") or {}
+    usable = bool(cm.get("usable"))
+    cpu = (detected or {}).get("cpu") or {}
+    local_threads = max(1, min(int(cpu.get("usable") or cpu.get("logical") or 1), CONFORMING_LOCAL_THREADS_MAX))
+    max_dof, timeout = _conforming_limits()
+    out: dict[str, Any] = {"mode": mode, "host": None, "fallback": None, "h_mm": h, "threads": None, "max_dof": None,
+                           "timeout_s": None, "reason": ""}
+    v = _rig_view(rig)
+    on_rig = v is not None and v["scope"]["conforming"]
+    if mode == "off":
+        out["reason"] = "conforming check disabled (--conforming off)"
+    elif mode in ("auto", "rig") and on_rig:
+        out.update(host="rig", threads=_rig_threads(), max_dof=int(max_dof["rig"]),
+                   timeout_s=float(timeout["rig"]))
+        out["reason"] = f"conforming tet10 at {h:g} mm on the rig CPU (ccx-check through lane {v['lane']})"
+        if mode == "auto" and usable:
+            out["fallback"] = "desktop"
+            out["reason"] += "; this desktop runs it when the rig does not deliver it"
+        elif mode == "auto":
+            out["reason"] += f"; no desktop fallback ({cm.get('reason')})"
+    elif mode == "rig":
+        out["reason"] = "--conforming rig needs a usable rig lane"
+    elif usable:
+        out.update(host="desktop", threads=local_threads, max_dof=int(max_dof["desktop"]),
+                   timeout_s=float(timeout["desktop"]))
+        out["reason"] = (f"conforming tet10 at {h:g} mm on this desktop (gmsh {cm.get('gmsh')}, ccx "
+                         f"{cm.get('ccx_version') or cm.get('ccx')}, {local_threads} threads)")
+    else:
+        out["reason"] = f"not available here: {cm.get('reason') or 'gmsh or ccx not found'}"
+    return out
+
+
+def plan(detected: dict, eff: dict, *, jobs: "int | str" = "auto", device: str = "auto", rig=None,
+         conforming: str = "auto") -> dict:
     """Where every solve of the run goes. Needs eff["derived"]["grid"] (ValueError when it is still null).
 
     sweep: a usable GPU when --device gpu (else GoldenError(EXIT_USAGE)), or with --device auto when a usable GPU has
     the memory and a solve is larger than GPU_SWEEP_MIN_CELLS cells; otherwise the CPU pool (the root-mount demo
     sweeps on the CPU on every host, so its sweeps are identical everywhere). verify: the sweep's device. parity:
     the final verify mask re-solved on the other devices (CuPy, Warp). A --device gpu run is refused here, before
-    anything is computed, when a sweep solve or the level-1 check would not fit in the free GPU memory."""
+    anything is computed, when a sweep solve or the level-1 check would not fit in the free GPU memory. With a rig
+    session the sweep's designs go to the rig when its scope says so (--rig-sweep); verification rounds and parity
+    follow the desktop plan as if no rig existed. rig: plan_rig; conforming: plan_conforming."""
     d = _derived(eff)
     if device not in ("auto", "cpu", "gpu"):
         raise GoldenError(EXIT_USAGE, f"--device must be auto, cpu or gpu, not {device!r}")
@@ -529,21 +677,32 @@ def plan(detected: dict, eff: dict, *, jobs: "int | str" = "auto", device: str =
             parity.append({"case_id": "p002", "device": "gpu", "backend": "warp"})
         else:
             notes.append(f"no Warp parity: {warp.get('reason') or 'Warp not usable'}")
-    return {"sweep": {"device": sweep_dev, "jobs": int(j), "reason": reason},
+    sweep = {"device": sweep_dev, "jobs": int(j), "reason": reason}
+    v = _rig_view(rig)
+    if v is not None and v["scope"]["sweep"]:
+        sweep = {"device": "rig", "jobs": 1, "reason": f"--rig-sweep: the designs run on the rig (golden-case through "
+                                                       f"lane {v['lane']}); verification follows the desktop plan"}
+    return {"sweep": sweep,
             "verify": {"device": sweep_dev},
             "check_mode": d.get("check_mode") or "auto",
             "check_budget_s": float(d.get("check_budget_s") if d.get("check_budget_s") is not None else 60.0),
             "parity": parity,
-            "rig": {"submit": False, "reason": PLAN_RIG_REASON},
+            "rig": plan_rig(detected, rig),
+            "conforming": plan_conforming(detected, eff, mode=conforming, rig=rig),
             "cells": {"gen": gen_cells, "fea": fea_cells},
             "notes": notes}
 
 
-def plan_check(detected: dict, eff: dict, *, coarse_solve_s: float | None, device: str = "auto") -> list[dict]:
+def plan_check(detected: dict, eff: dict, *, coarse_solve_s: float | None, device: str = "auto",
+               rig=None) -> list[dict]:
     """The independent-check levels. Level 1 (h = fea_mm * check_factor, gating) runs on a usable GPU, else on the CPU
     when --check force or when the estimate coarse_solve_s * (fea_mm / h)^4 fits the budget. Level 2 (h = fea_mm *
     check_factor^2, informational) runs only on a usable GPU. A level that would need more GPU memory than is free is
-    not put on the GPU (level 1 then takes the CPU route)."""
+    not put on the GPU (level 1 then takes the CPU route). With a rig session whose scope has the check, both levels
+    go to the rig (device and host "rig") when they have at most CHECK_MAX_CELLS cells, and level 1 carries its desktop
+    plan as "fallback" (the plan a level-1 case the rig does not deliver falls back to)."""
+    if rig is not None and (_rig_view(rig) or {}).get("scope", {}).get("check"):
+        return _plan_check_rig(detected, eff, coarse_solve_s=coarse_solve_s, device=device, rig=_rig_view(rig))
     d = _derived(eff)
     env = d["grid"]["envelope_mm"]
     fea = float(d["fea_mm"])
@@ -584,32 +743,35 @@ def plan_check(detected: dict, eff: dict, *, coarse_solve_s: float | None, devic
             else:
                 who = lead if gpu_ok else ("--device cpu and " if device == "cpu" else "no usable GPU and ")
                 row["reason"] = f"{who}the CPU estimate {est:.1f} s exceeds the {budget:g} s budget"
+        row["host"] = "desktop" if row["run"] else None
         out.append(row)
     return out
 
 
-def lane_refusal(lane: str) -> str:
-    """The one-line refusal for --lane (exit 2 before anything runs). Reads the fabric manifest only."""
-    path, max_age, data, age, err = _read_manifest()
-    if data is None:
-        state = ("not in the fabric manifest (it could not be read)" if err
-                 else "not in the fabric manifest (there is none: aces fabric refresh writes it)")
-    else:
-        found = [x for x in data.get("lanes") or [] if isinstance(x, dict) and x.get("id") == lane]
-        if not found:
-            state = "not in the fabric manifest"
-        elif age is not None and age > max_age:
-            state = "in a stale manifest"
-        elif found[0].get("kind") != "sim":
-            state = f"a {found[0].get('kind') or 'non-simulation'} lane in the fabric manifest, not a simulation lane"
+def _plan_check_rig(detected: dict, eff: dict, *, coarse_solve_s, device: str, rig: dict) -> list[dict]:
+    desk = {lv["level"]: lv for lv in plan_check(detected, eff, coarse_solve_s=coarse_solve_s, device=device)}
+    d = _derived(eff)
+    env = d["grid"]["envelope_mm"]
+    fea = float(d["fea_mm"])
+    cf = float(d.get("check_factor") or 0.5)
+    mode = d.get("check_mode") or "auto"
+    budget = float(d.get("check_budget_s") if d.get("check_budget_s") is not None else 60.0)
+    out = []
+    for level, h in ((1, fea * cf), (2, fea * cf * cf)):
+        cells = _cells(env, h)
+        row: dict[str, Any] = {"level": level, "h_mm": h, "device": None, "run": False, "gating": level == 1,
+                               "est_s": None, "budget_s": budget, "reason": "", "cells": cells, "host": None,
+                               "fallback": desk.get(level) if level == 1 else None}
+        if mode == "off":
+            row["reason"] = "check disabled (--check off)"
+        elif cells > CHECK_MAX_CELLS:
+            row["reason"] = f"{cells:,} cells at {h:g} mm exceed the {CHECK_MAX_CELLS:,}-cell limit"
         else:
-            st = _lane_status(found[0], False, ((data.get("health") or {}).get("simlab_mcp")))
-            state = {"available": "available in the fabric manifest",
-                     "no-endpoint": "in the fabric manifest but has no endpoint"}.get(
-                st, "in the fabric manifest but its simlab endpoint is unreachable")
-    return (f"rig submission through lane '{lane}' is not wired into the golden path yet (v0); the lane is {state}; "
-            f"nothing was submitted. Run without --lane to compute on this desktop (preview-grade); the report lists "
-            f"the rig lanes it saw.")
+            row.update(device="rig", host="rig", run=True,
+                       reason=(f"finer check on the rig (golden-check through lane {rig['lane']})" if level == 1 else
+                               f"extra level on the rig (golden-check through lane {rig['lane']})"))
+        out.append(row)
+    return out
 
 
 def summary_lines(detected: dict, plan: dict | None) -> list[str]:
@@ -641,14 +803,18 @@ def summary_lines(detected: dict, plan: dict | None) -> list[str]:
     lines.append(f"fno: torch {'installed' if t else 'not installed'}, PhysicsNeMo {'installed' if p else 'not installed'}"
                  f"; not used: {FNO_REASON}")
     cm = detected.get("conforming_mesh") or {}
-    lines.append(f"conforming mesh: ccx {cm.get('ccx') or 'not found'}, Code_Aster {cm.get('code_aster') or 'not found'}"
-                 f"; not used: {CONFORMING_REASON}")
+    if cm.get("usable"):
+        lines.append(f"conforming mesh: gmsh {cm.get('gmsh')}, ccx {cm.get('ccx_version') or '?'} at {cm.get('ccx')}; "
+                     f"Code_Aster {cm.get('code_aster') or 'not found'} (not used)")
+    else:
+        lines.append(f"conforming mesh: gmsh {cm.get('gmsh') or 'not found'}, ccx {cm.get('ccx') or 'not found'}, "
+                     f"Code_Aster {cm.get('code_aster') or 'not found'}; not usable here: {cm.get('reason')}")
     rig = detected.get("rig") or {}
     man = rig.get("manifest") or {}
     for lane in rig.get("lanes") or []:
         if lane.get("id"):
             age = f", manifest {_g(man.get('age_s'), 3)} s old" if man.get("age_s") is not None else ""
-            lines.append(f"rig: lane {lane['id']} {lane.get('status')}{age}; not used: {lane.get('reason')}")
+            lines.append(f"rig: lane {lane['id']} {lane.get('status')}{age}; {lane.get('use')}: {lane.get('reason')}")
         else:
             lines.append(f"rig: {lane.get('reason')}")
     if plan:
@@ -656,7 +822,11 @@ def summary_lines(detected: dict, plan: dict | None) -> list[str]:
         par = ", ".join(f"{p['case_id']} {p['device']}/{p['backend']}" for p in plan.get("parity") or []) or "none"
         lines.append(f"plan: sweep on {sw.get('device')} x{sw.get('jobs')} ({sw.get('reason')}) · verify on "
                      f"{(plan.get('verify') or {}).get('device')} · parity {par} · check {plan.get('check_mode')}, "
-                     f"budget {_g(plan.get('check_budget_s'))} s · rig: {(plan.get('rig') or {}).get('reason')}")
+                     f"budget {_g(plan.get('check_budget_s'))} s")
+        lines.append(f"plan: rig: {(plan.get('rig') or {}).get('reason')}")
+        conf = plan.get("conforming") or {}
+        if conf:
+            lines.append(f"plan: conforming {conf.get('mode')}: {conf.get('reason')}")
         for note in plan.get("notes") or []:
             lines.append(f"plan: {note}")
     return lines
@@ -709,6 +879,21 @@ def _devices(solves: list[dict], jobs: int | None) -> str:
     for name in names:
         out.append(f"{name} x{jobs}" if name == "cpu/numpy" and jobs and jobs > 1 else name)
     return ", ".join(out)
+
+
+def _rig_token(run, case: dict, name) -> str | None:
+    """The device token of a case solved on the rig: `rig gpu <n> (<name>)` (`rig cpu (<name>)` on the CPU queue);
+    None for a desktop case."""
+    if case.get("device") != "rig":
+        return None
+    rj = run.read_json(f"{case.get('case_id')}/rig.json") or {}
+    gpu = rj.get("gpu")
+    return f"rig gpu {gpu} ({name})" if gpu is not None else f"rig cpu ({name})"
+
+
+def _not_run_note(reason) -> str:
+    s = str(reason)
+    return s if s.startswith("not run") else f"not run: {s}"
 
 
 def _not_run_reason(validation: dict | None, sweep: dict | None, what: str) -> str:
@@ -773,24 +958,27 @@ def _derive_rows(run, detected: dict, plan: dict | None) -> list[dict]:
                          source="domain/mesh.json", note="not run: no domain/mesh.json"))
 
     design_cases = by_role.get("sweep", []) + by_role.get("verify", [])
+    on_rig = sweep_dev == "rig"
+    parallel = (sweep_dev == "cpu" and (jobs or 1) > 1) or on_rig  # concurrent designs: only the sum is honest
     # generate
     gens = []
     for c in design_cases:
         st = run.read_json(f"{c['case_id']}/status.json") or {}
         g = (st.get("diagnostics") or {}).get("generator")
         if isinstance(g, dict) and g:
-            gens.append(g)
+            tok = _rig_token(run, c, g.get("device"))
+            gens.append(dict(g, device=tok) if tok else g)
     if gens:
-        parallel = sweep_dev == "cpu" and (jobs or 1) > 1
         total = _sum(g.get("wall_s") for g in gens)
         n_sweep = sum(1 for c in by_role.get("sweep", [])
                       if ((run.read_json(f"{c['case_id']}/status.json") or {}).get("diagnostics") or {}).get("generator"))
+        where = "on the rig" if on_rig else f"concurrently in {jobs} workers"
         rows.append(_row("generate", f"SIMP x {len(gens)}", "gendesign.topopt3d.run_case (OC, FFT filter)",
                          _devices(gens, jobs), gens[0].get("h_mm", d.get("gen_mm")),
                          f"{gens[0].get('elements')} elements", len(gens), None if parallel else total, total, "-",
                          "sweep, verify", "d###/status.json#diagnostics.generator, v###/status.json#diagnostics.generator",
                          f"{n_sweep} sweep and {len(gens) - n_sweep} verify designs"
-                         + (f"; the {n_sweep} sweep designs ran concurrently in {jobs} workers, wall_s_sum is the "
+                         + (f"; the {n_sweep} sweep designs ran {where}, wall_s_sum is the "
                             f"sum over designs" if parallel and n_sweep else "")))
     else:
         rows.append(_row("generate", "SIMP x 0", "gendesign.topopt3d.run_case (OC, FFT filter)",
@@ -798,9 +986,9 @@ def _derive_rows(run, detected: dict, plan: dict | None) -> list[dict]:
                          note=_not_run_reason(validation, sweep, "no design reached the generator")))
 
     # skin
-    skins = [s for s in (run.read_json(f"{c['case_id']}/skin.json") for c in design_cases) if isinstance(s, dict)]
+    skin_pairs = [(c, run.read_json(f"{c['case_id']}/skin.json")) for c in design_cases]
+    skins = [s for _, s in skin_pairs if isinstance(s, dict)]
     if skins:
-        parallel = sweep_dev == "cpu" and (jobs or 1) > 1
         total = _sum(s.get("wall_s") for s in skins)
         dom = run.read_json("domain/domain.json") or {}
         up = int(((eff.get("generator") or {}).get("skin") or {}).get("upsample") or 1)
@@ -809,26 +997,36 @@ def _derive_rows(run, detected: dict, plan: dict | None) -> list[dict]:
         ok = sum(1 for s in skins if s.get("status") == "ok")
         faces = sorted(int(s.get("faces") or 0) for s in skins if s.get("status") == "ok")
         med = faces[len(faces) // 2] if faces else None
+        skin_dev = []
+        for c, s in skin_pairs:
+            if isinstance(s, dict):
+                tok = _rig_token(run, c, (run.read_json(f"{c['case_id']}/solve.json") or {}).get("device"))
+                skin_dev.append({"device": tok or "cpu"})
         rows.append(_row("skin", f"organic skin x {len(skins)}", "golden.organic (EDT SDF, smooth unions, Taubin)",
-                         "cpu", skins[0].get("field_h_mm", d.get("field_h_mm")), size, len(skins),
-                         None if parallel else total, total, "-", "sweep, verify", "d###/skin.json, v###/skin.json",
+                         _devices(skin_dev, None) if on_rig else "cpu", skins[0].get("field_h_mm", d.get("field_h_mm")),
+                         size, len(skins), None if parallel else total, total, "-", "sweep, verify",
+                         "d###/skin.json, v###/skin.json",
                          f"{ok} of {len(skins)} watertight single-body skins; median {med} faces"))
     else:
         rows.append(_row("skin", "organic skin x 0", "golden.organic (EDT SDF, smooth unions, Taubin)",
                          source="d###/skin.json", note=_not_run_reason(validation, sweep, "no design reached the skin")))
 
     # sweep solves
-    solves = [s for s in (run.read_json(f"{c['case_id']}/solve.json") for c in by_role.get("sweep", []))
-              if isinstance(s, dict)]
+    solves = []
+    for c in by_role.get("sweep", []):
+        s = run.read_json(f"{c['case_id']}/solve.json")
+        if isinstance(s, dict):
+            tok = _rig_token(run, c, s.get("device"))
+            solves.append(dict(s, device=tok) if tok else s)
     if solves:
-        parallel = sweep_dev == "cpu" and (jobs or 1) > 1
         total = _sum(s.get("wall_s") for s in solves)
         rows.append(_row("solve", f"real FEA x {len(solves)}", "step-structures stage_solve, Jacobi-PCG FP64",
                          _devices(solves, jobs), d.get("fea_mm"),
                          f"{solves[0].get('elements')} elements, {solves[0].get('dof')} DOF", len(solves),
                          None if parallel else total, total, "preview-grade", "sweep", "d###/solve.json",
                          f"{sum(1 for s in solves if s.get('converged'))} of {len(solves)} converged"
-                         + (f"; ran concurrently in {jobs} workers" if parallel else "")))
+                         + ("; ran on the rig" if on_rig else (f"; ran concurrently in {jobs} workers" if parallel
+                                                               else ""))))
     else:
         rows.append(_row("solve", "real FEA x 0", "step-structures stage_solve, Jacobi-PCG FP64", role="sweep",
                          source="d###/solve.json", note=_not_run_reason(validation, sweep, "no design reached the solver")))
@@ -899,22 +1097,37 @@ def _derive_rows(run, detected: dict, plan: dict | None) -> list[dict]:
         for lv in levels:
             cid = lv.get("case_id")
             s = run.read_json(f"{cid}/solve.json") if cid and lv.get("ran") else None
+            ra = lv.get("rig_attempt") or {}
+            attempt = (f"; the rig did not deliver {ra.get('case_id')} ({ra.get('design_status')})"
+                       if ra.get("case_id") else "")
             if isinstance(s, dict):
                 if lv.get("gating"):
                     grade = "independent check -> " + ("verified-desktop" if lv.get("passed") else "preview-grade")
                 else:
                     grade = "informational (" + ("agrees" if lv.get("passed") else "does not agree") + ")"
+                rj = run.read_json(f"{cid}/rig.json") if lv.get("host") == "rig" else None
+                if isinstance(rj, dict):
+                    res = run.read_json(f"{cid}/results.json") or {}
+                    fs = res.get("fea_solver") or lv.get("fea_solver") or "pcg"
+                    rows.append(_row("check", f"finer real FEA, level {lv.get('level')}",
+                                     f"golden-check on the rig (step-structures stage_solve, {fs} FP64)",
+                                     f"rig gpu {rj.get('gpu')} ({s.get('device')})", lv.get("h_mm"),
+                                     f"{s.get('elements')} elements, {s.get('dof')} DOF", 1, _num(s.get("wall_s")),
+                                     _num(s.get("wall_s")), grade, "check", f"{cid}/solve.json, {cid}/rig.json",
+                                     f"job {rj.get('job_id')}; image {str(rj.get('image_id') or '-')[:19]}; lease wait "
+                                     f"{_g(_num(rj.get('wait_s')), 3)} s"))
+                    continue
                 rows.append(_row("check", f"finer real FEA, level {lv.get('level')}", "step-structures stage_solve",
                                  s.get("device") or lv.get("device"), lv.get("h_mm"),
                                  f"{s.get('elements')} elements, {s.get('dof')} DOF", 1, _num(s.get("wall_s")),
                                  _num(s.get("wall_s")), grade, "check", f"{cid}/solve.json",
-                                 f"estimate {_g(lv.get('est_s'), 3)} s, budget {_g(lv.get('budget_s'))} s"
-                                 if lv.get("est_s") is not None else (lv.get("reason") or "")))
+                                 (f"estimate {_g(lv.get('est_s'), 3)} s, budget {_g(lv.get('budget_s'))} s"
+                                  if lv.get("est_s") is not None else (lv.get("reason") or "")) + attempt))
             else:
                 rows.append(_row("check", f"finer real FEA, level {lv.get('level')}", "step-structures stage_solve",
                                  resolution_mm=lv.get("h_mm"), role="check",
                                  source="validation.json#independent_check.levels",
-                                 note=f"not run: {lv.get('reason') or 'no solve record'}"))
+                                 note=_not_run_note(lv.get("reason") or "no solve record")))
     else:
         why = ic.get("reason") or "no validation.json"
         if not str(why).startswith("not run"):
@@ -956,11 +1169,35 @@ def _derive_rows(run, detected: dict, plan: dict | None) -> list[dict]:
         rows.append(_row("parity", "CuPy / Warp re-solve", "step-structures stage_solve / WarpApplyK", role="parity",
                          source="validation.json#device_parity", note=why))
 
-    # rig lanes
+    # rig: one row per experiment this run submitted, then the lanes it did not use
+    session = run.read_json("rig/session.json")
+    exps = (session.get("experiments") or []) if isinstance(session, dict) else []
+    for e in exps:
+        gids = [str(g) for g in (e.get("cases") or {}).values()]
+        rjs = [run.read_json(f"{g}/rig.json") or {} for g in gids]
+        gpus = sorted({rj.get("gpu") for rj in rjs if isinstance(rj.get("gpu"), int)})
+        if gpus:
+            device = "rig gpu " + ",".join(str(x) for x in gpus)
+        else:
+            device = "rig cpu" if e.get("kind") == "conforming" else "rig gpu -"
+        image = (((session.get("solvers") or {}).get(e.get("solver"))) or {}).get("image")
+        waits = [_num(rj.get("wait_s")) for rj in rjs if _num(rj.get("wait_s")) is not None]
+        delivered = sum(1 for rj in rjs if rj.get("state") == "result")
+        finished = sum(1 for g in gids if (run.read_json(f"{g}/status.json") or {}).get("status") == "FINISHED")
+        note = f"principal {session.get('principal')}; max queue wait {_g(max(waits) if waits else None, 3)} s"
+        if finished < len(gids):
+            note += f"; {finished} of {len(gids)} case(s) finished, {delivered} delivered"
+        rows.append(_row("rig", f"experiment {e.get('id')}: {e.get('stage')}, {len(gids)} case(s)",
+                         f"{e.get('solver')} ({image})", device, None, None, finished, _num(e.get("wall_s")),
+                         _sum(rj.get("run_s") for rj in rjs), "used", None, "rig/session.json", note))
     for lane in ((detected.get("rig") or {}).get("lanes") or []):
+        if lane.get("use") == "used" and exps:
+            continue  # the experiment rows say what the lane ran
+        note = f"{lane.get('status')}: {lane.get('reason')}"
+        if lane.get("use") == "used":
+            note += "; nothing was submitted to the rig"
         rows.append(_row("rig", f"sim lane {lane.get('id')}" if lane.get("id") else "sim lanes", "simlab-mcp", "rig",
-                         grade="not used", source="compute.json#rig.lanes",
-                         note=f"{lane.get('status')}: {lane.get('reason')}"))
+                         grade="not used", source="compute.json#rig.lanes", note=note))
 
     # detected but not used
     rows.append(_row("warp-lattice", "rod-lattice generator", "gendesign.lattice_opt", "-", grade="not used",
@@ -974,13 +1211,44 @@ def _derive_rows(run, detected: dict, plan: dict | None) -> list[dict]:
         fno_note = f"not installed (torch, PhysicsNeMo); {FNO_REASON}"
     rows.append(_row("fno", "field surrogate", "simlab.surrogate.fno (torch, PhysicsNeMo)", "-", grade="not used",
                      source="compute.json#torch, compute.json#physicsnemo", note=fno_note))
-    cm = detected.get("conforming_mesh") or {}
-    found = [x for x in (cm.get("ccx"), cm.get("code_aster")) if x]
-    cm_note = (f"available ({', '.join(found)}), not wired (v0): {CONFORMING_REASON}" if found
-               else f"not available: neither ccx nor as_run is on PATH; {CONFORMING_REASON}")
-    rows.append(_row("second-discretisation", "conforming-mesh solver", "CalculiX / Code_Aster", "-", grade="not used",
-                     source="compute.json#conforming_mesh", note=cm_note))
+    rows.append(_conforming_row(run, detected, validation, sweep))
     return [clean(r) for r in rows]
+
+
+def _conforming_row(run, detected: dict, validation: dict | None, sweep: dict | None) -> dict:
+    """The second-discretisation row: the conforming tet10 check from <cid>/conforming.json, or why it did not run."""
+    conf = (validation or {}).get("conforming") if isinstance(validation, dict) else None
+    conf = conf if isinstance(conf, dict) else None
+    cid = (conf or {}).get("case_id")
+    rec = run.read_json(f"{cid}/conforming.json") if cid else None
+    if conf and conf.get("ran") and isinstance(rec, dict):
+        mesh, sol = rec.get("mesh") or {}, rec.get("solver") or {}
+        h = (conf.get("h_mm") if conf.get("h_mm") is not None else mesh.get("size_mm"))
+        threads = rec.get("threads")
+        device = f"rig cpu x{threads}" if conf.get("host") == "rig" else f"cpu x{threads}"
+        if rec.get("status") == "ok":
+            grade = "second discretisation -> " + ("agrees" if conf.get("passed") else "does not agree")
+        else:
+            grade = f"failed: {rec.get('status')}"
+        wall = _num(rec.get("wall_s"))
+        return _row("second-discretisation", f"conforming tet10 (C3D10) at {_g(h)} mm",
+                    f"gmsh {mesh.get('version')} + CalculiX ccx {sol.get('version')}", device, h,
+                    f"{mesh.get('elements')} C3D10, {mesh.get('dof')} DOF", 1, wall, wall, grade, "conforming",
+                    f"{cid}/conforming.json", "" if rec.get("status") == "ok" else str(rec.get("message") or ""))
+    cm = (detected or {}).get("conforming_mesh") or {}
+    if conf:
+        why = str(conf.get("reason") or conf.get("status") or "did not run")
+        src = "validation.json#conforming"
+    elif validation is None:
+        why = _not_run_reason(validation, sweep, "the check stage did not run")
+        src = "validation.json#conforming"
+    else:
+        why = f"{cm.get('reason') or 'not available'}"
+        src = "compute.json#conforming_mesh"
+    if not why.startswith("not run"):
+        why = f"not run: {why}"
+    return _row("second-discretisation", "conforming tet10 (C3D10)", "gmsh + CalculiX ccx", "-",
+                (conf or {}).get("h_mm"), grade="not used", role="conforming", source=src, note=why)
 
 
 class ComputeLog:

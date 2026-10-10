@@ -87,9 +87,24 @@ if command -v aces-voxel >/dev/null 2>&1; then
 fi
 if pacman -Q aces-engineering >/dev/null 2>&1; then
   command -v aces-golden >/dev/null 2>&1 || { echo "golden: aces-engineering is installed but aces-golden is missing"; exit 1; }
+  echo "== conforming check tools: gmsh in the venv (a hard check), ccx when calculix-ccx-bin is installed"
+  /opt/aces/engineering/venv/bin/python -c "import importlib.metadata as m, gmsh; print(\"gmsh\", m.version(\"gmsh\"))"
+  have_ccx=0; if pacman -Q calculix-ccx-bin >/dev/null 2>&1; then have_ccx=1; fi
+  if command -v ccx >/dev/null 2>&1; then
+    # ccx -v prints "This is Version 2.23" and exits 201
+    echo "ccx: $(command -v ccx): $( (ccx -v 2>&1 || true) | grep -m1 -i "version" || echo "no version line")"
+  else
+    echo "ccx: not installed (the conforming check reports not run: ccx-not-found)"
+  fi
   echo "== golden path: aces golden run --demo (computed organic part -> real voxel FEA -> sweep -> surrogate -> verify -> evidence -> report)"
   rm -rf /logs/golden
   aces golden compute
+  echo "== aces golden compute --lane sim/pool: there is no rig from this container, so it must exit 2"
+  rc=0; aces golden compute --lane sim/pool >/tmp/lane.out 2>&1 || rc=$?
+  cat /tmp/lane.out
+  if [ "$rc" -ne 2 ]; then echo "golden: compute --lane sim/pool exited $rc, expected 2"; exit 1; fi
+  # argparse also exits 2: an aces golden without --lane on compute must not pass this check by accident
+  if grep -q "unrecognized arguments" /tmp/lane.out; then echo "golden: this aces golden compute has no --lane (the 2 was a usage error)"; exit 1; fi
   t0=$(date +%s); rc=0
   aces golden run --demo --json --progress lines > /tmp/golden.json || rc=$?
   echo "golden: exit $rc after $(( $(date +%s) - t0 )) s"
@@ -107,11 +122,23 @@ if pacman -Q aces-engineering >/dev/null 2>&1; then
     for d in winner candidate figures; do
       if [ -d "$run_dir/$d" ]; then cp -r "$run_dir/$d" /logs/golden/; fi
     done
+    # the conforming record and the ccx output, when the check got that far
+    for f in conforming.json ccx.log; do
+      if [ -f "$run_dir/m001/$f" ]; then cp "$run_dir/m001/$f" /logs/golden/; fi
+    done
     # the run writes its records 0600 and this container is root: without this the host user (the CI runner that
     # uploads logs/) cannot read them, and upload-artifact fails on logs/golden/compute_used.json with EACCES
     chmod -R a+rX /logs/golden
   fi
   if [ "$rc" -ne 0 ] || [ "$json_ok" -ne 1 ]; then echo "golden: FAILED (exit $rc, one JSON document: $json_ok)"; exit 1; fi
+  # the conforming status is printed, never gated on ran (a 2-vCPU runner may hit the 900 s desktop timeout); with
+  # calculix-ccx-bin installed, the tools themselves must have been found
+  conf="$(python3 -c "import json; c=json.load(open(\"/tmp/golden.json\")).get(\"conforming\") or {}; print(c.get(\"status\") or \"none\", \"|\", c.get(\"reason\") or \"\")")"
+  echo "golden: conforming status ${conf}"
+  conf_status="${conf%% |*}"
+  if [ "$have_ccx" -eq 1 ] && { [ "$conf_status" = "ccx-not-found" ] || [ "$conf_status" = "gmsh-not-found" ]; }; then
+    echo "golden: calculix-ccx-bin is installed, but the conforming check says $conf_status"; exit 1
+  fi
   aces golden verify latest
   aces ledger verify
   aces-evidence verify

@@ -3,11 +3,13 @@
   aces golden run     [--demo [root-mount|bone]] [--spec FILE] [--step FILE] [--project NAME] [--new]
                       [-n N] [--seed S] [--res MM] [--gen-res MM] [--tol FRAC] [--rounds R]
                       [--check auto|off|force] [--check-budget S] [--allow-thin] [--strict]
-                      [--device auto|cpu|gpu] [--jobs N|auto] [--lane LANE]
+                      [--require-grade preview-grade|verified-desktop|rig-verified]
+                      [--device auto|cpu|gpu] [--jobs N|auto] [--lane LANE|none] [--rig-sweep] [--rig-budget S]
+                      [--conforming auto|rig|local|off]
                       [--json] [--progress auto|bar|lines|jsonl|none] [--quiet] [--note TEXT]
   aces golden show    [RUN] [--project NAME] [--json] [--bench-out FILE]   no RUN: every run, newest first
   aces golden verify  [RUN] [--project NAME] [--json] [--no-model] [--resolve]
-  aces golden compute [--demo NAME | --spec FILE] [--device auto|cpu|gpu] [--json]
+  aces golden compute [--demo NAME | --spec FILE] [--device auto|cpu|gpu] [--lane LANE|none] [--json]
   aces golden spec    [--demo NAME] [--schema] [--out FILE]
   aces golden init    NAME [--step FILE] [--demo NAME] [--class CLS] [--hypothesis TEXT]
   aces golden report  RUN [--project NAME]
@@ -15,12 +17,16 @@
 The part is computed, not drawn: a disc, a box or a user STEP is only the design space. Each design is a SIMP
 topology optimisation smoothed into an organic implicit skin (gyroid-cored in the bone variant), solved on the real
 voxel FEA; a GP surrogate fitted to the sweep picks the winner, which is solved again and, where the budget allows,
-at a finer resolution; the run is anchored in the simlab evidence ledger and the aces ledger. Desktop results are
-preview-grade; verified-desktop means the finer-resolution check agreed. Neither is a sign-off.
+at a finer resolution (on a rig lane through simlab-mcp with --lane), and given a conforming tet10 second
+discretisation (gmsh + CalculiX ccx, on the rig or here); the run is anchored in the simlab evidence ledger and the
+aces ledger. Grades: preview-grade (every solve on its own), verified-desktop (the finer-resolution check agreed),
+rig-verified (the check and the conforming check ran on the rig on validated images and agree). None is a sign-off.
 
-Exit codes of `run`: 0 pass, 1 verification failed (or --strict without verified-desktop), 2 usage, 3 thin sweep,
-4 under-resolved, 5 infeasible, 6 evidence or ledger failure, 7 internal error, 130 interrupted.
-`show`: 0 found, 1 none, 2 usage. `verify`: 0 all checks pass, 1 any fails, 2 run not found. `report`: 0, 2.
+Exit codes of `run`: 0 pass, 1 verification failed (or the grade is below --strict / --require-grade), 2 usage (a
+--lane that cannot be used included), 3 thin sweep, 4 under-resolved, 5 infeasible, 6 evidence, ledger or rig
+integrity failure, 7 internal error, 130 interrupted.
+`show`: 0 found, 1 none, 2 usage. `verify` (13 checks): 0 all checks pass, 1 any fails, 2 run not found.
+`compute`: 0, 2 (usage, or a --lane that cannot be used). `report`: 0, 2.
 """
 from __future__ import annotations
 
@@ -28,6 +34,7 @@ import argparse
 import contextlib
 import json
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -35,7 +42,7 @@ import traceback
 from pathlib import Path
 from typing import Any
 
-from .golden import (DEFAULT_DEMO, DEMOS, EXIT_FAIL, EXIT_INTERNAL, EXIT_OK, EXIT_USAGE, OUTCOMES, VERSION,
+from .golden import (DEFAULT_DEMO, DEMOS, EXIT_FAIL, EXIT_INTERNAL, EXIT_OK, EXIT_USAGE, GRADES, OUTCOMES, VERSION,
                      GoldenError, dump_json, read_json, sha256_file, write_text)
 from .golden.acescli import AcesCli, AcesCliError
 from .golden.rundir import RunDir, RunNotFound, list_runs, slug, work_root
@@ -75,9 +82,11 @@ def build_parser() -> argparse.ArgumentParser:
     p = _Parser(prog=PROG,
                 description="The ACES golden path: a design space in, a computed organic part out, verified on the "
                             "real voxel FEA and recorded in both ledgers. Desktop results are preview-grade.",
-                epilog="Exit codes of run: 0 pass, 1 verification failed, 2 usage, 3 thin sweep, 4 under-resolved, "
-                       "5 infeasible, 6 evidence, 7 internal error, 130 interrupted. Details: aces golden <command> "
-                       "--help and the aces-engineering skill.")
+                epilog="Exit codes of run: 0 pass, 1 verification failed (or the grade is below --strict / "
+                       "--require-grade), 2 usage (a --lane that cannot be used included), 3 thin sweep, "
+                       "4 under-resolved, 5 infeasible, 6 evidence, ledger or rig integrity, 7 internal error, "
+                       "130 interrupted. verify runs 13 checks. Details: aces golden <command> --help and the "
+                       "aces-engineering skill.")
     p.add_argument("--version", action="version", version=f"aces-golden {VERSION}")
     sub = p.add_subparsers(dest="cmd", metavar="{run,show,verify,compute,spec,init,report}")
 
@@ -97,10 +106,24 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--check", choices=("auto", "off", "force"), help="the finer-resolution independent check (verify.check)")
     r.add_argument("--check-budget", type=float, dest="check_budget", help="CPU seconds the check may take (verify.check_budget_s)")
     r.add_argument("--allow-thin", action="store_true", dest="allow_thin", help="fit the surrogate on as few as 3 designs")
-    r.add_argument("--strict", action="store_true", help="exit 1 unless the grade is verified-desktop")
+    r.add_argument("--strict", action="store_true", help="exit 1 unless the grade is verified-desktop or better")
+    r.add_argument("--require-grade", choices=GRADES, dest="require_grade", metavar="GRADE",
+                   help=f"exit 1 when the grade is below GRADE ({', '.join(GRADES)}); with --strict the higher wins")
     r.add_argument("--device", choices=("auto", "cpu", "gpu"), default="auto", help="where the solves run (default auto)")
     r.add_argument("--jobs", type=_jobs_arg, default="auto", metavar="N|auto", help="CPU workers for the sweep (default auto)")
-    r.add_argument("--lane", help="a rig lane: not wired into the golden path yet (v0), refused with exit 2")
+    r.add_argument("--lane", metavar="LANE|none",
+                   help="send the independent check and the conforming check to this rig lane through simlab-mcp "
+                        "(exit 2 before anything is computed when it cannot be used); none forces this desktop; "
+                        "default: [golden] lane in aces.toml, else this desktop only")
+    r.add_argument("--rig-sweep", action="store_true", dest="rig_sweep",
+                   help="also run the sweep's designs on the rig (golden-case); verification rounds stay on this "
+                        "desktop; needs a lane")
+    r.add_argument("--rig-budget", type=float, dest="rig_budget", default=1800.0, metavar="S",
+                   help="seconds from each rig experiment's submission to its last pulled file (default 1800)")
+    r.add_argument("--conforming", choices=("auto", "rig", "local", "off"), default="auto",
+                   help="the conforming tet10 second discretisation (gmsh + CalculiX ccx): auto (on the rig with a "
+                        "lane, this desktop as the fallback; else here when it can run), rig, local or off "
+                        "(default auto)")
     r.add_argument("--json", action="store_true", dest="json_out", help="print exactly one JSON document (result.json) on stdout")
     r.add_argument("--progress", choices=("auto", "bar", "lines", "jsonl", "none"), default="auto")
     r.add_argument("--quiet", action="store_true", help="no progress output (--progress none)")
@@ -113,7 +136,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--bench-out", dest="bench_out", type=Path, metavar="FILE",
                    help="append this run's wall-time row to a benchmarks file (e.g. docs/BENCHMARKS.md)")
 
-    v = sub.add_parser("verify", help="audit a run: files, bundle, both ledgers, tables, models, verdict, report")
+    v = sub.add_parser("verify", help="audit a run (13 checks): files, bundle, both ledgers, sweep, surrogate, verdict, "
+                                      "report, compute, rig, conforming, manifest, resolve; never contacts the rig")
     v.add_argument("run", nargs="?", default="latest", metavar="RUN")
     v.add_argument("--project")
     v.add_argument("--json", action="store_true")
@@ -125,6 +149,9 @@ def build_parser() -> argparse.ArgumentParser:
     g.add_argument("--demo", nargs="?", const=DEFAULT_DEMO, choices=DEMOS, metavar="NAME")
     g.add_argument("--spec", type=Path)
     c.add_argument("--device", choices=("auto", "cpu", "gpu"), default="auto")
+    c.add_argument("--lane", metavar="LANE|none",
+                   help="probe this rig lane (simlab-mcp) and show what a run would send; exit 2 when it cannot be "
+                        "used (default: [golden] lane in aces.toml, whose refusal is a warning)")
     c.add_argument("--json", action="store_true")
 
     sp = sub.add_parser("spec", help="print a demo spec or the JSON schema of aces-golden-spec/1")
@@ -198,8 +225,9 @@ def cmd_run(args: argparse.Namespace, argv: list[str]) -> int:
     opts = Options(demo=args.demo, spec=args.spec, step=args.step, project=args.project, new=args.new, n=args.n,
                    seed=args.seed, res=args.res, gen_res=args.gen_res, tol=args.tol, rounds=args.rounds,
                    check=args.check, check_budget=args.check_budget, allow_thin=args.allow_thin, strict=args.strict,
-                   device=args.device, jobs=args.jobs, lane=args.lane, json_out=args.json_out,
-                   progress=args.progress, quiet=args.quiet, note=args.note, argv=list(argv))
+                   device=args.device, jobs=args.jobs, lane=args.lane, rig_sweep=args.rig_sweep,
+                   rig_budget=args.rig_budget, conforming=args.conforming, require_grade=args.require_grade,
+                   json_out=args.json_out, progress=args.progress, quiet=args.quiet, note=args.note, argv=list(argv))
     return run(opts)
 
 
@@ -285,27 +313,52 @@ def cmd_show(args: argparse.Namespace) -> int:
     return 0
 
 
+_RIG_GPU = re.compile(r"rig gpu (\S+) \((.+)\)\Z")
+
+
 def devices_used(rows: list) -> str:
     """The devices of the compute-used rows that ran, e.g. `cpu/numpy x10, <GPU name> (cupy, warp)`: CPU entries
     without the ones another entry already names (`cpu` inside `cpu/numpy x10`), GPUs with the backends that ran
-    on them."""
+    on them. Rig tokens aggregate: `rig gpu <n> (<name>)` to `rig: <name> x<k> (cupy[, mg])` (k distinct GPUs; numpy
+    when the rig solve ran on its CPU), `rig cpu ...` to `rig cpu (ccx x16)`."""
     ran = [r for r in rows if isinstance(r, dict) and (r.get("count") or 0) > 0 and r.get("grade") != "not used"]
     cpu: list[str] = []
     gpus: dict[str, list[str]] = {}
+    rig_gpus: dict[str, dict] = {}
+    rig_cpu = False
     for r in ran:
+        solver = str(r.get("solver") or "").lower()
         for tok in str(r.get("device") or "").split(";"):
             tok = tok.strip()
             if not tok or tok in ("-", "rig", "gpu"):
+                continue
+            if tok.startswith("rig cpu"):
+                rig_cpu = True
+                continue
+            if tok.startswith("rig"):
+                m = _RIG_GPU.match(tok)
+                if m is None:  # an experiment row (`rig gpu 0, 2`): the case rows name the GPUs
+                    continue
+                ent = rig_gpus.setdefault(m.group(2), {"idx": set(), "backends": []})
+                ent["idx"].add(m.group(1))
+                for b in ("numpy" if m.group(2).lower().startswith("cpu") else "cupy",
+                          "mg" if ", mg fp64" in solver else None):
+                    if b and b not in ent["backends"]:
+                        ent["backends"].append(b)
                 continue
             if tok.startswith("cpu"):
                 if tok not in cpu:
                     cpu.append(tok)
                 continue
-            backend = "warp" if "warp" in str(r.get("solver") or "").lower() else "cupy"
+            backend = "warp" if "warp" in solver else "cupy"
             if backend not in gpus.setdefault(tok, []):
                 gpus[tok].append(backend)
     cpu = [c for c in cpu if not any(o != c and o.startswith(c) for o in cpu)]
-    return ", ".join(cpu + [f"{name} ({', '.join(b)})" for name, b in gpus.items()]) or "-"
+    out = cpu + [f"{name} ({', '.join(b)})" for name, b in gpus.items()]
+    out += [f"rig: {name} x{len(e['idx'])} ({', '.join(e['backends'])})" for name, e in rig_gpus.items()]
+    if rig_cpu:
+        out.append("rig cpu (ccx x16)")
+    return ", ".join(out) or "-"
 
 
 def _bench_out(run: RunDir, out: Path) -> int:
@@ -374,22 +427,39 @@ def cmd_verify(args: argparse.Namespace) -> int:
 
 # ---- compute ------------------------------------------------------------------------------------------------------
 def cmd_compute(args: argparse.Namespace) -> int:
+    """Detection and plan; with a lane (--lane, else [golden] lane in aces.toml) the live probe of section 10.5 and
+    its rig: lines. Exit 2 when a --lane cannot be used (a config lane that cannot is a warning)."""
+    code, refusal = EXIT_OK, None
     try:
         with _guarded(args.json) as guard:
-            from .golden import compute, demo, spec as spec_mod
+            from .golden import compute, demo, rig, spec as spec_mod
 
-            detected = compute.detect(device=args.device)
-            gpu_ok = bool((detected.get("gpu") or {}).get("usable"))
-            if args.device == "gpu" and not gpu_ok:
-                raise GoldenError(EXIT_USAGE, f"no usable CUDA GPU here ({(detected.get('gpu') or {}).get('reason')})")
             if args.spec:
                 raw, _, base = spec_mod.load(Path(args.spec))
             else:
                 raw, base = demo.spec(args.demo or DEFAULT_DEMO), Path(demo.__file__).resolve().parent
+            lane, source = rig.choose_lane(args.lane)
+            rec, view, notes = None, None, []
+            if lane is not None:
+                check_mode = str((raw.get("verify") or {}).get("check") or "auto")
+                rec, client = rig.probe(lane, source, check_mode=check_mode, conforming_mode="auto",
+                                        rig_sweep=False, warn=notes.append)
+                if rec.get("ok"):
+                    view = {"lane": lane, "lane_source": source, "url": rec.get("url"),
+                            "budget_s": 1800.0, "scope": rig.needs_for(check_mode, "auto", False)}
+                elif source == "cli":
+                    code, refusal = EXIT_USAGE, str(rec.get("refusal"))
+                else:
+                    notes.append(f"rig lane {lane} (from aces.toml) unavailable: {rig.refusal_reason(rec)}; "
+                                 "computing on this desktop")
+            detected = compute.detect(device=args.device, probe=rec, rig_scope=(view or {}).get("scope"))
+            gpu_ok = bool((detected.get("gpu") or {}).get("usable"))
+            if args.device == "gpu" and not gpu_ok:
+                raise GoldenError(EXIT_USAGE, f"no usable CUDA GPU here ({(detected.get('gpu') or {}).get('reason')})")
             eff = spec_mod.resolve(raw, base_dir=base, overrides={}, gpu_usable=gpu_ok)
             plan = None
             if (eff.get("derived") or {}).get("grid") is not None:
-                plan = compute.plan(detected, eff, jobs="auto", device=args.device)
+                plan = compute.plan(detected, eff, jobs="auto", device=args.device, rig=view)
             if args.json:
                 guard.out.write(json.dumps({**detected, "plan": plan, "spec": eff.get("name")}, indent=1,
                                            ensure_ascii=False, default=str) + "\n")
@@ -397,6 +467,9 @@ def cmd_compute(args: argparse.Namespace) -> int:
                 lines = list(compute.summary_lines(detected, plan) or [])
                 if plan is None:
                     lines.append("plan: decided at run time (the grid is derived from the STEP)")
+                if rec is not None:
+                    lines += rig.probe_lines(rec, (plan or {}).get("rig"))
+                lines += [f"warning: {n}" for n in notes]
                 guard.out.write("\n".join(lines) + "\n")
             guard.out.flush()
     except GoldenError as e:
@@ -405,7 +478,9 @@ def cmd_compute(args: argparse.Namespace) -> int:
     except ValueError as e:  # SpecError
         _err(str(e))
         return EXIT_USAGE
-    return EXIT_OK
+    if refusal:
+        _err(refusal)
+    return code
 
 
 # ---- spec ---------------------------------------------------------------------------------------------------------

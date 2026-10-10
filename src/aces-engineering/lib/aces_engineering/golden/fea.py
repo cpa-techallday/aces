@@ -6,10 +6,18 @@ solves through the step-structures adapter's stage_solve (CPU NumPy or CuPy) or 
 Warp apply_K, and derives the metrics: mass from the mesh volume (the deliverable is the mesh), vm_p99/vm_p95 over the
 solid elements outside the boundary-condition zones (vm_max is recorded but is resolution-sensitive).
 
+The linear solver is chosen per solve (`solver`): "pcg" (Jacobi-PCG; sweep, verify and parity solves), "mg"
+(geometric-multigrid PCG on the solid-only operator, gendesign.mg) or "auto" (the independent check: multigrid for a
+one-component mask of at least MG_MIN_CELLS cells when gendesign.mg is importable, else PCG). An MG solve that stops above
+the tolerance is solved again with PCG, and both attempts are recorded. Every solve asks for repair=False: the golden
+path never lets the evaluator edit the mask it was given (the rig's patched evaluator repairs masks by default).
+
 Ordering, pinned by the vendored code: element arrays such as fields.npz["vm_MPa"] are the C-order ravel of the
 (nx, ny, nz) mask; node arrays such as u_mm are x-fastest, node i + (nx+1)*(j + (ny+1)*k)."""
 from __future__ import annotations
 
+import importlib.util
+import inspect
 import math
 import re
 import shutil
@@ -21,13 +29,62 @@ from . import METRICS, dump_json, read_json, sha256_file, utc_now, write_text
 AXES = "xyz"
 COVERAGE_MIN = 0.98
 BACKENDS = {"adapter": "step-structures.stage_solve", "warp": "warp-apply_K"}
+FEA_SOLVERS = ("pcg", "mg", "auto")
+MG_MIN_CELLS = 200_000            # "auto" uses multigrid from this many cells (one solid component, gendesign.mg present)
+MG_LEVELS = 4
 
 
 def lane_of(device: str, backend: str) -> str:
-    """desktop-cpu, desktop-gpu or desktop-warp: where a solve ran (never a rig lane in v0)."""
+    """desktop-cpu, desktop-gpu or desktop-warp: where a desktop solve ran. A rig job carries its own lane ("rig-gpu",
+    set by golden.rigside), which case._results prefers."""
     if backend == "warp":
         return "desktop-warp"
     return "desktop-cpu" if device == "cpu" else "desktop-gpu"
+
+
+def mg_available() -> bool:
+    """gendesign.mg can be imported here (looked up with find_spec, not imported)."""
+    try:
+        return importlib.util.find_spec("gendesign.mg") is not None
+    except (ImportError, ValueError):
+        return False
+
+
+def resolve_solver(requested: str, cells: int, components: int) -> tuple[str, str]:
+    """(solver, reason) for a solve over `cells` grid cells whose mask has `components` solid components. "auto" is
+    multigrid when gendesign.mg is importable, cells >= MG_MIN_CELLS and there is exactly one component, else PCG; an
+    explicit "mg" without the module or with more than one component falls back to PCG; "pcg" is PCG."""
+    req = str(requested or "pcg")
+    if req not in FEA_SOLVERS:
+        raise ValueError(f"unknown fea solver {req!r}: pcg, mg or auto")
+    if req == "pcg":
+        return "pcg", "pcg requested"
+    have = mg_available()
+    n = int(components)
+    if req == "mg":
+        if not have:
+            return "pcg", "mg requested; gendesign.mg is not importable here: Jacobi-PCG"
+        if n != 1:
+            return "pcg", f"mg requested; {n} solid components (multigrid needs one): Jacobi-PCG"
+        return "mg", "mg requested"
+    if not have:
+        return "pcg", "auto: Jacobi-PCG (gendesign.mg is not importable here)"
+    if n != 1:
+        return "pcg", f"auto: Jacobi-PCG ({n} solid components; multigrid needs one)"
+    if int(cells) < MG_MIN_CELLS:
+        return "pcg", f"auto: Jacobi-PCG ({int(cells):,} cells < {MG_MIN_CELLS:,})"
+    return "mg", (f"auto: geometric multigrid (gendesign.mg) for a one-component mask of {int(cells):,} cells "
+                  f"(>= {MG_MIN_CELLS:,})")
+
+
+def _evaluator_kwargs(cls, **wanted) -> dict:
+    """The keyword arguments of `wanted` that `cls` (VoxelFEAEvaluator) accepts: the rig's patched evaluator takes
+    solver, repair and mg_levels; the older vendored snapshot does not, and must keep working."""
+    try:
+        params = inspect.signature(cls).parameters
+    except (TypeError, ValueError):
+        return {}
+    return {k: v for k, v in wanted.items() if k in params}
 
 
 class _Stage:
@@ -201,7 +258,8 @@ def _solve_adapter(fcase: dict, case_dir: Path) -> dict:
 
 def _solve_warp(fcase: dict, mask, h: float, origin, env, case_dir: Path) -> dict:
     """The adapter's solve with the Warp K product: VoxelFEAEvaluator built with exactly stage_solve's arguments, then
-    ev.fea.apply_K = WarpApplyK(ev.fea). Needs a usable CuPy GPU and warp-lang (imported here, never at module level)."""
+    ev.fea.apply_K = WarpApplyK(ev.fea). Needs a usable CuPy GPU and warp-lang (imported here, never at module level).
+    solver="pcg" and repair=False are passed only when the evaluator has those parameters (the patched one)."""
     import numpy as np
     from gendesign.evaluators import VoxelFEAEvaluator
     from gendesign.fea3d import device_name, to_numpy
@@ -216,10 +274,11 @@ def _solve_warp(fcase: dict, mask, h: float, origin, env, case_dir: Path) -> dic
         if "axis" in ld:
             e["axis"] = ld["axis"]
         loads.append(e)
+    extra = _evaluator_kwargs(VoxelFEAEvaluator, solver="pcg", repair=False)
     ev = VoxelFEAEvaluator(env, h, E=float(fcase["E"]), nu=float(fcase["nu"]), rho_kg_mm3=float(fcase["rho_kg_mm3"]),
                            supports=supports, loads=loads, dtype=fcase["dtype"], prefer_gpu=True,
                            tol=float(fcase["tol"]), maxiter=int(fcase["maxiter"]), warm_start=False,
-                           vm_exclude_boxes=[_box_to_grid(b, origin) for b in fcase["vm_exclude"]])
+                           vm_exclude_boxes=[_box_to_grid(b, origin) for b in fcase["vm_exclude"]], **extra)
     if ev.fea.xp is np:
         raise RuntimeError("the Warp backend needs a usable CuPy GPU (gendesign.fea3d fell back to NumPy)")
     if tuple(ev.shape) != tuple(mask.shape):
@@ -270,11 +329,13 @@ def _post(case_dir: Path, mask, h: float, origin, sj: dict, res: dict, lane: str
              f"{res['mesh_volume_mm3']:.1f} mm³; mass {res['mass_kg']:.6g} kg from the mesh volume. Voxelised at {h:g} mm "
              f"into {int(mask.sum())} solid cells of {mask.size} (voxel/mesh volume "
              f"{res['voxel_volume_mm3'] / res['mesh_volume_mm3']:.4f}).",
-             f"Solve: {sj.get('device')} float64 on lane {lane}, {res['pcg_iters']} PCG iterations, true relative residual "
+             f"Solve: {sj.get('device')} float64 on lane {lane}, {res['pcg_iters']} "
+             f"{'multigrid-PCG' if res.get('fea_solver') == 'mg' else 'PCG'} iterations, true relative residual "
              f"{res['pcg_relres']:.2e}, {'converged' if res['converged'] else 'NOT converged'}. Constrained stress is vm_p99 "
              f"over the solid elements outside the boundary-condition zones (+-{exclude_mm:g} mm); vm_max is recorded but "
              "is resolution-sensitive.",
-             "preview-grade: a desktop voxel solve is evidence, not sign-off."]
+             "preview-grade: a voxel solve on the rig is evidence, not sign-off." if str(lane).startswith("rig")
+             else "preview-grade: a desktop voxel solve is evidence, not sign-off."]
     md = case_dir / "case.md"
     case_markdown(str(md), f"case {case_dir.name} · preview-grade", numbers, notes, figs)
     write_text(md, md.read_text(encoding="utf-8"))  # LF line endings
@@ -334,16 +395,28 @@ def _voxel_and_check(out: dict, st: _Stage, mesh_path, eff: dict, case_dir: Path
     return mask, h, mj
 
 
+def _attempt(sj: dict, solver: str) -> dict:
+    return {"solver": solver, "iters": int(sj.get("pcg_iters") or 0), "relres": float(sj["pcg_relres"]),
+            "wall_s": float(sj["wall_s"]) if isinstance(sj.get("wall_s"), (int, float)) else None}
+
+
 def solve_mesh(mesh_path: Path, domain: dict, eff: dict, case_dir: Path, *, h_mm: float, device: str,
-               backend: str = "adapter", post: bool = False, reuse_mask_from: Path | None = None) -> dict:
+               backend: str = "adapter", post: bool = False, reuse_mask_from: Path | None = None,
+               solver: str = "pcg", lane: str | None = None) -> dict:
     """Voxelise (or reuse a mask), check, solve and measure one part. Returns {"status": "ok"|design status, "message",
     "results": {metrics}|None, "voxel", "checks", "stress", "wall_s_voxel", "wall_s_solve", "wall_s_post",
     "artifacts", "stages"}. Writes mask.npy, mesh.json, solve.json, fields.npz (+ vm_slices.png, disp_slices.png,
-    fields.vtk, case.md with post) in case_dir. A mesh that is not watertight is refused, never voxelised."""
+    fields.vtk, case.md with post) in case_dir. A mesh that is not watertight is refused, never voxelised.
+
+    `solver` is pcg, mg or auto (resolve_solver, after the structural checks); the results carry fea_solver (what
+    solved), fea_solver_reason, mg_levels when multigrid ran, and fea_solver_attempts when an MG solve that stopped above
+    the tolerance was solved again with PCG. `lane` only labels case.md (default lane_of(device, backend))."""
     import numpy as np
 
     if backend not in BACKENDS:
         raise ValueError(f"unknown backend {backend!r}: adapter or warp")
+    if str(solver or "pcg") not in FEA_SOLVERS:
+        raise ValueError(f"unknown fea solver {solver!r}: pcg, mg or auto")
     case_dir = Path(case_dir)
     case_dir.mkdir(parents=True, exist_ok=True)
     d = eff["derived"]
@@ -361,7 +434,12 @@ def solve_mesh(mesh_path: Path, domain: dict, eff: dict, case_dir: Path, *, h_mm
         return out
     mask, h, mj = got
 
-    # 3. solve
+    # 3. solve (the linear solver is resolved after the structural checks: the component count is known)
+    if backend == "warp":
+        fea_solver = "pcg"
+        reason = "pcg requested" if str(solver or "pcg") == "pcg" else "the Warp backend is Jacobi-PCG with the Warp K product"
+    else:
+        fea_solver, reason = resolve_solver(solver, int(mask.size), int((out.get("checks") or {}).get("solid_components") or 0))
     loads = []
     for ld in eff["loads"]:
         e = {"box": [float(v) for v in ld["box"]], "force": [float(f) for f in ld["force"]], "case": ld["case"]}
@@ -371,7 +449,9 @@ def solve_mesh(mesh_path: Path, domain: dict, eff: dict, case_dir: Path, *, h_mm
     fcase = {"E": float(mat["E_MPa"]), "nu": float(mat["nu"]), "rho_kg_mm3": float(mat["rho_kg_mm3"]),
              "supports": [{"box": [float(v) for v in s["box"]], "dofs": [int(x) for x in s["dofs"]]} for s in eff["supports"]],
              "loads": loads, "vm_exclude": [[float(v) for v in b] for b in domain["stress_exclude"]], "dtype": "float64",
-             "tol": float(sol["tol"]), "maxiter": int(sol["maxiter"]), "cpu": device == "cpu"}
+             "tol": float(sol["tol"]), "maxiter": int(sol["maxiter"]), "cpu": device == "cpu",
+             "fea_solver": fea_solver, "repair": False, "mg_levels": MG_LEVELS}
+    attempts: list[dict] = []
     with _Stage(stages, "solve", "cpu" if device == "cpu" else "gpu") as st:
         if backend == "warp":
             sj = _solve_warp(fcase, mask, h, origin, env, case_dir)
@@ -380,6 +460,17 @@ def solve_mesh(mesh_path: Path, domain: dict, eff: dict, case_dir: Path, *, h_mm
         if device == "gpu" and str(sj.get("device", "")).startswith("cpu"):
             raise RuntimeError("a GPU solve was asked for but gendesign.fea3d fell back to NumPy (no usable CUDA "
                                "device); the result is not recorded as a GPU solve")
+        ran = str(sj.get("solver") or "pcg")  # the evaluator records what solved; an evaluator without the key is PCG
+        if fea_solver == "mg" and ran != "mg":
+            reason += "; the step-structures adapter in this snapshot does not pass fea_solver: Jacobi-PCG solved"
+        if ran == "mg" and float(sj["pcg_relres"]) > float(sol["tol"]):
+            first = _attempt(sj, "mg")
+            fcase["fea_solver"] = "pcg"
+            sj = _solve_adapter(fcase, case_dir)
+            ran = str(sj.get("solver") or "pcg")
+            attempts = [first, _attempt(sj, ran)]
+            reason += (f"; multigrid stopped at relative residual {first['relres']:.3e} > tol {float(sol['tol']):g} after "
+                       f"{first['iters']} iterations: the same mask was solved again with Jacobi-PCG")
     out["wall_s_solve"] = st.rec["wall_s"]
 
     # 4. metrics
@@ -400,7 +491,14 @@ def solve_mesh(mesh_path: Path, domain: dict, eff: dict, case_dir: Path, *, h_mm
            "vm_max_MPa": float(sj["vm_max_MPa"]), "vm_p99_MPa": p99, "vm_p95_MPa": p95,
            "pcg_iters": int(sj["pcg_iters"]), "pcg_relres": relres, "converged": bool(relres <= float(sol["tol"])),
            "elements": int(sj["elements"]), "dof": int(sj["dof"]), "elem_mm": h, "n_fixed_dofs": int(sj["n_fixed_dofs"]),
-           "device": str(sj["device"])}
+           "device": str(sj["device"]), "fea_solver": ran, "fea_solver_reason": reason}
+    if ran == "mg":
+        # the number of multigrid levels the solve built: the patched evaluator records the hierarchy in solve.json
+        # (one {nx, ny, nz, h, active_dof} per level; it stays there), a bare count is taken as it is
+        lv = sj.get("mg_levels")
+        res["mg_levels"] = len(lv) if isinstance(lv, list) else int(lv or MG_LEVELS)
+    if attempts:
+        res["fea_solver_attempts"] = attempts
     out["results"] = res
     # the zones' width as domain.prepare snapped it to the stress lattice (the spec value when the record predates that)
     exclude_mm = float(domain.get("stress_exclude_effective_mm", d["stress_exclude_mm"]))
@@ -417,7 +515,7 @@ def solve_mesh(mesh_path: Path, domain: dict, eff: dict, case_dir: Path, *, h_mm
     arts = [str(case_dir / n) for n in ("mask.npy", "mesh.json", "solve.json", "fields.npz")]
     if post and out["status"] == "ok":
         with _Stage(stages, "post", "cpu") as st:
-            arts += _post(case_dir, mask, h, origin, sj, res, lane_of(device, backend), exclude_mm)
+            arts += _post(case_dir, mask, h, origin, sj, res, lane or lane_of(device, backend), exclude_mm)
         out["wall_s_post"] = st.rec["wall_s"]
     out["artifacts"] = arts
     return out

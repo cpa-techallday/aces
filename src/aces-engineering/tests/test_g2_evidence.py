@@ -1,5 +1,5 @@
-"""B2 unit tests: golden.evidence (experiment, solver digest, anchor, record into both ledgers, the eleven-check audit,
-tamper detection, a pre-broken ledger). The run directory is synthetic: its "solves" come from the fake runner of
+"""B2 unit tests: golden.evidence (experiment, solver digest, compute digest, anchor, record into both ledgers, the
+thirteen-check audit, tamper detection, a pre-broken ledger). The run directory is synthetic: its "solves" come from the fake runner of
 test_g2_verify (an analytic stand-in, test input), but the surrogate, optimiser, validation, compute table, simlab
 bundle, simlab ledger and report are the real code paths. The aces ledger is an in-process stand-in with aces-base's
 record format and hash chain; TestRealAcesCli repeats the record and audit through B3's AcesCli and the aces-base CLI
@@ -225,6 +225,30 @@ class TestPieces(_Env):
         self.assertIn("golden/evidence.py", dg["golden_code_files"])
         self.assertTrue(dg["simlab_imported_from"])
 
+    def test_compute_digest_recipe(self):
+        """compute_digest(): sha256 of the sorted `golden/<name> <LF sha256>` lines (or `golden/<name> missing`), joined
+        with LF plus a final LF (section 14.7); recomputed here from the files themselves."""
+        got = evidence.compute_digest()
+        pkg = Path(evidence.__file__).resolve().parent
+        lines, present = [], []
+        for name in evidence.GOLDEN_COMPUTE_MODULES:
+            f = pkg / name
+            if f.is_file():
+                data = f.read_bytes().replace(b"\r\n", b"\n")
+                lines.append(f"golden/{name} {hashlib.sha256(data).hexdigest()}")
+                present.append(f"golden/{name}")
+            else:
+                lines.append(f"golden/{name} missing")
+        want = hashlib.sha256(("\n".join(sorted(lines)) + "\n").encode("utf-8")).hexdigest()
+        self.assertEqual(got["golden_compute_sha256"], want)
+        self.assertEqual(sorted(got["golden_compute_files"]), sorted(present))
+        self.assertEqual(evidence.GOLDEN_COMPUTE_MODULES, ("__init__.py", "case.py", "conforming.py", "domain.py",
+                                                           "fea.py", "generator.py", "organic.py", "rigside.py",
+                                                           "spec.py"))
+        self.assertIn("golden/rigside.py", got["golden_compute_files"])
+        self.assertIn("gendesign.mg", evidence.DIGEST_MODULES)
+        self.assertIn("gendesign.connectivity", evidence.DIGEST_MODULES)
+
     def test_anchor_exclusions(self):
         run = tc.FakeRun(self.runs_dir("anchor"))
         for rel in ("run.json", "result.json", "log.txt", "events.jsonl", "manifest.sha256", "report.md", "report.html",
@@ -300,8 +324,18 @@ class TestRecordAndAudit(_Env):
         res = evidence.audit(run, self.aces)
         self.assertEqual([c["name"] for c in res["checks"]],
                          ["files", "bundle", "simlab-ledger", "aces-ledger", "sweep", "surrogate", "verdict", "report",
-                          "compute", "manifest", "resolve"])
+                          "compute", "rig", "conforming", "manifest", "resolve"])
         self.assertTrue(res["ok"], [c for c in res["checks"] if not c["ok"]])
+        checks = {c["name"]: c for c in res["checks"]}
+        self.assertEqual((checks["rig"]["ok"], checks["rig"]["detail"]), (None, "not run: no rig work in this run"))
+        self.assertIsNone(checks["conforming"]["ok"])
+        self.assertTrue(checks["conforming"]["detail"].startswith("not run"), checks["conforming"]["detail"])
+        # a desktop-only run: no rig block in the bundle or the payload; the conforming block says it did not run
+        self.assertIsNone(g["rig"])
+        self.assertEqual(g["conforming"], val["conforming"])
+        self.assertFalse(g["conforming"]["ran"])
+        self.assertIsNone(payload["rig"])
+        self.assertEqual(payload["conforming"], {"ran": False, "passed": None, "host": None})
 
         # a second run chains onto the first: positions recorded
         run2, eff2 = minimal_run(self.runs_dir("r2"), run_id="20261009T000001Z-b2test")

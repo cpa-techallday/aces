@@ -20,3 +20,9 @@ scikit-learn==1.9.0         # tabular surrogates: GP, extra-trees, K-fold (simla
 joblib==1.5.3               # surrogate model save/load (simlab.surrogate.tabular)
 build123d==0.11.1           # STEP import/export (step-structures, evaluators, nozzle STEP), parametric B-rep
 cadquery-ocp-novtk==7.9.3.1.1  # OpenCASCADE 7.9.3 bindings for build123d (the workstation runs the same OCP build with VTK)
+gmsh==4.15.2                # conforming tet10 (C3D10) mesh of a verified part for the CalculiX second discretisation
+                            # (aces_engineering.golden.conforming; the wheel bundles libgmsh, GPL-2.0-or-later with
+                            # the Gmsh exceptions, see LICENSES.md)
+psutil==7.2.2               # usable CPUs and memory for the golden compute plan (was resolved as a dependency)
+threadpoolctl==3.7.0        # one BLAS thread per golden solve (was resolved as a dependency)
+tqdm==4.70.1                # the golden progress bar (was resolved as a dependency)
