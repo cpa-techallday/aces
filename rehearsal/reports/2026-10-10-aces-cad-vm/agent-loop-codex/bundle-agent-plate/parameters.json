@@ -1,0 +1,30 @@
+{
+ "schema": "aces.cad.local.parameters/1",
+ "params": {
+  "length": 60,
+  "width": 40,
+  "thickness": 5,
+  "hole": 10
+ },
+ "params_declared": {
+  "length": {
+   "type": "int",
+   "default": 60
+  },
+  "width": {
+   "type": "int",
+   "default": 40
+  },
+  "thickness": {
+   "type": "int",
+   "default": 5
+  },
+  "hole": {
+   "type": "int",
+   "default": 10
+  }
+ },
+ "params_overridden": [],
+ "entry": "build",
+ "params_sha256": "80108c16aa65ac0dee8fdebddf77b43cf78dbf3b87fa153093e4eafab43cec98"
+}

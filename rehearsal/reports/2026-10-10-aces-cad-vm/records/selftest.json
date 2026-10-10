@@ -1,0 +1,89 @@
+{
+ "ok": true,
+ "checks": [
+  {
+   "n": "0",
+   "name": "project",
+   "status": "PASS",
+   "detail": "selftest (sovereign) by aces project new"
+  },
+  {
+   "n": "1",
+   "name": "doctor",
+   "status": "PASS",
+   "detail": "verdict ready, mode strict, sandbox missing nothing"
+  },
+  {
+   "n": "2",
+   "name": "ACES plate",
+   "status": "PASS",
+   "detail": "run 20261010T101553Z-077b: volume 11607.300918301276 mm3, counts 1/1/7/15/10, valid"
+  },
+  {
+   "n": "3",
+   "name": "parameter override",
+   "status": "PASS",
+   "detail": "run 20261010T101555Z-07d4: length=70 -> 13607.300918301276 mm3"
+  },
+  {
+   "n": "4",
+   "name": "inspect",
+   "status": "PASS",
+   "detail": "mass 0.030991493451864402 kg, one through \u00d810 hole at (30.0, 20.0, 5.0), thickness min 5.0 mm, validity ok"
+  },
+  {
+   "n": "5",
+   "name": "render",
+   "status": "PASS",
+   "detail": "/tmp/aces-cad-selftest-1uixucp5/work/selftest/cad/local/runs/20261010T101553Z-077b/renders/iso-small.png (640 x 500 px, 28406 bytes)"
+  },
+  {
+   "n": "6",
+   "name": "drawing",
+   "status": "PASS",
+   "detail": "dimensions 60, 5, 40, \u00d810 THRU, 30, 20; audit 0; /tmp/aces-cad-selftest-1uixucp5/work/selftest/cad/local/runs/20261010T101553Z-077b/drawings/plate-fa5cc45b.dxf"
+  },
+  {
+   "n": "7",
+   "name": "pull",
+   "status": "PASS",
+   "detail": "5 files match source.json; geometry 806c9be7a86c8ae60308ee75d9a910f371d5f5aae6fe6517fa5ce6aa5fd1742f; cad.pull is ledger entry 2; aces ledger verify ok"
+  },
+  {
+   "n": "8",
+   "name": "reproducible pull",
+   "status": "PASS",
+   "detail": "run 20261010T101610Z-009d pulled with the same geometry_sha256"
+  },
+  {
+   "n": "9a",
+   "name": "hostile socket",
+   "status": "PASS",
+   "detail": "refused: sandbox (exit 5) after 2.6 s"
+  },
+  {
+   "n": "9b",
+   "name": "hostile loop",
+   "status": "PASS",
+   "detail": "refused: timeout (exit 4) after 5.1 s"
+  },
+  {
+   "n": "9c",
+   "name": "hostile write outside",
+   "status": "PASS",
+   "detail": "refused: sandbox (exit 5) after 2.5 s; the file is absent"
+  },
+  {
+   "n": "9d",
+   "name": "hostile OCCT export outside",
+   "status": "PASS",
+   "detail": "the export failed (script: Failed to write STEP file) and the file is absent"
+  }
+ ],
+ "passed": 13,
+ "failed": 0,
+ "skipped": 0,
+ "wall_s": 37.8,
+ "work_dir": "/tmp/aces-cad-selftest-1uixucp5",
+ "kept": false
+}

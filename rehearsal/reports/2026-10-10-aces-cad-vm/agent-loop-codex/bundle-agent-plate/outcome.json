@@ -1,0 +1,22 @@
+{
+ "schema": "aces.cad.local.outcome/1",
+ "files": {
+  "source.json": {
+   "sha256": "bf95f5c4a684dd050c67fd1987ff2fcc3350c2aa4a84e5ddb70439a2bd06ca52",
+   "bytes": 4359
+  }
+ },
+ "ledger": {
+  "written": true,
+  "kind": "cad.pull",
+  "via": "aces ledger record",
+  "n": 11,
+  "hash": "218338ac2309039423f91a2d61de6306e6f58856b3b60f96488c4441fc2c923b",
+  "path": "/home/aces/.local/state/aces/ledger.jsonl"
+ },
+ "cad_source": {
+  "recorded": true,
+  "ref": "cad/local/20261010T103215Z-agent-plate/part.step"
+ },
+ "updated_at": "2026-10-10T10:32:15Z"
+}

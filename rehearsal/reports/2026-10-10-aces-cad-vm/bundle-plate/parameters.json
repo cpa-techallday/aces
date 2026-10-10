@@ -1,0 +1,46 @@
+{
+ "schema": "aces.cad.local.parameters/1",
+ "params": {
+  "length": 60.0,
+  "width": 40.0,
+  "thickness": 5.0,
+  "hole_d": 10.0
+ },
+ "params_declared": {
+  "length": {
+   "type": "float",
+   "default": 60.0,
+   "min": 10.0,
+   "max": 500.0,
+   "unit": "mm",
+   "doc": "plate length along X"
+  },
+  "width": {
+   "type": "float",
+   "default": 40.0,
+   "min": 10.0,
+   "max": 500.0,
+   "unit": "mm",
+   "doc": "plate width along Y"
+  },
+  "thickness": {
+   "type": "float",
+   "default": 5.0,
+   "min": 1.0,
+   "max": 50.0,
+   "unit": "mm",
+   "doc": "plate thickness along Z"
+  },
+  "hole_d": {
+   "type": "float",
+   "default": 10.0,
+   "min": 1.0,
+   "max": 30.0,
+   "unit": "mm",
+   "doc": "centre hole diameter"
+  }
+ },
+ "params_overridden": [],
+ "entry": "build",
+ "params_sha256": "db83a7a069d33806a8ab041c228846190c3e9e46bf34192e37fa1ba2ea86ac29"
+}

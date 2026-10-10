@@ -1,0 +1,71 @@
+{
+ "run_dir": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391",
+ "ok": true,
+ "checks": [
+  {
+   "name": "files",
+   "ok": true,
+   "detail": "209 anchored files match"
+  },
+  {
+   "name": "bundle",
+   "ok": true,
+   "detail": "bundle a134a66fddc5 hashes to itself, matches the ledger record and the anchor; the copy equals the bundle in the simlab root"
+  },
+  {
+   "name": "simlab-ledger",
+   "ok": true,
+   "detail": "simlab ledger verifies (4 entries, 0 relocated); entry 4 is this bundle"
+  },
+  {
+   "name": "aces-ledger",
+   "ok": true,
+   "detail": "aces ledger verifies (10 entries); entry 10 is golden.run for this bundle"
+  },
+  {
+   "name": "sweep",
+   "ok": true,
+   "detail": "sweep.csv matches its digest and 9 FINISHED rows equal their results.json"
+  },
+  {
+   "name": "surrogate",
+   "ok": true,
+   "detail": "1 saved surrogate(s) reproduce their recorded predictions to 1e-9; cv.json match the bundle"
+  },
+  {
+   "name": "verdict",
+   "ok": true,
+   "detail": "PASS / verified-desktop re-derived from validation.json; result.json and the bundle agree"
+  },
+  {
+   "name": "report",
+   "ok": true,
+   "detail": "306 provenance pointers resolve to their sources"
+  },
+  {
+   "name": "compute",
+   "ok": true,
+   "detail": "15 compute-used rows re-derive from their sources"
+  },
+  {
+   "name": "rig",
+   "ok": null,
+   "detail": "not run: no rig work in this run"
+  },
+  {
+   "name": "conforming",
+   "ok": true,
+   "detail": "m001 (desktop): metrics recomputed from the ccx deck and output to 1e-12, 8 files hash as recorded, the comparison rows re-derive"
+  },
+  {
+   "name": "manifest",
+   "ok": true,
+   "detail": "232 files match manifest.sha256"
+  },
+  {
+   "name": "resolve",
+   "ok": null,
+   "detail": "not run (pass --resolve to re-solve the winner on this CPU)"
+  }
+ ]
+}

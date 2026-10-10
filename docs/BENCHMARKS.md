@@ -70,3 +70,11 @@ The --rig-sweep row above as aces-engineering 0.1.0-5 renders the same run (`ace
 | Machine | CPU | Devices used | Workers | Designs ok/n | gen/fea/check mm | Sweep s | Loop s | Check s | Total s | Outcome | Grade | Run |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Darkness | Intel(R) Core(TM) Ultra 9 285HX (24 logical) | cpu/numpy, NVIDIA RTX PRO 4000 Blackwell SFF Edition (cupy, warp), rig: NVIDIA CMP 170HX x3 (cupy, mg), rig cpu (ccx x16) | 1 | 9/10 | 4/4/2 | 247.4 | 10.0 | 64.7 | 340.2 | pass | rig-verified | 20261010T084243Z-b3ac99 |
+
+## 2026-10-10T10:22:59.738+00:00  aces golden root-mount on aces-rehearsal
+
+The domain of this run came from aces-cad, not the built-in demo: `disc_domain.py` run and pulled on the VM (bundle `cad/local/20261010T102209Z-disc`, `part.step` sha256 `2a88ca85e746…`), then `aces golden run --spec /tmp/rm.json --step <bundle>/part.step --project cad-gold --new` (acceptance step 12 of the aces-cad section in PACKAGES.md). Desktop only, CalculiX on the VM; `aces golden verify` passes 11 checks with the rig and resolve rows INFO (not run).
+
+| Machine | CPU | Devices used | Workers | Designs ok/n | gen/fea/check mm | Sweep s | Loop s | Check s | Total s | Outcome | Grade | Run |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| aces-rehearsal | Intel(R) Core(TM) Ultra 9 285HX (4 logical) | cpu/numpy x4, cpu x4 | 4 | 9/10 | 4/4/2 | 7.3 | 3.1 | 33.4 | 49.5 | pass | verified-desktop | 20261010T102210Z-bc7391 |

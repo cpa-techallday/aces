@@ -1,0 +1,153 @@
+{
+ "run_id": "20261010T102204Z-09d1",
+ "status": "ok",
+ "name": "disc",
+ "project": "cad-vm",
+ "script": {
+  "source": "inline",
+  "path": null,
+  "sha256": "95a19e1481bb1a1f6f654b3121fd4babbec8858ecf4c39e9c200420f22c41f81",
+  "bytes": 282
+ },
+ "from_run": null,
+ "entry": "build",
+ "params": {},
+ "params_overridden": [],
+ "params_declared": {},
+ "inputs": {},
+ "result": {
+  "kind": "solid",
+  "parts": [
+   {
+    "name": "disc",
+    "kind": "solid",
+    "volume_mm3": 314159.2653589794,
+    "area_mm2": 28274.333882308136,
+    "bbox_mm": [
+     0.0,
+     0.0,
+     0.0,
+     100.0,
+     100.0,
+     40.0
+    ],
+    "size_mm": [
+     100.0,
+     100.0,
+     40.0
+    ],
+    "centroid_mm": [
+     50.0,
+     50.0,
+     20.0
+    ],
+    "valid": true,
+    "reasons": [],
+    "counts": {
+     "solids": 1,
+     "shells": 1,
+     "faces": 3,
+     "edges": 3,
+     "vertices": 2
+    }
+   }
+  ],
+  "datums": [],
+  "totals": {
+   "parts": 1,
+   "volume_mm3": 314159.2653589794,
+   "bbox_mm": [
+    0.0,
+    0.0,
+    0.0,
+    100.0,
+    100.0,
+    40.0
+   ]
+  }
+ },
+ "problems": [],
+ "stdout": "",
+ "stderr": "",
+ "stdout_truncated": false,
+ "stderr_truncated": false,
+ "timings_s": {
+  "read": 0.0008,
+  "prelude": 0.0015,
+  "guards": 0.0015,
+  "imports": 1.5841,
+  "op": 0.0043,
+  "exec": 0.0014,
+  "write": 0.0004,
+  "analyse": 0.0012,
+  "wall": 2.407
+ },
+ "peak_rss_mb": 505.3,
+ "sandbox": {
+  "mode": "strict",
+  "confined": true,
+  "platform": "linux-x86_64",
+  "kernel": "7.2.5-3-omarchy",
+  "seccomp": {
+   "active": true,
+   "detail": "106 BPF instructions, TSYNC"
+  },
+  "landlock": {
+   "active": true,
+   "abi": 10,
+   "tcp_rules": true,
+   "scoped": true,
+   "added": [
+    "/usr",
+    "/etc",
+    "/opt/aces",
+    "/sys/devices/system/cpu",
+    "/proc/4320",
+    "/var/cache/fontconfig",
+    "/opt/aces/engineering/venv",
+    "/usr/lib/python3.14",
+    "/opt/aces/engineering/venv/lib/python3.14",
+    "/opt/aces/engineering/venv/lib/python3.14/site-packages",
+    "/opt/aces/cad/lib",
+    "/home/aces/Work/cad-vm/cad/local/runs/20261010T102204Z-09d1",
+    "/proc/cpuinfo",
+    "/proc/meminfo",
+    "/dev/urandom",
+    "/dev/random",
+    "/dev/zero",
+    "/home/aces/Work/cad-vm/cad/local/runs/20261010T102204Z-09d1/jobs/run-75c07e82",
+    "/dev/null"
+   ],
+   "skipped_roots": [],
+   "detail": "ABI 10, 19 rules"
+  },
+  "audit_hook": true,
+  "pdeathsig": true,
+  "limits": {
+   "timeout_s": 120,
+   "memory_mb": 4096,
+   "threads": 2,
+   "max_file_mb": 1024,
+   "nice": 10
+  },
+  "limits_enforced": {
+   "memory": true,
+   "cpu": true,
+   "file_size": true
+  },
+  "missing": [],
+  "note": null
+ },
+ "versions": {
+  "python": "3.14.7",
+  "build123d": "0.11.1",
+  "ocp": "7.9.3.1",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "scikit-image": "0.26.0",
+  "trimesh": "5.1.0"
+ },
+ "renders": [],
+ "run_dir": "/home/aces/Work/cad-vm/cad/local/runs/20261010T102204Z-09d1",
+ "warnings": []
+}

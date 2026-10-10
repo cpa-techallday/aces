@@ -1,0 +1,56 @@
+{
+ "bundle": "/home/aces/Work/cad-vm/cad/local/20261010T102209Z-disc",
+ "ref": "aces-cad://cad-vm/runs/20261010T102204Z-09d1",
+ "run_id": "20261010T102204Z-09d1",
+ "name": "disc",
+ "kind": "solid",
+ "files": {
+  "parameters.json": {
+   "sha256": "3c737bb998abd15b01881ad7f6749773d097ded733a249565d7506bf69945220",
+   "bytes": 215
+  },
+  "part.3mf": {
+   "sha256": "4d0180f49b8e0425fb06238472ed6c657aeea4330fc7659693ba8e37e8a970df",
+   "bytes": 7730
+  },
+  "part.step": {
+   "sha256": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+   "bytes": 7102
+  },
+  "part.stl": {
+   "sha256": "70c93d4c149873668b9ab5e0a3a210c41e2d4902a59121785c082b2a31bd8a76",
+   "bytes": 25084
+  },
+  "source.json": {
+   "sha256": "86d43a978d6506eb684e90d97e8dd0b8ae7643012aa2dd72e36c91ee6c5d744c",
+   "bytes": 4342
+  },
+  "source.py": {
+   "sha256": "95a19e1481bb1a1f6f654b3121fd4babbec8858ecf4c39e9c200420f22c41f81",
+   "bytes": 282
+  }
+ },
+ "geometry_sha256": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+ "valid": true,
+ "ledger": {
+  "written": true,
+  "kind": "cad.pull",
+  "via": "aces ledger record",
+  "n": 8,
+  "hash": "9b4e8af701ed97466cb36b0b160a4fe568d825e2aa00db208ff1212cff2a8e7b",
+  "path": "/home/aces/.local/state/aces/ledger.jsonl"
+ },
+ "cad_source": {
+  "recorded": true,
+  "ref": "cad/local/20261010T102209Z-disc/part.step"
+ },
+ "golden": {
+  "applicable": true,
+  "why_not": null,
+  "init": "aces golden init cad-vm --step /home/aces/Work/cad-vm/cad/local/20261010T102209Z-disc/part.step",
+  "run": "aces golden run --project cad-vm --step /home/aces/Work/cad-vm/cad/local/20261010T102209Z-disc/part.step",
+  "next": "init",
+  "note": "init copies the STEP to cad/part.step (refused if a different cad/part.step exists) and writes golden/spec.json, a template you must complete (supports, loads, keep_in, material with its source); once spec.json exists, init is refused and run --step uses any pulled STEP"
+ },
+ "warnings": []
+}

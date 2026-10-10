@@ -1,0 +1,166 @@
+{
+ "verdict": "ready",
+ "mode": "strict",
+ "worker": {
+  "python": "/opt/aces/engineering/venv/bin/python",
+  "ok": true,
+  "versions": {
+   "python": "3.14.7",
+   "build123d": "0.11.1",
+   "ocp": "7.9.3.1",
+   "numpy": "2.4.6",
+   "scipy": "1.17.1",
+   "scikit-image": "0.26.0",
+   "trimesh": "5.1.0",
+   "matplotlib": "3.11.1",
+   "ezdxf": "1.4.4",
+   "lib3mf": "2.5.0"
+  }
+ },
+ "sandbox": {
+  "mode": "strict",
+  "confined": true,
+  "platform": "linux-x86_64",
+  "kernel": "7.2.5-3-omarchy",
+  "seccomp": {
+   "active": true,
+   "detail": "106 BPF instructions, TSYNC"
+  },
+  "landlock": {
+   "active": true,
+   "abi": 10,
+   "tcp_rules": true,
+   "scoped": true,
+   "added": [
+    "/usr",
+    "/etc",
+    "/opt/aces",
+    "/sys/devices/system/cpu",
+    "/proc/3717",
+    "/var/cache/fontconfig",
+    "/opt/aces/engineering/venv",
+    "/usr/lib/python3.14",
+    "/opt/aces/engineering/venv/lib/python3.14",
+    "/opt/aces/engineering/venv/lib/python3.14/site-packages",
+    "/opt/aces/cad/lib",
+    "/proc/cpuinfo",
+    "/proc/meminfo",
+    "/dev/urandom",
+    "/dev/random",
+    "/dev/zero",
+    "/home/aces/.cache/aces-cad/env/jobs/env-1824d2ac",
+    "/dev/null"
+   ],
+   "skipped_roots": [],
+   "detail": "ABI 10, 18 rules"
+  },
+  "audit_hook": false,
+  "pdeathsig": true,
+  "limits": {
+   "timeout_s": 30,
+   "memory_mb": 4096,
+   "threads": 2,
+   "max_file_mb": 1024,
+   "nice": 10
+  },
+  "limits_enforced": {
+   "memory": true,
+   "cpu": true,
+   "file_size": true
+  },
+  "missing": [],
+  "note": null
+ },
+ "checks": [
+  {
+   "check": "socket(AF_INET)",
+   "expect": "EACCES",
+   "got": "errno 13 (EACCES)",
+   "pass": true
+  },
+  {
+   "check": "socket(AF_UNIX)",
+   "expect": "EACCES",
+   "got": "errno 13 (EACCES)",
+   "pass": true
+  },
+  {
+   "check": "os.fork()",
+   "expect": "EPERM",
+   "got": "errno 1 (EPERM)",
+   "pass": true
+  },
+  {
+   "check": "os.posix_spawn(/usr/bin/true)",
+   "expect": "EPERM",
+   "got": "errno 1 (EPERM)",
+   "pass": true
+  },
+  {
+   "check": "os.kill(parent, 0)",
+   "expect": "EPERM",
+   "got": "errno 1 (EPERM)",
+   "pass": true
+  },
+  {
+   "check": "read the planted secret",
+   "expect": "EACCES",
+   "got": "errno 13 (EACCES)",
+   "pass": true
+  },
+  {
+   "check": "read /proc/<parent>/environ",
+   "expect": "EACCES",
+   "got": "errno 13 (EACCES)",
+   "pass": true
+  },
+  {
+   "check": "write outside the job directory",
+   "expect": "EACCES",
+   "got": "errno 13 (EACCES)",
+   "pass": true
+  },
+  {
+   "check": "symlink inside the job directory",
+   "expect": "EACCES",
+   "got": "errno 13 (EACCES)",
+   "pass": true
+  },
+  {
+   "check": "write inside the job directory",
+   "expect": "ok",
+   "got": "allowed",
+   "pass": true
+  },
+  {
+   "check": "a thread",
+   "expect": "ok",
+   "got": "allowed",
+   "pass": true
+  },
+  {
+   "check": "socket.socket() with the audit hook",
+   "expect": "PermissionError aces-cad sandbox:",
+   "got": "PermissionError: aces-cad sandbox: socket.__new__ is not available in a CAD run",
+   "pass": true
+  },
+  {
+   "check": "the planted secret appears in no output",
+   "expect": "absent",
+   "got": "absent",
+   "pass": true
+  },
+  {
+   "check": "no file was written outside the job directory",
+   "expect": "absent",
+   "got": "absent",
+   "pass": true
+  }
+ ],
+ "aces": {
+  "cli": "/usr/bin/aces",
+  "ledger_record": true,
+  "add_cad_source": true
+ },
+ "cache_dir": "/home/aces/.cache/aces-cad"
+}

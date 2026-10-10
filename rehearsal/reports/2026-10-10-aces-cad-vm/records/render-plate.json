@@ -1,0 +1,105 @@
+{
+ "run_id": "20261010T101628Z-0ffb",
+ "renders": [
+  {
+   "view": "iso",
+   "path": "/home/aces/Work/cad-vm/cad/local/runs/20261010T101628Z-0ffb/renders/iso-medium.png",
+   "width_px": 1024,
+   "height_px": 800,
+   "bytes": 43358,
+   "sha256": "1e90e5c92227c88dc92a63bcc066bd8cd4451c1abfd64c981b75b056d76cdfa6"
+  },
+  {
+   "view": "front",
+   "path": "/home/aces/Work/cad-vm/cad/local/runs/20261010T101628Z-0ffb/renders/front-medium.png",
+   "width_px": 1024,
+   "height_px": 800,
+   "bytes": 19815,
+   "sha256": "b43c92aa1163b32ffad632defea19e1cf9a0ffc9bab5b461985c7a96d7ba1b1e"
+  },
+  {
+   "view": "cutaway",
+   "path": "/home/aces/Work/cad-vm/cad/local/runs/20261010T101628Z-0ffb/renders/cutaway-medium.png",
+   "width_px": 1024,
+   "height_px": 800,
+   "bytes": 34830,
+   "sha256": "ac265a7ac32c02028a789b6e504dc75f5748e7e4222f9ab591256493a975435e"
+  }
+ ],
+ "tessellation": {
+  "tolerance_mm": 0.07228416147400481,
+  "angular_rad": 0.2,
+  "triangles": 268,
+  "doublings": 0
+ },
+ "timings_s": {
+  "read": 0.0008,
+  "prelude": 0.0014,
+  "guards": 0.0013,
+  "imports": 1.5096,
+  "op": 0.9427,
+  "wall": 3.413
+ },
+ "sandbox": {
+  "mode": "strict",
+  "confined": true,
+  "platform": "linux-x86_64",
+  "kernel": "7.2.5-3-omarchy",
+  "seccomp": {
+   "active": true,
+   "detail": "106 BPF instructions, TSYNC"
+  },
+  "landlock": {
+   "active": true,
+   "abi": 10,
+   "tcp_rules": true,
+   "scoped": true,
+   "added": [
+    "/usr",
+    "/etc",
+    "/opt/aces",
+    "/sys/devices/system/cpu",
+    "/proc/3940",
+    "/var/cache/fontconfig",
+    "/opt/aces/engineering/venv",
+    "/usr/lib/python3.14",
+    "/opt/aces/engineering/venv/lib/python3.14",
+    "/opt/aces/engineering/venv/lib/python3.14/site-packages",
+    "/opt/aces/cad/lib",
+    "/home/aces/Work/cad-vm/cad/local/runs/20261010T101628Z-0ffb",
+    "/proc/cpuinfo",
+    "/proc/meminfo",
+    "/dev/urandom",
+    "/dev/random",
+    "/dev/zero",
+    "/home/aces/Work/cad-vm/cad/local/runs/20261010T101628Z-0ffb/jobs/render-12b5fe60",
+    "/home/aces/.cache/aces-cad",
+    "/dev/null"
+   ],
+   "skipped_roots": [],
+   "detail": "ABI 10, 20 rules"
+  },
+  "audit_hook": false,
+  "pdeathsig": true,
+  "limits": {
+   "timeout_s": 120,
+   "memory_mb": 4096,
+   "threads": 2,
+   "max_file_mb": 1024,
+   "nice": 10
+  },
+  "limits_enforced": {
+   "memory": true,
+   "cpu": true,
+   "file_size": true
+  },
+  "missing": [],
+  "note": null
+ },
+ "warnings": [],
+ "inline_images": [
+  "/home/aces/Work/cad-vm/cad/local/runs/20261010T101628Z-0ffb/renders/iso-medium.png",
+  "/home/aces/Work/cad-vm/cad/local/runs/20261010T101628Z-0ffb/renders/front-medium.png",
+  "/home/aces/Work/cad-vm/cad/local/runs/20261010T101628Z-0ffb/renders/cutaway-medium.png"
+ ]
+}

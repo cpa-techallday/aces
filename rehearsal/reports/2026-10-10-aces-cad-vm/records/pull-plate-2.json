@@ -1,0 +1,56 @@
+{
+ "bundle": "/home/aces/Work/cad-vm/cad/local/20261010T101741Z-plate",
+ "ref": "aces-cad://cad-vm/runs/20261010T101736Z-01b3",
+ "run_id": "20261010T101736Z-01b3",
+ "name": "plate",
+ "kind": "solid",
+ "files": {
+  "parameters.json": {
+   "sha256": "3d1898ba42cf2c57008f1df1c109ba675d58cb05ef8c63087dc6d333079bbd98",
+   "bytes": 857
+  },
+  "part.3mf": {
+   "sha256": "b636e2e5aef83aa9fa03003eddc842f7174fb28c12c223fd4d3ce09171590936",
+   "bytes": 7672
+  },
+  "part.step": {
+   "sha256": "806c9be7a86c8ae60308ee75d9a910f371d5f5aae6fe6517fa5ce6aa5fd1742f",
+   "bytes": 18903
+  },
+  "part.stl": {
+   "sha256": "3d24ea3da0fd38ff6b344b5de7ccb2d57136209171419670a5675368e7b46515",
+   "bytes": 26084
+  },
+  "source.json": {
+   "sha256": "e91a78a2a2e0c3e2af9d7c02250bdb7b277289e11812deb20d511ac2089b9519",
+   "bytes": 4342
+  },
+  "source.py": {
+   "sha256": "414a679ffc86fb68da219ac90579256432a5963ebae7ca575fad3f0828d7dc7f",
+   "bytes": 740
+  }
+ },
+ "geometry_sha256": "806c9be7a86c8ae60308ee75d9a910f371d5f5aae6fe6517fa5ce6aa5fd1742f",
+ "valid": true,
+ "ledger": {
+  "written": true,
+  "kind": "cad.pull",
+  "via": "aces ledger record",
+  "n": 7,
+  "hash": "8b1d01824e36dba1a16e119e762e2baae65342e6edb5294c18a236a71910afd1",
+  "path": "/home/aces/.local/state/aces/ledger.jsonl"
+ },
+ "cad_source": {
+  "recorded": true,
+  "ref": "cad/local/20261010T101741Z-plate/part.step"
+ },
+ "golden": {
+  "applicable": true,
+  "why_not": null,
+  "init": "aces golden init cad-vm --step /home/aces/Work/cad-vm/cad/local/20261010T101741Z-plate/part.step",
+  "run": "aces golden run --project cad-vm --step /home/aces/Work/cad-vm/cad/local/20261010T101741Z-plate/part.step",
+  "next": "init",
+  "note": "init copies the STEP to cad/part.step (refused if a different cad/part.step exists) and writes golden/spec.json, a template you must complete (supports, loads, keep_in, material with its source); once spec.json exists, init is refused and run --step uses any pulled STEP"
+ },
+ "warnings": []
+}

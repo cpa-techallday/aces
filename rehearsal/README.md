@@ -247,7 +247,83 @@ VM: the same signed packages a customer machine installs, the real Omarchy kerne
 an agent session at the console. Results are written here and into the aces-cad section of `docs/PACKAGES.md`; copy
 `cad-doctor.json`, the run and pull JSON, the renders, the drawing and the bundle to `rehearsal/reports/`.
 
-**Not run yet (2026-10-10).** Each step below records its result when it has run.
+**Run on 2026-10-10, 10:15 to 10:35 UTC**, by the operator from DARKNESS over ssh, against the packages `bin/build`
+made from main 61ac8a4 and served from the LAN repo. Every step passed; step 9 ran with Codex as the MCP client, not
+Claude Code (the reason is in that step). Records, renders, the drawing, the bundles, the agent loop's event stream and
+the cancel test are in `reports/2026-10-10-aces-cad-vm/`. Results, step by step:
+
+1. `pacman -S aces-cad` installed aces-cad 0.1.0-1 and upgraded aces-os to 0.1.0-6; installed afterwards: aces-cad
+   0.1.0-1, aces-os 0.1.0-6, aces-engineering 0.1.0-5, aces-base 0.1.0-3, calculix-ccx-bin 2.23-1 (aces-omarchy 0.1.0-6
+   and aces-voxel 0.1.0-2 from the morning's upgrade). The clean-container install tests on DARKNESS the same day:
+   the default set resolves aces-os to 510 packages, the aces-base + aces-engineering + aces-cad set to 522, and the
+   aces-cad block (doctor, plate, inspect, render, drawing, pull with its ledger entry, socket exit 5, loop exit 4) and
+   the 114 unit tests passed (430 s).
+2. Kernel `7.2.5-3-omarchy`, lsm `lockdown,capability,landlock,yama,bpf`. Doctor: verdict ready, mode strict, seccomp
+   active (106 BPF instructions, TSYNC), Landlock active at ABI 10 (the TCP rules and the signal and abstract-socket
+   scoping in force, no skipped roots), 14 of 14 checks pass: socket AF_INET and AF_UNIX EACCES, fork and posix_spawn
+   EPERM, kill(parent) EPERM, the planted secret and `/proc/<parent>/environ` EACCES, a write and a symlink outside
+   the job directory EACCES, a write inside it and a thread allowed, the audit hook's PermissionError on
+   `socket.socket()`, the planted secret in no output, no file written outside. Python 3.14.7, build123d 0.11.1, OCP
+   7.9.3.1, numpy 2.4.6, scipy 1.17.1, scikit-image 0.26.0, trimesh 5.1.0, matplotlib 3.11.1, ezdxf 1.4.4, lib3mf
+   2.5.0; the thickness check reports the embree ray backend.
+3. Selftest: 13 checks PASS (project, doctor, plate, parameter override, inspect, render, drawing, pull, reproducible
+   pull, hostile socket, loop, write outside and OCCT export outside), 37.8 s wall. `/usr/bin/time` is not on the VM
+   (the first attempt failed with exit 127); shell timing was used throughout.
+4. `aces project new cad-vm --class sovereign`: created.
+5. Plate run `20261010T101628Z-0ffb`: 2.4 s wall, volume 11607.300918301276 mm³ (exact), 60 × 40 × 5 mm, counts
+   1/1/7/15/10, valid, sandbox strict and confined.
+6. Inspect `20261010T101631Z-eca3` (2.4 s wall, 1.6 s of it imports, 503 MB peak RSS): mass 0.030991 kg at 2670 kg/m³
+   (AlSi10Mg, the golden demo's nominal value); validity ok (BRepCheck valid, closed, 0 free edges, no
+   self-intersection, manifold); one simple through hole `h1`, Ø10.0, axis +Z, entering at (30.0, 20.0, 5.0), depth
+   5.0 mm; thickness min 5.0 mm (268 rays, 268 hits, p01 = p50 = 5.0).
+7. Render 3.5 s: iso, front and cutaway at 1024 × 800 (43358, 19815 and 34830 bytes; 268 triangles at 0.0723 mm).
+   Drawing 3.1 s: third-angle, 1:1 mm, front, top, right and iso, dimension texts 60, 5, 40, Ø10 THRU, 30, 20, as
+   DXF, SVG and PNG. Checked by eye on the PNG (the report copy): the six values read as listed, the Ø is clean, and
+   the hole's hidden edges in the front and right views are grey. Checked in the DXF with ezdxf: every DIMENSION
+   entity carries a `dimlfac` override of 1.0 and its rendered block text is one of the six values; the header
+   `$DIMLFAC` is 100 (ezdxf's default for its EZDXF dimstyle, which these entities override), so a viewer that ignores
+   per-entity overrides would show 6000 where one that honours them (ezdxf's own rendering, the SVG and the PNG) shows
+   60.
+8. Pull: bundle `cad/local/20261010T101736Z-plate` (7 files), geometry_sha256
+   `806c9be7a86c8ae60308ee75d9a910f371d5f5aae6fe6517fa5ce6aa5fd1742f`; `check_bundle.py`: all files match; `aces
+   ledger verify` ok (6 entries); the `cad.pull` entry carries `class: sovereign`; `aces project show cad-vm` lists
+   `cad/local/20261010T101736Z-plate/part.step`. Run and pull again (`20261010T101741Z-plate`): the same
+   geometry_sha256, equal to the CI and Windows values, so the plate's STEP hash is now equal on Windows, Arch (the
+   container) and the VM.
+9. Agent loop: Codex 0.133.0 (gpt-5.5, the operator's ChatGPT login) on DARKNESS, with `aces-cad` configured as
+   `ssh aces@<vm> env ACES_CAD_PROJECT=cad-vm aces-cad-mcp`, asked to make the plate, check it, show it, draw it, pull
+   it and note a lesson, with the aces-cad tools only. Seven tool calls in order, each right at the first try
+   (`agent-loop-codex/events.jsonl`): cad_start; cad_run (run `20261010T103142Z-09a4`, the agent's own BuildPart
+   script, volume 11607.300918301273 mm³); cad_inspect (hole h1 Ø10 through, thickness min 5.0 mm); cad_render (iso);
+   cad_drawing (60, 5, 40, Ø10 THRU, 30, 20); cad_pull (bundle `20261010T103215Z-agent-plate`, geometry_sha256
+   `4213f419d026…`, different from the plate's because the run name is written into the STEP); cad_note (one lesson,
+   now in `cad/NOTES.md`). 102 s wall including the model. Images: the server sent `image/png` content with the render
+   (58,484 base64 characters) and the drawing (201,896), but Codex passed only the text to the model, which reported
+   "rendered image itself reached me: no". Claude Code was not the client: the CLI's stored claude.ai login on
+   DARKNESS had expired ("OAuth session expired and could not be refreshed"), the user settings route the CLI to a
+   third-party endpoint, and logging in again is the operator's to do; whether Claude Code shows the images to the
+   model is still open. Esc, with a plain stdio client (`records/vm-cad-cancel-test.json`): `notifications/cancelled`
+   during a 100 s run killed the job, the worker was gone 0.13 s later, no reply was sent for the cancelled id, `ping`
+   and a following `cad_runs` answered (the cancelled run is kept with status error), and the server exited 0 when
+   stdin closed. A client that dies mid-run: the server's EOF grace lets the running job go on for 10 s, then kills it
+   (gone at 10.7 s, by design).
+10. Hostile, as `aces`, from `/usr/share/aces/cad/tests/scripts/`: socket exit 5 (sandbox: `socket.getaddrinfo` is not
+    available); loop `--timeout 5` exit 4 (timeout), and with `--timeout 3` no worker left 1 s later; memory exit 4
+    (kind memory, RLIMIT_AS); the planted secret (a labelled fake value) exit 5 (sandbox: reading the file outside the
+    allowed roots is refused) and the marker appears nowhere in the output; OCCT export outside exit 1, kind script,
+    "Failed to write STEP file", and `~/escape.step` does not exist (Landlock refuses the C++ write; OCCT reports a
+    write failure rather than a sandbox error, as the sandbox section says); kill parent exit 5.
+11. 60 s loop: load 0.41 → 0.58, the worker at nice 10 on one core (98.9 %, 516 MB RSS), a foreground Python loop ran
+    in 0.01 s; measured from an ssh shell, not at the Hyprland console.
+12. Golden hand-off: `disc_domain.py` run `20261010T102204Z-09d1` (Ø100 × 40 mm, 314159.27 mm³), bundle
+    `20261010T102209Z-disc`; `aces golden run --spec /tmp/rm.json --step <bundle>/part.step --project cad-gold --new`:
+    exit 0 after 50 s, PASS, grade verified-desktop (run `20261010T102210Z-bc7391`): winner volfrac 0.23, rmin 11.55
+    mm, mass 0.177 kg, vm_p99 54.47 ≤ 60 MPa, umax 0.0312 ≤ 0.035 mm; the conforming tet10 check at 2 mm on the VM
+    (38,618 C3D10, 187,011 DOF, 29.5 s) agrees (vm_p99 −5.7 %, mass +0.0 %); `aces golden verify`: 11 PASS, rig and
+    resolve INFO (not run); `aces ledger verify` ok (10 entries). The bench row is in `docs/BENCHMARKS.md`.
+13. This section, the aces-cad section of `docs/PACKAGES.md`, and `reports/2026-10-10-aces-cad-vm/`.
+
+The step list as planned:
 
 1. On DARKNESS: `bash bin/build aces-cad` (and `bash bin/build aces-os`), then `.\serve-repo.ps1` (check the web root
    byte for byte against `repo\x86_64`). On the VM: `sudo pacman -Sy aces-cad`, then `sudo pacman -S aces-os`.

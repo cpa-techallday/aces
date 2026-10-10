@@ -1,0 +1,137 @@
+{
+ "started_utc": "2026-10-10T10:34:17Z",
+ "before": {
+  "workers": [],
+  "servers": []
+ },
+ "A_init": {
+  "ok": true,
+  "server": {
+   "name": "aces-cad",
+   "version": "0.1.0"
+  },
+  "protocol": "2025-06-18"
+ },
+ "A_cancel": {
+  "worker_running_before_cancel": 1,
+  "worker_gone_after_s": 0.13,
+  "polls": [
+   {
+    "t_s": 0.13,
+    "workers": 0
+   }
+  ],
+  "reply_for_cancelled_id": null,
+  "server_ping_after_cancel": {
+   "jsonrpc": "2.0",
+   "id": 11,
+   "result": {}
+  }
+ },
+ "A_runs_after": {
+  "ok": true,
+  "latest": [
+   {
+    "run_id": "20261010T103418Z-0050",
+    "status": "error",
+    "name": "cancel-test",
+    "error_kind": null
+   },
+   {
+    "run_id": "20261010T103142Z-09a4",
+    "status": "ok",
+    "name": "agent-plate",
+    "error_kind": null
+   }
+  ]
+ },
+ "A_server_exit_after_stdin_close": 0,
+ "B_pipe_close": {
+  "worker_running_before_kill": 1,
+  "server_running_before_kill": 0,
+  "worker_gone_after_s": 10.68,
+  "server_gone_after_s": 0.26,
+  "polls": [
+   {
+    "t_s": 0.26,
+    "workers": 1,
+    "servers": 0
+   },
+   {
+    "t_s": 1.01,
+    "workers": 1,
+    "servers": 0
+   },
+   {
+    "t_s": 1.78,
+    "workers": 1,
+    "servers": 0
+   },
+   {
+    "t_s": 2.51,
+    "workers": 1,
+    "servers": 0
+   },
+   {
+    "t_s": 3.24,
+    "workers": 1,
+    "servers": 0
+   },
+   {
+    "t_s": 3.98,
+    "workers": 1,
+    "servers": 0
+   },
+   {
+    "t_s": 4.74,
+    "workers": 1,
+    "servers": 0
+   },
+   {
+    "t_s": 5.47,
+    "workers": 1,
+    "servers": 0
+   },
+   {
+    "t_s": 6.2,
+    "workers": 1,
+    "servers": 0
+   },
+   {
+    "t_s": 6.95,
+    "workers": 1,
+    "servers": 0
+   },
+   {
+    "t_s": 7.68,
+    "workers": 1,
+    "servers": 0
+   },
+   {
+    "t_s": 8.44,
+    "workers": 1,
+    "servers": 0
+   },
+   {
+    "t_s": 9.18,
+    "workers": 1,
+    "servers": 0
+   },
+   {
+    "t_s": 9.93,
+    "workers": 1,
+    "servers": 0
+   },
+   {
+    "t_s": 10.68,
+    "workers": 0,
+    "servers": 0
+   }
+  ]
+ },
+ "after": {
+  "workers": [],
+  "servers": []
+ },
+ "finished_utc": "2026-10-10T10:34:44Z"
+}

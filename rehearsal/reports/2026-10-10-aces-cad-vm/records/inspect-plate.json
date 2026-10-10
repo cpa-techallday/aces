@@ -1,0 +1,263 @@
+{
+ "run_id": "20261010T101628Z-0ffb",
+ "inspect_id": "20261010T101631Z-eca3",
+ "checks": {
+  "mass": {
+   "method": "OCCT BRepGProp volume and surface integrals on the B-rep (trimesh for watertight meshes); inertia per part about its own centroid in global axes, unit density (mm^5)",
+   "parts": [
+    {
+     "name": "plate",
+     "kind": "solid",
+     "volume_mm3": 11607.300918301273,
+     "area_mm2": 5799.999999999999,
+     "centroid_mm": [
+      30.000000000000004,
+      20.0,
+      2.5
+     ],
+     "inertia_mm5": [
+      [
+       1621727.507652511,
+       9.313225746154785e-10,
+       1.1641532182693481e-10
+      ],
+      [
+       9.313225746154785e-10,
+       3621727.50765251,
+       -1.1641532182693481e-10
+      ],
+      [
+       1.1641532182693481e-10,
+       -1.1641532182693481e-10,
+       5195091.261478763
+      ]
+     ],
+     "principal_moments_mm5": [
+      5195091.261478763,
+      3621727.50765251,
+      1621727.507652511
+     ],
+     "principal_axes": [
+      [
+       3.257863734199482e-17,
+       -7.399135866949084e-17,
+       1.0
+      ],
+      [
+       4.656612873077394e-16,
+       1.0,
+       7.399135866949083e-17
+      ],
+      [
+       1.0,
+       -4.656612873077394e-16,
+       -3.2578637341994855e-17
+      ]
+     ],
+     "mass_kg": 0.030991493451864402,
+     "inertia_kg_mm2": [
+      [
+       4.330012445432205,
+       2.486631274223328e-15,
+       3.10828909277916e-16
+      ],
+      [
+       2.486631274223328e-15,
+       9.670012445432201,
+       -3.10828909277916e-16
+      ],
+      [
+       3.10828909277916e-16,
+       -3.10828909277916e-16,
+       13.8708936681483
+      ]
+     ]
+    }
+   ],
+   "totals": {
+    "volume_mm3": 11607.300918301273,
+    "area_mm2": 5799.999999999999,
+    "mass_kg": 0.030991493451864402
+   },
+   "density": {
+    "kg_m3": 2670.0,
+    "material": "AlSi10Mg",
+    "source": "aces-engineering golden demo spec (aces_engineering/golden/demo.py): nominal handbook value for AlSi10Mg, 2.67 g/cm3; demo input, not a qualified material card"
+   }
+  },
+  "validity": {
+   "method": "OCCT BRepCheck_Analyzer, ShapeAnalysis_Shell and ShapeAnalysis_FreeBounds, signed volumes per solid (BRepGProp), BRepAlgoAPI_Check with self-intersection, build123d is_manifold, and a tessellation at the render tolerance checked by trimesh",
+   "parts": [
+    {
+     "name": "plate",
+     "kind": "solid",
+     "brepcheck_valid": true,
+     "statuses": [],
+     "statuses_truncated": false,
+     "closed": true,
+     "free_edges": 0,
+     "signed_volumes_mm3": [
+      11607.300918301273
+     ],
+     "signed_volumes_truncated": false,
+     "self_intersection": false,
+     "bop_statuses": [],
+     "manifold": true,
+     "max_tolerance_mm": 1e-07,
+     "small_edges": [],
+     "small_edges_truncated": false,
+     "sliver_faces": [],
+     "sliver_faces_truncated": false,
+     "mesh": {
+      "tolerance_mm": 0.07228416147400481,
+      "watertight": true,
+      "winding_consistent": true,
+      "euler_number": 0,
+      "volume_mm3": 11607.951604028969,
+      "volume_error_pct": 0.0056058314700051315
+     },
+     "reasons": [],
+     "ok": true
+    }
+   ],
+   "ok": true
+  },
+  "holes": {
+   "method": "coaxial concave cylinder and cone faces whose drill-radius cylinders span 360 degrees (BRepTools UV bounds); ends by Solid.is_inside 0.01 mm beyond the stack",
+   "holes": [
+    {
+     "id": "h1",
+     "kind": "simple",
+     "diameter_mm": 10.0,
+     "axis_dir": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "entry_point_mm": [
+      30.0,
+      20.0,
+      5.0
+     ],
+     "depth_mm": 5.0,
+     "through": true,
+     "cbore": null,
+     "csk": null,
+     "faces": [
+      "f7"
+     ],
+     "group": "g1",
+     "part": "plate"
+    }
+   ],
+   "hole_groups": [
+    {
+     "id": "g1",
+     "count": 1,
+     "kind": "simple",
+     "diameter_mm": 10.0,
+     "depth_mm": 5.0,
+     "through": true,
+     "cbore": null,
+     "csk": null,
+     "holes": [
+      "h1"
+     ]
+    }
+   ],
+   "count": 1,
+   "holes_truncated": false
+  },
+  "thickness": {
+   "method": "ray along -normal from triangle centroids",
+   "backend": "embree",
+   "note": "normal-direction thickness, not a medial-axis thickness; overestimates in sharp concave corners",
+   "parts": [
+    {
+     "name": "plate",
+     "tolerance_mm": 0.07228416147400481,
+     "tolerance_raised": 0,
+     "rays": 268,
+     "hits": 268,
+     "misses": 0,
+     "min_mm": 5.0,
+     "p01_mm": 5.0,
+     "p05_mm": 5.0,
+     "p50_mm": 5.0,
+     "min_location_mm": [
+      17.67543715095552,
+      10.95007676543558,
+      5.0
+     ]
+    }
+   ],
+   "min_mm": 5.0
+  }
+ },
+ "report_path": "/home/aces/Work/cad-vm/cad/local/runs/20261010T101628Z-0ffb/inspect/20261010T101631Z-eca3.json",
+ "timings_s": {
+  "read": 0.0007,
+  "prelude": 0.0014,
+  "guards": 0.0013,
+  "imports": 1.5964,
+  "op": 0.0282,
+  "wall": 2.408
+ },
+ "peak_rss_mb": 502.9,
+ "sandbox": {
+  "mode": "strict",
+  "confined": true,
+  "platform": "linux-x86_64",
+  "kernel": "7.2.5-3-omarchy",
+  "seccomp": {
+   "active": true,
+   "detail": "106 BPF instructions, TSYNC"
+  },
+  "landlock": {
+   "active": true,
+   "abi": 10,
+   "tcp_rules": true,
+   "scoped": true,
+   "added": [
+    "/usr",
+    "/etc",
+    "/opt/aces",
+    "/sys/devices/system/cpu",
+    "/proc/3882",
+    "/var/cache/fontconfig",
+    "/opt/aces/engineering/venv",
+    "/usr/lib/python3.14",
+    "/opt/aces/engineering/venv/lib/python3.14",
+    "/opt/aces/engineering/venv/lib/python3.14/site-packages",
+    "/opt/aces/cad/lib",
+    "/home/aces/Work/cad-vm/cad/local/runs/20261010T101628Z-0ffb",
+    "/proc/cpuinfo",
+    "/proc/meminfo",
+    "/dev/urandom",
+    "/dev/random",
+    "/dev/zero",
+    "/home/aces/Work/cad-vm/cad/local/runs/20261010T101628Z-0ffb/jobs/inspect-73b3cebd",
+    "/dev/null"
+   ],
+   "skipped_roots": [],
+   "detail": "ABI 10, 19 rules"
+  },
+  "audit_hook": false,
+  "pdeathsig": true,
+  "limits": {
+   "timeout_s": 180,
+   "memory_mb": 4096,
+   "threads": 2,
+   "max_file_mb": 1024,
+   "nice": 10
+  },
+  "limits_enforced": {
+   "memory": true,
+   "cpu": true,
+   "file_size": true
+  },
+  "missing": [],
+  "note": null
+ },
+ "warnings": []
+}
