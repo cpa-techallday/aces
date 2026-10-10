@@ -648,6 +648,28 @@ class TestRunCheckWithoutTools(unittest.TestCase):
             self.assertEqual(rec["max_dof"], cf.MAX_DOF["desktop"])
             self.assertEqual(rec["material"], {"E_MPa": 70000.0, "nu": 0.33, "rho_kg_mm3": 2.67e-6})
 
+    def test_the_mesher_child_always_runs_single_threaded(self):
+        """The case's thread count is the solve's; the mesher child is asked for MESH_THREADS = 1 so the same STL
+        gives the same mesh (conforming.py, Repeatability)."""
+        self.assertEqual(cf.MESH_THREADS, 1)
+        seen = {}
+
+        def fake_run(cmd, **kw):
+            seen["cmd"] = list(cmd)
+            (Path(kw["cwd"]) / "tetmesh.json").write_text(
+                json.dumps({"status": "not-watertight", "message": "fixture", "threads": 1}), encoding="utf-8")
+            return subprocess.CompletedProcess(cmd, 1)
+
+        with tempfile.TemporaryDirectory() as td, mock.patch.object(cf.subprocess, "run", side_effect=fake_run):
+            out = Path(td) / "m001"
+            out.mkdir()
+            status, message, tetmesh = cf._run_mesher(Path(td) / "p.stl", out, 2.0, "m001")
+        self.assertEqual((status, message), ("not-watertight", "fixture"))
+        self.assertEqual(tetmesh["threads"], 1)
+        i = seen["cmd"].index("--threads")
+        self.assertEqual(seen["cmd"][i + 1], "1")
+        self.assertEqual(seen["cmd"][i + 2:i + 4], ["--case-id", "m001"])
+
     def test_gmsh_not_found(self):
         av = dict(_AV, gmsh=None, gmsh_reason="gmsh is not installed in this Python (test)", usable=False)
         with tempfile.TemporaryDirectory() as td, mock.patch.object(cf, "available", return_value=av):
@@ -891,6 +913,9 @@ class TestCcx(unittest.TestCase):
             rec = cf.run_check(stl, eff, {"stress_exclude": []}, Path(td) / "m001", case_id="m001", size_mm=2.0,
                                where="desktop", threads=2)
             self.assertEqual(rec["status"], "ok", rec["message"])
+            self.assertEqual((rec["threads"], rec["mesh"]["threads"], rec["solver"]["threads"]), (2, 1, 2))
+            tm = json.loads((Path(td) / "m001" / "tetmesh.json").read_text(encoding="utf-8"))
+            self.assertEqual(tm["threads"], 1)
             res = cf.read_results(Path(td) / "m001")
             tip = np.abs(res["nodes"][:, 0] - 100.0) <= 1e-9
             uz = float(np.mean(res["u"][tip, 2]))

@@ -26,10 +26,13 @@ and midside nodes 4-9 on the edges (0,1), (1,2), (2,0), (0,3), (1,3), (2,3), pla
 gmsh's own order. Boxes are in the part frame (mm), as in the spec. Standard library only at module level: numpy,
 trimesh and gmsh are imported where they are used.
 
-Repeatability. gmsh meshes with General.NumThreads = threads, and with more than one thread its meshes differ from run
-to run (measured on DARKNESS, gmsh 4.15.2: three 4-thread meshes of the patch-test bar had 895, 939 and 905 nodes;
-three 1-thread meshes were identical). The record keeps the mesh that was solved (mesh.npz, ccx.inp.gz), and the
-audit re-derives every number from those files, never by meshing again."""
+Repeatability. The mesher child always runs gmsh with General.NumThreads = MESH_THREADS (1): with more than one
+thread its meshes differ from run to run (measured on DARKNESS, gmsh 4.15.2: three 4-thread meshes of the patch-test
+bar had 895, 939 and 905 nodes, and two 8-thread meshes of the section 12.8 cantilever at 2 mm had 36,837 and 36,375
+DOF; three 1-thread meshes were identical). The case's thread count applies to the ccx solve alone (OMP_NUM_THREADS
+and the CCX_NPROC_* variables). Both counts are recorded: tetmesh.json and the record's mesh box carry the mesher's,
+the solver box the solve's. The record keeps the mesh that was solved (mesh.npz, ccx.inp.gz), and the audit
+re-derives every number from those files, never by meshing again."""
 from __future__ import annotations
 
 import argparse
@@ -65,6 +68,7 @@ DOF_PER_UNIT = 37.0
 MAX_DOF = {"desktop": 1_500_000, "rig": 3_000_000}
 TIMEOUT_S = {"desktop": 900.0, "rig": 3000.0}
 MESH_TIMEOUT_S = 600.0
+MESH_THREADS = 1  # the mesher child always meshes single-threaded: see Repeatability in the module docstring
 NOT_RUN = ("gmsh-not-found", "ccx-not-found", "too-large", "mesh-timeout", "ccx-timeout")
 FAILED = ("not-watertight", "multi-body", "mesh-failed", "invalid-mesh", "bc-mapping-failed", "ccx-failed",
           "parse-failed", "equilibrium", "error")
@@ -1033,8 +1037,8 @@ def mesh_stl(stl, out_dir, *, size: float, threads: int, case_id: str = "part", 
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     size = float(size)
-    rec = {"status": "error", "message": "", "route": None, "algorithm_3d": None, "size": size, "nodes": None,
-           "elements": None, "dof": None, "min_sicn": None, "p01_sicn": None, "volume_mm3": None,
+    rec = {"status": "error", "message": "", "route": None, "algorithm_3d": None, "size": size, "threads": int(threads),
+           "nodes": None, "elements": None, "dof": None, "min_sicn": None, "p01_sicn": None, "volume_mm3": None,
            "volume_rel_err": None, "attempts": [], "source": None, "gmsh_version": None}
     t0 = time.time()
     try:
@@ -1158,7 +1162,8 @@ def _empty_record(case_id: str, where: str, threads: int, timeout_s: float, max_
             "source": {"stl": None, "sha256": None, "faces": None, "vertices": None, "volume_mm3": None,
                        "area_mm2": None, "watertight": None, "shells": None, "cavities": None, "bbox_mm": None},
             "mesh": {"tool": "gmsh", "version": None, "route": None, "algorithm_3d": None, "size_mm": None,
-                     "element": "C3D10", "second_order_linear": True, "nodes": None, "elements": None, "dof": None,
+                     "threads": None, "element": "C3D10", "second_order_linear": True, "nodes": None, "elements": None,
+                     "dof": None,
                      "dof_estimate": None, "volume_mm3": None, "volume_rel_err": None, "min_sicn": None,
                      "p01_sicn": None, "attempts": None},
             "bcs": {"window_mm": None, "normal_min": NORMAL_MIN, "supports": [], "loads": []},
@@ -1189,10 +1194,11 @@ def _child_env() -> dict:
     return env
 
 
-def _run_mesher(stl: Path, out_dir: Path, size: float, threads: int, case_id: str) -> tuple[str, str, dict | None]:
-    """(status, message, tetmesh record) of the child mesher; stdout and stderr go to mesh.log."""
+def _run_mesher(stl: Path, out_dir: Path, size: float, case_id: str) -> tuple[str, str, dict | None]:
+    """(status, message, tetmesh record) of the child mesher; stdout and stderr go to mesh.log. The child always
+    meshes with MESH_THREADS threads (Repeatability, module docstring); the case's thread count is the solve's."""
     cmd = [sys.executable, "-m", "aces_engineering.golden.conforming", "mesh", "--stl", str(stl), "--out", str(out_dir),
-           "--size", repr(float(size)), "--threads", str(int(threads)), "--case-id", case_id]
+           "--size", repr(float(size)), "--threads", str(int(MESH_THREADS)), "--case-id", case_id]
     tm = out_dir / "tetmesh.json"
     with contextlib.suppress(FileNotFoundError):
         tm.unlink()
@@ -1301,10 +1307,11 @@ def run_check(stl_path, eff: dict, domain: dict, out_dir, *, case_id: str, size_
 
         # 1. the mesh, in a child process
         tm0 = time.time()
-        status, message, tetmesh = _run_mesher(stl, out_dir, float(size_mm), int(threads), case_id)
+        status, message, tetmesh = _run_mesher(stl, out_dir, float(size_mm), case_id)
         rec["wall_s_mesh"] = time.time() - tm0
         if tetmesh:
             rec["mesh"].update(route=tetmesh.get("route"), algorithm_3d=tetmesh.get("algorithm_3d"),
+                               threads=tetmesh.get("threads"),
                                nodes=tetmesh.get("nodes"), elements=tetmesh.get("elements"), dof=tetmesh.get("dof"),
                                volume_mm3=tetmesh.get("volume_mm3"), volume_rel_err=tetmesh.get("volume_rel_err"),
                                min_sicn=tetmesh.get("min_sicn"), p01_sicn=tetmesh.get("p01_sicn"),
