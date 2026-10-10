@@ -10,7 +10,7 @@ desktop command line or wrap it, as listed below.
 
 | Path | What |
 |---|---|
-| `/opt/aces/engineering/venv` | one locked Python 3.14 venv: `requirements.txt` pins all 77 distributions with sha256 hashes. 0.1.0-2 (76, no gmsh) measured 907.6 MiB installed per pacman (982 MiB by du), package 255 MB; 0.1.0-3 adds the gmsh wheel (40,006,930 bytes, a 92,641,960-byte `libgmsh.so.4.15` inside) and has not been measured as a package yet |
+| `/opt/aces/engineering/venv` | one locked Python 3.14 venv: `requirements.txt` pins all 77 distributions with sha256 hashes. 0.1.0-2 (76, no gmsh) measured 907.6 MiB installed per pacman (982 MiB by du), package 255 MB; 0.1.0-3 adds the gmsh wheel (40,006,930 bytes, a 92,641,960-byte `libgmsh.so.4.15` inside); 0.1.0-4 (the integration) measured 2026-10-10 in the aces-builder container: venv 1.1G (78 distributions), package 295,086,073 bytes |
 | `/opt/aces/engineering/lib` | the vendored `simlab` and `gendesign`, the `aces_engineering` wrappers, `aces_engineering_site.py` (put on the venv's path by `aces-engineering.pth`) |
 | `/opt/aces/engineering/SNAPSHOT` | source path and commit, sync time, content sha256 and per-file manifest of the vendored code |
 | `/usr/bin/aces-simlab`, `aces-evidence`, `aces-gendesign` | shims that run `python -m aces_engineering.<cli>` in the venv |
