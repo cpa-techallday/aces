@@ -153,14 +153,19 @@ residual of 0.010 (sd of log) for friction and 0.002 for Nusselt.
     Mach 0.15, so its factors were never fitted; the probe finds the Mach-safe Re range)
   - `aces-cal-air-02r` (wall-ratio extension: gyroid + diamond at t/a 0.20/0.24/0.28, Re 10/30/100 —
     widens the calibrated 0.08–0.16 range)
-- **Run state (2026-10-09, evening):** validation, resolution, `aces-cal-air-01` and campaign 2
+  - `aces-cal-air-03p` (primitive Mach pin: Re 5/6 at t/a 0.08/0.12/0.16 — Re 5 Mach-safe, Re 6 borderline;
+    an honest over-Mach rejection is itself the boundary measurement)
+  - `aces-cal-air-03d` (diamond firm-up: Re 1/3/60 at t/a 0.20/0.24/0.28 — fills the Re spread at thick
+    walls to pull diamond Nu scatter (0.143) clear of the 0.15 refusal line, or prove it genuinely broad)
+- **Run state (2026-10-10, evening):** campaign 3 (`aces-cal-air-03p`/`03d`, 15 cases) enqueued and
+  running on the sim-lab-4 window. Validation, resolution, `aces-cal-air-01` and campaign 2
   (`aces-cal-air-02p`/`02r`) are all complete and fitted — the registry holds 9 factors (D30),
   including primitive's first (valid at Re <= ~6 only: Mach/Re ~ 0.023). Corpus v2 (40 rows) and
   Tier-0 dataset v2 rebuilt from the combined measurements.
 
 ```bash
-docker exec -w /work simlab-queue-1 python -m simlab enqueue cases/aces/aces-cal-air-02p.yaml --docker
-docker exec -w /work simlab-queue-1 python -m simlab enqueue cases/aces/aces-cal-air-02r.yaml --docker
+docker exec -w /work simlab-queue-1 python -m simlab enqueue cases/aces/aces-cal-air-03p.yaml --docker
+docker exec -w /work simlab-queue-1 python -m simlab enqueue cases/aces/aces-cal-air-03d.yaml --docker
 ```
 
 ## Building and registering from scratch
