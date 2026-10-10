@@ -108,6 +108,28 @@ class SolveBox(unittest.TestCase):
         with self.assertRaises(ValueError):
             fea.solve_mesh(self.stl, self.dom, self.eff, self.root / "x002", h_mm=4.0, device="cpu", solver="cg")
 
+    def test_explicit_mg_solves_and_agrees_with_pcg(self):
+        """A real multigrid solve through solve_mesh (the vendored gendesign.mg, CPU): results carry fea_solver mg and
+        mg_levels as the number of levels solve.json lists (the patched evaluator records the hierarchy there), and
+        the metrics agree with Jacobi-PCG on the same 2 mm mask (test input)."""
+        if not fea.mg_available():
+            self.skipTest("gendesign.mg is not importable here (a snapshot before rig-golden-1)")
+        mg = fea.solve_mesh(self.stl, self.dom, self.eff, self.root / "mg2", h_mm=2.0, device="cpu", solver="mg")
+        pcg = fea.solve_mesh(self.stl, self.dom, self.eff, self.root / "pcg2", h_mm=2.0, device="cpu", solver="pcg")
+        self.assertEqual(mg["status"], "ok", mg["message"])
+        self.assertEqual(pcg["status"], "ok", pcg["message"])
+        r, p = mg["results"], pcg["results"]
+        self.assertEqual((r["fea_solver"], p["fea_solver"]), ("mg", "pcg"))
+        sj = golden.read_json(self.root / "mg2" / "solve.json")
+        self.assertEqual(sj["solver"], "mg")
+        self.assertIsInstance(sj["mg_levels"], list)
+        self.assertIsInstance(r["mg_levels"], int)
+        self.assertEqual(r["mg_levels"], len(sj["mg_levels"]))
+        self.assertGreaterEqual(r["mg_levels"], 2)
+        self.assertNotIn("fea_solver_attempts", r)
+        for k in ("compliance_Nmm", "umax_mm", "vm_max_MPa", "vm_p99_MPa", "mass_voxel_kg"):
+            self.assertLess(abs(r[k] - p[k]) / abs(p[k]), 1e-6, k)
+
     def test_mg_that_stops_above_tol_is_solved_again_with_pcg(self):
         """The fallback path, emulated: resolve_solver says mg and the first solve reports solver mg with relative
         residual 1.0 (a test input standing in for a multigrid solve that stopped above tol); the second solve is the

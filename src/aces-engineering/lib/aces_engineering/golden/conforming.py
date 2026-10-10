@@ -1216,14 +1216,16 @@ def run_check(stl_path, eff: dict, domain: dict, out_dir, *, case_id: str, size_
 
     if where not in MAX_DOF:
         raise ValueError(f"where must be one of {sorted(MAX_DOF)}, not {where!r}")
-    out_dir = Path(out_dir)
+    # absolute paths: the mesher child runs with cwd = out_dir, where a relative --stl or --out names another file
+    # (the rig worker hands its adapter a run directory relative to /work)
+    out_dir = Path(os.path.abspath(out_dir))
     out_dir.mkdir(parents=True, exist_ok=True)
     timeout_s = float(TIMEOUT_S[where] if timeout_s is None else timeout_s)
     max_dof = int(MAX_DOF[where] if max_dof is None else max_dof)
     rec = _empty_record(case_id, where, threads, timeout_s, max_dof)
     rec["mesh"]["size_mm"] = float(size_mm)
     t0 = time.time()
-    stl = Path(stl_path)
+    stl = Path(os.path.abspath(stl_path))
     for name in CASE_FILES + ("conforming.json", "ccx.inp", "ccx.dat", "ccx.frd", "ccx.12d", "spooles.out"):
         with contextlib.suppress(FileNotFoundError):     # a rerun in the same case directory starts clean
             (out_dir / name).unlink()

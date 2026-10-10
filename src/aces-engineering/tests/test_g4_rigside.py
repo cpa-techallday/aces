@@ -243,6 +243,60 @@ class Refusals(_Guarded):
         self.assertEqual(out["design_status"], "ccx-not-found")
 
 
+class WorkerRelativeRunDir(_Guarded):
+    """The simlab worker runs `python3 -m simlab.worker <spec> out/<exp>/c000/case.json out/<exp>/c000` with cwd /work,
+    so the adapter gets a run directory relative to its cwd. rigside makes it absolute: the results then name
+    absolute rig paths (section 8.2) and the conforming mesher child, which runs in the case directory, finds its
+    files. With the relative path every ccx-check case was mesh-failed on the integration stand-in."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp(prefix="g4-rigside-rel-"))
+        self.cwd = os.getcwd()
+
+    def tearDown(self):
+        os.chdir(self.cwd)
+        super().tearDown()
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def run_relative(self, st: _Store, solver: str):
+        spec = st.spec()
+        case = spec.cases()[0]
+        rel = Path("queue") / spec.id / case["case_id"]
+        (self.tmp / rel).mkdir(parents=True, exist_ok=True)
+        os.chdir(self.tmp)
+        with mock.patch.dict(os.environ, ENV):
+            res = rigside.run(case, spec, rel.as_posix(), solver)
+        return self.tmp / rel, res
+
+    def test_mesh_case(self):
+        rd, res = self.run_relative(_Store(self.tmp), "golden-check")
+        self.assertTrue(res["artifacts"])
+        case_dir = str((rd / "golden" / "x001").resolve())
+        for a in res["artifacts"]:
+            self.assertTrue(os.path.isabs(a), a)
+            self.assertTrue(Path(a).is_file(), a)
+            self.assertTrue(str(Path(a).resolve()).startswith(case_dir), a)
+        fd = json.loads((rd / "files.json").read_text(encoding="utf-8"))
+        self.assertIn("golden/x001/fields.npz", [f["path"] for f in fd["files"]])
+
+    def test_conforming_case(self):
+        try:
+            from aces_engineering.golden import conforming
+        except ImportError as exc:
+            self.skipTest(f"golden.conforming (B3) is not in this tree ({exc})")
+        av = conforming.available()
+        if not av.get("usable"):
+            self.skipTest(f"gmsh and CalculiX ccx are not usable here ({av.get('reason')})")
+        gcase = {"case_id": "m001", "role": "conforming", "source_case": "b001", "level": 1, "h_mm": 1.0,
+                 "device": "rig", "host": "rig", "lane": "sim/test", "threads": 1, "max_dof": 3000000,
+                 "timeout_s": 600.0, "seed": 7}
+        rd, res = self.run_relative(_Store(self.tmp, kind="conforming", solver="ccx-check", gcase=gcase), "ccx-check")
+        out = json.loads((rd / "outcome.json").read_text(encoding="utf-8"))
+        self.assertEqual(out["status"], "FINISHED", out.get("error"))
+        self.assertEqual(res["status"], "ok")
+        self.assertTrue(all(os.path.isabs(a) for a in res["artifacts"]), res["artifacts"])
+
+
 class SelfCheck(_Guarded):
     def test_selfcheck_prints_one_document(self):
         buf = io.StringIO()

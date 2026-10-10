@@ -232,13 +232,20 @@ class AuditRig(unittest.TestCase):
             self.skipTest(f"golden.conforming (B3) is not in this tree ({exc}); the integrator runs this after merging")
         if not compute.conforming_available().get("usable"):
             self.skipTest("gmsh and CalculiX ccx are not usable here")
+        from simlab.spec import Experiment
+
         from aces_engineering.golden import case as case_mod
 
         run = self.copy()
         eff, dom = run.read_json("inputs/spec.effective.json"), run.read_json("domain/domain.json")
         plan = {"mode": "local", "host": "desktop", "h_mm": 1.0, "threads": 2, "max_dof": 1_500_000, "timeout_s": 900.0}
         c = verify.conforming_case(plan, "b001", 7, case_id="m001", host="desktop")
-        oc = case_mod.run_conforming_case(run, eff, dom, None, c)
+        # an Experiment for this run, as the pipeline always passes one (built like test_g1_case's): write_records
+        # needs it for the case's evidence manifest; the synthetic tree has no spec.resolved.json
+        spec_path = run.path("inputs", "spec.effective.json")
+        exp = Experiment(id=run.exp_id, project=run.project, owner="test", physics="structures",
+                         solver="step-structures", spec_path=str(spec_path), spec_sha256=golden.sha256_file(spec_path))
+        oc = case_mod.run_conforming_case(run, eff, dom, exp, c)
         check = {"levels": [{"level": 1, "case_id": "x001", "h_mm": 1.0, "ran": True, "host": "rig"}]}
         blk = verify._conforming_from(run, eff, check, c, oc, mode="local", rig_blk=None, attempt=None)
         self.edit_json(run, "validation.json", lambda v: v.update(conforming=golden.clean(blk)))

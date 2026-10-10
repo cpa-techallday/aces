@@ -160,7 +160,9 @@ def run(case: dict, spec, run_dir: str, solver: str) -> dict:
     gid = str(gcase["case_id"])
     if not _NAME.match(gid):
         raise InputError(f"golden case id {gid!r} is not a plain name")
-    run_dir_p = Path(run_dir)
+    # absolute: the simlab worker passes the run directory relative to its cwd (/work), and every path below is
+    # handed on (to the conforming mesher child, which runs in another cwd; to the results as absolute rig paths)
+    run_dir_p = Path(os.path.abspath(run_dir))
     root = run_dir_p / "golden"
     root.mkdir(parents=True, exist_ok=True)
     forced = os.environ.get(FORCE_DEVICE_ENV) or None

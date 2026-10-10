@@ -493,7 +493,10 @@ def solve_mesh(mesh_path: Path, domain: dict, eff: dict, case_dir: Path, *, h_mm
            "elements": int(sj["elements"]), "dof": int(sj["dof"]), "elem_mm": h, "n_fixed_dofs": int(sj["n_fixed_dofs"]),
            "device": str(sj["device"]), "fea_solver": ran, "fea_solver_reason": reason}
     if ran == "mg":
-        res["mg_levels"] = int(sj.get("mg_levels") or MG_LEVELS)
+        # the number of multigrid levels the solve built: the patched evaluator records the hierarchy in solve.json
+        # (one {nx, ny, nz, h, active_dof} per level; it stays there), a bare count is taken as it is
+        lv = sj.get("mg_levels")
+        res["mg_levels"] = len(lv) if isinstance(lv, list) else int(lv or MG_LEVELS)
     if attempts:
         res["fea_solver_attempts"] = attempts
     out["results"] = res

@@ -800,6 +800,21 @@ class TestCcx(unittest.TestCase):
             self.assertEqual(rec["solver"]["version"], cf.CCX_PIN)
             self.assertIn("spooles", rec["solver"]["linear_solver"].lower())
 
+    def test_bar_patch_test_with_relative_paths(self):
+        """The rig worker hands its adapter a run directory relative to its cwd (/work), so rigside passes relative
+        paths on; the mesher child runs with cwd = out_dir, where those would name other files (a measured
+        mesh-failed on the integration stand-in). run_check makes them absolute first (test input: the bar)."""
+        with tempfile.TemporaryDirectory() as td:
+            cwd = os.getcwd()
+            os.chdir(td)
+            try:
+                out = cf.bar_patch_test(Path("rel"), threads=1)
+            finally:
+                os.chdir(cwd)
+            self.assertEqual(out["status"], "ok", out["record"]["message"])
+            self.assertTrue(out["ok"])
+            self.assertEqual(out["record"]["source"]["stl"], "bar.stl")
+
     def test_cantilever(self):
         with tempfile.TemporaryDirectory() as td:
             stl = cf.write_box_stl(Path(td) / "beam.stl", (0, 0, 0), (100, 10, 10))
