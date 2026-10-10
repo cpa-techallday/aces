@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+"""Run aces-cad-mcp from a source checkout; the package installs the same command as /usr/bin/aces-cad-mcp."""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from aces_cad.mcp_server import main  # noqa: E402
+
+sys.exit(main())

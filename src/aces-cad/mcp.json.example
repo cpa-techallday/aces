@@ -1,0 +1,6 @@
+{
+  "_comment": "Copy the aces-cad entry into your agent's MCP configuration (for example a project's .mcp.json) and replace <project> with the ACES project the agent works on. aces-cad-mcp runs build123d locally in a sandboxed child of the aces-engineering venv: no network, no API keys, no quota, every project class allowed. The <project> placeholder fails the name rule, so an unedited copy refuses every tool.",
+  "mcpServers": {
+    "aces-cad": {"command": "aces-cad-mcp", "args": [], "env": {"ACES_CAD_PROJECT": "<project>"}}
+  }
+}
