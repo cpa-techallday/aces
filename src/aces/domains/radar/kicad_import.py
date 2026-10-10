@@ -1173,6 +1173,195 @@ def deck_kicad_net(polyline: dict, cell: float, window_s: float, f0: float,
     return deck, geom
 
 
+# ------------------------------------------------------------------ N-port
+def tee_reference(z0_arm: float, n_ports: int, z_port: float = 50.0) -> dict:
+    """Ideal lossless N-way junction of equal-Z0 arms (real impedances).
+
+    The fed port sees the other n-1 arms in parallel: Z_L = z0_arm/(n-1),
+    S_ii = (Z_L - z_port)/(Z_L + z_port), S_ij = 1 + S_ii.  Power
+    conservation is exact when z0_arm == z_port (field-amplitude waves on
+    identical arms: S_ii = (2-n)/n, S_ij = 2/n); with a port/arm mismatch
+    the |S|^2 columns carry the normalization offset.  Junction
+    discontinuity is NOT modelled (the FDTD measurement includes it — the
+    delta is the junction's excess reactance signature).
+    """
+    z_l = z0_arm / (n_ports - 1)
+    g = (z_l - z_port) / (z_l + z_port)
+    return {"z_load_ohm": z_l, "s_ii": g, "s_ij": 1.0 + g,
+            "s_ii_db": 20 * math.log10(max(abs(g), 1e-30)),
+            "s_ij_db": 20 * math.log10(max(abs(1.0 + g), 1e-30))}
+
+
+def deck_kicad_nport(graph: dict, cell: float, window_s: float, f0: float,
+                     er: float, h: float, tand: float,
+                     feed_port: int = 1, margin_cells: int = 16,
+                     air_cells: int = 16, lift_cells: int = 12,
+                     n_sub: int | None = None,
+                     pour: dict | None = None) -> tuple[str, dict]:
+    """Build the gprMax deck for an N-port junction graph (metres, SI out).
+
+    ``graph``: ``{"junction_mm": (x, y), "branches": [{"points_mm": [...],
+    "width_mm": w}, ...], optional "net"}`` — each branch's FIRST point is
+    at/near the junction, its last point hosts a port.  Copper = union of
+    per-segment capsules plus a junction disk (radius = widest branch
+    half-width), face-connected and merged into row-run boxes — axis-aligned
+    segments rasterise onto exactly the snapped rows (cell-centre rule).
+
+    ``feed_port`` (1-based) gets the stacked-source feed (job22 rule);
+    every other port gets a stacked zero-excitation 50 ohm Thevenin string.
+    Each port end section must be axis-aligned and long enough for the
+    probe triad (job26 rule).  ``pour`` behaves as in deck_kicad_net
+    (job28), with the keepout dilated around every branch and the junction.
+    """
+    n_sub = n_sub or max(2, round(h / cell))
+    if abs(n_sub * cell - h) > 1e-9:
+        raise ValueError(f"substrate h {h} is not {n_sub} cells of {cell}")
+    branches = graph["branches"]
+    n_ports = len(branches)
+    if n_ports < 2:
+        raise ValueError("nport graph needs >= 2 branches")
+    if not 1 <= feed_port <= n_ports:
+        raise ValueError(f"feed_port {feed_port} out of 1..{n_ports}")
+
+    pts_all = []          # per branch: [(x, y) m, ...]
+    w_used_all = []
+    for b in branches:
+        pts = [(x * 1e-3, y * 1e-3) for x, y in b["points_mm"]]
+        if len(pts) < 2:
+            raise ValueError("each branch needs >= 2 points")
+        w_cells = max(1, round(b["width_mm"] * 1e-3 / cell))
+        pts_all.append(pts)
+        w_used_all.append(w_cells * cell)
+
+    xs = [p[0] for pts in pts_all for p in pts]
+    ys = [p[1] for pts in pts_all for p in pts]
+    w_max = max(w_used_all)
+
+    def snap(v: float) -> float:
+        return round(v / cell) * cell
+
+    ox = snap(min(xs) - w_max / 2) - margin_cells * cell
+    oy = snap(min(ys) - w_max / 2) - margin_cells * cell
+    dom_x = snap(max(xs) + w_max / 2) + margin_cells * cell - ox
+    dom_y = snap(max(ys) + w_max / 2) + margin_cells * cell - oy
+    z_gnd = lift_cells * cell
+    z_sub = z_gnd + cell
+    z_trace = z_sub + n_sub * cell
+    dom_z = z_trace + cell + air_cells * cell
+    z_probe = z_sub + (n_sub // 2) * cell
+
+    sigma_d = 2 * math.pi * f0 * EPS0 * er * tand
+    r_each = 50.0 / n_sub
+
+    def rel(x: float, y: float) -> tuple[float, float]:
+        return snap(x - ox), snap(y - oy)
+
+    # copper: segment capsules + junction disk, unioned and face-connected
+    cells: set[tuple[int, int]] = set()
+    for pts, w_used in zip(pts_all, w_used_all):
+        for i in range(len(pts) - 1):
+            cells |= rasterize_capsule_cells(rel(*pts[i]), rel(*pts[i + 1]),
+                                             w_used / 2, cell)
+    jx, jy = rel(graph["junction_mm"][0] * 1e-3, graph["junction_mm"][1] * 1e-3)
+    cells |= rasterize_capsule_cells((jx, jy), (jx, jy), w_max / 2, cell)
+    cells = make_face_connected(cells)
+
+    lines = [f"#title: aces-tile-em kicad_net_nport ({graph.get('net', '?')}, "
+             f"{n_ports} ports, feed port {feed_port})",
+             f"#domain: {dom_x:.7f} {dom_y:.7f} {dom_z:.7f}",
+             f"#dx_dy_dz: {cell:.7f} {cell:.7f} {cell:.7f}",
+             f"#time_window: {window_s:.6e}",
+             f"#material: {er:.4f} {sigma_d:.5f} 1.0 0.0 sub",
+             f"#waveform: gaussiandot 1.0 {f0:.6e} feed",
+             f"#waveform: gaussiandot 1.0e-30 {f0:.6e} term",
+             f"#box: 0 0 {z_gnd:.7f} {dom_x:.7f} {dom_y:.7f} {z_gnd + cell:.7f} pec",
+             f"#box: 0 0 {z_sub:.7f} {dom_x:.7f} {dom_y:.7f} {z_trace:.7f} sub"]
+    for i0, j, i1, _ in merge_cell_runs(cells):
+        lines.append(f"#box: {i0 * cell:.7f} {j * cell:.7f} {z_trace:.7f} "
+                     f"{(i1 + 1) * cell:.7f} {(j + 1) * cell:.7f} {z_trace + cell:.7f} pec")
+
+    # GND pour on the trace layer (job28), keepout around all copper
+    pour_geom = None
+    if pour is not None:
+        g_clear = float(pour["clearance_m"])
+        keepout: set[tuple[int, int]] = set()
+        for pts, w_used in zip(pts_all, w_used_all):
+            for i in range(len(pts) - 1):
+                keepout |= rasterize_capsule_cells(rel(*pts[i]), rel(*pts[i + 1]),
+                                                   w_used / 2 + g_clear, cell)
+        keepout |= rasterize_capsule_cells((jx, jy), (jx, jy),
+                                           w_max / 2 + g_clear, cell)
+        poly_m = [(x * 1e-3 - ox, y * 1e-3 - oy) for x, y in pour["polygon_mm"]]
+        nx, ny = round(dom_x / cell), round(dom_y / cell)
+        pour_cells = rasterize_pour_cells(poly_m, cell, nx, ny, keepout)
+        for i0, j, i1, _ in merge_cell_runs(pour_cells):
+            lines.append(f"#box: {i0 * cell:.7f} {j * cell:.7f} {z_trace:.7f} "
+                         f"{(i1 + 1) * cell:.7f} {(j + 1) * cell:.7f} {z_trace + cell:.7f} pec")
+        pour_geom = {"clearance_m": g_clear, "cells": len(pour_cells),
+                     "clipped_to_domain": True, "stitched_to_plane": False}
+
+    # ports: end geometries, feed/termination strings, probe triads
+    ports = []
+    for bi, (pts, w_used) in enumerate(zip(pts_all, w_used_all)):
+        ex, ey = pts[-1]
+        px, py = pts[-2]
+        dx, dy = ex - px, ey - py
+        n = math.hypot(dx, dy)
+        if abs(dx) > 1e-12 and abs(dy) > 1e-12:
+            raise ValueError(f"branch {bi + 1}: end section is diagonal — the "
+                             "probe triad needs an axis-aligned end section "
+                             "(job26)")
+        d = (-dx / n, -dy / n)     # inward, toward the junction
+        sec = n
+        spacing = 4 * cell if 4 * cell < 0.45e-3 else cell
+        start = 0.35e-3
+        if start + 2 * spacing > sec - w_used:
+            raise ValueError(f"branch {bi + 1}: end section too short for probe "
+                             f"triad ({sec * 1e3:.2f} mm)")
+        fx, fy = rel(ex + d[0] * cell, ey + d[1] * cell)
+        ports.append({"dir": d, "feed_xy": (fx, fy), "end_mm": (ex * 1e3, ey * 1e3),
+                      "end_xy": rel(ex, ey), "length_m": sum(
+                          math.hypot(pts[i + 1][0] - pts[i][0],
+                                     pts[i + 1][1] - pts[i][1])
+                          for i in range(len(pts) - 1)),
+                      "w_m": w_used})
+
+    probes_m: dict[int, list[float]] = {}
+    for pi, port in enumerate(ports, start=1):
+        fx, fy = port["feed_xy"]
+        wave = "feed" if pi == feed_port else "term"
+        for k in range(n_sub):
+            lines.append(f"#voltage_source: z {fx:.7f} {fy:.7f} "
+                         f"{z_sub + k * cell:.7f} {r_each:.3f} {wave}")
+        d = port["dir"]
+        ex_m, ey_m = port["end_xy"]
+        spacing = 4 * cell if 4 * cell < 0.45e-3 else cell
+        dists = []
+        for j in range(3):
+            dist = 0.35e-3 + j * spacing
+            lines.append(f"#rx: {snap(ex_m + d[0] * dist):.7f} "
+                         f"{snap(ey_m + d[1] * dist):.7f} {z_probe:.7f}")
+            dists.append(dist)
+        probes_m[pi] = dists
+    deck = "\n".join(lines) + "\n"
+
+    er_eff = er_eff_microstrip_t(er, h, w_used_all[0])
+    geom = {"net": graph.get("net"), "cell_m": cell, "n_sub_cells": n_sub,
+            "n_ports": n_ports, "feed_port": feed_port,
+            "branch_widths_m": w_used_all,
+            "branch_lengths_m": [p["length_m"] for p in ports],
+            "port_ends_mm": [p["end_mm"] for p in ports],
+            "er_eff_model": er_eff,
+            "z0_model_ohm": z0_microstrip_t(er, h, w_used_all[0]),
+            "probes_m": probes_m,
+            "rasterised_cells": len(cells),
+            "stacked_feed": True}
+    if pour_geom is not None:
+        geom["pour"] = pour_geom
+        geom["pour_present"] = True
+    return deck, geom
+
+
 def expectations(geom: dict, er: float, h: float, tand: float,
                  f_hz: float) -> dict:
     """Model values the FDTD run is checked against (grid-snapped width,

@@ -1,6 +1,6 @@
 # ACES radar domain — the AERIS-X64 EM simulation pipeline
 
-Doc: CPA-ACES-RADAR-001 · Rev K · 2026-10-10 · status: fast tier live, verification tier live on gprMax AND Palace — patch_xband, wr90_through, tile_coupon, tile_multiport PASS on workstation, in the `aces-em:0.1` rig image, and wr90_through cross-checked FEM-vs-FDTD (S21 agreement 0.005 dB); patch far-field CLOSED with a verified matched-feed realized gain **5.33 dBi @ 9.88 GHz** (job22); **KiCad-layout import LIVE** (job23: `kicad_net` case, RXO_1 PASS — measured Z0 76.5 Ω vs 50 Ω spec: a real design finding); **50 Ω redesign verified** (job24: w = 0.51 mm → measured 52.7 Ω, inside the ±7 % fab band); **via transitions LIVE** (job25: `via_coupon` case PASS — stitched F.Cu→In2→F.Cu transition, delay 0.3 %, S21 0.30 dB vs cascade); **arbitrary-angle routes LIVE** (job26: staircase-rasterised diagonal import, coupon PASS — Z0 bias ≤ 0.02 %, er_eff fringe +3.1 % at h/4 → +1.7 % at h/5); **multi-layer import LIVE** (job27: `kicad_net_ml` case PASS — F.Cu↔In2.Cu via chains, coupon-equivalence vs job25 within 0.05 dB; the real PAI/TR/CAL nets raise honestly: component-interrupted or stub-ended); **F.Cu pour / GCPW LIVE** (job28: zone polygons parsed, pour rasterised onto decks, coupon PASS — pour drops Z0 8.7 % at 0.2 mm gap, monotonic in gap; RXO_1 with its real pour measures **67.4 Ω**, 11.8 % below the pour-free line)
+Doc: CPA-ACES-RADAR-001 · Rev L · 2026-10-10 · status: fast tier live, verification tier live on gprMax AND Palace — patch_xband, wr90_through, tile_coupon, tile_multiport PASS on workstation, in the `aces-em:0.1` rig image, and wr90_through cross-checked FEM-vs-FDTD (S21 agreement 0.005 dB); patch far-field CLOSED with a verified matched-feed realized gain **5.33 dBi @ 9.88 GHz** (job22); **KiCad-layout import LIVE** (job23: `kicad_net` case, RXO_1 PASS — measured Z0 76.5 Ω vs 50 Ω spec: a real design finding); **50 Ω redesign verified** (job24: w = 0.51 mm → measured 52.7 Ω, inside the ±7 % fab band); **via transitions LIVE** (job25: `via_coupon` case PASS — stitched F.Cu→In2→F.Cu transition, delay 0.3 %, S21 0.30 dB vs cascade); **arbitrary-angle routes LIVE** (job26: staircase-rasterised diagonal import, coupon PASS — Z0 bias ≤ 0.02 %, er_eff fringe +3.1 % at h/4 → +1.7 % at h/5); **multi-layer import LIVE** (job27: `kicad_net_ml` case PASS — F.Cu↔In2.Cu via chains, coupon-equivalence vs job25 within 0.05 dB; the real PAI/TR/CAL nets raise honestly: component-interrupted or stub-ended); **F.Cu pour / GCPW LIVE** (job28: zone polygons parsed, pour rasterised onto decks, coupon PASS — pour drops Z0 8.7 % at 0.2 mm gap, monotonic in gap; RXO_1 with its real pour measures **67.4 Ω**, 11.8 % below the pour-free line); **N-port decomposition LIVE** (job29: `kicad_net_nport` case, 3-port Tee coupon PASS — reciprocity 0.012 dB, column power 0.98–0.99, junction discontinuity sub-dB quantified vs the ideal lossless Tee)
 
 This adds the AERIS-X64 X-band phased-array radar as an ACES domain
 (`radar.phased_array`) and wires the simulation pipeline that carries a radar
@@ -140,8 +140,9 @@ FDTD-unstable), and a 3-probe least-squares forward/backward wave split
 (`wave_split_ab`) per port.  Validated on the real board-1 stackup (0.254 mm
 RO4350B): S11/S22 −21…−22.4 dB, S21/S12 −0.01…−0.04 dB, reciprocity
 1.5×10⁻⁷ dB, split residuals < 0.7 %, β within 1.2 % of the er_eff model.
-Arbitrary N-port layouts from the KiCad RF layout are future work; the
-machinery (feed, load, wave-split, sequential excitation) is what was missing.
+Arbitrary N-port layouts landed in job29 (`kicad_net_nport`, junction
+graphs from synthetic descriptions; extraction of junction graphs from the
+KiCad net topology is future work).
 
 **KiCad-layout import (job23, LIVE):** `structure: "kicad_net"` parses a
 `.kicad_pcb` (S-expressions: nets, segments, vias, pads, zones), chains a
@@ -246,7 +247,7 @@ explicit reasons: `CAL_2` raises on its 0.6 mm end section (triad guard),
 with their buried runs on In5.Cu (a stack region this deck does not
 model).  The machinery is validated and waiting for the Rev D layout.
 
-**F.Cu GND pour / GCPW (job28, LIVE):** `parse_pcb` now captures zone
+**F.Cu pour / GCPW (job28, LIVE):** `parse_pcb` now captures zone
 outline polygons (`Zone(net, layer, polygon_mm, clearance_mm,
 min_thickness_mm)`) and `deck_kicad_net(..., pour=…)` rasterises the pour
 onto the trace layer — polygon cells minus a clearance halo around the
@@ -270,6 +271,21 @@ estimator margin sensitivity (~1.5 % at h/4; job23 measured 4.56 % on
 identical geometry at margin 16, Z0 agrees to 0.01 Ω).  Limitations:
 pour clipped to the deck domain, not via-stitched to the bottom plane
 inside the window.
+
+**N-port decomposition (job29, `structure: "kicad_net_nport"`, LIVE):**
+`deck_kicad_nport` builds an N-branch junction graph (segment capsules +
+junction disk, face-connected, merged row-runs) and the adapter extracts
+the full N×N S-matrix from N sequential excitations — per-port feed/term
+stacks and probe triads, same wave frames as the 2-port path.  Gates:
+reciprocity 0.2 dB, residuals 0.05, per-column power conservation
+0.90…1.02, er_eff from transmission phase slopes 5 %.  3-port Tee coupon
+(8 mm arms, w = 0.51 mm): **PASS** — reciprocity 0.012 dB, residuals
+0.46 %, column power 0.983–0.991, er_eff 3.5 %.  The ideal lossless Tee
+reference (`tee_reference`: fed port sees the other arms in parallel;
+exact in field normalisation at equal impedances, S_ii = (2−n)/n) is
+recorded with measured deltas — S_ii −9.24 dB vs −9.69 dB ideal,
+S_ij −3.62 dB vs −3.45 dB: the junction discontinuity is sub-dB at
+10.5 GHz for w/h = 2, now quantified rather than assumed.
 
 **Patch far-field (job14 + job20 audit, resolved):** gprMax 4.x
 layered-background NTFF (`#ntff_layered_background` with the PEC-terminated
@@ -409,7 +425,7 @@ records factors and provenance, not geometry.
 | Domain package | `src/aces/domains/radar/` (`array`, `cascade`, `linkbudget`, `model`, `calibrate`, `em_adapter`) |
 | Registration | `src/aces/domains/__init__.py` (`MODELS`) |
 | Spec template | `specs/templates/radar_phased_array.yaml` (X64 baseline values, datasheet-cited chain) |
-| Tests | `tests/test_radar.py` (16 tests), `tests/test_em_adapter.py` (25 tests), `tests/test_kicad_import.py` (11 tests), `tests/test_via_coupon.py` (13 tests), `tests/test_staircase_import.py` (8 tests), `tests/test_kicad_net_ml.py` (7 tests), `tests/test_gcpw_pour.py` (7 tests) |
+| Tests | `tests/test_radar.py` (16 tests), `tests/test_em_adapter.py` (25 tests), `tests/test_kicad_import.py` (11 tests), `tests/test_via_coupon.py` (13 tests), `tests/test_staircase_import.py` (8 tests), `tests/test_kicad_net_ml.py` (7 tests), `tests/test_gcpw_pour.py` (7 tests), `tests/test_nport_tee.py` (9 tests) |
 
 ## 6. What this does not do yet
 
@@ -440,8 +456,10 @@ records factors and provenance, not geometry.
   to job25 within 0.05 dB; the real PAI/TR/CAL nets raise with explicit
   reasons: component interruptions, In5.Cu stack region, stub ends).
   The F.Cu GND pour is modelled (job28 — zone polygons rasterised onto
-  the trace layer, coupon PASS, RXO_1 with its real pour at 67.4 Ω).
-  N-port decomposition of full layouts
+  the trace layer, coupon PASS, RXO_1 with its real pour at 67.4 Ω) and
+  N-port junctions decompose (job29, kicad_net_nport PASS — 3-port Tee
+  coupon, junction discontinuity sub-dB quantified).  Junction-graph
+  extraction from the KiCad net topology
   and the In5.Cu stack region remain future work.  CAL_* nets are deferred (0.6 mm
   end sections cannot host a probe
   triad, CPL pad offsets odd — recorded finding).  The gprMax

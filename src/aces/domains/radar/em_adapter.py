@@ -600,6 +600,8 @@ class Adapter:
             return self._run_via_coupon(case, rd)
         if case.get("structure") == "kicad_net_ml":
             return self._run_kicad_net_ml(case, rd)
+        if case.get("structure") == "kicad_net_nport":
+            return self._run_kicad_net_nport(case, rd)
         margins = {"margin_cells": int(case.get("margin_cells", 30)),
                    "air_cells": int(case.get("air_cells", 40))}
         if validate == "patch_xband" or (not validate and case.get("structure") in (None, "antenna_plate")):
@@ -1032,6 +1034,176 @@ class Adapter:
         return {"kind": "kicad_net", "net": net, "sparams": sparams,
                 "validation": validation, "geometry": runs[1][0],
                 "expectations": expct, "converged": 1}
+
+    def _run_kicad_net_nport(self, case: dict, rd: Path) -> dict:
+        """N-port S-matrix of a junction graph (job29: Tee coupon).
+
+        Same machinery as kicad_net generalised to N ends: one deck per
+        feed port (stacked-source feed, job22 rule), stacked 50 ohm
+        Thevenin strings on every other port, a 3-probe wave-split triad
+        per port (distances measured inward from each port end — the same
+        per-end wave frames as the 2-port path: at the fed port S_ff =
+        b/a, at every other port the transmitted wave travels outward and
+        S_pf = b_p/a_f).
+
+        Gates: reciprocity 0.2 dB, wave-split residuals 0.05, per-column
+        power conservation 0.90..1.02 (passivity + small-loss bound), and
+        er_eff from the transmission phase slopes vs Hammerstad 5 %.  The
+        ideal lossless Tee reference (tee_reference: fed port sees the
+        other N-1 arms in parallel) is recorded with the measured deltas —
+        the delta is the junction discontinuity signature, informational.
+        """
+        from . import kicad_import as ki
+        from .linkbudget import C0
+
+        st = case.get("stackup", ki.TILE_L1L2)
+        er, h, tand = st["substrate_er"], st["substrate_h_m"], st["loss_tan"]
+        f0 = case.get("f0_hz", 10.5e9)
+        flo, fhi = case.get("freq_lo_hz", 8e9), case.get("freq_hi_hz", 13e9)
+        cell = float(case.get("cell_m", h / 4))
+        window = float(case.get("time_window_s", 4e-9))
+        n_freq = int(case.get("n_freq", 11))
+        timeout = int(case.get("timeout_seconds", 2400))
+        margins = {"margin_cells": int(case.get("margin_cells", 16)),
+                   "air_cells": int(case.get("air_cells", 16))}
+        graph = {"net": case.get("graph", {}).get("net", "nport"),
+                 "junction_mm": tuple(case["graph"]["junction_mm"]),
+                 "branches": [{"points_mm": [tuple(p) for p in b["points_mm"]],
+                               "width_mm": float(b["width_mm"])}
+                              for b in case["graph"]["branches"]]}
+        pour = case.get("pour")
+        if pour is not None:
+            pour = {"polygon_mm": [tuple(p) for p in pour["polygon_mm"]],
+                    "clearance_m": float(pour["clearance_m"])}
+        n_ports = len(graph["branches"])
+
+        runs = {}
+        for p in range(1, n_ports + 1):
+            stem = f"case_p{p}"
+            deck, geom = ki.deck_kicad_nport(graph, cell, window, f0,
+                                             er, h, tand, feed_port=p,
+                                             pour=pour, **margins)
+            (rd / f"{stem}.in").write_text(deck, encoding="utf-8")
+            self._gprmax_exec(rd, stem, timeout)
+            runs[p] = (geom, self._read_probes(rd / f"{stem}.h5"))
+
+        er_eff = runs[1][0]["er_eff_model"]
+        freqs = np.linspace(flo, fhi, n_freq)
+
+        def spectra(probes: dict) -> tuple[np.ndarray, list[np.ndarray]]:
+            t, _ = probes["rx1"]
+            n = len(t)
+            dt = float(t[1] - t[0])
+            fr = np.fft.rfftfreq(n, d=dt)
+            specs = [np.fft.rfft(np.asarray(probes[f"rx{i}"][1], dtype=float)
+                                 - np.mean(probes[f"rx{i}"][1]))
+                     for i in range(1, 3 * n_ports + 1)]
+            return fr, specs
+
+        rows = []
+        for ghz in freqs:
+            beta = 2 * math.pi * ghz * math.sqrt(er_eff) / C0
+            row = {"frequency_hz": float(ghz)}
+            for f_port, (gm, probes) in runs.items():
+                fr, specs = spectra(probes)
+                k = int(np.argmin(np.abs(fr - ghz)))
+                a_fed = None
+                for p in range(1, n_ports + 1):
+                    triad = np.array([specs[3 * (p - 1) + j][k] for j in range(3)])
+                    ys = np.asarray(gm["probes_m"][p], dtype=float)
+                    a, b, r = wave_split_ab(triad, ys, beta)
+                    row[f"resid_f{f_port}_p{p}"] = r
+                    if p == f_port:
+                        a_fed = a
+                        row[f"s{p}{f_port}"] = b / a
+                for p in range(1, n_ports + 1):
+                    if p == f_port:
+                        continue
+                    triad = np.array([specs[3 * (p - 1) + j][k] for j in range(3)])
+                    ys = np.asarray(gm["probes_m"][p], dtype=float)
+                    a, b, r = wave_split_ab(triad, ys, beta)
+                    row[f"s{p}{f_port}"] = b / a_fed
+            rows.append(row)
+
+        def db(x: complex) -> float:
+            return 20 * math.log10(max(abs(x), 1e-30))
+
+        smatrix = []
+        for r in rows:
+            entry = {"frequency_hz": r["frequency_hz"]}
+            for p in range(1, n_ports + 1):
+                for f in range(1, n_ports + 1):
+                    entry[f"s{p}{f}_db"] = db(r[f"s{p}{f}"])
+            smatrix.append(entry)
+
+        f_arr = np.array([r["frequency_hz"] for r in rows])
+        k0 = int(np.argmin(np.abs(f_arr - f0)))
+        recip_db = max(abs(db(r[f"s{p}{f}"]) - db(r[f"s{f}{p}"]))
+                       for r in rows
+                       for p in range(1, n_ports + 1)
+                       for f in range(1, p))
+        worst_resid = max(r[f"resid_f{f}_p{p}"] for r in rows
+                          for f in range(1, n_ports + 1)
+                          for p in range(1, n_ports + 1))
+        # power conservation per excitation column (passivity + loss bound)
+        col_power = {f: [sum(abs(r[f"s{p}{f}"]) ** 2
+                             for p in range(1, n_ports + 1))
+                         for r in rows]
+                     for f in range(1, n_ports + 1)}
+        col_power_min = min(min(v) for v in col_power.values())
+        col_power_max = max(max(v) for v in col_power.values())
+        # er_eff from the transmission phase slopes (path = feed arm + port arm)
+        lengths = runs[1][0]["branch_lengths_m"]
+        taus = []
+        for f in range(1, n_ports + 1):
+            for p in range(1, n_ports + 1):
+                if p == f:
+                    continue
+                ph = np.unwrap(np.angle([r[f"s{p}{f}"] for r in rows]))
+                taus.append((-np.polyfit(2 * math.pi * f_arr, ph, 1)[0],
+                             lengths[f - 1] + lengths[p - 1]))
+        er_eff_meas = float(np.mean([(C0 * tau / ln) ** 2 for tau, ln in taus]))
+        err_er_eff = abs(er_eff_meas - er_eff) / er_eff
+
+        widths = set(round(w, 9) for w in runs[1][0]["branch_widths_m"])
+        tee = None
+        if len(widths) == 1:
+            tee = ki.tee_reference(runs[1][0]["z0_model_ohm"], n_ports)
+            tee["s_ii_db_measured"] = db(rows[k0][f"s{1}{1}"])
+            tee["s_ij_db_measured"] = float(np.mean([
+                db(rows[k0][f"s{p}{1}"]) for p in range(2, n_ports + 1)]))
+            tee["s_ii_delta_db"] = tee["s_ii_db_measured"] - tee["s_ii_db"]
+            tee["s_ij_delta_db"] = tee["s_ij_db_measured"] - tee["s_ij_db"]
+
+        passed = (recip_db <= 0.2 and worst_resid <= 0.05
+                  and 0.90 <= col_power_min and col_power_max <= 1.02
+                  and err_er_eff <= 0.05)
+        validation = {
+            "case": "kicad_net_nport", "net": graph["net"],
+            "n_ports": n_ports,
+            "method": ("gprMax FDTD, N-branch junction graph (capsule-"
+                       "rasterised union + junction disk, face-connected), "
+                       "stacked-source feed on the fed port, stacked 50 ohm "
+                       "Thevenin terminations elsewhere, 3-probe wave split "
+                       "per port (job22/job26 rules)"),
+            "reciprocity_db": recip_db, "bar_reciprocity_db": 0.2,
+            "worst_fit_residual": worst_resid, "bar_residual": 0.05,
+            "column_power_min": col_power_min, "column_power_max": col_power_max,
+            "bar_column_power": [0.90, 1.02],
+            "er_eff_measured": er_eff_meas, "er_eff_model": er_eff,
+            "er_eff_err_pct": 100 * err_er_eff, "bar_er_eff_pct": 5.0,
+            "z0_model_ohm": runs[1][0]["z0_model_ohm"],
+            "tee_reference": tee,   # informational: junction discontinuity
+            "f_Cu_pour_modelled": bool(runs[1][0].get("pour_present")),
+            "pass": int(passed),
+        }
+        (rd / "smatrix.json").write_text(json.dumps(smatrix, indent=2),
+                                         encoding="utf-8")
+        (rd / "validation.json").write_text(json.dumps(validation, indent=2),
+                                            encoding="utf-8")
+        return {"kind": "kicad_net_nport", "net": graph["net"],
+                "smatrix": smatrix, "validation": validation,
+                "geometry": runs[1][0], "converged": 1}
 
     def _run_via_coupon(self, case: dict, rd: Path) -> dict:
         """Via-transition validation: F.Cu -> via -> In2 stripline -> via -> F.Cu.
