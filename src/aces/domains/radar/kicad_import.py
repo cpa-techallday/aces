@@ -556,12 +556,20 @@ def deck_kicad_net_ml(chain: dict, cell: float, window_s: float, f0: float,
     barrels, on the board-1 hybrid stack (the job25 via_coupon stack:
     RO4350B 5 cells, FR4 3+trace+3 cells, In3 solid, In1 antipads).
 
-    Every via gets the job25 treatment: square PEC barrel + In1 antipad +
+    job30: chains may also drop to In5.Cu — the deep stack region
+    (In4 GND / In6 GND planes, FR4 0.162 mm gaps, TILE_8L budget).  The
+    deep region is added only when a section uses it, so In2-only decks
+    are bit-identical to job27.  Deep vias get antipads on every GND
+    plane they cross (In1/In3/In4) and full-plane-cage stitching
+    (In6..In1); In2 vias keep the job25 recipe (In3..In1 stitches).
+
+    Every via gets the job25 treatment: square PEC barrel + antipads +
     4 diagonal stitching vias (45 deg rule).  Chain ends must be on F.Cu
     (feed/term strings cross the RO4350B gap; stripline ends would launch
     parallel-plate modes — job25) and must be axis-aligned and long enough
     for the probe triad (job26 rule).  Diagonal middle segments are
-    rasterised (job26).  Other layers (In5 etc.) raise honestly.
+    rasterised (job26).  Layers other than F.Cu/In2.Cu/In5.Cu raise
+    honestly.
     """
     n_ro = round(0.254e-3 / cell)
     n_fr4 = round(0.162e-3 / cell)
@@ -573,11 +581,14 @@ def deck_kicad_net_ml(chain: dict, cell: float, window_s: float, f0: float,
     if len(vias) != len(sections) - 1:
         raise ValueError(f"chain has {len(sections)} sections but "
                          f"{len(vias)} vias")
+    layers_used = {s["layer"] for s in sections}
+    deep = "In5.Cu" in layers_used
+    allowed = {"F.Cu", "In2.Cu"} | ({"In5.Cu"} if deep else set())
     for s in sections:
-        if s["layer"] not in ("F.Cu", "In2.Cu"):
+        if s["layer"] not in allowed:
             raise ValueError(f"layer {s['layer']!r} not modelled "
-                             "(F.Cu and In2.Cu only — deeper layers sit in "
-                             "a different stack region)")
+                             "(F.Cu, In2.Cu and In5.Cu — other layers sit "
+                             "outside the RF stack regions)")
     if sections[0]["layer"] != "F.Cu" or sections[-1]["layer"] != "F.Cu":
         raise ValueError("chain ends must be on F.Cu — feed/termination "
                          "strings cross the RO4350B gap (job22/job25 rule)")
@@ -602,13 +613,24 @@ def deck_kicad_net_ml(chain: dict, cell: float, window_s: float, f0: float,
     dom_x = snap(max(all_x) + ext) + margin_cells * cell - ox
     dom_y = snap(max(all_y) + ext) + margin_cells * cell - oy
 
-    z_in3 = lift_cells * cell
+    z_in6 = lift_cells * cell
+    z_in5 = z_in6 + cell + n_fr4 * cell
+    z_in4 = z_in5 + cell + n_fr4 * cell
+    z_in3 = (z_in4 + cell + n_fr4 * cell) if deep else lift_cells * cell
     z_in2 = z_in3 + cell + n_fr4 * cell
     z_in1 = z_in2 + cell + n_fr4 * cell
     z_fc = z_in1 + cell + n_ro * cell
     dom_z = z_fc + cell + air_cells * cell
     z_probe = z_in1 + cell + (n_ro // 2) * cell
     layer_z = {"F.Cu": z_fc, "In2.Cu": z_in2}
+    if deep:
+        layer_z["In5.Cu"] = z_in5
+    # GND planes (solid PEC, antipads re-stamped per via below).
+    # Legacy emission order (In3, In1) preserved so In2-only decks stay
+    # bit-identical to job27; deep decks emit bottom-up.
+    planes = [("In3", z_in3), ("In1", z_in1)]
+    if deep:
+        planes = [("In6", z_in6), ("In4", z_in4)] + planes
 
     def rel(x: float, y: float) -> tuple[float, float]:
         return snap(x - ox), snap(y - oy)
@@ -616,7 +638,7 @@ def deck_kicad_net_ml(chain: dict, cell: float, window_s: float, f0: float,
     sigma_ro = 2 * math.pi * f0 * EPS0 * er_ro * tand_ro
     sigma_fr4 = 2 * math.pi * f0 * EPS0 * er_fr4 * tand_fr4
     lines = [f"#title: aces-tile-em kicad_net_ml import ({chain.get('net', '?')}, "
-             f"feed end {feed_end})",
+             f"feed end {feed_end}{', deep stack' if deep else ''})",
              f"#domain: {dom_x:.7f} {dom_y:.7f} {dom_z:.7f}",
              f"#dx_dy_dz: {cell:.7f} {cell:.7f} {cell:.7f}",
              f"#time_window: {window_s:.6e}",
@@ -626,14 +648,27 @@ def deck_kicad_net_ml(chain: dict, cell: float, window_s: float, f0: float,
              f"#waveform: gaussiandot 1.0e-30 {f0:.6e} term",
              f"#box: 0 0 {z_in3 + cell:.7f} {dom_x:.7f} {dom_y:.7f} {z_in2:.7f} subfr4",
              f"#box: 0 0 {z_in2 + cell:.7f} {dom_x:.7f} {dom_y:.7f} {z_in1:.7f} subfr4",
-             f"#box: 0 0 {z_in1 + cell:.7f} {dom_x:.7f} {dom_y:.7f} {z_fc:.7f} subro",
-             f"#box: 0 0 {z_in3:.7f} {dom_x:.7f} {dom_y:.7f} {z_in3 + cell:.7f} pec",
-             f"#box: 0 0 {z_in1:.7f} {dom_x:.7f} {dom_y:.7f} {z_in1 + cell:.7f} pec"]
-    # antipads: re-stamp dielectric through the In1 plane at each via
-    for xv, yv in via_xy:
+             f"#box: 0 0 {z_in1 + cell:.7f} {dom_x:.7f} {dom_y:.7f} {z_fc:.7f} subro"]
+    if deep:
+        lines += [f"#box: 0 0 {z_in6 + cell:.7f} {dom_x:.7f} {dom_y:.7f} {z_in5:.7f} subfr4",
+                  f"#box: 0 0 {z_in5 + cell:.7f} {dom_x:.7f} {dom_y:.7f} {z_in4:.7f} subfr4",
+                  f"#box: 0 0 {z_in4 + cell:.7f} {dom_x:.7f} {dom_y:.7f} {z_in3:.7f} subfr4"]
+    for _, zp in planes:
+        lines.append(f"#box: 0 0 {zp:.7f} {dom_x:.7f} {dom_y:.7f} {zp + cell:.7f} pec")
+    # antipads: re-stamp dielectric through every GND plane a via crosses
+    # without contacting (In1 for F.Cu<->In2 vias; In1/In3/In4 for deep
+    # F.Cu<->In5 vias — job30).  Stamped after the planes; barrels below
+    # re-stamp their own PEC through the hole.
+    via_levels = [(layer_z[sections[i]["layer"]],
+                   layer_z[sections[i + 1]["layer"]])
+                  for i in range(len(vias))]
+    for (xv, yv), (za, zb) in zip(via_xy, via_levels):
+        z_lo, z_hi = min(za, zb), max(za, zb)
         ax_, ay_ = snap(xv - ox), snap(yv - oy)
-        lines.append(f"#box: {ax_ - ap:.7f} {ay_ - ap:.7f} {z_in1:.7f} "
-                     f"{ax_ + ap:.7f} {ay_ + ap:.7f} {z_in1 + cell:.7f} subfr4")
+        for _, zp in planes:
+            if z_lo < zp < z_hi:
+                lines.append(f"#box: {ax_ - ap:.7f} {ay_ - ap:.7f} {zp:.7f} "
+                             f"{ax_ + ap:.7f} {ay_ + ap:.7f} {zp + cell:.7f} subfr4")
 
     # ---- traces: per section, rasterising diagonals (job26 rules) ------
     n_diag = 0
@@ -662,17 +697,21 @@ def deck_kicad_net_ml(chain: dict, cell: float, window_s: float, f0: float,
                 lines.append(f"#box: {i0 * cell:.7f} {j * cell:.7f} {zt:.7f} "
                              f"{(i1 + 1) * cell:.7f} {(j + 1) * cell:.7f} {zt + cell:.7f} pec")
 
-    # ---- via barrels + diagonal stitching (job25 rules) -----------------
+    # ---- via barrels + diagonal stitching (job25 rules, job30 deep) -----
     hv = via_cells * cell / 2
     hs = stitch_cells * cell / 2
     d45 = stitch_off / math.sqrt(2)
-    for xv, yv in via_xy:
+    for (xv, yv), (za, zb) in zip(via_xy, via_levels):
+        z_lo, z_hi = min(za, zb), max(za, zb)
         bx_, by_ = snap(xv - ox), snap(yv - oy)
-        lines.append(f"#box: {bx_ - hv:.7f} {by_ - hv:.7f} {z_in2:.7f} "
-                     f"{bx_ + hv:.7f} {by_ + hv:.7f} {z_fc + cell:.7f} pec")
+        lines.append(f"#box: {bx_ - hv:.7f} {by_ - hv:.7f} {z_lo:.7f} "
+                     f"{bx_ + hv:.7f} {by_ + hv:.7f} {z_hi + cell:.7f} pec")
+        # stitches tie the plane cage near the via: In3..In1 for In2-depth
+        # vias (job25 recipe, unchanged); full In6..In1 cage for deep vias
+        z_st_lo = z_in3 if z_lo >= z_in2 else z_in6
         for dx, dy in ((d45, d45), (d45, -d45), (-d45, d45), (-d45, -d45)):
             xs_, ys_ = snap(bx_ + dx), snap(by_ + dy)
-            lines.append(f"#box: {xs_ - hs:.7f} {ys_ - hs:.7f} {z_in3:.7f} "
+            lines.append(f"#box: {xs_ - hs:.7f} {ys_ - hs:.7f} {z_st_lo:.7f} "
                          f"{xs_ + hs:.7f} {ys_ + hs:.7f} {z_in1 + cell:.7f} pec")
 
     # ---- feed / termination + probe triads on the F.Cu end sections ----
@@ -727,6 +766,16 @@ def deck_kicad_net_ml(chain: dict, cell: float, window_s: float, f0: float,
 
     # ---- model geometry --------------------------------------------------
     b_sl = (2 * n_fr4 + 1) * cell
+    # per-via vertical transit: FR4 cells at sqrt(er_fr4), RO4350B cells at
+    # sqrt(er_ro); the top F.Cu plane cell is excluded (job25 convention —
+    # reproduces via_transit for F.Cu<->In2 exactly)
+    via_transits = []
+    for za, zb in via_levels:
+        span = round(abs(za - zb) / cell)
+        ro_cells = n_ro if max(za, zb) == z_fc else 0
+        fr4_cells = span - 1 - ro_cells
+        via_transits.append((fr4_cells * cell * math.sqrt(er_fr4)
+                             + ro_cells * cell * math.sqrt(er_ro)) / C0)
     via_transit = ((n_fr4 + 1) * cell * math.sqrt(er_fr4)
                    + n_ro * cell * math.sqrt(er_ro)) / C0
     sec_models = []
@@ -743,17 +792,21 @@ def deck_kicad_net_ml(chain: dict, cell: float, window_s: float, f0: float,
                                "er_eff": er_eff_microstrip_t(er_ro, n_ro * cell, w_used),
                                "kind": "microstrip", "er": er_ro, "tand": tand_ro})
         else:
-            sec_models.append({"layer": "In2.Cu", "length_m": length,
+            # In2.Cu and In5.Cu are the same stripline environment
+            # (symmetric FR4 b = 2x0.162 mm between GND planes, TILE_8L)
+            sec_models.append({"layer": s["layer"], "length_m": length,
                                "w_m": w_used,
                                "z0_ohm": stripline_z0_cohn(er_fr4, b_sl, w_used, t=cell),
                                "er_eff": er_fr4,
                                "kind": "stripline", "er": er_fr4, "tand": tand_fr4})
     geom = {"net": chain.get("net"), "cell_m": cell, "n_sub_cells": n_ro,
             "n_fr4_cells": n_fr4, "b_sl_modelled_m": b_sl,
+            "deep_stack": deep,
             "sections_model": sec_models, "n_vias": len(vias),
             "via_cells": via_cells, "antipad_cells": antipad_cells,
             "stitch_cells": stitch_cells, "stitch_off_m": stitch_off,
             "via_transit_s": via_transit,
+            "via_transits_s": via_transits,
             "er_ro": er_ro, "tand_ro": tand_ro, "er_fr4": er_fr4, "tand_fr4": tand_fr4,
             "n_diagonal_segments": n_diag, "rasterised_cells": raster_total,
             "probes_near_m": probes["near"], "probes_far_m": probes["far"],
@@ -765,15 +818,18 @@ def deck_kicad_net_ml(chain: dict, cell: float, window_s: float, f0: float,
 def expectations_kicad_net_ml(geom: dict, f_hz: float) -> dict:
     """Cascade reference for a multi-layer chain: lossy per-section lines
     (microstrip Hammerstad / stripline Cohn) in chain order; stitched via
-    loop-L neglected (job25), delay includes one via vertical transit per
-    via."""
+    loop-L neglected (job25), delay includes each via's vertical transit
+    (per-via list, job30; falls back to n_vias x the F.Cu<->In2 transit)."""
     sections = [{"z0": s["z0_ohm"], "er_eff": s["er_eff"],
                  "length_m": s["length_m"], "kind": s["kind"],
                  "er": s["er"], "tand": s["tand"]}
                 for s in geom["sections_model"]]
     sp = cascade_sparams([f_hz], sections)[0]
     delay = sum(s["length_m"] * math.sqrt(s["er_eff"]) / C0 for s in sections)
-    delay += geom["n_vias"] * geom.get("via_transit_s", 0.0)
+    if geom.get("via_transits_s"):
+        delay += sum(geom["via_transits_s"])
+    else:
+        delay += geom["n_vias"] * geom.get("via_transit_s", 0.0)
     return {"s11_model": sp["s11"], "s21_model": sp["s21"],
             "delay_s_model": delay, "sections": sections}
 

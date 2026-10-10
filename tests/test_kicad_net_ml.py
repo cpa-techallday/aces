@@ -122,10 +122,15 @@ def test_ml_rejects_bad_topology():
     bad["vias_mm"] = bad["vias_mm"][:1]
     with pytest.raises(ValueError, match="vias"):
         ki.deck_kicad_net_ml(bad, CELL, 4e-9, 10.5e9)
-    # In5 section: different stack region
+    # In5 section: deep stack region — supported since job30
+    good = _chain()
+    good["sections"][1]["layer"] = "In5.Cu"
+    deck, geom = ki.deck_kicad_net_ml(good, CELL, 4e-9, 10.5e9)
+    assert geom["deep_stack"] is True
+    # other inner layers: still outside the modelled stack regions
     bad = _chain()
-    bad["sections"][1]["layer"] = "In5.Cu"
-    with pytest.raises(ValueError, match="In5"):
+    bad["sections"][1]["layer"] = "In4.Cu"
+    with pytest.raises(ValueError, match="not modelled"):
         ki.deck_kicad_net_ml(bad, CELL, 4e-9, 10.5e9)
     # chain ending on In2.Cu: no clean stripline feed (job25)
     bad = _chain()
