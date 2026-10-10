@@ -1,15 +1,20 @@
 """The golden path, end to end: stage order, outcomes, exit codes and the run's own records.
 
-    0 preflight  lane refusal, BLAS pinned to one thread, the stdio guard, the spec, `aces` present   (no run dir)
-    1 compute    detect CPUs, GPUs, Warp and rig lanes; resolve and guard the spec; the kernel self-test gate (7);
-                 the project; the run directory
+    0 preflight  BLAS pinned to one thread, the stdio guard, the spec, `aces` present, then the rig lane (--lane,
+                 else [golden] lane in aces.toml): its usage rules and the live probe of simlab-mcp. A --lane that
+                 cannot be used exits 2 here; a config lane that cannot is a warning (desktop only)   (no run dir)
+    1 compute    detect CPUs, GPUs, Warp, the conforming mesher and rig lanes; resolve and guard the spec; the kernel
+                 self-test gate (7); the project; the run directory
     2 inputs     inputs/spec.json, the design-space STEP, the grid (guarded again when derived from the STEP; the CPU
                  cell warning), spec.effective.json, the compute plan, compute.json, spec.resolved.json (the simlab
                  experiment)
     3 domain     the design space voxelised through the step-structures adapter
-    4 sweep      N computed designs: SIMP -> organic skin -> real voxel FEA (the thin rule follows)
+    4 sweep      N computed designs: SIMP -> organic skin -> real voxel FEA, on the rig with --rig-sweep (the thin
+                 rule follows)
     5 loop       surrogate -> optimiser -> verify on the real solver, round by round
-    6 check      finer-resolution independent check, GPU and Warp parity, grade, validation.json
+    6 check      the finer-resolution independent check (on the rig with a lane; x101 on this desktop when the rig
+                 does not deliver level 1), GPU and Warp parity, the conforming tet10 check (m001 on the rig or here;
+                 m101 here when the rig does not deliver it), grade, validation.json
     7 export     the winner (or candidate) STL and renders, the sweep gallery, charts, compute_used.json
     8 evidence   files.sha256, the simlab bundle and ledger, golden.run in the aces ledger, the project
     9 report     report.md, report.html, report.json
@@ -17,9 +22,10 @@
 
 The stage functions are the generator's and the verifier's (golden.spec, demo, domain, sweep, verify, compute,
 evidence, export, render, report); this module calls them in order and maps what happened to an exit code:
-0 pass, 1 verification failed (or --strict without verified-desktop), 2 usage, 3 thin sweep, 4 under-resolved,
-5 infeasible, 6 evidence or ledger failure, 7 internal error, 130 interrupted. When several apply: a pre-compute 2 or
-4, then 7, then 3, 5, 1, then 6. Nothing numeric is produced here: every number in result.json is read back from
+0 pass, 1 verification failed (or the grade is below --strict / --require-grade), 2 usage (a rig lane that cannot be
+used included), 3 thin sweep, 4 under-resolved, 5 infeasible, 6 evidence, ledger or rig integrity failure, 7 internal
+error, 130 interrupted (rig jobs cancelled on a best-effort basis). When several apply: a pre-compute 2 or 4, then 7,
+then 3, 5, 1, then 6. Nothing numeric is produced here: every number in result.json is read back from
 the records the stages wrote.
 """
 from __future__ import annotations
@@ -41,8 +47,9 @@ from pathlib import Path
 from typing import Any
 
 from . import (DEMO_PROJECT, EXIT_EVIDENCE, EXIT_FAIL, EXIT_INFEASIBLE, EXIT_INTERNAL,
-               EXIT_INTERRUPTED, EXIT_OK, EXIT_THIN, EXIT_UNDER_RESOLVED, EXIT_USAGE, GRADE_VERIFIED_DESKTOP, OUTCOMES,
-               SCHEMA, STAGES, VERSION, GoldenError, _atomic_write, clean, read_json, sha256_bytes, utc_now)
+               EXIT_INTERRUPTED, EXIT_OK, EXIT_THIN, EXIT_UNDER_RESOLVED, EXIT_USAGE, GRADE_RANK,
+               GRADE_VERIFIED_DESKTOP, GRADES, OUTCOMES, SCHEMA, STAGES, VERSION, GoldenError, _atomic_write, clean,
+               read_json, sha256_bytes, utc_now)
 from .acescli import AcesCli, AcesCliError
 from .progress import Progress, StdioGuard, make_progress
 from .rundir import RunDir, slug, work_root
@@ -72,6 +79,10 @@ class Options:
     device: str = "auto"
     jobs: str = "auto"
     lane: str | None = None
+    rig_sweep: bool = False
+    rig_budget: float = 1800.0
+    conforming: str = "auto"
+    require_grade: str | None = None
     json_out: bool = False
     progress: str = "auto"
     quiet: bool = False
@@ -156,7 +167,8 @@ def result_document(run: "RunDir | None", *, outcome: str, exit_code: int, messa
         "schema": SCHEMA["result"], "outcome": outcome, "verdict": None, "exit_code": int(exit_code),
         "message": message, "verdict_line": None, "grade": None, "project": None, "run_id": None, "run_dir": None,
         "report": None, "winner": None, "validation": None, "independent_check": None, "device_parity": [],
-        "evidence": None, "compute_used": [], "started_utc": None, "finished_utc": None, "wall_s": None}
+        "conforming": None, "rig": None, "evidence": None, "compute_used": [], "started_utc": None,
+        "finished_utc": None, "wall_s": None}
     if run is None:
         return doc
     meta = run.meta()
@@ -178,7 +190,15 @@ def result_document(run: "RunDir | None", *, outcome: str, exit_code: int, messa
         if isinstance(ic, dict):
             lv1 = next((lv for lv in ic.get("levels") or [] if isinstance(lv, dict) and lv.get("level") == 1), {})
             doc["independent_check"] = {"ran": ic.get("ran"), "h_mm": lv1.get("h_mm"), "device": lv1.get("device"),
-                                        "passed": ic.get("passed"), "reason": ic.get("reason")}
+                                        "host": lv1.get("host"), "passed": ic.get("passed"), "reason": ic.get("reason")}
+        cf = val.get("conforming")
+        if isinstance(cf, dict):
+            doc["conforming"] = {k: cf.get(k) for k in ("ran", "passed", "host", "h_mm", "case_id", "status", "reason")}
+        rg = val.get("rig")
+        if isinstance(rg, dict):
+            doc["rig"] = {"lane": rg.get("lane"), "scope": rg.get("scope"), "experiments": rg.get("experiments") or [],
+                          "code_identity_ok": (rg.get("code_identity") or {}).get("ok"),
+                          "integrity_error": rg.get("integrity_error")}
         doc["device_parity"] = [{k: p.get(k) for k in ("case_id", "device", "backend", "max_rel_diff", "passed")}
                                 for p in val.get("device_parity") or [] if isinstance(p, dict)]
     for label in ("winner", "candidate"):
@@ -230,6 +250,8 @@ class _Pipeline:
         self.evidence_error: GoldenError | None = None
         self.report_paths: dict = {}
         self.label: str | None = None
+        self.probe: dict | None = None  # the lane probe (section 10.5), also for a config lane that was refused
+        self.session: Any = None  # golden.rig.RigSession when a lane is used
 
     # ---- bookkeeping --------------------------------------------------------------------------------------------
     def _begin(self, i: int, name: str, text: str, *, t0: float | None = None) -> None:
@@ -329,6 +351,7 @@ class _Pipeline:
             with contextlib.suppress(Exception):
                 self.pool.cancel()
             self.pool = None
+        self._stop_rig(f"the run failed: {message}")
         self._say_error(message, hint)
         if self.run is None:
             doc = result_document(None, outcome=OUTCOMES.get(code, "error"), exit_code=code, message=message)
@@ -355,6 +378,7 @@ class _Pipeline:
             with contextlib.suppress(Exception):
                 self.pool.cancel()
             self.pool = None
+        self._stop_rig("interrupted")
         message = f"interrupted during {self.current or 'start-up'}"
         self._say_error(message)
         if self.run is None:
@@ -369,8 +393,31 @@ class _Pipeline:
         self._output(doc, human=False)
         return EXIT_INTERRUPTED
 
+    def _stop_rig(self, reason: str) -> None:
+        """Ctrl-C or a failure: cancel the rig experiments not collected yet (best effort, within the cancel budget) and
+        write rig/session.json. Never raises."""
+        sess = self.session
+        if sess is None or getattr(sess, "closed", False):
+            return
+        with contextlib.suppress(Exception):
+            sess.cancel_all(reason)
+        with contextlib.suppress(Exception):
+            sess.close()
+
+    def _rig_block(self) -> dict | None:
+        """validation.json "rig": the session closed, its evidence cross-referenced; None without a lane."""
+        sess = self.session
+        if sess is None:
+            return None
+        if not getattr(sess, "closed", False):
+            sess.record_evidence()
+            sess.close()
+        return sess.validation_block()
+
     def final_code(self) -> tuple[int, str, str | None]:
-        """(exit code, message, hint) from the verdict, --strict and the evidence stage, by the precedence rule."""
+        """(exit code, message, hint) from the verdict, --strict / --require-grade, a rig integrity error and the
+        evidence stage, by the precedence rule (an integrity error is folded in like the evidence error: 6 when
+        nothing worse applies)."""
         v = self.validation
         verdict, grade = v.get("verdict"), v.get("grade")
         reasons = [str(r) for r in (v.get("verdict_reasons") or []) if r]
@@ -382,13 +429,26 @@ class _Pipeline:
         elif verdict == "FAIL":
             code, msg = EXIT_FAIL, "verification failed: " + (reasons[0] if reasons else "see validation.json")
         elif verdict == "PASS":
-            if self.opts.strict and grade != GRADE_VERIFIED_DESKTOP:
+            need = None  # (rank, label): the higher of --strict (verified-desktop) and --require-grade wins
+            if self.opts.strict:
+                need = (GRADE_RANK[GRADE_VERIFIED_DESKTOP], "strict")
+            req = self.opts.require_grade
+            if req in GRADE_RANK and (need is None or GRADE_RANK[req] > need[0]):
+                need = (GRADE_RANK[req], f"required grade {req}")
+            if need is not None and GRADE_RANK.get(str(grade), 0) < need[0]:
                 why = next((str(r) for r in (v.get("grade_reasons") or []) if r), "no finer-resolution check agreed")
-                code, msg = EXIT_FAIL, f"strict: grade {grade} ({why})"
+                code, msg = EXIT_FAIL, f"{need[1]}: grade {grade} ({why})"
             else:
                 code, msg = EXIT_OK, f"verification passed ({grade})"
         else:
             raise GoldenError(EXIT_INTERNAL, f"validation.json has no verdict this command knows ({verdict!r})")
+        integrity = (v.get("rig") or {}).get("integrity_error") if isinstance(v.get("rig"), dict) else None
+        if integrity:
+            hint = "the pulled rig files did not verify: rig/session.json and <case>/rig.json name the file"
+            if code == EXIT_OK:
+                code, msg = EXIT_EVIDENCE, f"rig integrity error: {integrity}"
+            else:
+                msg += f"; rig integrity error too: {integrity}"
         if self.evidence_error is not None:
             hint = self.evidence_error.hint
             if code == EXIT_OK:
@@ -401,8 +461,6 @@ class _Pipeline:
     def preflight(self) -> None:
         o = self.opts
         self.progress.line(f"aces-golden {VERSION} · loading the engineering stack ...")
-        if o.lane:
-            raise GoldenError(EXIT_USAGE, _mod("compute").lane_refusal(o.lane))
         if o.demo and o.spec:
             raise GoldenError(EXIT_USAGE, "give --demo or --spec, not both")
         import aces_engineering
@@ -446,6 +504,59 @@ class _Pipeline:
         if not self.aces.supports_record():
             raise GoldenError(EXIT_USAGE, "this aces has no `aces ledger record` (aces-base older than 0.1.0-3), so the run could not be recorded",
                               hint="sudo pacman -S aces-base")
+        self._preflight_rig()
+
+    def _preflight_rig(self) -> None:
+        """The rig lane (section 10.2), the usage refusals and the live probe (10.5), before any run directory exists:
+        a --lane that cannot be used exits 2 with the probe's refusal; a config lane that cannot be used is a warning
+        and the run computes on this desktop (the probe record keeps the refusal)."""
+        o = self.opts
+        rig_mod, compute = _mod("rig"), _mod("compute")
+        if o.conforming not in compute.CONFORMING_MODES:
+            raise GoldenError(EXIT_USAGE, f"--conforming must be auto, rig, local or off, not {o.conforming!r}")
+        if o.require_grade is not None and o.require_grade not in GRADES:
+            raise GoldenError(EXIT_USAGE, f"--require-grade must be one of {', '.join(GRADES)}, not {o.require_grade!r}")
+        try:
+            budget = float(o.rig_budget)
+        except (TypeError, ValueError):
+            budget = float("nan")
+        if not budget > 0:
+            raise GoldenError(EXIT_USAGE, f"--rig-budget must be a positive number of seconds, not {o.rig_budget!r}")
+        budget_given = any(a == "--rig-budget" or a.startswith("--rig-budget=") for a in o.argv or [])
+        lane, source = rig_mod.choose_lane(o.lane)
+        if lane is None:
+            why = " (--lane none was given)" if source == "cli" else ""
+            if o.rig_sweep:
+                raise GoldenError(EXIT_USAGE, f"--rig-sweep needs a rig lane{why}", hint="aces golden run --lane LANE "
+                                                                                       "--rig-sweep ...")
+            if budget_given:
+                raise GoldenError(EXIT_USAGE, f"--rig-budget needs a rig lane{why}", hint="aces golden run --lane LANE "
+                                                                                        "--rig-budget S ...")
+            if o.conforming == "rig":
+                raise GoldenError(EXIT_USAGE, f"--conforming rig needs a rig lane{why}",
+                                  hint="--conforming auto runs it on this desktop when gmsh and ccx are here")
+        if o.conforming == "local":
+            av = compute.conforming_available()
+            if not av.get("usable"):
+                raise GoldenError(EXIT_USAGE, f"--conforming local cannot run on this desktop: {av.get('reason')}",
+                                  hint="aces golden compute shows what was found (gmsh in this venv, CalculiX ccx)")
+        if lane is None:
+            return
+        check_mode = o.check or (self.raw.get("verify") or {}).get("check") or "auto"
+        self.progress.line(f"rig: probing lane {lane} ({'--lane' if source == 'cli' else '[golden] lane in aces.toml'})")
+        rec, client = rig_mod.probe(lane, source, check_mode=str(check_mode), conforming_mode=o.conforming,
+                                    rig_sweep=bool(o.rig_sweep), warn=lambda m: self.progress.note(m, "warning"))
+        self.probe = rec
+        if not rec.get("ok"):
+            if source == "cli":
+                raise GoldenError(EXIT_USAGE, str(rec.get("refusal")))
+            self.progress.note(f"rig lane {lane} (from aces.toml) unavailable: {rig_mod.refusal_reason(rec)}; computing "
+                               "on this desktop", "warning")
+            return
+        scope = rig_mod.needs_for(str(check_mode), o.conforming, bool(o.rig_sweep))
+        self.session = rig_mod.RigSession(rec, client, budget_s=budget, scope=scope, progress=self.progress)
+        for ln in rig_mod.probe_lines(rec):
+            self.progress.line("  " + ln)
 
     # ---- stage 1 ------------------------------------------------------------------------------------------------
     def stage_compute(self) -> None:
@@ -453,7 +564,8 @@ class _Pipeline:
         self.current = "compute"
         compute, spec_mod = _mod("compute"), _mod("spec")
         with self.progress.watch(lambda: [], "compute: detecting CPUs, GPUs, Warp and rig lanes"):
-            self.detected = compute.detect(device=o.device)
+            self.detected = compute.detect(device=o.device, probe=self.probe,
+                                           rig_scope=self.session.scope if self.session is not None else None)
         gpu = self.detected.get("gpu") or {}
         if o.device == "gpu" and not gpu.get("usable"):
             raise GoldenError(EXIT_USAGE, f"no usable CUDA GPU here ({gpu.get('reason') or 'none detected'})",
@@ -530,7 +642,8 @@ class _Pipeline:
         for msg in spec_mod.geometry_warnings(eff, gpu_usable=gpu_usable) or []:
             self.progress.note(str(msg), "warning")
         run.write_json("inputs/spec.effective.json", eff)
-        self.plan = compute.plan(self.detected, eff, jobs=_jobs(o.jobs), device=o.device)
+        self.plan = compute.plan(self.detected, eff, jobs=_jobs(o.jobs), device=o.device, rig=self.session,
+                                 conforming=o.conforming)
         run.write_json("compute.json", {**self.detected, "plan": self.plan})
         try:
             self.project_info = self.aces.project_show(self.project) or {}
@@ -549,9 +662,14 @@ class _Pipeline:
     def _plan_text(self) -> str:
         p = self.plan or {}
         sw, ver = p.get("sweep") or {}, p.get("verify") or {}
+        rg, cf = p.get("rig") or {}, p.get("conforming") or {}
         parity = ", ".join(f"{x.get('case_id')} {x.get('device')}/{x.get('backend')}" for x in p.get("parity") or []) or "none"
+        sent = [k for k in ("sweep", "check", "conforming") if rg.get(k)]
+        rig_t = f"rig lane {rg.get('lane')} ({', '.join(sent) or 'nothing sent'})" if rg.get("lane") else "no rig lane"
+        conf_t = (f"conforming {cf.get('mode')} on {'the rig' if cf.get('host') == 'rig' else 'this desktop'}"
+                  if cf.get("host") else f"conforming {cf.get('mode') or self.opts.conforming} not run")
         return (f"sweep {sw.get('device')} x{sw.get('jobs')}, verify {ver.get('device')}, parity {parity}, "
-                f"check {p.get('check_mode')}, rig submission not wired (v0)")
+                f"check {p.get('check_mode')}, {conf_t}, {rig_t}")
 
     # ---- stage 3 ------------------------------------------------------------------------------------------------
     def stage_domain(self) -> None:
@@ -563,6 +681,9 @@ class _Pipeline:
         text = (f"grid {dm.get('shape')} at {_g(dm.get('h_gen_mm'))} mm, design share {_g(dm.get('design_share'))}, "
                 f"{_g(dm.get('n_void_boxes'))} passive void boxes, {_g(dm.get('wall_s'), '.1f')} s")
         self.progress.line("  " + text)
+        if self.session is not None:
+            self.session.bind(self.run, self.eff, self.domain, self.experiment, operator=self.operator,
+                              host=self.detected.get("host"), progress=self.progress)
         self._end("domain", text)
 
     # ---- stage 4 ------------------------------------------------------------------------------------------------
@@ -571,12 +692,16 @@ class _Pipeline:
         sw_plan = plan.get("sweep") or {}
         d = eff.get("derived") or {}
         n, seed = (eff.get("sweep") or {}).get("n"), (eff.get("sweep") or {}).get("seed")
-        self._begin(4, "sweep", f"{n} computed designs (LHS seed {seed}) on {sw_plan.get('device')} x{sw_plan.get('jobs')}: "
+        on_rig = sw_plan.get("device") == "rig" and self.session is not None
+        where = (f"the rig (lane {self.session.lane})" if on_rig
+                 else f"{sw_plan.get('device')} x{sw_plan.get('jobs')}")
+        self._begin(4, "sweep", f"{n} computed designs (LHS seed {seed}) on {where}: "
                                 f"SIMP -> organic skin -> voxel FEA at {_g(d.get('fea_mm'))} mm")
         sweep_mod = _mod("sweep")
         if sw_plan.get("device") == "cpu":
             self.pool = sweep_mod.CasePool(int(sw_plan.get("jobs") or 1))
-        self.sweep = sw = sweep_mod.run_sweep(self.run, eff, self.domain, self.experiment, self.pool, plan, self.progress) or {}
+        self.sweep = sw = sweep_mod.run_sweep(self.run, eff, self.domain, self.experiment, self.pool, plan, self.progress,
+                                              rig=self.session if on_rig else None) or {}
         n_ok, n_all = int(sw.get("n_ok") or 0), int(sw.get("n") or 0)
         min_points = int((eff.get("surrogate") or {}).get("min_points") or 8)
         need = 3 if self.opts.allow_thin else min_points
@@ -610,27 +735,57 @@ class _Pipeline:
         self._end("loop", text)
 
     # ---- stage 6 ------------------------------------------------------------------------------------------------
+    def _coarse_solve_s(self) -> float | None:
+        """The coarse solve time the CPU check estimate scales: the sweep's median solve, or with --rig-sweep (the
+        sweep solved on the rig) the final verify case's wall_s_solve on this desktop."""
+        if (self.plan.get("sweep") or {}).get("device") == "rig":
+            res = _safe_json(self.run.path(str((self.loop or {}).get("final_case")), "results.json"))
+            v = res.get("wall_s_solve")
+            return float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+        return self.sweep.get("median_solve_s")
+
     def stage_check(self) -> None:
         verify = _mod("verify")
         if self.thin_message:
             self._skip(6, "check", "not run: thin sweep")
-            self.validation = verify.finalise(self.run, self.eff, None, None, [], None, outcome="thin-sweep") or {}
+            self.validation = verify.finalise(self.run, self.eff, None, None, [], None, outcome="thin-sweep",
+                                              rig=self._rig_block()) or {}
         elif (self.loop or {}).get("outcome") == "pass":
-            self._begin(6, "check", "finer-resolution independent check and device parity on the final verify case")
-            levels = _mod("compute").plan_check(self.detected, self.eff, coarse_solve_s=self.sweep.get("median_solve_s"),
-                                                device=self.opts.device)
-            check = verify.independent_check(self.run, self.eff, self.domain, self.experiment, self.loop, levels,
-                                             self.pool, self.progress)
+            self._begin(6, "check", "finer-resolution independent check, device parity and the conforming check on the "
+                                    "final verify case")
+            compute, sess = _mod("compute"), self.session
+            levels = compute.plan_check(self.detected, self.eff, coarse_solve_s=self._coarse_solve_s(),
+                                        device=self.opts.device, rig=sess)
+            conf_plan = compute.plan_conforming(self.detected, self.eff, mode=self.opts.conforming, rig=sess)
+            final = str(self.loop.get("final_case"))
+            seed = int((self.eff.get("derived") or {}).get("seed") or 0)
+            if sess is not None:  # both experiments are submitted before anything waits (section 10.11)
+                on_rig = [lv for lv in levels if lv.get("run") and lv.get("host") == "rig"]
+                if on_rig:
+                    sess.submit("check", [verify.check_case(lv, final, seed, lane=sess.lane) for lv in on_rig],
+                                source_case=final)
+                if conf_plan.get("host") == "rig":
+                    sess.submit("conf", [verify.conforming_case(conf_plan, final, seed, lane=sess.lane)],
+                                source_case=final)
             parity = verify.device_parity(self.run, self.eff, self.domain, self.experiment, self.loop, self.plan, self.progress)
-            grade_ = verify.grade(self.loop, check, self.eff)
-            self.validation = verify.finalise(self.run, self.eff, self.loop, check, parity, grade_) or {}
+            local = verify.local_conforming(self.run, self.eff, self.domain, self.experiment, self.loop, conf_plan,
+                                            self.progress)
+            check = verify.independent_check(self.run, self.eff, self.domain, self.experiment, self.loop, levels,
+                                             self.pool, self.progress, rig=sess)
+            conf = verify.conforming_block(self.run, self.eff, self.domain, self.experiment, self.loop, check, conf_plan,
+                                           self.progress, rig=sess, local=local)
+            rig_blk = self._rig_block()
+            grade_ = verify.grade(self.loop, check, self.eff, conforming=conf, rig=rig_blk)
+            self.validation = verify.finalise(self.run, self.eff, self.loop, check, parity, grade_, conforming=conf,
+                                              rig=rig_blk) or {}
             text = f"grade {self.validation.get('grade')}, verdict {self.validation.get('verdict')}"
             self.progress.line("  " + text)
             self._end("check", text)
         else:  # FAIL or INFEASIBLE: no independent check, no parity; grade and validation.json still written
             self._skip(6, "check", "not run: verification failed")
-            grade_ = verify.grade(self.loop, None, self.eff)
-            self.validation = verify.finalise(self.run, self.eff, self.loop, None, [], grade_) or {}
+            rig_blk = self._rig_block()
+            grade_ = verify.grade(self.loop, None, self.eff, rig=rig_blk)
+            self.validation = verify.finalise(self.run, self.eff, self.loop, None, [], grade_, rig=rig_blk) or {}
         if self.pool is not None:
             self.pool.close()
             self.pool = None

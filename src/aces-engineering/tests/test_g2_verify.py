@@ -301,9 +301,23 @@ class TestRounds(_Env):
         self.assertEqual(verify.derive(val)[:2], ("PASS", golden.GRADE_VERIFIED_DESKTOP))
         for key in ("schema", "tol", "kappa", "cv_margin", "check_objective", "objective", "constraints",
                     "resolution_mm", "rounds", "outcome", "passed", "final_round", "final_case", "winner_case",
-                    "winner_params", "independent_check", "device_parity", "grade", "grade_reasons", "verdict",
-                    "verdict_reasons", "scope"):
+                    "winner_params", "independent_check", "device_parity", "conforming", "rig", "grade",
+                    "grade_reasons", "verdict", "verdict_reasons", "scope"):
             self.assertIn(key, val)
+        self.assertIsNone(val["rig"])  # no lane
+        self.assertEqual(set(val["conforming"]), set(verify.CONFORMING_KEYS))
+        self.assertFalse(val["conforming"]["ran"])
+        self.assertEqual(val["grade_reasons"], ["the 2 mm check agrees with the 4 mm solve within 10 % and meets every "
+                                                "constraint"])
+        # the level entries carry host, fea_solver, rig and rig_attempt (section 14.3); the case dicts the fake
+        # runner received carry fea_solver (pcg for verify and parity, auto and host desktop for the check)
+        self.assertEqual({k: lv1[k] for k in ("host", "fea_solver", "rig", "rig_attempt")},
+                         {"host": "desktop", "fea_solver": "auto", "rig": None, "rig_attempt": None})
+        self.assertEqual(self.run.read_json("v001/case.json")["fea_solver"], "pcg")
+        self.assertEqual(self.run.read_json("p001/case.json")["fea_solver"], "pcg")
+        x1 = self.run.read_json("x001/case.json")
+        self.assertEqual((x1["host"], x1["fea_solver"], x1["device"]), ("desktop", "auto", "cpu"))
+        self.assertNotIn("lane", x1)
 
     def test_fail_then_pass_with_infill(self):
         """Scripted surrogate and search (the real ones are tested elsewhere): round 1 has no feasible candidate and

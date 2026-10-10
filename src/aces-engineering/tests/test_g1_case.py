@@ -109,7 +109,7 @@ RESULT_KEYS = {"schema", "case_id", "role", "round", "level", "source_case", "de
                "vm_p99_MPa", "vm_p95_MPa", "pcg_iters", "pcg_relres", "converged", "elements", "dof", "elem_mm",
                "n_fixed_dofs", "device", "dtype", "backend", "lane", "grade", "generator", "skin", "voxel", "checks",
                "stress", "wall_s_generate", "wall_s_skin", "wall_s_voxel", "wall_s_solve", "wall_s_post", "wall_s_total",
-               "artifacts"}
+               "artifacts", "fea_solver", "fea_solver_reason"}
 
 
 class Cases(unittest.TestCase):
@@ -145,6 +145,7 @@ class Cases(unittest.TestCase):
         self.assertFalse((d / "vm_slices.png").exists())
         res = golden.read_json(d / "results.json")
         self.assertEqual(set(res), RESULT_KEYS)
+        self.assertEqual((res["fea_solver"], res["fea_solver_reason"]), ("pcg", "pcg requested"))
         self.assertEqual((res["schema"], res["grade"], res["lane"], res["backend"]),
                          ("aces-golden-case/1", "preview-grade", "desktop-cpu", "step-structures.stage_solve"))
         self.assertEqual(res["design"], {"volfrac": 0.62, "rmin_mm": 6.5})
