@@ -111,6 +111,11 @@ aces-engineering` exit 0 (07:41:48Z to 07:51:47Z; pacman fetched calculix-ccx-bi
 20261010T074932Z-b3ac99: all checks pass`), and `bin/install-test aces-base aces-engineering aces-voxel
 calculix-ccx-bin` exit 0 again (the second integration row of the golden path table).
 
+GitHub Actions on main 954332c (run 38039642430, 2026-10-10 08:56:51 to 09:16:20 UTC, 19 min 29 s): every package
+built and signed in the Arch builder container (calculix-ccx-bin fetched its two pinned sources), the default install
+test and the engineering install test (CalculiX and the golden path) passed. cudax-sim-runtime CI on main ee67548
+(run 38039674084) and 36d0446 (run 38040391660) passed on Python 3.11 and 3.12.
+
 ## Golden path (`aces golden`)
 
 One command from a design space to a computed, verified and evidenced organic part (VISION section 11.1: STEP ->
