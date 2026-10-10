@@ -64,3 +64,9 @@ Rows written by `aces golden show <run> --bench-out` on the machine that ran eac
 | Machine | CPU | Devices used | Workers | Designs ok/n | gen/fea/check mm | Sweep s | Loop s | Check s | Total s | Outcome | Grade | Run |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | aces-rehearsal | Intel(R) Core(TM) Ultra 9 285HX (4 logical) | cpu/numpy x4, rig: NVIDIA CMP 170HX x2 (cupy, mg), rig cpu (ccx x16) | 4 | 9/10 | 4/4/2 | 8.1 | 3.2 | 65.9 | 83.8 | pass | rig-verified | 20261010T084920Z-b3ac99 |
+
+The --rig-sweep row above as aces-engineering 0.1.0-5 renders the same run (`aces golden show 20261010T084243Z-b3ac99 --bench-out`, 2026-10-10 09:30 UTC): the Devices used cell now names the three rig GPUs the records hold.
+
+| Machine | CPU | Devices used | Workers | Designs ok/n | gen/fea/check mm | Sweep s | Loop s | Check s | Total s | Outcome | Grade | Run |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Darkness | Intel(R) Core(TM) Ultra 9 285HX (24 logical) | cpu/numpy, NVIDIA RTX PRO 4000 Blackwell SFF Edition (cupy, warp), rig: NVIDIA CMP 170HX x3 (cupy, mg), rig cpu (ccx x16) | 1 | 9/10 | 4/4/2 | 247.4 | 10.0 | 64.7 | 340.2 | pass | rig-verified | 20261010T084243Z-b3ac99 |
