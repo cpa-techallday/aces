@@ -34,6 +34,11 @@ EXP_KEY = "simlab:exp:"
 CANCEL_KEY = "simlab:cancel:"
 
 
+def _cancel_requested(r, job_id: str) -> bool:
+    """True once sim_cancel (cancel_experiment) has flagged this started job."""
+    return bool(r.exists(CANCEL_KEY + job_id))
+
+
 def enqueue_experiment(spec_path: str, out_root: str, use_docker: bool = False, image: Optional[str] = None,
                        mlflow_uri: Optional[str] = None, queue_name: Optional[str] = None,
                        lease_wait_s: int = 6 * 3600, job_timeout_s: Optional[int] = None) -> dict:
@@ -42,6 +47,14 @@ def enqueue_experiment(spec_path: str, out_root: str, use_docker: bool = False, 
     qname = queue_name or (QUEUE_GPU if needs_gpu else QUEUE_CPU)
     stages = solver_stages(spec) or [(None, qname)]
     r = get_redis()
+    # One experiment id, one spec: a second spec with the same id (two principals can each store one) would
+    # overwrite this record and reuse the run directory, hiding the first experiment's jobs. Re-submitting the same
+    # spec file is still allowed.
+    prev_spec = r.hget(EXP_KEY + spec.id, "spec")
+    if prev_spec:
+        prev_path = prev_spec.decode() if isinstance(prev_spec, bytes) else str(prev_spec)
+        if os.path.abspath(prev_path) != os.path.abspath(spec.spec_path):
+            raise ValueError(f"experiment id {spec.id!r} is already used by {prev_path}; give this spec its own id")
     timeout = int(job_timeout_s or (spec.resources.wall_h * 3600 + lease_wait_s + 600))
     ids: List[str] = []
     stage_names = [st for st, _q in stages if st]
@@ -108,6 +121,9 @@ def run_case_job(spec_path: str, case_path: str, run_dir: str, use_docker: bool,
                     note(state="failed", reason="no GPU lease within wait")
                     raise RuntimeError(f"no GPU lease available within {lease_wait_s}s (mode {table['mode']}, pool {table['pool']})")
                 note(state="waiting_for_gpu", mode=table["mode"], pool=table["pool"], available=table["available"])
+                if job is not None and _cancel_requested(lm.r, job.id):
+                    note(state="cancelled", reason="cancelled while waiting for a GPU lease")
+                    raise RuntimeError("cancelled by request while waiting for a GPU lease")
                 time.sleep(poll)
                 poll = min(poll * 1.5, 60.0)
     note(state="running", gpu=gpu, owner=owner)
