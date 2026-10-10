@@ -136,12 +136,21 @@ class Pad:
 
 
 @dataclass
+class Zone:
+    net: str
+    layer: str
+    polygon_mm: list = field(default_factory=list)    # [(x, y), ...] mm, outline
+    clearance_mm: float = 0.25                        # connect_pads clearance
+    min_thickness_mm: float = 0.2
+
+
+@dataclass
 class Pcb:
     nets: dict[int, str] = field(default_factory=dict)
     segments: list = field(default_factory=list)      # list[Segment], with net attr
     vias: list = field(default_factory=list)
     pads: list = field(default_factory=list)          # list[Pad]
-    zones: list = field(default_factory=list)         # (net_name, layer)
+    zones: list = field(default_factory=list)         # list[Zone] (job28: polygons)
 
 
 def parse_pcb(path) -> Pcb:
@@ -200,8 +209,25 @@ def parse_pcb(path) -> Pcb:
     for z in zone_nodes:
         nm = _child(z, "net_name")
         lay = _child(z, "layer") or _child(z, "layers")
-        if nm and lay:
-            pcb.zones.append((nm[1], lay[1]))
+        if not (nm and lay):
+            continue
+        zone = Zone(nm[1], lay[1])
+        poly = _child(z, "polygon")
+        if poly is not None:
+            pts = _child(poly, "pts")
+            if pts is not None:
+                zone.polygon_mm = [(float(p[1]), float(p[2]))
+                                   for p in pts[1:]
+                                   if isinstance(p, list) and p and p[0] == "xy"]
+        cp = _child(z, "connect_pads")
+        if cp is not None:
+            cl = _child(cp, "clearance")
+            if cl is not None:
+                zone.clearance_mm = float(cl[1])
+        mt = _child(z, "min_thickness")
+        if mt is not None:
+            zone.min_thickness_mm = float(mt[1])
+        pcb.zones.append(zone)
     return pcb
 
 
@@ -872,15 +898,66 @@ def merge_cell_runs(cells: set[tuple[int, int]]) -> list[tuple[int, int, int, in
     return boxes
 
 
+# ------------------------------------------------------------------ pour
+def point_in_polygon(x: float, y: float, poly: list[tuple[float, float]]) -> bool:
+    """Ray-casting point-in-polygon (even-odd); boundary counts as inside."""
+    n = len(poly)
+    inside = False
+    for k in range(n):
+        x1, y1 = poly[k]
+        x2, y2 = poly[(k + 1) % n]
+        if min(y1, y2) <= y <= max(y1, y2) and min(x1, x2) <= x <= max(x1, x2):
+            # on-segment check (collinear within tolerance)
+            cross = (x - x1) * (y2 - y1) - (y - y1) * (x2 - x1)
+            if abs(cross) <= 1e-12 * max(1.0, abs(x2 - x1), abs(y2 - y1)):
+                return True
+        if (y1 > y) != (y2 > y):
+            xi = x1 + (y - y1) * (x2 - x1) / (y2 - y1)
+            if x < xi:
+                inside = not inside
+    return inside
+
+
+def rasterize_pour_cells(polygon_m: list[tuple[float, float]], cell: float,
+                         nx: int, ny: int,
+                         keepout: set[tuple[int, int]]) -> set[tuple[int, int]]:
+    """Grid cells whose centres lie inside the pour polygon (metres, deck
+    frame), clipped to the nx x ny domain, minus the keepout cells (trace +
+    pads dilated by the pour clearance).  job28: F.Cu GND pour (GCPW)."""
+    xs = [p[0] for p in polygon_m]
+    ys = [p[1] for p in polygon_m]
+    i0 = max(0, math.floor(min(xs) / cell))
+    i1 = min(nx - 1, math.floor(max(xs) / cell))
+    j0 = max(0, math.floor(min(ys) / cell))
+    j1 = min(ny - 1, math.floor(max(ys) / cell))
+    cells = set()
+    for j in range(j0, j1 + 1):
+        cy = (j + 0.5) * cell
+        for i in range(i0, i1 + 1):
+            if (i, j) in keepout:
+                continue
+            if point_in_polygon((i + 0.5) * cell, cy, polygon_m):
+                cells.add((i, j))
+    return cells
+
+
 # ------------------------------------------------------------------ deck
 def deck_kicad_net(polyline: dict, cell: float, window_s: float, f0: float,
                    er: float, h: float, tand: float,
                    feed_end: int = 1, margin_cells: int = 16,
                    air_cells: int = 16, lift_cells: int = 12,
-                   n_sub: int | None = None) -> tuple[str, dict]:
+                   n_sub: int | None = None,
+                   pour: dict | None = None) -> tuple[str, dict]:
     """Build the gprMax deck for an imported net (metres, SI out).
 
     ``feed_end`` 1 excites the polyline start (load at the end); 2 swaps.
+
+    ``pour`` (job28, GCPW): ``{"polygon_mm": [(x, y), ...], "clearance_m": g}``
+    lays a GND pour on the trace layer — PEC cells inside the polygon minus
+    a clearance halo around the trace and pads.  The pour is clipped to the
+    deck domain (sized from the trace bbox + margins) and is NOT tied to the
+    bottom plane inside the window (via-fence stitching is out of scope);
+    both are documented limitations.
     """
     n_sub = n_sub or max(2, round(h / cell))
     if abs(n_sub * cell - h) > 1e-9:
@@ -1003,6 +1080,32 @@ def deck_kicad_net(polyline: dict, cell: float, window_s: float, f0: float,
             x0, x1 = sorted((cx - pad_ext[i] / 2, cx + pad_ext[i] / 2))
         lines.append(f"#box: {x0:.7f} {y0:.7f} {z_trace:.7f} {x1:.7f} {y1:.7f} {z_trace + cell:.7f} pec")
 
+    # GND pour on the trace layer (job28): polygon minus a clearance halo
+    # around the trace capsules and end pads, clipped to the domain
+    pour_geom = None
+    if pour is not None:
+        g_clear = float(pour["clearance_m"])
+        keepout: set[tuple[int, int]] = set()
+        for i in range(len(pts_m) - 1):
+            (ax, ay), (bx, by) = rel(*pts_m[i]), rel(*pts_m[i + 1])
+            keepout |= rasterize_capsule_cells((ax, ay), (bx, by),
+                                               w_used / 2 + g_clear, cell)
+        for i, (ex, ey) in enumerate((pts_m[0], pts_m[-1])):
+            if pad_ext[i] <= 0:
+                continue
+            d = end_dir(i)
+            keepout |= rasterize_capsule_cells(
+                rel(ex, ey), rel(ex - d[0] * pad_ext[i], ey - d[1] * pad_ext[i]),
+                pad_w[i] / 2 + g_clear, cell)
+        poly_m = [(x * 1e-3 - ox, y * 1e-3 - oy) for x, y in pour["polygon_mm"]]
+        nx, ny = round(dom_x / cell), round(dom_y / cell)
+        pour_cells = rasterize_pour_cells(poly_m, cell, nx, ny, keepout)
+        for i0, j, i1, _ in merge_cell_runs(pour_cells):
+            lines.append(f"#box: {i0 * cell:.7f} {j * cell:.7f} {z_trace:.7f} "
+                         f"{(i1 + 1) * cell:.7f} {(j + 1) * cell:.7f} {z_trace + cell:.7f} pec")
+        pour_geom = {"clearance_m": g_clear, "cells": len(pour_cells),
+                     "clipped_to_domain": True, "stitched_to_plane": False}
+
     # end geometries: feed point (stacked sources) and load column
     ends = []
     for i, (ex, ey) in enumerate((pts_m[0], pts_m[-1])):
@@ -1064,6 +1167,9 @@ def deck_kicad_net(polyline: dict, cell: float, window_s: float, f0: float,
             "n_diagonal_segments": n_diag,
             "rasterised_cells": len(diag_cells),
             "stacked_feed": True}
+    if pour_geom is not None:
+        geom["pour"] = pour_geom
+        geom["pour_present"] = True
     return deck, geom
 
 

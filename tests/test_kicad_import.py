@@ -29,7 +29,9 @@ FIXTURE = """(kicad_pcb (version 20240108)
   (footprint "AERIS:SMPM" (layer "F.Cu") (at 18.0 14.0 0)
     (fp_text reference J2 (at 0 0) (layer "F.SilkS"))
     (pad "S" smd rect (at 0.0 -1.6 0) (size 0.6 0.8) (layers "F.Cu") (net 2 "RF_A")))
-  (zone (net 1) (net_name "GND") (layer "In1.Cu"))
+  (zone (net 1) (net_name "GND") (layer "In1.Cu")
+    (connect_pads (clearance 0.25)) (min_thickness 0.2)
+    (polygon (pts (xy 0 0) (xy 30 0) (xy 30 20) (xy 0 20))))
 )"""
 
 
@@ -52,7 +54,12 @@ def test_parse_nets_segments_pads_zones(pcb):
     ats = sorted(p.at for p in pads)
     assert ats[0] == pytest.approx((10.0, 9.6))
     assert ats[1] == pytest.approx((18.0, 12.4))
-    assert ("GND", "In1.Cu") in pcb.zones
+    zones = [(z.net, z.layer) for z in pcb.zones]
+    assert ("GND", "In1.Cu") in zones
+    z = pcb.zones[0]
+    assert z.polygon_mm == [(0.0, 0.0), (30.0, 0.0), (30.0, 20.0), (0.0, 20.0)]
+    assert z.clearance_mm == pytest.approx(0.25)
+    assert z.min_thickness_mm == pytest.approx(0.2)
 
 
 def test_polyline_chains_l_shape(pcb):

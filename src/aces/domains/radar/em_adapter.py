@@ -843,8 +843,17 @@ class Adapter:
         er_eff vs Hammerstad (3 %), |S21| at f0 vs dielectric-loss model
         (PEC conductors; extra loss 0..1 dB allowed for bends/pads), Z0 from
         the S11/S22 ripple extrema vs the microstrip model at the snapped
-        width (10 %), reciprocity 0.2 dB.  The F.Cu GND pour (GCPW effect)
-        is NOT modelled and is a documented limitation.
+        width (10 %), reciprocity 0.2 dB.
+
+        job28: ``case["pour"]`` models the F.Cu GND pour on the trace layer
+        (GCPW effect) — ``{"polygon_mm": [...], "clearance_m": g}``, or
+        ``"auto"`` to take the GND zone polygon on the net's layer from the
+        parsed pcb (requires case["pcb"]).  The pour is clipped to the deck
+        domain and is not via-stitched to the bottom plane inside the window
+        (documented limitations).  With pour present there is no closed-form
+        reference, so the er_eff / Z0 model bars become informational deltas
+        vs the pure-microstrip model; reciprocity / residual / loss bars
+        still gate.
         """
         from . import kicad_import as ki
         from .linkbudget import C0
@@ -860,6 +869,7 @@ class Adapter:
         margins = {"margin_cells": int(case.get("margin_cells", 16)),
                    "air_cells": int(case.get("air_cells", 16))}
         pcb_path, net = case.get("pcb"), case.get("net")
+        pcb = None
         if case.get("polyline"):
             # synthetic polyline (staircase/diagnostic coupons, job26):
             # {"points_mm": [...], "width_mm": w, optional "pads", "net"}
@@ -875,10 +885,26 @@ class Adapter:
             poly = ki.net_polyline(pcb, net, case.get("layer", "F.Cu"))
             poly["net"] = net
 
+        pour = case.get("pour")
+        if pour == "auto":
+            if pcb is None:
+                raise ValueError('pour "auto" needs case["pcb"] (zone polygons '
+                                 "come from the board file)")
+            lay = case.get("layer", "F.Cu")
+            zones = [z for z in pcb.zones
+                     if z.layer == lay and z.net == "GND" and z.polygon_mm]
+            if not zones:
+                raise ValueError(f'pour "auto": no GND zone polygon on {lay}')
+            pour = {"polygon_mm": zones[0].polygon_mm,
+                    "clearance_m": zones[0].clearance_mm * 1e-3}
+        elif pour is not None:
+            pour = {"polygon_mm": [tuple(p) for p in pour["polygon_mm"]],
+                    "clearance_m": float(pour["clearance_m"])}
+
         runs = {}
         for stem, feed_end in (("case_p1", 1), ("case_p2", 2)):
             deck, geom = ki.deck_kicad_net(poly, cell, window, f0, er, h, tand,
-                                           feed_end=feed_end, **margins)
+                                           feed_end=feed_end, pour=pour, **margins)
             (rd / f"{stem}.in").write_text(deck, encoding="utf-8")
             self._gprmax_exec(rd, stem, timeout)
             runs[feed_end] = (geom, self._read_probes(rd / f"{stem}.h5"))
@@ -962,9 +988,15 @@ class Adapter:
         err_er_eff = abs(er_eff_meas - er_eff) / er_eff
         err_z0 = abs(z0_meas - expct["z0_model_ohm"]) / expct["z0_model_ohm"]
         extra_loss_db = loss_meas_db - expct["loss_db_model"]
+        pour_present = bool(runs[1][0].get("pour_present"))
         passed = (recip_db <= 0.2 and worst_resid <= 0.05
-                  and err_er_eff <= 0.05 and err_z0 <= 0.10
                   and -0.3 <= extra_loss_db <= 1.0)
+        if not pour_present:
+            passed = passed and err_er_eff <= 0.05 and err_z0 <= 0.10
+        # with pour there is no closed-form reference: the signed shifts vs
+        # the pure-microstrip model are the measurement output (job28)
+        z0_shift_pct = 100 * (z0_meas - expct["z0_model_ohm"]) / expct["z0_model_ohm"]
+        er_eff_shift_pct = 100 * (er_eff_meas - er_eff) / er_eff
         validation = {
             "case": "kicad_net", "net": net,
             "pcb": str(pcb_path) if pcb_path else "synthetic polyline",
@@ -987,7 +1019,12 @@ class Adapter:
             "z0_err_pct": 100 * err_z0, "bar_z0_pct": 10.0,
             "loss_measured_db": loss_meas_db, "loss_model_db": expct["loss_db_model"],
             "extra_loss_db": extra_loss_db, "bar_extra_loss_db": [-0.3, 1.0],
-            "f_Cu_pour_modelled": False,
+            "f_Cu_pour_modelled": pour_present,
+            "pour": runs[1][0].get("pour"),
+            "z0_pour_shift_pct": z0_shift_pct if pour_present else None,
+            "er_eff_pour_shift_pct": er_eff_shift_pct if pour_present else None,
+            "model_bars": ("informational (pour present, job28)" if pour_present
+                           else "gating"),
             "pass": int(passed),
         }
         (rd / "sparams.json").write_text(json.dumps(sparams, indent=2), encoding="utf-8")
