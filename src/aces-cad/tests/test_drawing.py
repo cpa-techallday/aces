@@ -44,14 +44,21 @@ auditor = doc.audit()
 print(json.dumps({"dims": dims, "layers": layers, "hidden_entity_linetypes": hidden,
                   "audit_errors": len(auditor.errors), "insunits": doc.header.get("$INSUNITS"),
                   "linetypes": [lt.dxf.name for lt in doc.linetypes],
-                  "texts": [dec(t.dxf.text) for t in msp.query("TEXT")]}))
+                  "texts": [dec(t.dxf.text) for t in msp.query("TEXT")],
+                  "title_texts": [dec(t.dxf.text) for t in msp.query("TEXT") if t.dxf.layer == "TITLE"]}))
 """
+HOLE_LIMIT_NOTE = "NOTE: HOLE DETECTION STOPS AT 100 HOLES PER PART"
 
 
 class DrawingTest(WorkerTestCase):
 
     def read_dxf(self, path) -> dict:
         return self.worker_python_json(READ_DXF, str(path))
+
+    def holes_of(self, run_id: str) -> dict:
+        """cad_inspect's hole records of a run, by id."""
+        out = self.op("inspect", project="p", run_id=run_id, checks=["holes"])
+        return {h["id"]: h for h in out["checks"]["holes"]["holes"]}
 
     def drawing(self, run_id: str, **kw) -> dict:
         out = self.op("drawing", project="p", run_id=run_id, **kw)
@@ -111,6 +118,78 @@ class DrawingTest(WorkerTestCase):
         joined = " | ".join(texts)
         for want in ("Ø10 THRU", "DEEP 8", "CBORE Ø11 DEEP 6", "CSK Ø12 X 90°"):
             self.assertIn(want, joined)
+        # review finding 2: a blind hole's drill point is no countersink (it read "Ø6 DEEP 11.8, CSK Ø0 X 118°"), and
+        # a hole countersunk on both faces is called out at its upper end
+        rid = self.run_script("drill_point_block")["run_id"]
+        out = self.drawing(rid, views=["top"], formats=["dxf"])
+        texts = [d["text"] for d in self.read_dxf(out["files"]["dxf"]["path"])["dims"]]
+        joined = " | ".join(texts)
+        for want in ("Ø6 DEEP 10", "Ø6.6 THRU, CSK Ø12 X 90°"):
+            self.assertIn(want, joined)
+        for bad in ("CSK Ø0", "DEEP 11.8", "118°"):
+            self.assertNotIn(bad, joined)
+
+    def test_w12_hole_ids_are_cad_inspect_ids(self):
+        """drawing.json's hole features are cad_inspect's ids for the same run (review finding 5: the drawing renumbered
+        the holes by position, so an h2 in one output was another hole in the other)."""
+        rid = self.run_script("three_axis_holes")["run_id"]
+        holes = self.holes_of(rid)
+        self.assertEqual(sorted(holes), ["h1", "h2", "h3"])
+        by_position = sorted(holes.values(), key=lambda h: [round(h["entry_point_mm"][i], 6) for i in (2, 1, 0)])
+        self.assertNotEqual([h["id"] for h in by_position], ["h1", "h2", "h3"],
+                            "the fixture must number its holes out of position order, or this test proves nothing")
+        out = self.drawing(rid, views=["front", "top", "right"], formats=["dxf"])
+        callouts = {d["feature"]: d for d in out["dimensions"] if d["type"] == "diameter"}
+        self.assertEqual(sorted(callouts), sorted(holes))
+        for hid, dim in callouts.items():
+            self.assert_close(dim["value_mm"], holes[hid]["diameter_mm"], 1e-6, hid)
+        positions = [d for d in out["dimensions"] if d["feature"].startswith("pos_")]
+        self.assertEqual(len(positions), 6, "two position dimensions per hole")
+        for dim in positions:
+            _pos, hid, axis = dim["feature"].split("_")
+            self.assert_close(dim["value_mm"], holes[hid]["entry_point_mm"]["xyz".index(axis)], 1e-6, dim["feature"])
+        # several parts: cad_inspect numbers holes across the parts in part order and groups them per part
+        rid = self.run_script("two_plates_holes")["run_id"]
+        inspected = self.op("inspect", project="p", run_id=rid, checks=["holes"])["checks"]["holes"]
+        holes = {h["id"]: h for h in inspected["holes"]}
+        self.assertEqual({h["id"]: h["part"] for h in holes.values()}, {"h1": "left", "h2": "right", "h3": "right"})
+        groups = {g["id"]: g["holes"] for g in inspected["hole_groups"]}
+        out = self.drawing(rid, views=["top"], formats=["dxf"])
+        callouts = {d["feature"]: d["value_mm"] for d in out["dimensions"] if d["type"] == "diameter"}
+        self.assertEqual(set(callouts), {"h1", "g2"})
+        self.assertEqual(groups["g2"], ["h2", "h3"])
+        self.assert_close([callouts["h1"], callouts["g2"]],
+                          [holes["h1"]["diameter_mm"], holes["h2"]["diameter_mm"]], 1e-6)
+        for dim in [d for d in out["dimensions"] if d["feature"].startswith("pos_")]:
+            _pos, hid, axis = dim["feature"].split("_")
+            self.assert_close(dim["value_mm"], holes[hid]["entry_point_mm"]["xyz".index(axis)], 1e-6, dim["feature"])
+
+    def test_w12_the_hole_cap_and_the_hole_table(self):
+        """The 100-hole note and warning appear only when a part has more than 100 holes (integration fix c5f93c2), and
+        the hole table lists cad_inspect's ids in capitals with their positions (review finding 5)."""
+        rid = self.run_script("perforated_block")["run_id"]
+        holes = self.holes_of(rid)
+        self.assertEqual(len(holes), 100)
+        out = self.drawing(rid, views=["top"], formats=["dxf"])
+        self.assertEqual([w for w in out["warnings"] if "at most 100 holes" in w], [])
+        dxf = self.read_dxf(out["files"]["dxf"]["path"])
+        self.assertFalse([t for t in dxf["texts"] if "HOLE DETECTION STOPS" in t], "no cap note at 100 holes")
+        table = out["hole_table"]
+        self.assertEqual(len(table), 100)
+        for row in table:
+            self.assertEqual(row["id"], row["hole"].upper())
+            self.assert_close([row["x"], row["y"]], holes[row["hole"]]["entry_point_mm"][:2], 1e-6, row["id"])
+        self.assertIn(f"{table[0]['id']} ", " ".join(dxf["title_texts"]))
+        self.assertNotEqual([r["hole"] for r in table], [f"h{i}" for i in range(1, 101)],
+                            "the table runs in position order while the ids stay cad_inspect's")
+        over = self.run_script("perforated_block_101")["run_id"]
+        out = self.drawing(over, views=["top"], formats=["dxf"])
+        capped = [w for w in out["warnings"] if "at most 100 holes per part" in w]
+        self.assertEqual(len(capped), 1, out["warnings"])
+        self.assertIn("perforated-block-101 has more", capped[0])
+        self.assertEqual(len(out["hole_table"]), 100)
+        title = self.read_dxf(out["files"]["dxf"]["path"])["title_texts"]
+        self.assertEqual(len([t for t in title if t.startswith(HOLE_LIMIT_NOTE)]), 1, title)
 
     def test_w12_projection_placement(self):
         rid = self.run_script("aces_plate", name="plate")["run_id"]

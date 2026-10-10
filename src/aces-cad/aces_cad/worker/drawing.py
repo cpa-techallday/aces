@@ -386,19 +386,12 @@ def _hole_ok(h) -> bool:
         return False
 
 
-def _group_key(h) -> tuple:
-    def r(x):
-        return round(float(x), 6)
-
-    cb = h.get("cbore") or None
-    cs = h.get("csk") or None
-    return (h.get("kind"), r(h["diameter_mm"]), r(h["depth_mm"]), bool(h["through"]),
-            (r(cb["diameter_mm"]), r(cb["depth_mm"])) if cb else None,
-            (r(cs["diameter_mm"]), r(cs["angle_deg"])) if cs else None)
-
-
 def hole_dims(dims: Dims, views: dict, holes: list, c: tuple, occupied: set, notes: list) -> list | None:
-    """Diameter callouts per hole group and baseline position dimensions (or a hole table) in the axis view."""
+    """Diameter callouts per hole group and baseline position dimensions (or a hole table) in the axis view.
+
+    The holes carry cad_inspect's ids (h1, g1, ...): a callout's feature is its hole's id, or its group's for more than
+    one hole, and the hole table lists the ids in capitals. Only the layout follows the positions.
+    """
     per_view: dict = {}
     for h in holes:
         ax = [float(x) for x in h["axis_dir"]]
@@ -413,12 +406,11 @@ def hole_dims(dims: Dims, views: dict, holes: list, c: tuple, occupied: set, not
             continue
         per_view.setdefault(name, []).append(h)
     table = []
-    group_n = 0
     for name in [n for n in ORTHO if n in per_view]:
         v = views[name]
         groups: dict = {}
-        for h in per_view[name]:
-            groups.setdefault(_group_key(h), []).append(h)
+        for h in per_view[name]:  # cad_inspect's groups: equal holes, one axis, one part
+            groups.setdefault(h.get("group") or h["id"], []).append(h)
         x0, x1, y0, y1 = v.box()
         hside = _side(v, True, occupied)
         vside = _side(v, False, occupied)
@@ -433,11 +425,9 @@ def hole_dims(dims: Dims, views: dict, holes: list, c: tuple, occupied: set, not
 
         ordered = sorted(groups.values(), key=lambda g: sign * v.at(anchor(g)["entry_point_mm"], c)[0])
         for k, group in enumerate(ordered):
-            group_n += 1
-            gid = f"g{group_n}"
             first = anchor(group)
             centre = v.at(first["entry_point_mm"], c)
-            feature = gid if len(group) > 1 else first["id"]
+            feature = (first.get("group") or first["id"]) if len(group) > 1 else first["id"]
             text = hole_text(group)
             y = y1 + dims.h + (len(ordered) - 1 - k) * 2.5 * dims.h
             if side == "right":
@@ -471,7 +461,7 @@ def hole_dims(dims: Dims, views: dict, holes: list, c: tuple, occupied: set, not
                                                           round(float(r["entry_point_mm"][lx]), 6))):
                 ep = [float(x) for x in h["entry_point_mm"]]
                 call = hole_text([h]).replace("<>", "\u00d8" + fmt(float(h["diameter_mm"])))
-                table.append({"id": h["id"].upper(), "view": name, "callout": call,
+                table.append({"id": h["id"].upper(), "hole": h["id"], "view": name, "callout": call,
                               AXES[lx]: ep[lx], AXES[ly]: ep[ly],
                               "text": f"{h['id'].upper()} {call} {AXES[lx].upper()} {ep[lx]:.2f} "
                                       f"{AXES[ly].upper()} {ep[ly]:.2f}"})
@@ -719,6 +709,7 @@ def op_drawing(args: dict, ctx) -> dict:
     if a["dimensions"]:
         extent_dims(dims, views, b, c, occupied, sketch)
         if not sketch:
+            found_all = []
             for k, p in enumerate(parts):
                 try:
                     found = geom.find_holes(p.shape, limit=HOLE_LIMIT + 1) if p.kind != "sketch" else []
@@ -728,15 +719,23 @@ def op_drawing(args: dict, ctx) -> dict:
                 if len(found) > HOLE_LIMIT:
                     capped.append(p.name)
                     found = found[:HOLE_LIMIT]
-                for hole in found:
-                    if not _hole_ok(hole):
-                        warnings.append("a hole record without the expected fields was skipped")
-                        continue
-                    holes.append(dict(hole, part=p.name, _order=k))
-            # numbered in position order (part, then z, y, x of the entry point), so callouts and tables read in rows
+                found_all.extend(dict(hole, part=p.name, _order=k) for hole in found)
+            if len(parts) > 1:
+                # cad_inspect's holes check numbers the holes of several parts across them, in part order, and gives
+                # each part its own groups: the drawing uses the same ids, so the two outputs match hole for hole
+                groups: dict = {}
+                for n, hole in enumerate(found_all, 1):
+                    hole["id"] = f"h{n}"
+                    hole["group"] = groups.setdefault((hole["part"], hole.get("group")), f"g{len(groups) + 1}")
+            for hole in found_all:
+                if not _hole_ok(hole):
+                    warnings.append("a hole record without the expected fields was skipped")
+                    continue
+                holes.append(hole)
+            # laid out in position order (part, then z, y, x of the entry point) so callouts and tables read in rows;
+            # the ids stay cad_inspect's
             holes.sort(key=lambda r: (r["_order"],) + tuple(round(float(r["entry_point_mm"][i]), 6) for i in (2, 1, 0)))
-            for n, hole in enumerate(holes, 1):
-                hole["id"] = f"h{n}"
+            for hole in holes:
                 hole.pop("_order", None)
             hole_table = hole_dims(dims, views, holes, c, occupied, notes)
     section = None

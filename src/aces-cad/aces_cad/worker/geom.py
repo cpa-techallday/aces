@@ -323,8 +323,10 @@ def find_holes(shape, limit: int = HOLE_LIMIT) -> list[dict]:
     """Holes: groups of coaxial concave cylinder (and cone) faces whose drill-radius cylinders span 360 degrees.
 
     Through/blind from Solid.is_inside 0.01 mm beyond each end of the stack; counterbore (a larger coaxial cylinder at
-    the entry) and countersink (a concave cone at the entry) detected. Records of section 12.4, at most `limit` (100
-    by default); callers that report the cap ask for HOLE_LIMIT + 1 to learn whether more holes exist.
+    the entry) and countersink (a concave cone at the entry) detected, only between an open end and the drill-radius
+    bore, so a drill point at a blind bottom is neither. A blind hole's depth runs from the entry to the far end of
+    the bore. Records of section 12.4, at most `limit` (100 by default); callers that report the cap ask for
+    HOLE_LIMIT + 1 to learn whether more holes exist.
     """
     import numpy as np
     import build123d as bd
@@ -385,16 +387,25 @@ def find_holes(shape, limit: int = HOLE_LIMIT) -> list[dict]:
         lo_open = not _inside(solids, origin + (t_lo - END_PROBE_MM) * d)
         hi_open = not _inside(solids, origin + (t_hi + END_PROBE_MM) * d)
         through = lo_open and hi_open
-        bigger = [m for m in cyls if m["radius"] > drill + 1e-6]
-        cones = [m for m in members if m["cone"] is not None]
-        feature = bigger or cones
-        if feature:
-            mid = sum((m["t"][0] + m["t"][1]) / 2 for m in feature) / len(feature)
-            entry_hi = abs(mid - t_hi) <= abs(mid - t_lo)
+        bore = [m for m in cyls if abs(m["radius"] - drill) <= 1e-6]  # the drill-radius cylinders
+        bore_lo = min(m["t"][0] for m in bore)
+        bore_hi = max(m["t"][1] for m in bore)
+        # Spec 12.4 puts a counterbore or a countersink at an open end: a face counts when it lies between an open end
+        # of the stack and the drill-radius bore, so a drill point at a closed bottom, or a groove inside the bore, is
+        # neither. With features at both ends the upper end is the entry, as for a plain through hole, and the
+        # counterbore or countersink is measured there.
+        extra = [m for m in members if m["cone"] is not None or m["radius"] > drill + 1e-6]
+        at_hi = [m for m in extra if hi_open and m["t"][0] >= bore_hi - 1e-6]
+        at_lo = [m for m in extra if lo_open and m["t"][1] <= bore_lo + 1e-6]
+        if at_hi or at_lo:
+            entry_hi = bool(at_hi)
         elif through:
             entry_hi = True
         else:
             entry_hi = hi_open or not lo_open
+        side = at_hi if entry_hi else at_lo
+        bigger = [m for m in side if m["cone"] is None]
+        cones = [m for m in side if m["cone"] is not None]
         t_entry = t_hi if entry_hi else t_lo
         axis_dir = d if entry_hi else -d
         cbore = None
@@ -410,8 +421,14 @@ def find_holes(shape, limit: int = HOLE_LIMIT) -> list[dict]:
             r_entry = abs(_radius_at(cone["face"], origin, d, t_entry))
             csk = {"diameter_mm": 2 * r_entry, "angle_deg": 2 * abs(math.degrees(cone["cone"]["semi_angle"]))}
         entry = origin + t_entry * d
+        # a through hole is as deep as its stack; a blind hole to the far end of its drill-radius bore, the drawing
+        # convention (a drill point below the bore is not part of the depth)
+        if through:
+            depth = t_hi - t_lo
+        else:
+            depth = t_hi - bore_lo if entry_hi else bore_hi - t_lo
         holes.append({"kind": kind, "diameter_mm": 2 * drill, "axis_dir": [float(x) + 0.0 for x in axis_dir],
-                      "entry_point_mm": [float(x) + 0.0 for x in entry], "depth_mm": float(t_hi - t_lo),
+                      "entry_point_mm": [float(x) + 0.0 for x in entry], "depth_mm": float(depth),
                       "through": bool(through), "cbore": cbore, "csk": csk,
                       "faces": [face_ref(m["n"]) for m in sorted(members, key=lambda m: m["n"])]})
     holes = holes[:max(0, int(limit))]

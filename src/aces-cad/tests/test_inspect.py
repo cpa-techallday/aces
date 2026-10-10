@@ -55,6 +55,25 @@ class InspectTest(WorkerTestCase):
     def plate(self) -> str:
         return self.run_script("aces_plate", name="plate")["run_id"]
 
+    def assert_holes(self, holes: list, wanted: list, what: str) -> None:
+        """Hole records against expected ones, both in order of the entry point's x."""
+        holes = sorted(holes, key=lambda h: h["entry_point_mm"][0])
+        self.assertEqual(len(holes), len(wanted), holes)
+        for got, want in zip(holes, wanted):
+            label = f"{what} hole at x {want['entry_point_mm'][0]}"
+            self.assertEqual((got["kind"], got["through"]), (want["kind"], want["through"]), label)
+            self.assert_close(got["diameter_mm"], want["diameter_mm"], 1e-6, label)
+            self.assert_close(got["depth_mm"], want["depth_mm"], 1e-6, label)
+            self.assert_close(got["entry_point_mm"], want["entry_point_mm"], 1e-6, label)
+            self.assert_close(got["axis_dir"], want.get("axis_dir", [0.0, 0.0, 1.0]), 1e-9, label)
+            for key in ("cbore", "csk"):
+                if want[key] is None:
+                    self.assertIsNone(got[key], label)
+                else:
+                    self.assertIsNotNone(got[key], label)
+                    for k, v in want[key].items():
+                        self.assert_close(got[key][k], v, 1e-6, f"{label} {key}.{k}")
+
     def test_w07_mass_and_inertia(self):
         rid = self.plate()
         mass = self.inspect(rid, "mass", material="AlSi10Mg")["mass"]
@@ -120,24 +139,12 @@ class InspectTest(WorkerTestCase):
         self.assertRegex(hole["id"], r"^h[0-9]+$")
         self.assertTrue(all(f.startswith("f") for f in hole["faces"]))
         block = part_entry(self.inspect(self.run_script("holes_block")["run_id"], "holes")["holes"])
-        holes = sorted(block["holes"], key=lambda h: h["entry_point_mm"][0])
-        wanted = expected("holes_block.holes")
-        self.assertEqual(len(holes), len(wanted), holes)
-        for got, want in zip(holes, wanted):
-            label = f"hole at x {want['entry_point_mm'][0]}"
-            self.assertEqual((got["kind"], got["through"]), (want["kind"], want["through"]), label)
-            self.assert_close(got["diameter_mm"], want["diameter_mm"], 1e-6, label)
-            self.assert_close(got["depth_mm"], want["depth_mm"], 1e-6, label)
-            self.assert_close(got["entry_point_mm"], want["entry_point_mm"], 1e-6, label)
-            self.assert_close(got["axis_dir"], [0.0, 0.0, 1.0], 1e-9, label)
-            for key in ("cbore", "csk"):
-                if want[key] is None:
-                    self.assertIsNone(got[key], label)
-                else:
-                    self.assertIsNotNone(got[key], label)
-                    for k, v in want[key].items():
-                        self.assert_close(got[key][k], v, 1e-6, f"{label} {key}.{k}")
+        self.assert_holes(block["holes"], expected("holes_block.holes"), "holes_block")
         self.assertEqual(len(block["hole_groups"]), 4)
+        # review finding 2: a cone at a blind bottom is a drill point (the hole is simple, enters at its open end and
+        # is as deep as its full-diameter bore), and a hole countersunk on both faces is measured at its upper end
+        drilled = part_entry(self.inspect(self.run_script("drill_point_block")["run_id"], "holes")["holes"])
+        self.assert_holes(drilled["holes"], expected("drill_point_block.holes"), "drill_point_block")
         checks = self.inspect(self.run_script("l_bracket")["run_id"], "holes", "radii")
         bracket = part_entry(checks["holes"])
         self.assertEqual(len(bracket["holes"]), expected("l_bracket.holes")["count"], "the fillet is not a hole")
@@ -146,6 +153,16 @@ class InspectTest(WorkerTestCase):
             self.assertIs(h["through"], True)
         radii = part_entry(checks["radii"])
         self.assert_close(radii["min_concave_mm"], expected("l_bracket.fillet")["radius_mm"], 1e-6)
+
+    def test_w09_the_hole_cap(self):
+        """Spec 12.4 reports at most 100 holes; holes_truncated is true only when a part has more (integration fix
+        c5f93c2: the cap used to be reported at exactly 100)."""
+        for script in ("perforated_block", "perforated_block_101"):
+            holes = part_entry(self.inspect(self.run_script(script)["run_id"], "holes")["holes"])
+            want = expected(f"{script}.holes")
+            self.assertEqual((holes["count"], len(holes["holes"]), holes["holes_truncated"]),
+                             (want["count"], want["count"], want["holes_truncated"]), script)
+            self.assertEqual(sorted(h["id"] for h in holes["holes"]), sorted(f"h{i}" for i in range(1, 101)), script)
 
     def test_w10_thickness_topology_draft_section_measure(self):
         rid = self.plate()

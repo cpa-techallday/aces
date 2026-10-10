@@ -572,6 +572,79 @@
    "tol": null,
    "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance",
    "note": "audit events raised by sys.addaudithook, sys.settrace and sys.setprofile on 3.11 and 3.14"
+  },
+  "drill_point_block.holes": {
+   "value": [
+    {
+     "kind": "simple",
+     "diameter_mm": 6.0,
+     "through": false,
+     "depth_mm": 10.0,
+     "entry_point_mm": [
+      15.0,
+      20.0,
+      20.0
+     ],
+     "axis_dir": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "cbore": null,
+     "csk": null
+    },
+    {
+     "kind": "countersink",
+     "diameter_mm": 6.6,
+     "through": true,
+     "depth_mm": 20.0,
+     "entry_point_mm": [
+      45.0,
+      20.0,
+      20.0
+     ],
+     "axis_dir": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "cbore": null,
+     "csk": {
+      "diameter_mm": 12.0,
+      "angle_deg": 90.0
+     }
+    }
+   ],
+   "tol": null,
+   "source": "analytic: design of tests/scripts/drill_point_block.py (a d6 bore 10 mm deep from the 20 mm top face with a 118 degree point below it; a d6.6 through hole with 90 degree countersinks, d12 at the top and d8 at the bottom); sorted by the entry x",
+   "checked_by": "fixer probe 2026-10-10 on Windows (probes.windows): geom.find_holes in that venv, and aces-cad run and inspect in permissive mode",
+   "note": "review finding 2: before the fix (HEAD ff3c166, fixer probe on Windows) the first hole read countersink, axis (0, 0, -1), entry (15, 20, 8.1974) at the drill point's tip, depth 11.8026, csk d0 x 118 degrees, and the second countersink, axis (0, 0, -1), entry (45, 20, 0), csk d28 (measured on the top cone at the bottom face)"
+  },
+  "perforated_block.holes": {
+   "value": {
+    "count": 100,
+    "holes_truncated": false
+   },
+   "tol": null,
+   "source": "analytic: design of tests/scripts/perforated_block.py (a 10 x 10 grid of through holes); spec 12.4 reports at most 100",
+   "checked_by": "fixer probe 2026-10-10 on Windows (probes.windows): geom.find_holes in that venv, and aces-cad run and inspect in permissive mode"
+  },
+  "perforated_block_101.holes": {
+   "value": {
+    "count": 100,
+    "holes_truncated": true
+   },
+   "tol": null,
+   "source": "analytic: design of tests/scripts/perforated_block_101.py (101 through holes); spec 12.4 reports at most 100, and holes_truncated says a part has more",
+   "checked_by": "fixer probe 2026-10-10 on Windows (probes.windows): geom.find_holes in that venv, and aces-cad run and inspect in permissive mode"
+  },
+  "skill_gyroid.volume_mm3": {
+   "value": 6534.400079864546,
+   "tol": {
+    "rel": 0.0001
+   },
+   "source": "probe 2026-10-10 on Windows (probes.windows): aces-cad run of tests/scripts/skill_gyroid.py (the SKILL.md example) at its defaults, permissive, with mesh_from_sdf counting grid values on the level as outside (run 20261010T091709Z-087e: watertight, valid, 572800 triangles)",
+   "note": "a marching-cubes volume: a grid value within rounding of the level may fall on either side on another platform and move about one cell (0.027 mm3), hence rel 1e-4; before the exact-level rule the same script gave 6561.871596953505 and the first SKILL.md example (h = cell / 16) an open mesh"
   }
  }
 }
