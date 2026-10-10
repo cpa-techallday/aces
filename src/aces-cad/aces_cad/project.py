@@ -41,15 +41,19 @@ def run_aces(args: list[str], *, input_bytes: bytes | None = None, env: Mapping[
     """Run the aces CLI (CompletedProcess), or None when there is no aces CLI.
 
     ACES_WORK is set to aces-cad's own project root (config.work_dir), so `aces project show`, `ledger record` and
-    `project add-cad-source` look for projects where aces-cad writes; ONSHAPE_* variables are removed.
+    `project add-cad-source` look for projects where aces-cad writes; ONSHAPE_* variables are removed. Without
+    input_bytes the child's stdin is the null device, never this process's stdin: under aces-cad-mcp that is the
+    JSON-RPC pipe, which a child could read from, and on Windows a child that inherits a pipe the server's reader
+    thread is blocked on hangs until the 30 s timeout.
     """
     cmd = aces_command(env)
     if not cmd:
         return None
     child = {k: v for k, v in _environ(env).items() if not k.startswith("ONSHAPE_")}
     child["ACES_WORK"] = str(config.work_dir(env))
+    stdin = {"input": input_bytes} if input_bytes is not None else {"stdin": subprocess.DEVNULL}
     try:
-        return subprocess.run(cmd + list(args), input=input_bytes, capture_output=True, timeout=timeout, env=child)
+        return subprocess.run(cmd + list(args), capture_output=True, timeout=timeout, env=child, **stdin)
     except subprocess.TimeoutExpired:
         return subprocess.CompletedProcess(cmd + list(args), 124, b"", f"timed out after {timeout} s".encode())
     except OSError:

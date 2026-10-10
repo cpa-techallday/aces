@@ -168,9 +168,9 @@ def _kill(proc: subprocess.Popen) -> None:
             except OSError:
                 pass
     else:
-        try:
-            subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)], capture_output=True, timeout=30,
-                           creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        try:  # stdin DEVNULL: an inherited stdin pipe that aces-cad-mcp's reader is blocked on hangs a child at start
+            subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)], stdin=subprocess.DEVNULL,
+                           capture_output=True, timeout=30, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         except (OSError, subprocess.TimeoutExpired):
             pass
         try:
