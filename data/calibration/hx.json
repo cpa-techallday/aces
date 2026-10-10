@@ -1,10 +1,10 @@
 {
   "hx.diamond.friction": {
-    "basis": "friction baseline x factor; power law in Re (exponent 0.255 about Re 32.8) of 17 ratio(s) over 17 condition(s); laminar baseline; level-set resolution 64; dpdx per metre of core length",
-    "fitted_on": "2026-10-09",
+    "basis": "friction baseline x factor; power law in Re (exponent 0.127 about Re 19.2) of 25 ratio(s) over 25 condition(s); laminar baseline; level-set resolution 64; dpdx per metre of core length",
+    "fitted_on": "2026-10-11",
     "form": "power",
-    "re_exponent": 0.25547458317231786,
-    "re_ref": 32.80591649561769,
+    "re_exponent": 0.12663569747050935,
+    "re_ref": 19.15065294867376,
     "sources": [
       "simlab:aces-cal-air-01:c012",
       "simlab:aces-cal-air-01:c013",
@@ -22,11 +22,19 @@
       "simlab:aces-cal-air-02r:c013",
       "simlab:aces-cal-air-02r:c014",
       "simlab:aces-cal-air-02r:c016",
-      "simlab:aces-cal-air-02r:c017"
+      "simlab:aces-cal-air-02r:c017",
+      "simlab:aces-cal-air-03d:c000",
+      "simlab:aces-cal-air-03d:c001",
+      "simlab:aces-cal-air-03d:c002",
+      "simlab:aces-cal-air-03d:c003",
+      "simlab:aces-cal-air-03d:c004",
+      "simlab:aces-cal-air-03d:c005",
+      "simlab:aces-cal-air-03d:c006",
+      "simlab:aces-cal-air-03d:c008"
     ],
     "valid_range": {
       "reynolds": [
-        9.709495884687195,
+        0.9996280073863028,
         100.20508077839617
       ],
       "wall_ratio": [
@@ -34,14 +42,14 @@
         0.28
       ]
     },
-    "value": 4.133455916060672
+    "value": 3.974907131075806
   },
   "hx.diamond.nusselt": {
-    "basis": "nusselt baseline x factor; geometric mean of 17 ratio(s) over 17 condition(s); laminar baseline; level-set resolution 64; Nu baseline uniform_heat_flux (fully developed)",
-    "fitted_on": "2026-10-09",
-    "form": "",
-    "re_exponent": 0.0,
-    "re_ref": 0.0,
+    "basis": "nusselt baseline x factor; power law in Re (exponent 0.093 about Re 19.2) of 25 ratio(s) over 25 condition(s); laminar baseline; level-set resolution 64; Nu baseline uniform_heat_flux (fully developed)",
+    "fitted_on": "2026-10-11",
+    "form": "power",
+    "re_exponent": 0.09339195341325089,
+    "re_ref": 19.15065294867376,
     "sources": [
       "simlab:aces-cal-air-01:c012",
       "simlab:aces-cal-air-01:c013",
@@ -59,7 +67,15 @@
       "simlab:aces-cal-air-02r:c013",
       "simlab:aces-cal-air-02r:c014",
       "simlab:aces-cal-air-02r:c016",
-      "simlab:aces-cal-air-02r:c017"
+      "simlab:aces-cal-air-02r:c017",
+      "simlab:aces-cal-air-03d:c000",
+      "simlab:aces-cal-air-03d:c001",
+      "simlab:aces-cal-air-03d:c002",
+      "simlab:aces-cal-air-03d:c003",
+      "simlab:aces-cal-air-03d:c004",
+      "simlab:aces-cal-air-03d:c005",
+      "simlab:aces-cal-air-03d:c006",
+      "simlab:aces-cal-air-03d:c008"
     ],
     "valid_range": {
       "prandtl": [
@@ -67,7 +83,7 @@
         0.7054096673501762
       ],
       "reynolds": [
-        9.709495884687195,
+        0.9996280073863028,
         100.20508077839617
       ],
       "wall_ratio": [
@@ -75,11 +91,11 @@
         0.28
       ]
     },
-    "value": 1.4280040522592603
+    "value": 1.3675061794893428
   },
   "hx.diamond.tortuosity": {
     "basis": "folded into the friction factor (dpdx measured per metre of core); level-set resolution 64",
-    "fitted_on": "2026-10-09",
+    "fitted_on": "2026-10-11",
     "form": "",
     "re_exponent": 0.0,
     "re_ref": 0.0,
@@ -100,11 +116,19 @@
       "simlab:aces-cal-air-02r:c013",
       "simlab:aces-cal-air-02r:c014",
       "simlab:aces-cal-air-02r:c016",
-      "simlab:aces-cal-air-02r:c017"
+      "simlab:aces-cal-air-02r:c017",
+      "simlab:aces-cal-air-03d:c000",
+      "simlab:aces-cal-air-03d:c001",
+      "simlab:aces-cal-air-03d:c002",
+      "simlab:aces-cal-air-03d:c003",
+      "simlab:aces-cal-air-03d:c004",
+      "simlab:aces-cal-air-03d:c005",
+      "simlab:aces-cal-air-03d:c006",
+      "simlab:aces-cal-air-03d:c008"
     ],
     "valid_range": {
       "reynolds": [
-        9.709495884687195,
+        0.9996280073863028,
         100.20508077839617
       ],
       "wall_ratio": [
@@ -116,7 +140,7 @@
   },
   "hx.gyroid.friction": {
     "basis": "friction baseline x factor; power law in Re (exponent 0.344 about Re 28.8) of 17 ratio(s) over 17 condition(s); laminar baseline; level-set resolution 64; dpdx per metre of core length",
-    "fitted_on": "2026-10-09",
+    "fitted_on": "2026-10-11",
     "form": "power",
     "re_exponent": 0.34439171657947154,
     "re_ref": 28.834486393446124,
@@ -153,7 +177,7 @@
   },
   "hx.gyroid.nusselt": {
     "basis": "nusselt baseline x factor; power law in Re (exponent 0.253 about Re 28.8) of 17 ratio(s) over 17 condition(s); laminar baseline; level-set resolution 64; Nu baseline uniform_heat_flux (fully developed)",
-    "fitted_on": "2026-10-09",
+    "fitted_on": "2026-10-11",
     "form": "power",
     "re_exponent": 0.2529059167686322,
     "re_ref": 28.834486393446124,
@@ -194,7 +218,7 @@
   },
   "hx.gyroid.tortuosity": {
     "basis": "folded into the friction factor (dpdx measured per metre of core); level-set resolution 64",
-    "fitted_on": "2026-10-09",
+    "fitted_on": "2026-10-11",
     "form": "",
     "re_exponent": 0.0,
     "re_ref": 0.0,
@@ -230,8 +254,8 @@
     "value": 1.0
   },
   "hx.primitive.friction": {
-    "basis": "friction baseline x factor; geometric mean of 6 ratio(s) over 6 condition(s); laminar baseline; level-set resolution 64; dpdx per metre of core length",
-    "fitted_on": "2026-10-09",
+    "basis": "friction baseline x factor; geometric mean of 9 ratio(s) over 9 condition(s); laminar baseline; level-set resolution 64; dpdx per metre of core length",
+    "fitted_on": "2026-10-11",
     "form": "",
     "re_exponent": 0.0,
     "re_ref": 0.0,
@@ -241,23 +265,26 @@
       "simlab:aces-cal-air-02p:c003",
       "simlab:aces-cal-air-02p:c004",
       "simlab:aces-cal-air-02p:c006",
-      "simlab:aces-cal-air-02p:c007"
+      "simlab:aces-cal-air-02p:c007",
+      "simlab:aces-cal-air-03p:c000",
+      "simlab:aces-cal-air-03p:c001",
+      "simlab:aces-cal-air-03p:c002"
     ],
     "valid_range": {
       "reynolds": [
         0.9988343200651888,
-        2.972378968207549
+        5.989875503310246
       ],
       "wall_ratio": [
         0.08,
         0.16
       ]
     },
-    "value": 3.941337185696308
+    "value": 3.9344382272404133
   },
   "hx.primitive.nusselt": {
-    "basis": "nusselt baseline x factor; geometric mean of 6 ratio(s) over 6 condition(s); laminar baseline; level-set resolution 64; Nu baseline uniform_heat_flux (fully developed)",
-    "fitted_on": "2026-10-09",
+    "basis": "nusselt baseline x factor; geometric mean of 9 ratio(s) over 9 condition(s); laminar baseline; level-set resolution 64; Nu baseline uniform_heat_flux (fully developed)",
+    "fitted_on": "2026-10-11",
     "form": "",
     "re_exponent": 0.0,
     "re_ref": 0.0,
@@ -267,7 +294,10 @@
       "simlab:aces-cal-air-02p:c003",
       "simlab:aces-cal-air-02p:c004",
       "simlab:aces-cal-air-02p:c006",
-      "simlab:aces-cal-air-02p:c007"
+      "simlab:aces-cal-air-02p:c007",
+      "simlab:aces-cal-air-03p:c000",
+      "simlab:aces-cal-air-03p:c001",
+      "simlab:aces-cal-air-03p:c002"
     ],
     "valid_range": {
       "prandtl": [
@@ -276,18 +306,18 @@
       ],
       "reynolds": [
         0.9988343200651888,
-        2.972378968207549
+        5.989875503310246
       ],
       "wall_ratio": [
         0.08,
         0.16
       ]
     },
-    "value": 0.8694057598281311
+    "value": 0.8742712837478017
   },
   "hx.primitive.tortuosity": {
     "basis": "folded into the friction factor (dpdx measured per metre of core); level-set resolution 64",
-    "fitted_on": "2026-10-09",
+    "fitted_on": "2026-10-11",
     "form": "",
     "re_exponent": 0.0,
     "re_ref": 0.0,
@@ -297,12 +327,15 @@
       "simlab:aces-cal-air-02p:c003",
       "simlab:aces-cal-air-02p:c004",
       "simlab:aces-cal-air-02p:c006",
-      "simlab:aces-cal-air-02p:c007"
+      "simlab:aces-cal-air-02p:c007",
+      "simlab:aces-cal-air-03p:c000",
+      "simlab:aces-cal-air-03p:c001",
+      "simlab:aces-cal-air-03p:c002"
     ],
     "valid_range": {
       "reynolds": [
         0.9988343200651888,
-        2.972378968207549
+        5.989875503310246
       ],
       "wall_ratio": [
         0.08,

@@ -92,6 +92,18 @@ provenance gate applies to training data too, and sourceless rows are refused. F
 17 rows at 32³ from `hx-corpus-v1.jsonl`. Model training starts when the corpus has the
 spread to support it; the scaffold exists so that day is a config change, not a project.
 
+### Reference floor model + evaluation harness (done 2026-10-10, D32)
+
+`aces.propose.tier0` is the numpy-only clean-room floor any future learned proposer must
+beat: a PCA-conditional model (closed-form fit, deterministic, no external code or weights)
+trained by `aces tier0-train` and judged by `aces tier0-eval`. The harness — held-out BCE,
+Spearman ranking by requested wall_ratio, and sample validity on the shared voxel_measure
+layer — is the part that outlives any model; ranking honestly excludes rows outside the
+training anchor envelope rather than pretending the model extrapolates. First real run
+(`research/tier0-run-v1`, 40-row corpus at 32³): ranking ρ 0.99 gyroid / 0.99 diamond /
+0.95 primitive, solid-fraction conditioning error mean 0.004, and it already surfaces
+printability signals (neck-blocked and enclosed-void shares at thick walls).
+
 ## What Tier 0 must never do
 
 - Emit geometry to a customer without Tier 3 sign-off (D5).

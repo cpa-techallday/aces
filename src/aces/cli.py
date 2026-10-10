@@ -1243,6 +1243,42 @@ def cmd_propose_dataset(args) -> int:
     return 0
 
 
+def cmd_tier0_train(args) -> int:
+    """Fit the Tier 0 reference model on a propose-dataset folder."""
+    from .propose.tier0 import train as tier0_train
+    try:
+        with safeio.OutDir(args.out) as od:
+            metrics = tier0_train.train(args.dataset, od, n_components=args.components,
+                                        val_every=args.val_every, ridge=args.ridge)
+    except ValueError as e:
+        print(f"REFUSED: {e}")
+        return 2
+    print(f"tier0 model -> {args.out} (train_bce {metrics['train_bce']:.4f}, "
+          f"val_bce {metrics['val_bce']:.4f}, {metrics['components']} components, "
+          f"{metrics['n_train']}+{metrics['n_val']} rows)")
+    return 0
+
+
+def cmd_tier0_eval(args) -> int:
+    """Run the Tier 0 evaluation harness on a trained run."""
+    from .propose.tier0 import evaluate as tier0_eval
+    try:
+        report = tier0_eval.evaluate(args.run, args.dataset, n_per=args.samples,
+                                     val_every=args.val_every)
+    except ValueError as e:
+        print(f"REFUSED: {e}")
+        return 2
+    with safeio.OutDir(args.out) as od:
+        od.write_text("eval_report.json", json.dumps(report, indent=2))
+    v = report["validity"]
+    print(f"eval -> {args.out}/eval_report.json: val_bce {report['val_bce']:.4f}; "
+          f"solid-fraction err mean {v['solid_fraction_abs_err_mean']:.3f} "
+          f"max {v['solid_fraction_abs_err_max']:.3f}; "
+          f"neck-blocked {v['neck_blocked_share']:.0%}; enclosed-void {v['enclosed_void_share']:.0%}; "
+          f"ranking: {report['ranking']}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="aces", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -1458,6 +1494,22 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--resolution", type=int, default=32, help="unit-cell voxel resolution")
     s.add_argument("--out", required=True, help="output folder (created; never overwritten)")
     s.set_defaults(fn=cmd_propose_dataset)
+    s = sub.add_parser("tier0-train", help="fit the Tier 0 reference model (PCA-conditional floor; "
+                                           "clean-room, internal licence)")
+    s.add_argument("dataset", help="dataset folder from aces propose-dataset")
+    s.add_argument("--components", type=int, default=None, help="PCA components (default: n_train - 1)")
+    s.add_argument("--val-every", type=int, default=5, help="every k-th row per kind held out (>= 3)")
+    s.add_argument("--ridge", type=float, default=1e-3, help="conditioning ridge regularisation")
+    s.add_argument("--out", required=True, help="run folder (created; never overwritten)")
+    s.set_defaults(fn=cmd_tier0_train)
+    s = sub.add_parser("tier0-eval", help="evaluate a trained Tier 0 run: held-out BCE, sample "
+                                          "validity on ACES definitions, Spearman ranking")
+    s.add_argument("run", help="run folder from aces tier0-train")
+    s.add_argument("--dataset", required=True, help="dataset folder the run was trained on")
+    s.add_argument("--samples", type=int, default=2, help="samples per conditioning row")
+    s.add_argument("--val-every", type=int, default=5, help="must match the training split")
+    s.add_argument("--out", required=True, help="output folder (created; never overwritten)")
+    s.set_defaults(fn=cmd_tier0_eval)
     return ap
 
 

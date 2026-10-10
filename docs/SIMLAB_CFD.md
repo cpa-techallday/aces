@@ -157,11 +157,12 @@ residual of 0.010 (sd of log) for friction and 0.002 for Nusselt.
     an honest over-Mach rejection is itself the boundary measurement)
   - `aces-cal-air-03d` (diamond firm-up: Re 1/3/60 at t/a 0.20/0.24/0.28 — fills the Re spread at thick
     walls to pull diamond Nu scatter (0.143) clear of the 0.15 refusal line, or prove it genuinely broad)
-- **Run state (2026-10-10, evening):** campaign 3 (`aces-cal-air-03p`/`03d`, 15 cases) enqueued and
-  running on the sim-lab-4 window. Validation, resolution, `aces-cal-air-01` and campaign 2
-  (`aces-cal-air-02p`/`02r`) are all complete and fitted — the registry holds 9 factors (D30),
-  including primitive's first (valid at Re <= ~6 only: Mach/Re ~ 0.023). Corpus v2 (40 rows) and
-  Tier-0 dataset v2 rebuilt from the combined measurements.
+- **Run state (2026-10-11):** campaign 3 complete and fitted (D33). All 15 cases FINISHED; 11 citable
+  (03p c003/c004/c005 over-Mach at 0.164/0.170/0.201 — the primitive boundary measurement; 03d c007
+  over-Mach at 0.156). Registry refit from all 51 measurements (campaigns 1–3): primitive valid at
+  Re 1.0–5.99 with 9 points; diamond Nu now a power law at scatter 0.067 (off the refusal line);
+  gyroid unchanged. Corpus v3 (51 rows) and tier-0 run v2 rebuilt. Validation, resolution,
+  `aces-cal-air-01` and campaign 2 all complete and fitted.
 
 ```bash
 docker exec -w /work simlab-queue-1 python -m simlab enqueue cases/aces/aces-cal-air-03p.yaml --docker
