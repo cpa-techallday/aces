@@ -173,8 +173,15 @@ class Transport(_Env):
             self.skipTest("the vendored simlab/mcp_server.py has no TIERS literal to compare with")
         added = {k: fake_simlab.TIERS[k] - vendored.get(k, set()) for k in fake_simlab.TIERS}
         self.assertTrue(all(vendored[k] <= fake_simlab.TIERS[k] for k in vendored))
-        self.assertTrue(added["read"] <= {"sim_list_specs", "sim_get_file"} and "sim_get_file" in added["read"])
-        self.assertTrue(added["submit"] <= {"sim_put_spec", "sim_put_file"} and "sim_put_file" in added["submit"])
+        if "sim_get_file" in vendored.get("read", set()):
+            # the vendored snapshot is simlab-mcp 0.4.0 itself (sync.sh --commit rig-golden-1): the fake's tiers are
+            # exactly its tiers
+            self.assertEqual({k: set(v) for k, v in fake_simlab.TIERS.items()},
+                             {k: set(vendored.get(k, set())) for k in fake_simlab.TIERS})
+        else:
+            # an older snapshot (28d92a8): the fake adds the spec store and file tools of 0.4.0 to its tiers
+            self.assertTrue(added["read"] <= {"sim_list_specs", "sim_get_file"} and "sim_get_file" in added["read"])
+            self.assertTrue(added["submit"] <= {"sim_put_spec", "sim_put_file"} and "sim_put_file" in added["submit"])
         self.assertEqual(added["full"], set())
         self.assertEqual(len(fake_simlab.allowed_tools("full")), 17)
         self.assertEqual(len(fake_simlab.allowed_tools("read")), 12)

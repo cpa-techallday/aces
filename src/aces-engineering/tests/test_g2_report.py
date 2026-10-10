@@ -54,11 +54,16 @@ class TestRecordedRun(unittest.TestCase):
         for key in ("title", "summary", "key_numbers", "inputs", "voxel", "compute", "sweep", "surrogate", "optimise",
                     "verification", "check", "conforming", "rig", "winner", "evidence", "environment", "limits"):
             self.assertIn(key, self.doc["sections"])
-        # this recorded run (golden 0.1 records: no conforming block, no lane) says so instead of inventing either
-        self.assertTrue(self.doc["sections"]["conforming"]["status"].startswith("not run: "))
+        # this recorded run (golden 0.2.0 records: finalise writes a not-run conforming block, and no lane was used)
+        # says so instead of inventing either
+        conf = self.doc["sections"]["conforming"]
+        self.assertFalse(conf["ran"])
+        self.assertTrue(str(conf["reason"]).startswith("not run: "))
+        self.assertEqual(conf["rows"], [])
         self.assertEqual(self.doc["sections"]["rig"]["status"], "not run: no rig lane was used (desktop only)")
         self.assertIn("| level | case | h (mm) | device | host |", self.md)
-        self.assertNotIn("conforming tet10", self.doc["verdict_line"])
+        self.assertIn("conforming tet10: not run (no conforming check)", self.doc["verdict_line"])
+        self.assertIn("Mode `-`; status `-`; case `-` on -.", self.md)
         self.assertIn("no rig run (desktop only)", self.doc["sections"]["limits"]["not_verified"])
         for fig in ("sweep_scatter.png", "optimise_map.png", "check_levels.png"):
             p = Path(self.rd.path("figures", fig))
@@ -68,6 +73,13 @@ class TestRecordedRun(unittest.TestCase):
         self.assertFalse(Path(self.rd.path("figures", "conforming.png")).exists())   # no conforming check ran
         self.assertIn("Material source: test input", self.md)
         self.assertIn(golden.sha256_file(self.rd.path("inputs", "spec.json")), self.md)
+
+    def test_golden_01_validation_reads_not_run(self):
+        """A validation.json written by golden 0.1 has no conforming block: section 10 says not run, never invents it."""
+        val = {k: v for k, v in self.val.items() if k not in ("conforming", "rig")}
+        sec = report._conforming_section(report._Reader(self.rd), report._Prov(), val, {})
+        self.assertEqual(sec, {"status": "not run: this run's validation record has no conforming check "
+                                         "(golden code before 0.2.0)"})
 
     def test_verdict_line_pass_format(self):
         line = self.doc["verdict_line"]

@@ -1216,6 +1216,11 @@ class RigSession:
         for name, data in (records or {}).items():
             with contextlib.suppress(OSError):
                 _atomic_write(run.path(gid, "rig", name), data)
+        if "evidence.json" in (records or {}):
+            # <gid>/evidence.json is a byte copy of the rig's whenever it pulled cleanly (section 10.8), delivered or
+            # not: the audit's R4 asks for it and the bundle takes the case's image and GPU facts from it
+            with contextlib.suppress(OSError):
+                _atomic_write(run.path(gid, "evidence.json"), records["evidence.json"])
         now = utc_now()
         case = e["_cases"].get(gid) or {"case_id": gid}
         oc = {"case_id": gid, "role": case.get("role"), "status": "FAILED", "design_status": status, "error": reason,

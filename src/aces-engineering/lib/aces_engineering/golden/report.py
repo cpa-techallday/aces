@@ -1100,7 +1100,8 @@ def _conforming_markdown(cf: dict) -> list[str]:
     if not cf.get("ran"):
         why = str(cf.get("reason") or cf.get("check_status") or "not run")
         L += [why if why.startswith("not run") else f"not run: {why}", "",
-              f"Mode `{cf.get('mode')}`; status `{cf.get('check_status')}`; case `{cf.get('case_id') or '-'}` {where}.",
+              f"Mode `{cf.get('mode') or '-'}`; status `{cf.get('check_status') or '-'}`; "
+              f"case `{cf.get('case_id') or '-'}` {where}.",
               ""]
         if isinstance(cf.get("rig_attempt"), dict):
             att = cf["rig_attempt"]
