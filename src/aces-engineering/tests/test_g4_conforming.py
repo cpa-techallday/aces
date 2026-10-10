@@ -734,6 +734,30 @@ class TestMesher(unittest.TestCase):
             self.assertEqual(rec["dof"], 3 * rec["nodes"])
             self.check_tet10(mesh)
 
+    def test_the_validation_bar_whose_blank_header_copy_gmsh_refused(self):
+        """cudax scripts/golden_validate.py writes its 10 x 2 x 2 bar (CC-1) with struct, the -x face before the +x
+        face (write_box_stl has them the other way round). trimesh re-exported it for gmsh with an all-zero header,
+        and gmsh 4.15.2 refused that copy on every attempt (mesh-failed, measured on the integration stand-in). The
+        mesher now writes its copies with STL_HEADER (test input: that bar, byte for byte)."""
+        import struct
+
+        p = [(0, 0, 0), (10, 0, 0), (10, 2, 0), (0, 2, 0), (0, 0, 2), (10, 0, 2), (10, 2, 2), (0, 2, 2)]
+        quads = [((0, 3, 2, 1), (0, 0, -1)), ((4, 5, 6, 7), (0, 0, 1)), ((0, 1, 5, 4), (0, -1, 0)),
+                 ((2, 3, 7, 6), (0, 1, 0)), ((0, 4, 7, 3), (-1, 0, 0)), ((1, 2, 6, 5), (1, 0, 0))]
+        body = b""
+        for (a, b, c, d), n in quads:
+            for tri in ((a, b, c), (a, c, d)):
+                body += struct.pack("<12fH", *(float(x) for x in n), *(float(x) for k in tri for x in p[k]), 0)
+        with tempfile.TemporaryDirectory() as td:
+            stl = Path(td) / "bar.stl"
+            stl.write_bytes(b"golden_validate box (validation fixture)".ljust(80, b" ") + struct.pack("<I", 12) + body)
+            rc, rec, mesh = run_mesher(stl, Path(td) / "o", 1.0, "ABCD")
+            self.assertEqual((rc, rec["status"]), (0, "ok"), rec.get("message"))
+            self.assertLessEqual(abs(rec["volume_rel_err"]), 0.005)
+            self.check_tet10(mesh)
+        self.assertFalse(cf.STL_HEADER.startswith(b"solid"))
+        self.assertEqual(len(cf.STL_HEADER), 80)
+
     def test_icosphere_on_the_discrete_route(self):
         import trimesh
 

@@ -202,6 +202,19 @@ def bc_from(eff: dict, domain: dict) -> dict:
 
 # ------------------------------------------------------------------------------------------------ the STL, cleaned
 
+# The 80-byte header of the cleaned copies gmsh reads. trimesh writes binary STL with an all-zero header, and gmsh
+# 4.15.2 refuses some such files ("Error loading"): measured on golden_validate's 10 x 2 x 2 box during integration,
+# whose re-export failed every mesh attempt, while the same bytes load with a header that starts with text. It must
+# not start with "solid" (that marks an ASCII STL).
+STL_HEADER = b"aces golden conforming mesher input".ljust(80, b" ")
+
+
+def _write_stl(mesh, path) -> None:
+    """`mesh` as a binary STL at `path`, with STL_HEADER in place of trimesh's blank header."""
+    data = mesh.export(file_type="stl")
+    Path(path).write_bytes(STL_HEADER + bytes(data)[80:])
+
+
 def _load_stl(path):
     """The part's STL loaded with trimesh (merged vertices), degenerate faces removed, winding made consistent per
     component and the whole mesh turned outward when its signed volume is negative. Returns (mesh, components, info):
@@ -1034,9 +1047,9 @@ def mesh_stl(stl, out_dir, *, size: float, threads: int, case_id: str = "part", 
         rec["gmsh_version"] = getattr(gmsh, "__version__", None)
         tmp = Path(tempfile.mkdtemp(prefix=".mesh-", dir=str(out_dir)))
         try:
-            m.export(str(tmp / "all.stl"))
+            _write_stl(m, tmp / "all.stl")
             for k, (c, _) in enumerate(comps):
-                c.export(str(tmp / f"comp-{k}.stl"))
+                _write_stl(c, tmp / f"comp-{k}.stl")
             gmsh.initialize(["gmsh", "-noenv"], readConfigFiles=False)
             gmsh.logger.start()
             try:
