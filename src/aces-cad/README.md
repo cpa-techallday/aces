@@ -471,7 +471,7 @@ aces-cad` runs the installed copy after the end-to-end block (doctor, the ACES p
 pulled in a sovereign project, `check_bundle.py`, the ledger, a socket script that must exit 5 and a loop that must exit
 4), and keeps everything in `logs/cad/`.
 
-16 test modules, 107 test methods and 52 fixture scripts:
+16 test modules, 108 test methods and 52 fixture scripts:
 
 - **Static** (`test_static.py`, no worker): parent modules import only the standard library and no network module;
   worker modules import heavy libraries only inside functions, and only distributions of the engineering lock (never
@@ -526,10 +526,27 @@ runs, labelled as such; nothing is invented.
   skip). On Windows (permissive) the suite ran with only test-side failures, fixed since. The ACES plate's
   `geometry_sha256` was the same on Windows (Python 3.11.9) and Arch (Python 3.14.7), while `part.stl` differed.
 
+**Verified at integration on 2026-10-10** (the merged branch, `cad-local/integration` at 032c1d0; details and every
+number in `docs/PACKAGES.md`, "Local CAD"):
+
+- `bin/build aces-cad` (unsigned): `check()` passed the 108 tests as the builder user in strict mode on Python 3.14.7
+  (one skip, S02b); namcap printed nothing.
+- `bin/install-test aces-base aces-engineering aces-cad` in a clean `archlinux:base`: exit 0, doctor ready and strict
+  (seccomp, 106 instructions with TSYNC; Landlock ABI 3; 14 of 14 checks), the ACES plate, inspect, render, drawing,
+  pull, the `cad.pull` ledger entry, `check_bundle.py`, the socket script exit 5, the loop exit 4, and the installed
+  tests as root (108, one skip).
+- As a normal user against the installed package: the installed tests (108, one skip), `aces-cad selftest` (13
+  passed), and the agent loop through `aces-cad-mcp` with a project made by the real aces CLI (start, run, inspect,
+  render, drawing, pull, note, runs; 17 of 17 steps). On Windows (permissive): 108 tests OK (14 skips), the selftest
+  (12 passed, 9d skipped) and the same loop (17 of 17).
+- The integration fixed four defects the merged code showed (children inheriting the server's stdin, the ledger
+  result losing `n`, `hash` and `path` on long paths, the 100-hole cap report, job clean-up under the call's
+  environment) and set aces-os to 0.1.0-5 by the spec's merge-order rule; `docs/PACKAGES.md` describes each.
+
 **Not verified yet:**
 
-- The merged branch: `bin/build aces-cad` and its `check()`, `bin/install-test aces-base aces-engineering aces-cad`, CI
-  and the VM acceptance steps (`rehearsal/README.md`) have not run on it.
+- CI and the VM acceptance steps (`rehearsal/README.md`) have not run on the merged branch, and its packages so far are
+  unsigned integration builds.
 - Whether the VM kernel has Landlock and which ABI (acceptance step 2).
 - Whether GitHub's runners allow the Landlock syscalls under Docker's seccomp profile; if not, the CI install test runs
   permissive and says so.

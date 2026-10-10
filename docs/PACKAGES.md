@@ -29,7 +29,7 @@ is a development key: rotate it before anything is distributed.
 | `aces-engineering` | 0.1.0-1 | One locked Python 3.14 venv at `/opt/aces/engineering/venv` (76 distributions, each hash-pinned in `requirements.txt`, binary wheels only; 907.6 MiB installed, 255 MB package) with a vendored snapshot of cudax-sim-runtime's `simlab` and `gendesign` (commit `28d92a8`, content sha256 in `SNAPSHOT`) on its path. Commands: `aces-simlab` (validate, local run, report, evidence, surrogate, export, capacity, `remote` MCP client), `aces-evidence` (ledger and bundle verification, relocates ledgers from other machines), `aces-gendesign` (list, selftest, topopt, parametric, nozzle, fusion); `mcp.json.example` for the rig's simlab `:8022` and rig-state `:8010`; LICENSES.md. Not installed: rig-only rq, redis, uvicorn, mcp, starlette, gmsh, rocketcea, physicsnemo, and the GPU packages cupy, warp, torch (mlflow too); the wrappers keep the queue, leases, MCP-server and console commands off the desktop CLI. Depends on `libglvnd` and `libx11` (the OCP wheel links libGL and libX11) | built (x86_64, signed); `check()` = `aces-gendesign selftest` passed | `check()`: 56/56 imports, fea3d element test, the 1 mm cantilever on NumPy reproduces the workstation's GPU record (0.1989054912444315 mm) to 8.3e-13 in 401 PCG iterations, evidence bundle and chain verified, md/html/docx report, 8 SIMP iterations, L-bracket STEP round trip at 26,694 voxels as on the workstation (needs `embreex`; trimesh's rtree fallback gives 26,616, all 78 differences on one 45-degree face). Clean container (own script, `SigLevel = Optional TrustAll`): relocated shebangs, `pyvenv.cfg` and bytecode paths, selftest again, `aces-voxel fea` of the bracket STEP at 2 mm (converged, 1,232 iterations), the workstation's 4-bundle evidence ledger verified (4 entries relocated) and a hand-edited bundle rejected, `aces-simlab remote` against a local mcp 2.0.0 server (JSON and SSE replies, bearer token, 401 on a wrong one), a 10-trial parametric study and a GP surrogate in a per-user registry, `pacman -R` leaves nothing under `/opt/aces`. After the full signed rebuild, `bin/install-test aces-base aces-engineering aces-voxel` passed under `SigLevel = Required DatabaseRequired`: `aces-engineering selftest: all hard checks passed`, `aces-voxel fea --self-test` PASS (STEP round trip at 26,694 voxels in 0.3 s) |
 | `aces-voxel` | 0.1.0-1 | `aces-voxel`: `fea` (STEP to voxel H8 FEA through simlab's step-structures stages, or `--self-test`), `topopt` (3-D SIMP), `lattice` (Warp rod lattices, GPU only), `export` (density to STL); `docs/VOXEL_KERNEL.md` (what is standard, what is not, the source modules) in `/usr/share/doc/aces-voxel`; an `aces-voxel` agent skill in `/usr/share/aces/voxel/skills` (linked by `aces-omarchy-setup` 0.1.0-2). Runs in the aces-engineering venv, no second venv | built (any, signed) with its dependency installed (`pkgbuilds/ORDER` no longer marks it `nodeps`), so `check()` runs against the installed aces-engineering: fea self-test, 6 SIMP iterations, export, a build123d bar STEP through `fea`, `lattice` exits 2 without a GPU | Clean container: `--help`, `fea --self-test`, `fea` of the bracket STEP, `export` of a SIMP density, `lattice` exit 2 with its reason |
 | `aces-cad-onshape` | 0.1.0-2 | -2 changes two unit tests only: the reply-that-cannot-be-encoded test uses a circular reference instead of a list nested 100,000 deep (json encoded that list on the GitHub runner, whose containers run with an unlimited stack, so CI run 37948580881 failed the package's `check()` while the same test passed on DARKNESS and the VM with the default 8 MB stack). Onshape adapter (cloud; every write, evaluation, export and pull runs the project class gate and is refused for sovereign and controlled projects): standard-library REST client, `aces-onshape` CLI (whoami, documents, create-document, elements, fs read/write, eval, features, add-feature, add-custom-feature, update-feature, delete-feature, version, massprops, export step/stl, pull), `aces-onshape-mcp` stdio MCP server (17 tools; descriptions name every write; changing a feature or Feature Studio it did not create needs confirm_foreign, writing into a public document needs allow_public), the `aces-cad-onshape` agent skill in `/usr/share/aces/cad-onshape/skills`, `mcp.json.example` with this server and the official Onshape FeatureScript MCP Server (Onshape Labs, `https://fs-mcp.labs.onshape.app/mcp`, browser sign-in after an App Store subscription). `aces-onshape pull onshape://<did>/<wid>/<eid> --project NAME` writes `part.step`, `parameters.json`, `source.json` and `outcome.json` under `~/Work/NAME/cad/onshape/` and a `cad.pull` ledger entry with the sha256 of the first three where `aces` offers `ledger record` | built (any, signed) on main, 0.1.0-2 on 2026-10-09 15:14 UTC with `bin/build aces-cad-onshape`: `check()` ran the 69 unit tests (the 62 originals plus the seven review regressions) against the fake Onshape server, all OK on Python 3.14.7, namcap reported nothing; the same 69 pass in the builder image with the runner's unlimited stack (`docker run --ulimit stack=-1:-1`), which is where 0.1.0-1's test 34c had failed in CI. 0.1.0-1 (14:49 UTC, same sources apart from that test) and the earlier unsigned worktree build (62 tests, before the review fixes) are superseded | Clean container, the default `bin/install-test` set (aces-base, aces-creative, aces-consoles, aces-omarchy, aces-cad-onshape) from the signed repo (`SigLevel = Required DatabaseRequired`, 2026-10-09 14:52 UTC, exit 0): `aces-onshape --help`; `aces-onshape whoami` exits 3 with `no Onshape API keys: ...`; the installed tests in `/usr/share/aces/cad-onshape/tests` 69/69 as root against the installed package; `pacman -Sp aces-os` (0.1.0-4) resolves to 508 packages. Earlier, unsigned, with `bin/install-test aces-base aces-omarchy aces-cad-onshape` (62/62 before the review fixes): `aces-omarchy-setup` links the skill as `~/.claude/skills/aces-cad-onshape` and `~/.agents/skills/aces-cad-onshape`, and `--remove` unlinks both. Workstation: 62 tests OK on Python 3.11.9 and 3.13.13 (one skipped there, the POSIX file-mode test), 62/62 on 3.14.7 in `aces-builder`; the stdio MCP server driven through the skill's whole loop against the fake server. Real Omarchy 4.0.4 (the rehearsal VM, 2026-10-09 14:55 UTC): `pacman -Sy aces-cad-onshape aces-os` from the signed LAN repo installed 0.1.0-1 and upgraded aces-os to 0.1.0-4 (pacman lists the new optional dependency as installed); `aces-onshape whoami` exits 3 with the keys message; the installed tests 69/69; `aces-omarchy-setup` linked the skill into `~/.claude/skills` and `~/.agents/skills`; `aces-onshape-mcp` answered `initialize` and `tools/list` (17 tools) over stdio with `ACES_ONSHAPE_PROJECT=golden-demo`; upgraded to 0.1.0-2 from the same repo at 15:16 UTC, installed tests 69/69 again, whoami exit 3. No live Onshape run yet (no credentials on DARKNESS or the VM) |
-| `aces-cad` | 0.1.0-1 | Local text-to-CAD (no network, no quota, every project class): agents write build123d Python; `aces-cad-mcp` (stdio MCP server, 8 tools) and the `aces-cad` CLI run it in a sandboxed child of the aces-engineering venv (seccomp, Landlock, rlimits, a scrubbed environment; strict mode by default), report volume, area, bbox, validity and topology, inspect (mass, validity, holes, thickness, draft, radii, interference, section, measure, design space), render PNGs in the golden-path look, draw dimensioned DXF/SVG/PNG, and pull a run into `cad/local/` as STEP + parameters + sha256 with a `cad.pull` ledger entry; the `aces-cad` agent skill; no venv of its own (section "Local CAD" below) | not built yet | not built yet |
+| `aces-cad` | 0.1.0-1 | Local text-to-CAD (no network, no quota, every project class): agents write build123d Python; `aces-cad-mcp` (stdio MCP server, 8 tools) and the `aces-cad` CLI run it in a sandboxed child of the aces-engineering venv (seccomp, Landlock, rlimits, a scrubbed environment; strict mode by default), report volume, area, bbox, validity and topology, inspect (mass, validity, holes, thickness, draft, radii, interference, section, measure, design space), render PNGs in the golden-path look, draw dimensioned DXF/SVG/PNG, and pull a run into `cad/local/` as STEP + parameters + sha256 with a `cad.pull` ledger entry; the `aces-cad` agent skill; no venv of its own (section "Local CAD" below) | built (any) from branch `cad-local/integration` at 032c1d0 with `bin/build aces-cad` in the integration worktree, **unsigned** (the worktree has no secret key; its repo held unsigned copies of main's packages), 2026-10-10 07:49 UTC: `check()` ran the 108 tests as the `builder` user on Python 3.14.7 in strict mode (no "strict-mode tests skipped" line), OK in 641.9 s with one skip (S02b: the makepkg tree has no lock file); namcap printed nothing; the package holds 138 files, 27 checked-hash `.pyc`, the two shims at 755, no `__pycache__` under the tests and no file naming the build directory. The first build of the merge (6e3f6ef, before the ledger-result fix) passed 107 in 428.2 s with the same skip | Clean `archlinux:base`, `bin/install-test aces-base aces-engineering aces-cad` from that unsigned repo (`SigLevel = Optional TrustAll`, 2026-10-10 07:51-08:01 UTC, exit 0), as root: `aces-cad doctor` ready, mode **strict**, seccomp active (106 BPF instructions, TSYNC), Landlock ABI 3 (no TCP rules and no scoping at that ABI; `/var/cache/fontconfig` absent, so skipped), 14 of 14 checks passed, memory, CPU and file-size limits enforced, PDEATHSIG on; the ACES plate 11607.300918301276 mm³, counts 1/1/7/15/10, valid, 5.5 s wall (imports 3.5 s), peak 500.0 MB; inspect 0.030991493451864402 kg in AlSi10Mg, one simple through Ø10 hole entering at (30, 20, 5), minimum thickness 5.0 mm (embree), validity ok; iso and front renders at 1024 × 800; drawing texts 60, 5, 40, Ø10 THRU, 30, 20 with 0 audit errors; the pull wrote `part.step`, `part.stl`, `part.3mf`, `parameters.json`, `source.py`, `source.json` and `outcome.json`, `geometry_sha256` `806c9be7a86c8ae60308ee75d9a910f371d5f5aae6fe6517fa5ce6aa5fd1742f`, the `cad.pull` ledger entry 7 (class sovereign), the CAD source recorded, `check_bundle.py` all files match, `aces ledger verify` ok (7 entries); the socket script kind sandbox exit 5, the loop kind timeout exit 4 (3.0 s); the installed tests as root 108, OK in 475.3 s (one skip, S02b); the golden block passed (45 s). As the non-root `builder` user in the `aces-builder` image with the package installed (the packaged layout): doctor ready and strict, the installed tests 108, OK in 521.9 s (S02b skipped), `aces-cad selftest` 13 passed, 0 failed, 0 skipped in 40.0 s, and the stdio MCP loop 17 of 17 (section "Local CAD"). `pacman -Sp aces-os` (0.1.0-5): 530 packages after this set, 509 in the default install test (0.1.0-4 there: 508) |
 
 ## Changed for the golden path
 
@@ -397,49 +397,73 @@ without it.
 
 | Package | Version | What changed | Test evidence |
 |---|---|---|---|
-| `aces-cad` | 0.1.0-1 | new (its row is in "Built and tested") | not built yet |
-| `aces-os` | 0.1.0-6 | `aces-cad` added to `depends` (the sovereign CAD path). Written against main (aces-os 0.1.0-4) on the assumption that golden-rig/packaging merges first: its aces-os 0.1.0-5 adds `calculix-ccx-bin`, and the merged 0.1.0-6 lists both. golden-rig/packaging records that calculix-ccx-bin 2.23-1 does not build (it needs `libgfortran.so.4`), so this aces-os does not resolve until it does | not built yet; `pacman -Sp aces-os` not run (package count not measured) |
+| `aces-cad` | 0.1.0-1 | new (its row is in "Built and tested") | built and install-tested from the merged branch (its row, and "Integration" below) |
+| `aces-os` | 0.1.0-5 | `aces-cad` added to `depends` (the sovereign CAD path). Spec section 3: golden-rig/packaging (45f2c16, whose aces-os 0.1.0-5 adds `calculix-ccx-bin`) was not an ancestor of main (1680edf) when this integration started, so this is 0.1.0-5 against main. Whichever of the two merges second renumbers: golden-rig's aces-os must become 0.1.0-6 with both comment lines and both `'calculix-ccx-bin'` and `'aces-cad'` in `depends` (a trial `git merge-tree` against golden-rig/packaging and golden-rig/integration conflicts in this file only), and that aces-os does not resolve until calculix-ccx-bin builds (golden-rig records that 2.23-1 needs `libgfortran.so.4`) | built (any, `--nodeps`, unsigned, integration worktree) with `bin/build aces-os`; `pacman -Sp aces-os` resolves: 509 packages in the default install test (0.1.0-4 there: 508, so aces-cad adds one package), 530 after aces-base, aces-engineering and aces-cad are installed |
 
 `bin/install-test` gains an aces-cad block, which runs when aces-cad is in the package set (doctor, the ACES plate run,
 inspected, rendered, drawn and pulled in a sovereign project, `check_bundle.py`, the ledger, two hostile scripts by exit
 code, the installed tests; artefacts in `logs/cad/`), and CI a third install test, `bin/install-test aces-base
 aces-engineering aces-cad`. The default install test is unchanged.
 
-**Pre-integration check (B3, 2026-10-10).** The suite and the packaging ran against copies of builders B1's and B2's
-uncommitted working trees (taken at 16:19 AEDT), in a scratch tree whose unsigned repository held only aces-base
-0.1.0-3, aces-engineering 0.1.0-2 and the new package. The integrator's build of the merged branch replaces these
-results in the cells above.
+**Integration (2026-10-10).** The three builder branches (B1 ef59108, B2 5b5b8c6, B3 2008e7e) merged into
+`cad-local/integration` from main 1680edf without a conflict: no file is shared by two builders, and no file on the
+spec's never-edit list changed. The branch is named `cad-local/integration` because git cannot hold a branch
+`cad-local` next to the builders' `cad-local/b1..b3`. The merged code showed these defects, each fixed in its own
+commit:
 
-- `bin/build aces-cad`: `aces-cad-0.1.0-1-any.pkg.tar.zst` built; `check()` ran the 107 tests as the builder user in
-  strict mode, OK in 391.6 s with one skip (S02b: the makepkg tree has no lock file); namcap printed nothing.
-- `bin/install-test aces-base aces-engineering aces-cad`: exit 0. `aces-cad doctor`: ready, strict, seccomp (106 BPF
-  instructions, TSYNC), Landlock ABI 3, 14 of 14 checks passed; Python 3.14.7, build123d 0.11.1, OCP 7.9.3.1, ezdxf
-  1.4.4, lib3mf 2.5.0, trimesh 5.1.0. The ACES plate: 11607.300918301276 mm³, counts 1/1/7/15/10, valid, 2.5 s wall
-  (imports 1.7 s), peak 500.7 MB. Inspect: 0.030991493451864402 kg in AlSi10Mg, one simple through Ø10 hole entering at
-  (30, 20, 5), minimum thickness 5.0 mm, validity ok. The drawing read 60, 40, 5, 30, 20 and Ø10 THRU (checked by eye).
-  The pull: `geometry_sha256` `806c9be7a86c8ae60308ee75d9a910f371d5f5aae6fe6517fa5ce6aa5fd1742f`, the `cad.pull`
-  ledger entry written, the CAD source recorded, `check_bundle.py` passed. The socket script exited 5 (kind sandbox)
-  and the loop 4 (kind timeout). The installed tests, as root: 107, OK in 364.2 s (one skip, S02b).
-- In a clean `archlinux:base` as uid 1000 (strict), before two test fixes: 105 of 107 passed. Both failures were test
-  defects (an unpaced print flood can finish between two of the parent's 100 ms checks; the None-result test expected
-  the word NoneType where the message names None) and were fixed before the build above.
-- Windows 11 with the workstation's Python 3.11.9 venv (permissive), before the same fixes: 107 run, 93 passed, 1
-  failed (the None-result test), 13 skipped (strict-only tests, POSIX-only checks, and symlinks, which need a privilege
-  there); after them the two changed modules passed (sandbox unit 12 and worker run 6, one skip each). On Windows
-  every aces CLI call that `aces-cad-mcp` made waited out its 30 s timeout: the child inherits the server's stdin pipe,
-  which the reader thread is blocked on (a B3 probe: the same child finished in 0.08 s with stdin set to DEVNULL);
-  reported for a fix.
-- The ACES plate pulled on Windows had the same `geometry_sha256` as on Arch; `part.stl` differed between the two
-  (OCCT tessellation), so STL hashes are not compared across operating systems.
+- aces-os back to 0.1.0-5 (spec section 3, the table above).
+- Children of the parent no longer inherit its stdin. `project.run_aces`, and the Windows `taskkill` of a job, gave
+  every child the server's stdin, which under `aces-cad-mcp` is the JSON-RPC pipe. On Windows each aces CLI call then
+  waited out its 30 s timeout (B3's probe: 8 s and still waiting with the pipe, 0.08 s with stdin on the null device);
+  on Linux a child that read stdin would have consumed MCP input. Children now get the null device.
+- The `cad.pull` result keeps `n`, `hash` and `path`. The `--print json` line of `aces ledger record` was cut at 300
+  characters before it was parsed; that line is about 245 characters plus the ledger path, so a long path (any Windows
+  path, a Linux path over about 55 characters) left only `{"written": true, "output": ...}`. Found by the stdio loop
+  below on Windows; a new U03 test fails on the old code and passes on the fix.
+- The 100-hole cap is reported only when a part has more holes. `geom.find_holes` cut its own records at 100, so the
+  inspect `holes_truncated` flag could never be true for one part and the drawing's note fired at exactly 100 holes;
+  both callers now ask for 101.
+- Render, drawing and pull remove their job directories under the call's environment (`ACES_CAD_KEEP_JOBS`), as
+  `OpContext.finish` does.
+
+Results (runs of 2026-10-10, UTC):
+
+- Workstation, Windows 11, Python 3.11.9 parent, the workstation venv as the worker (build123d 0.11.1, OCP 7.9.3.1),
+  `ACES_CAD_SANDBOX=permissive`, `ACES_CAD_REQUIRE_WORKER=1`: the merge as it came from the builders (6ad086f) ran 107
+  tests OK in 1161.5 s; the final branch (032c1d0) ran 108 OK in 1235.7 s. Both skipped the same 14: the strict-only
+  H06, H07, H08 and H12; H03, H14, U06 and the FIFO check (POSIX or Linux only); four U04 checks and W06 (symlinks need
+  a privilege there); S02b, because those runs used an archive of `src/aces-cad` alone (the static tests from the full
+  tree, 8 of 8, ran S02b and S03 against the real lock). `aces-cad selftest`: 12 passed, 0 failed, 1 skipped (9d needs
+  strict) in 79.7 s.
+- Linux: the package build and the install tests in the row above, all in strict mode on Python 3.14.7.
+- The agent loop through the stdio server, against a scratch project made by the real aces CLI (`aces project new
+  cadloop --class sovereign`; aces-base 0.1.0-3, the installed package on Linux and `src/aces-base` on Windows):
+  `initialize`, `tools/list` (the 8 tools), `cad_start`, the ACES plate written to `cad/src/plate.py` and run by
+  `script_path` with `render` and a progress token, `cad_inspect` (mass in AlSi10Mg, validity, holes, thickness),
+  `cad_render` (iso, front and cutaway, inline), `cad_drawing` (inline), `cad_pull`, `cad_note`, `cad_runs`, `cad_start`
+  again (the note comes back) and EOF; then `aces ledger verify`, `aces ledger show --kind cad.pull` (class sovereign),
+  `aces project show` (the CAD source) and `check_bundle.py`. 17 of 17 steps passed on Linux as uid 1000 in strict mode
+  (tool calls of 2.9, 6.9, 3.5, 4.7, 4.2 and 3.6 s from start to pull; no job ran long enough for a progress
+  notification) and on Windows in permissive mode (6.7, 14.3, 6.5, 7.9, 6.5 and 7.1 s; progress at 5.3 of 120 s in the
+  run job and 10.6 of 125.3 s in its render job). No call waited on a timeout, every reply line was ASCII, and the
+  server exited 0 at EOF.
+- The images were looked at: the iso, front and cutaway renders in the dark look, captioned "designed in build123d
+  (aces-cad)", and the drawing PNG in third-angle layout reading 60, 40, 5, 30, 20 and Ø10 THRU above the title block.
+- The ACES plate's `geometry_sha256` was `806c9be7a86c8ae60308ee75d9a910f371d5f5aae6fe6517fa5ce6aa5fd1742f` in every
+  run on Windows (Python 3.11.9) and on Arch (Python 3.14.7); `part.stl` differed (`1dfaf2d9aae7…` on Windows,
+  `3d24ea3da0fd…` on Arch), so STL hashes are not compared across operating systems.
 
 **Not verified.**
 
-- The merged branch has not been built, install-tested or run in CI, and the VM acceptance has not run: the result
-  cells above say "not built yet".
-- Whether the VM kernel has Landlock, and which ABI (acceptance step 2).
+- CI has not run the merged branch (nothing is pushed), the packages above are unsigned integration builds, and the VM
+  acceptance (section 29) has not run.
+- Whether the VM kernel has Landlock, and which ABI (acceptance step 2). The Docker Desktop kernel used here,
+  `6.6.114.1-microsoft-standard-WSL2`, offers ABI 3, so the TCP rules (ABI 4) and the signal and abstract-socket
+  scoping (ABI 6) are written but not exercised.
 - Whether GitHub runners allow the Landlock syscalls under Docker's seccomp profile; if not, the CI install test runs
   permissive and says so in its log.
-- Which MCP clients show image content to the model (acceptance step 9).
+- Which MCP clients show image content to the model (acceptance step 9); the loop above checked only that the server
+  sends valid PNG image content.
 - Cross-OS equality of `geometry_sha256` beyond the ACES plate on the two platforms above, and on the VM (acceptance
   step 8).
 
