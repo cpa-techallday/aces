@@ -16,11 +16,13 @@ mcp_client.simlab_token() and is only ever sent as a header; records keep only w
 
 RigSession submits a stage without blocking (uploads, rig/specs/<id>.yaml, sim_put_spec, sim_submit, rig/session.json),
 then collects it: polls sim_status every POLL_S, shows state changes and the rig's own progress beacons, pulls each case
-as it ends, classifies it (a result, or not delivered with a rig-* design status) and writes <case>/rig/ (the rig's
-records unchanged), <case>/evidence.json (a byte copy of the rig's), <case>/results.json, <case>/status.json and
-<case>/rig.json. Every wait is bounded: the budget runs from an experiment's submission to its last pulled file (then
-sim_cancel), and UNREACHABLE_S without a successful call ends the wait (rig-unreachable). sim_submit is never retried
-blindly. Standard library only at module level (yaml is imported when an experiment is written).
+as it ends, classifies it (a result: FINISHED, or FAILED with a real design or conforming status; not delivered, with a
+rig-* design status: no outcome, NOT_RUN, a rig-* status, an internal error "error", or a file the rig would not hand
+over) and writes <case>/rig/ (the rig's records unchanged), <case>/evidence.json (a byte copy of the rig's),
+<case>/results.json, <case>/status.json and <case>/rig.json. Every wait is bounded: the budget runs from an
+experiment's submission to its last pulled file (then sim_cancel), and UNREACHABLE_S without a successful call ends the
+wait (rig-unreachable). sim_submit is never retried blindly. Standard library only at module level (yaml is imported
+when an experiment is written).
 """
 from __future__ import annotations
 
@@ -932,6 +934,10 @@ class RigSession:
                                 self._lost_contact(e, pending, str(exc), on_case)
                                 pending.clear()
                                 break
+                            except RigError as exc:  # last resort: a refusal while pulling is "not delivered" (10.7)
+                                res = self._not_delivered(e, rc, gid, "rig-error",
+                                                          f"{gid} ({rc}) could not be pulled from the rig: {exc}",
+                                                          job=job)
                             if on_case:
                                 on_case(gid, res)
                     if not pending:
@@ -1074,7 +1080,7 @@ class RigSession:
         records: dict[str, bytes] = {}
         pulled: list[tuple[dict, bytes, int, str]] = []
         outcome = files_doc = None
-        integrity = None
+        integrity = pull_error = None
         try:
             got = self._get_optional(exp_id, f"{rc}/outcome.json")
             if got is not None:
@@ -1093,7 +1099,17 @@ class RigSession:
                     rel = p[len(prefix):] if p.startswith(prefix) else None
                     if not rel or not all(_NAME.match(part) for part in rel.split("/")):
                         raise RigIntegrityError(f"{rc}/files.json lists {p!r}, which is not a file under {prefix}")
-                    data, sha, chunks = self.client.get_file(exp_id, f"{rc}/{p}", expect_sha256=entry.get("sha256"))
+                    try:
+                        data, sha, chunks = self.client.get_file(exp_id, f"{rc}/{p}",
+                                                                 expect_sha256=entry.get("sha256"))
+                    except (RigUnreachable, RigIntegrityError):
+                        raise
+                    except RigError as exc:
+                        # the rig refused a file its own files.json lists (gone, not a regular file, changed while
+                        # read, an unknown experiment after a redis reset, a smaller chunk limit): the case is not
+                        # delivered (section 10.7), never an internal error; the records below are still pulled
+                        pull_error = f"{rc}/{p} could not be pulled: {exc}"
+                        break
                     pulled.append((entry, data, chunks, rel))
             names = (("results.json",) if state == "finished" else ()) + ("evidence.json", "status.json", "case.json",
                                                                          "worker.log")
@@ -1124,6 +1140,9 @@ class RigSession:
             self.integrity_error = self.integrity_error or integrity
             return self._not_delivered(e, rc, gid, "rig-integrity", f"rig integrity: {integrity}", job=job,
                                        records=records, outcome=outcome, evidence=evidence, pulled_utc=pulled_utc)
+        if pull_error is not None:
+            return self._not_delivered(e, rc, gid, "rig-error", pull_error, job=job, records=records, outcome=outcome,
+                                       evidence=evidence, pulled_utc=pulled_utc)
         if outcome is None:
             log = records.get("worker.log", b"").decode("utf-8", "replace")
             tail = "\n".join(log.strip().splitlines()[-LOG_TAIL_LINES:]) if log.strip() else ""
@@ -1148,6 +1167,19 @@ class RigSession:
                 self.integrity_error = self.integrity_error or f"{gid}: {_last_line(outcome.get('error'))}"
             return self._not_delivered(e, rc, gid, dst, str(outcome.get("error") or dst), job=job, records=records,
                                        outcome=outcome, evidence=evidence, pulled_utc=pulled_utc)
+        if ost == "FAILED" and dst == "error":
+            # design status "error" is the catch-all for an exception inside the case (case._run, rigside, or
+            # conforming.run_check's own record): on the rig that is as likely an infrastructure fault (a CUDA
+            # out-of-memory on the leased GPU, an image that cannot import cupy) as a code bug, so the case is not
+            # delivered and falls back to this desktop (sections 10.9 and 13.3), where a code bug fails again and
+            # grades as it would have. The real design and conforming statuses (unconverged, detached-load,
+            # bc-mapping-failed, equilibrium, ...) stay results. A deviation from the 10.7 table (finding 3 of the
+            # rig review).
+            return self._not_delivered(e, rc, gid, "rig-error",
+                                       f"the rig case {gid} stopped on an internal error: "
+                                       f"{_last_line(outcome.get('error')) or 'no error text'}",
+                                       job=job, records=records, outcome=outcome, evidence=evidence,
+                                       pulled_utc=pulled_utc)
         if ost == "NOT_RUN" or ost not in ("FINISHED", "FAILED"):
             return self._not_delivered(e, rc, gid, "rig-error",
                                        f"the rig did not run {gid} ({ost} {dst}: {_last_line(outcome.get('error'))})",

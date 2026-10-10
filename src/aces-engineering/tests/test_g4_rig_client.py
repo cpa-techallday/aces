@@ -510,6 +510,60 @@ class WholeExperiment(_Env):
         self.assertTrue(r["reason"].startswith("submission failed: "), r["reason"])
         self.assertFalse(f.tool_calls("sim_submit"))
 
+    def assert_not_delivered_with_records(self, run, sess, r):
+        """A not-delivered case keeps the rig records that pulled cleanly, a byte copy of the rig evidence, status.json
+        and rig.json, and none of the case's outputs."""
+        self.assertEqual((r["state"], r["design_status"]), ("not-run", "rig-error"))
+        self.assertIsNone(sess.level_block("x001"))
+        self.assertIsNone(sess.integrity_error)
+        st = run.read_json("x001/status.json")
+        self.assertEqual((st["status"], st["design_status"], st["error"]), ("FAILED", "rig-error", r["reason"]))
+        rj = run.read_json("x001/rig.json")
+        self.assertEqual((rj["state"], rj["design_status"], rj["files"]), ("not-run", "rig-error", []))
+        for name in ("outcome.json", "files.json", "evidence.json", "status.json", "case.json", "worker.log"):
+            self.assertTrue(run.path("x001", "rig", name).is_file(), name)
+            self.assertEqual(rj["records"][name], hashlib.sha256(run.path("x001", "rig", name).read_bytes()).hexdigest())
+        self.assertEqual(run.path("x001", "evidence.json").read_bytes(), run.path("x001", "rig", "evidence.json")
+                         .read_bytes())
+        self.assertFalse(run.path("x001", "results.json").exists())
+        self.assertFalse(run.path("x001", "mask.npy").exists())
+
+    def test_a_listed_file_the_rig_will_not_hand_over_is_not_delivered(self):
+        """Review finding 2: sim_get_file refuses a file the rig's files.json lists (here it was deleted after the job
+        ended, so the rig answers 'not a regular file'). That is a case the rig did not deliver (rig-error), never an
+        exception out of collect() (exit 7)."""
+        f = self.fake(scenarios={"x001": "file-vanishes"})
+        run, sess, res = gc1_check_run(self.tmp, f)
+        r = res["x001"]
+        self.assertTrue(r["reason"].startswith("c000/golden/x001/fields.npz could not be pulled: "), r["reason"])
+        self.assertIn("is not a regular file", r["reason"])
+        self.assert_not_delivered_with_records(run, sess, r)
+        self.assertEqual(run.read_json("x001/rig/outcome.json")["status"], "FINISHED")  # the rig did finish it
+
+    def test_an_internal_error_on_the_rig_is_not_delivered(self):
+        """Review finding 3: an exception inside the rig case (the fixture raises a CUDA out-of-memory from the solve)
+        comes back as FAILED with design status "error"; the desktop counts it as not delivered (rig-error, with the
+        traceback's last line), so level 1 falls back to this desktop instead of counting as a failed check."""
+        f = self.fake(scenarios={"x001": "rig-exception"})
+        run, sess, res = gc1_check_run(self.tmp, f)
+        r = res["x001"]
+        self.assertEqual(r["reason"], f"the rig case x001 stopped on an internal error: RuntimeError: "
+                                      f"{fake_simlab.RIG_EXCEPTION}")
+        self.assert_not_delivered_with_records(run, sess, r)
+        out = run.read_json("x001/rig/outcome.json")
+        self.assertEqual((out["status"], out["design_status"]), ("FAILED", "error"))
+
+    def test_a_refusal_while_pulling_never_escapes_collect(self):
+        """The last-resort guard around the pull in collect(): any RigError that is not lost contact makes the case not
+        delivered (test input: a pull that raises)."""
+        f = self.fake()
+        with mock.patch.object(rig.RigSession, "_pull_case", side_effect=rig.RigError("fixture: refused (test input)")):
+            run, sess, res = gc1_check_run(self.tmp, f)
+        r = res["x001"]
+        self.assertEqual((r["state"], r["design_status"]), ("not-run", "rig-error"))
+        self.assertEqual(r["reason"], "x001 (c000) could not be pulled from the rig: fixture: refused (test input)")
+        self.assertEqual(run.read_json("x001/status.json")["design_status"], "rig-error")
+
 
 if __name__ == "__main__":
     unittest.main()

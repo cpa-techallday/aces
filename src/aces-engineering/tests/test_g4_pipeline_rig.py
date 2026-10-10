@@ -13,7 +13,9 @@ fabric manifest, XDG_DATA_HOME) and poll constants patched short; the test metho
   fails, preview-grade, exit 0 (1 with --strict); corrupt-file -> exit 6; dark-after-submit with UNREACHABLE_S 2 ->
   rig-unreachable and x101; Ctrl-C (a KeyboardInterrupt raised in the child when x001 starts running) -> 130 with
   sim_cancel; --rig-sweep -> d000... on the fake and sweep.csv device rig; `aces golden verify` passes all 13 checks on
-  the ok run, and an edited pulled fields.npz makes files and rig FAIL.
+  the ok run, and an edited pulled fields.npz makes files and rig FAIL; file-vanishes (a listed file the rig will not
+  hand over) and rig-exception (an exception inside the rig case) -> rig-error, x101 and exit 0, never 7, with the audit
+  passing on both runs (review findings 2 and 3).
 
 The rig is never contacted: the children import fake_simlab (the loopback-only network guard) and report anything it
 blocked through a file that tearDown checks. Run: python -m unittest discover -s tests -p "test_g4_pipeline_rig.py".
@@ -201,6 +203,8 @@ class PipelineOnTheFakeRig(unittest.TestCase):
             Scenario(cls.tmp, "dark", cases={"x001": "dark-after-submit"}, patch=dict(PATCH, UNREACHABLE_S=2.0)),
             Scenario(cls.tmp, "ctrlc", cases={"x001": "hang"}, interrupt="x001"),
             Scenario(cls.tmp, "sweep", extra=["--rig-sweep"]),
+            Scenario(cls.tmp, "vanish", cases={"x001": "file-vanishes"}),
+            Scenario(cls.tmp, "rigexc", cases={"x001": "rig-exception"}),
         ]
         with ThreadPoolExecutor(max_workers=4) as ex:
             done = list(ex.map(lambda s: s.run(), plans))
@@ -341,6 +345,31 @@ class PipelineOnTheFakeRig(unittest.TestCase):
         self.assertEqual(s.read("x001/status.json")["design_status"], "rig-integrity")
         self.assertFalse((s.run_dir / "x001" / "mask.npy").exists())  # nothing of the case was written
         self.assertEqual(s.level(1)["case_id"], "x101")
+
+    def assert_falls_back_to_x101(self, s: Scenario, reason_starts: str) -> None:
+        self.assertEqual(s.rc, 0, s.label())  # never exit 7: a case the rig did not deliver is not an internal error
+        lv1 = s.level(1)
+        self.assertEqual((lv1["case_id"], lv1["host"]), ("x101", "desktop"))
+        self.assertEqual((lv1["rig_attempt"]["case_id"], lv1["rig_attempt"]["design_status"]), ("x001", "rig-error"))
+        self.assertTrue(lv1["rig_attempt"]["reason"].startswith(reason_starts), lv1["rig_attempt"]["reason"])
+        self.assertEqual(s.read("x101/case.json")["fallback_from"], "x001")
+        self.assertEqual((s.read("x001/rig.json")["state"], s.read("x001/status.json")["design_status"]),
+                         ("not-run", "rig-error"))
+        v = s.validation()
+        self.assertEqual(v["grade"], "verified-desktop", v["grade_reasons"])
+        self.assertIn("not rig-verified: the level-1 check ran on this desktop (x101: the rig did not deliver x001: "
+                      "rig-error)", v["grade_reasons"])
+        rc, doc, _err = self.cli(s, ["verify", str(s.run_dir), "--json"])  # the audit reads the not-delivered records
+        self.assertEqual(rc, 0, [c for c in doc["checks"] if c["ok"] is False])
+
+    def test_a_file_the_rig_will_not_hand_over_falls_back(self):
+        """Review finding 2: sim_get_file refuses a file that files.json lists (file-vanishes)."""
+        self.assert_falls_back_to_x101(self.runs["vanish"], "c000/golden/x001/fields.npz could not be pulled: ")
+
+    def test_an_internal_error_on_the_rig_falls_back(self):
+        """Review finding 3: an exception inside the rig case (rig-exception) is not delivered, not a failed check."""
+        self.assert_falls_back_to_x101(self.runs["rigexc"], "the rig case x001 stopped on an internal error: "
+                                                            f"RuntimeError: {fake_simlab.RIG_EXCEPTION}")
 
     def test_lost_contact_is_rig_unreachable_with_the_fallback(self):
         s = self.runs["dark"]

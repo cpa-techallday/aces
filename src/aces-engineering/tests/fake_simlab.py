@@ -8,6 +8,11 @@ emulates the simlab worker for an unstaged adapter around the real golden.rigsid
 so every number a job produces comes from a real CPU solve on this machine. The image digest, the GPU and the host in
 the evidence are labelled "(test fixture)". Without ccx, the real conforming.run_check reports ccx-not-found.
 
+Scenarios, per golden case id (section 22.2 item 9, plus two the rig review added): ok, design-fail, input-mismatch,
+never-starts, hang, infra-fail, dark-after-submit, corrupt-file, file-changes, delay:<s>, evidence-fail; rig-exception
+(the solve or the conforming check raises inside the case, so the outcome is FAILED with design status "error") and
+file-vanishes (after the job ends, a file its files.json lists is deleted, so sim_get_file refuses it).
+
 The network guard is installed when this module is imported (the same guard as aces-cad-onshape's fake_onshape.py):
 a connection to any host other than loopback raises NonLoopbackConnection and is recorded in BLOCKED, and every
 test_g4_* tearDown asserts that BLOCKED is empty.
@@ -576,6 +581,11 @@ class FakeSimlab:
                 patches = []
                 if job["scenario"] == "design-fail":
                     patches.append(mock.patch.object(case_mod, "run_job", _forced_unconverged))
+                if job["scenario"] == "rig-exception":  # an exception inside the case body, as an infrastructure
+                    from aces_engineering.golden import conforming as conf_mod, fea as fea_mod  # fault would raise
+
+                    patches.append(mock.patch.object(fea_mod, "_solve_adapter", _rig_exception))
+                    patches.append(mock.patch.object(conf_mod, "run_check", _rig_exception))
                 with contextlib.ExitStack() as stack:
                     for p in patches:
                         stack.enter_context(p)
@@ -604,6 +614,12 @@ class FakeSimlab:
                                                              "error": error, "stages": []}, indent=2), encoding="utf-8")
             (run_dir / "worker.log").write_text(f"fake simlab worker (test fixture): {spec.solver} {job['rc']} {status}\n"
                                                 + (error or ""), encoding="utf-8")
+            if job["scenario"] == "file-vanishes":  # a file files.json lists is gone before the desktop pulls it
+                listed = json.loads((run_dir / "files.json").read_text(encoding="utf-8")).get("files") or []
+                victim = next((f["path"] for f in listed if f["path"].endswith("/fields.npz")),
+                              listed[0]["path"] if listed else None)
+                if victim:
+                    os.unlink(run_dir / victim)
         if status == "FINISHED":
             job.update(status="finished")
             job["meta"].update(state="finished", rc=0, elapsed_s=(finished - started).total_seconds(), updated_utc=_now())
@@ -660,6 +676,15 @@ def _forced_unconverged(job: dict, kind: str) -> dict:
             "error": "fixture: forced unconverged", "results": None,
             "diagnostics": {"generator": None, "skin": None, "checks": None}, "started_utc": now, "finished_utc": now,
             "wall_s": 0.0, "stages": []}
+
+
+RIG_EXCEPTION = "cupy.cuda.memory.OutOfMemoryError: out of device memory (test fixture: no device was asked)"
+
+
+def _rig_exception(*args, **kwargs):
+    """The rig-exception scenario: the solve (or the conforming check) raises, as a CUDA out-of-memory on a GPU that
+    another process holds would (test fixture)."""
+    raise RuntimeError(RIG_EXCEPTION)
 
 
 def _reset(handler: BaseHTTPRequestHandler) -> None:
