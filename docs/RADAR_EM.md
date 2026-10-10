@@ -1,6 +1,6 @@
 # ACES radar domain — the AERIS-X64 EM simulation pipeline
 
-Doc: CPA-ACES-RADAR-001 · Rev I · 2026-10-09 · status: fast tier live, verification tier live on gprMax AND Palace — patch_xband, wr90_through, tile_coupon, tile_multiport PASS on workstation, in the `aces-em:0.1` rig image, and wr90_through cross-checked FEM-vs-FDTD (S21 agreement 0.005 dB); patch far-field CLOSED with a verified matched-feed realized gain **5.33 dBi @ 9.88 GHz** (job22); **KiCad-layout import LIVE** (job23: `kicad_net` case, RXO_1 PASS — measured Z0 76.5 Ω vs 50 Ω spec: a real design finding); **50 Ω redesign verified** (job24: w = 0.51 mm → measured 52.7 Ω, inside the ±7 % fab band); **via transitions LIVE** (job25: `via_coupon` case PASS — stitched F.Cu→In2→F.Cu transition, delay 0.3 %, S21 0.30 dB vs cascade); **arbitrary-angle routes LIVE** (job26: staircase-rasterised diagonal import, coupon PASS — Z0 bias ≤ 0.02 %, er_eff fringe +3.1 % at h/4 → +1.7 % at h/5)
+Doc: CPA-ACES-RADAR-001 · Rev J · 2026-10-10 · status: fast tier live, verification tier live on gprMax AND Palace — patch_xband, wr90_through, tile_coupon, tile_multiport PASS on workstation, in the `aces-em:0.1` rig image, and wr90_through cross-checked FEM-vs-FDTD (S21 agreement 0.005 dB); patch far-field CLOSED with a verified matched-feed realized gain **5.33 dBi @ 9.88 GHz** (job22); **KiCad-layout import LIVE** (job23: `kicad_net` case, RXO_1 PASS — measured Z0 76.5 Ω vs 50 Ω spec: a real design finding); **50 Ω redesign verified** (job24: w = 0.51 mm → measured 52.7 Ω, inside the ±7 % fab band); **via transitions LIVE** (job25: `via_coupon` case PASS — stitched F.Cu→In2→F.Cu transition, delay 0.3 %, S21 0.30 dB vs cascade); **arbitrary-angle routes LIVE** (job26: staircase-rasterised diagonal import, coupon PASS — Z0 bias ≤ 0.02 %, er_eff fringe +3.1 % at h/4 → +1.7 % at h/5); **multi-layer import LIVE** (job27: `kicad_net_ml` case PASS — F.Cu↔In2.Cu via chains, coupon-equivalence vs job25 within 0.05 dB; the real PAI/TR/CAL nets raise honestly: component-interrupted or stub-ended)
 
 This adds the AERIS-X64 X-band phased-array radar as an ACES domain
 (`radar.phased_array`) and wires the simulation pipeline that carries a radar
@@ -229,8 +229,21 @@ by tests:
   passive line.  `deck_kicad_net` now raises on a diagonal end section.
 - **`RF_IN` stays blocked honestly** (19.0 mm straight + 1.37 mm 10.5°
   tail — the tail can't host a triad); measurable after a layout tweak.
-  `PAI_*`/`TR_CH_*` raise on vias (multi-layer import is future work;
-  `net_sections` + the job25 via coupon are the pieces).
+
+**Multi-layer import (job27, `structure: "kicad_net_ml"`, LIVE):** a
+`net_sections` chain (F.Cu microstrip + In2.Cu stripline joined by vias)
+builds the full deck with the job25 via recipe (barrels, In1 antipads,
+4 diagonal stitches each) and job26 rasterised diagonals; reference =
+ABCD cascade of per-section lossy models with via vertical transits.
+Validated by **coupon-equivalence**: a synthetic chain with the
+via_coupon's snapped geometry reproduces the job25 *measured* S-params
+to 0.052 dB (S21) / 0.0038 (|S11|) — two independent deck builders, one
+physics — and meets the cascade contract (S21 0.25 dB, delay 0.33 %,
+reciprocity 2×10⁻⁵ dB).  Real-net outcome is honest negatives, now with
+explicit reasons: `CAL_2` raises on its 0.6 mm end section (triad guard),
+`PAI_1`/`TR_CH1` are component-interrupted chains (4 segment-graph ends)
+with their buried runs on In5.Cu (a stack region this deck does not
+model).  The machinery is validated and waiting for the Rev D layout.
 
 **Patch far-field (job14 + job20 audit, resolved):** gprMax 4.x
 layered-background NTFF (`#ntff_layered_background` with the PEC-terminated
@@ -370,7 +383,7 @@ records factors and provenance, not geometry.
 | Domain package | `src/aces/domains/radar/` (`array`, `cascade`, `linkbudget`, `model`, `calibrate`, `em_adapter`) |
 | Registration | `src/aces/domains/__init__.py` (`MODELS`) |
 | Spec template | `specs/templates/radar_phased_array.yaml` (X64 baseline values, datasheet-cited chain) |
-| Tests | `tests/test_radar.py` (16 tests), `tests/test_em_adapter.py` (25 tests), `tests/test_kicad_import.py` (11 tests), `tests/test_via_coupon.py` (13 tests), `tests/test_staircase_import.py` (8 tests) |
+| Tests | `tests/test_radar.py` (16 tests), `tests/test_em_adapter.py` (25 tests), `tests/test_kicad_import.py` (11 tests), `tests/test_via_coupon.py` (13 tests), `tests/test_staircase_import.py` (8 tests), `tests/test_kicad_net_ml.py` (7 tests) |
 
 ## 6. What this does not do yet
 
@@ -396,9 +409,12 @@ records factors and provenance, not geometry.
   via_coupon PASS — stitched F.Cu→In2→F.Cu), and arbitrary-angle routes
   import as face-connected staircases (job26 coupon PASS — Z0/loss
   unbiased, er_eff fringe +3.1 % at h/4 → +1.7 % at h/5; probe triads
-  require axis-aligned end sections).  Multi-layer net import
-  (PAI_*/TR_CH_* via chaining), N-port decomposition of full layouts,
-  and the F.Cu pour remain future work.  CAL_* nets are deferred (0.6 mm
+  require axis-aligned end sections).  Multi-layer net import is live
+  (job27, kicad_net_ml PASS — F.Cu↔In2.Cu via chains, coupon-equivalent
+  to job25 within 0.05 dB; the real PAI/TR/CAL nets raise with explicit
+  reasons: component interruptions, In5.Cu stack region, stub ends).
+  N-port decomposition of full layouts,
+  the F.Cu pour, and the In5.Cu stack region remain future work.  CAL_* nets are deferred (0.6 mm
   end sections cannot host a probe
   triad, CPL pad offsets odd — recorded finding).  The gprMax
   eigenmode-port sweep beta degrades mid-anchor (up to
