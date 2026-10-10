@@ -1,0 +1,831 @@
+{
+  "run_dir": "research/tier0-run-v1",
+  "dataset_dir": "research/tier0-dataset-v3",
+  "val_bce": 1.0132846455235267e-06,
+  "train_bce": 1.0132828265341232e-06,
+  "validity": {
+    "n_samples": 80,
+    "out_of_anchor_envelope_share": 0.0,
+    "solid_fraction_abs_err_max": 0.0439453125,
+    "solid_fraction_abs_err_mean": 0.004412082798990013,
+    "neck_blocked_share": 0.0375,
+    "enclosed_void_share": 0.25,
+    "rows": [
+      {
+        "row": 0,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.07999999821186066,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.23828125,
+        "solid_fraction_measured": 0.244110107421875,
+        "neck_min_m": 0.03599998740944688,
+        "isolated_void_fraction": 0.0
+      },
+      {
+        "row": 0,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.07999999821186066,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.23828125,
+        "solid_fraction_measured": 0.2415771484375,
+        "neck_min_m": 0.037568429058020936,
+        "isolated_void_fraction": 0.0014485755673587638
+      },
+      {
+        "row": 1,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.07999999821186066,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.23828125,
+        "solid_fraction_measured": 0.2452392578125,
+        "neck_min_m": 0.03599998740944688,
+        "isolated_void_fraction": 0.0009704027171276079
+      },
+      {
+        "row": 1,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.07999999821186066,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.23828125,
+        "solid_fraction_measured": 0.2408447265625,
+        "neck_min_m": 0.03599998740944688,
+        "isolated_void_fraction": 0.0
+      },
+      {
+        "row": 2,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.11999999731779099,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.3496093675348675,
+        "solid_fraction_measured": 0.3551025390625,
+        "neck_min_m": 0.03352323047905499,
+        "isolated_void_fraction": 0.0
+      },
+      {
+        "row": 2,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.11999999731779099,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.3496093675348675,
+        "solid_fraction_measured": 0.3577880859375,
+        "neck_min_m": 0.02898417017637278,
+        "isolated_void_fraction": 0.005702337958563011
+      },
+      {
+        "row": 3,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.11999999731779099,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.3496093675348675,
+        "solid_fraction_measured": 0.35693359375,
+        "neck_min_m": 0.02994074564270073,
+        "isolated_void_fraction": 0.002562642369020501
+      },
+      {
+        "row": 3,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.11999999731779099,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.3496093675348675,
+        "solid_fraction_measured": 0.357177734375,
+        "neck_min_m": 0.025932862559869818,
+        "isolated_void_fraction": 0.013102924420812762
+      },
+      {
+        "row": 4,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.11999999731779099,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.3496093675348675,
+        "solid_fraction_measured": 0.349609375,
+        "neck_min_m": 0.030871115270054844,
+        "isolated_void_fraction": 0.0045045045045045045
+      },
+      {
+        "row": 4,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.11999999731779099,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.3496093675348675,
+        "solid_fraction_measured": 0.349609375,
+        "neck_min_m": 0.03352323047905499,
+        "isolated_void_fraction": 0.0011261261261261261
+      },
+      {
+        "row": 5,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.1599999964237213,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.4287109304277692,
+        "solid_fraction_measured": 0.437255859375,
+        "neck_min_m": 0.02593308819570537,
+        "isolated_void_fraction": 0.006507592190889371
+      },
+      {
+        "row": 5,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.1599999964237213,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.4287109304277692,
+        "solid_fraction_measured": 0.4288330078125,
+        "neck_min_m": 0.025932629933889836,
+        "isolated_void_fraction": 0.01731139132293225
+      },
+      {
+        "row": 6,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.1599999964237213,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.4287109304277692,
+        "solid_fraction_measured": 0.429412841796875,
+        "neck_min_m": 0.028984793189153445,
+        "isolated_void_fraction": 0.0
+      },
+      {
+        "row": 6,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.1599999964237213,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.4287109304277692,
+        "solid_fraction_measured": 0.448486328125,
+        "neck_min_m": 0.02593308819570537,
+        "isolated_void_fraction": 0.008964143426294821
+      },
+      {
+        "row": 7,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.1599999964237213,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.4287109304277692,
+        "solid_fraction_measured": 0.429443359375,
+        "neck_min_m": 0.02371250273653898,
+        "isolated_void_fraction": 0.0012836970474967907
+      },
+      {
+        "row": 7,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.1599999964237213,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.4287109304277692,
+        "solid_fraction_measured": 0.4287109375,
+        "neck_min_m": 0.03087105561555417,
+        "isolated_void_fraction": 0.0
+      },
+      {
+        "row": 8,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.07999999821186066,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.27734375,
+        "solid_fraction_measured": 0.3212890625,
+        "neck_min_m": 0.019999856811508447,
+        "isolated_void_fraction": 0.000539568345323741
+      },
+      {
+        "row": 8,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.07999999821186066,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.27734375,
+        "solid_fraction_measured": 0.278076171875,
+        "neck_min_m": 0.019999856811508447,
+        "isolated_void_fraction": 0.0015218126479540075
+      },
+      {
+        "row": 9,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.07999999821186066,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.27734375,
+        "solid_fraction_measured": 0.278076171875,
+        "neck_min_m": 0.02593274293509966,
+        "isolated_void_fraction": 0.0010145417653026716
+      },
+      {
+        "row": 9,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.07999999821186066,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.27734375,
+        "solid_fraction_measured": 0.2945556640625,
+        "neck_min_m": 0.018627240310431656,
+        "isolated_void_fraction": 0.0036338466862779026
+      },
+      {
+        "row": 10,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.07999999821186066,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.27734375,
+        "solid_fraction_measured": 0.27734375,
+        "neck_min_m": 0.02593274293509966,
+        "isolated_void_fraction": 0.0
+      },
+      {
+        "row": 10,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.07999999821186066,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.27734375,
+        "solid_fraction_measured": 0.2791748046875,
+        "neck_min_m": 0.023712681921446557,
+        "isolated_void_fraction": 0.0020321761219305673
+      },
+      {
+        "row": 11,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.11999999731779099,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.41210936596326064,
+        "solid_fraction_measured": 0.4124755859375,
+        "neck_min_m": 0.018627240310431656,
+        "isolated_void_fraction": 0.0006233118637024725
+      },
+      {
+        "row": 11,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.11999999731779099,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.41210936596326064,
+        "solid_fraction_measured": 0.415771484375,
+        "neck_min_m": 0.019999856811508447,
+        "isolated_void_fraction": 0.0012536564981195152
+      },
+      {
+        "row": 12,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.11999999731779099,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.41210936596326064,
+        "solid_fraction_measured": 0.412109375,
+        "neck_min_m": 0.013888415042619905,
+        "isolated_void_fraction": 0.0012458471760797341
+      },
+      {
+        "row": 12,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.11999999731779099,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.41210936596326064,
+        "solid_fraction_measured": 0.421630859375,
+        "neck_min_m": 0.018627019978054056,
+        "isolated_void_fraction": 0.0034824820599409032
+      },
+      {
+        "row": 13,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.11999999731779099,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.41210936596326064,
+        "solid_fraction_measured": 0.412811279296875,
+        "neck_min_m": 0.018627019978054056,
+        "isolated_void_fraction": 0.01527987110857024
+      },
+      {
+        "row": 13,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.11999999731779099,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.41210936596326064,
+        "solid_fraction_measured": 0.4154052734375,
+        "neck_min_m": 0.018627019978054056,
+        "isolated_void_fraction": 0.00814366256003341
+      },
+      {
+        "row": 14,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.1599999964237213,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.52343749004649,
+        "solid_fraction_measured": 0.5238037109375,
+        "neck_min_m": 0.009856091517120429,
+        "isolated_void_fraction": 0.0007690335811330429
+      },
+      {
+        "row": 14,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.1599999964237213,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.52343749004649,
+        "solid_fraction_measured": 0.5322265625,
+        "neck_min_m": 0.018627254255217413,
+        "isolated_void_fraction": 0.012134655532359082
+      },
+      {
+        "row": 15,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.1599999964237213,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.52343749004649,
+        "solid_fraction_measured": 0.5234375,
+        "neck_min_m": 0.01199949992873178,
+        "isolated_void_fraction": 0.002305327868852459
+      },
+      {
+        "row": 15,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.1599999964237213,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.52343749004649,
+        "solid_fraction_measured": 0.5238037109375,
+        "neck_min_m": 0.007313302912230844,
+        "isolated_void_fraction": 0.009484747500640862
+      },
+      {
+        "row": 16,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.1599999964237213,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.52343749004649,
+        "solid_fraction_measured": 0.5283203125,
+        "neck_min_m": 0.013888098442861804,
+        "isolated_void_fraction": 0.05240683229813665
+      },
+      {
+        "row": 16,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.1599999964237213,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.52343749004649,
+        "solid_fraction_measured": 0.5260009765625,
+        "neck_min_m": 0.013888098442861804,
+        "isolated_void_fraction": 0.0305176409992274
+      },
+      {
+        "row": 17,
+        "kind": "primitive",
+        "wall_ratio_requested": 0.07999999821186066,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.18212890625,
+        "solid_fraction_measured": 0.1824951171875,
+        "neck_min_m": 0.04125382185660857,
+        "isolated_void_fraction": 0.001791847095714499
+      },
+      {
+        "row": 17,
+        "kind": "primitive",
+        "wall_ratio_requested": 0.07999999821186066,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.18212890625,
+        "solid_fraction_measured": 0.1824951171875,
+        "neck_min_m": 0.04125380284004633,
+        "isolated_void_fraction": 0.0008959235478572496
+      },
+      {
+        "row": 18,
+        "kind": "primitive",
+        "wall_ratio_requested": 0.07999999821186066,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.18212890625,
+        "solid_fraction_measured": 0.182861328125,
+        "neck_min_m": 0.04125344151166187,
+        "isolated_void_fraction": 0.00224081266806095
+      },
+      {
+        "row": 18,
+        "kind": "primitive",
+        "wall_ratio_requested": 0.07999999821186066,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.18212890625,
+        "solid_fraction_measured": 0.1876220703125,
+        "neck_min_m": 0.04125371719429277,
+        "isolated_void_fraction": 0.0036063110443275734
+      },
+      {
+        "row": 19,
+        "kind": "primitive",
+        "wall_ratio_requested": 0.11999999731779099,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.2714843690082489,
+        "solid_fraction_measured": 0.272216796875,
+        "neck_min_m": 0.03908014585710637,
+        "isolated_void_fraction": 0.0
+      },
+      {
+        "row": 19,
+        "kind": "primitive",
+        "wall_ratio_requested": 0.11999999731779099,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.2714843690082489,
+        "solid_fraction_measured": 0.271484375,
+        "neck_min_m": 0.03908014585710637,
+        "isolated_void_fraction": 0.0
+      },
+      {
+        "row": 20,
+        "kind": "primitive",
+        "wall_ratio_requested": 0.11999999731779099,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.2714843690082489,
+        "solid_fraction_measured": 0.271484375,
+        "neck_min_m": 0.03908014585710637,
+        "isolated_void_fraction": 0.0
+      },
+      {
+        "row": 20,
+        "kind": "primitive",
+        "wall_ratio_requested": 0.11999999731779099,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.2714843690082489,
+        "solid_fraction_measured": 0.2744140625,
+        "neck_min_m": 0.018626014127788387,
+        "isolated_void_fraction": 0.0005047106325706595
+      },
+      {
+        "row": 21,
+        "kind": "primitive",
+        "wall_ratio_requested": 0.1599999964237213,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.3535156176658347,
+        "solid_fraction_measured": 0.35357666015625,
+        "neck_min_m": 0.013888319108358964,
+        "isolated_void_fraction": 0.0016995562269851762
+      },
+      {
+        "row": 21,
+        "kind": "primitive",
+        "wall_ratio_requested": 0.1599999964237213,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.3535156176658347,
+        "solid_fraction_measured": 0.3538818359375,
+        "neck_min_m": 0.013887684304571067,
+        "isolated_void_fraction": 0.0
+      },
+      {
+        "row": 22,
+        "kind": "primitive",
+        "wall_ratio_requested": 0.1599999964237213,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.3535156176658347,
+        "solid_fraction_measured": 0.3580322265625,
+        "neck_min_m": 0.013888098442861804,
+        "isolated_void_fraction": 0.0005704506560182544
+      },
+      {
+        "row": 22,
+        "kind": "primitive",
+        "wall_ratio_requested": 0.1599999964237213,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.3535156176658347,
+        "solid_fraction_measured": 0.3665771484375,
+        "neck_min_m": 0.01559570386575615,
+        "isolated_void_fraction": 0.0028907303912121796
+      },
+      {
+        "row": 23,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.20000000298023224,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.5263671916472958,
+        "solid_fraction_measured": 0.53167724609375,
+        "neck_min_m": 0.003999893882531823,
+        "isolated_void_fraction": 0.008210608627655415
+      },
+      {
+        "row": 23,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.20000000298023224,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.5263671916472958,
+        "solid_fraction_measured": 0.5269775390625,
+        "neck_min_m": 0.007313375378205757,
+        "isolated_void_fraction": 0.0003870967741935484
+      },
+      {
+        "row": 24,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.20000000298023224,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.5263671916472958,
+        "solid_fraction_measured": 0.5263671875,
+        "neck_min_m": 0.02593289252908622,
+        "isolated_void_fraction": 0.006958762886597939
+      },
+      {
+        "row": 24,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.20000000298023224,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.5263671916472958,
+        "solid_fraction_measured": 0.5291748046875,
+        "neck_min_m": 0.02371228597535069,
+        "isolated_void_fraction": 0.022556390977443608
+      },
+      {
+        "row": 25,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.20000000298023224,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.5263671916472958,
+        "solid_fraction_measured": 0.527313232421875,
+        "neck_min_m": 0.003999590133032718,
+        "isolated_void_fraction": 0.0
+      },
+      {
+        "row": 25,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.20000000298023224,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.5263671916472958,
+        "solid_fraction_measured": 0.527099609375,
+        "neck_min_m": 0.023712501117507962,
+        "isolated_void_fraction": 0.003097573567372225
+      },
+      {
+        "row": 26,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.23999999463558197,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.5820312425348675,
+        "solid_fraction_measured": 0.5838623046875,
+        "neck_min_m": 0.023712424805171942,
+        "isolated_void_fraction": 0.0
+      },
+      {
+        "row": 26,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.23999999463558197,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.5820312425348675,
+        "solid_fraction_measured": 0.58203125,
+        "neck_min_m": 0.003999590133032718,
+        "isolated_void_fraction": 0.06615070093457943
+      },
+      {
+        "row": 27,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.23999999463558197,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.5820312425348675,
+        "solid_fraction_measured": 0.58740234375,
+        "neck_min_m": 0.003999590133032718,
+        "isolated_void_fraction": 0.03905325443786982
+      },
+      {
+        "row": 27,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.23999999463558197,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.5820312425348675,
+        "solid_fraction_measured": 0.5955810546875,
+        "neck_min_m": 0.019999777396709956,
+        "isolated_void_fraction": 0.02173256866888017
+      },
+      {
+        "row": 28,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.23999999463558197,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.5820312425348675,
+        "solid_fraction_measured": 0.5867919921875,
+        "neck_min_m": 0.013888098442861804,
+        "isolated_void_fraction": 0.0
+      },
+      {
+        "row": 28,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.23999999463558197,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.5820312425348675,
+        "solid_fraction_measured": 0.5849609375,
+        "neck_min_m": 0.007313375378205757,
+        "isolated_void_fraction": 0.003970588235294117
+      },
+      {
+        "row": 29,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.2800000011920929,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.6435546875,
+        "solid_fraction_measured": 0.64862060546875,
+        "neck_min_m": 0.007313581093273725,
+        "isolated_void_fraction": 0.0
+      },
+      {
+        "row": 29,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.2800000011920929,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.6435546875,
+        "solid_fraction_measured": 0.647216796875,
+        "neck_min_m": 0.003999590133032718,
+        "isolated_void_fraction": 0.0010380622837370243
+      },
+      {
+        "row": 30,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.2800000011920929,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.6435546875,
+        "solid_fraction_measured": 0.6629638671875,
+        "neck_min_m": 0.003999590133032718,
+        "isolated_void_fraction": 0.0
+      },
+      {
+        "row": 30,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.2800000011920929,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.6435546875,
+        "solid_fraction_measured": 0.644989013671875,
+        "neck_min_m": 0.007313581093273725,
+        "isolated_void_fraction": 0.0010315481818963293
+      },
+      {
+        "row": 31,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.2800000011920929,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.6435546875,
+        "solid_fraction_measured": 0.65087890625,
+        "neck_min_m": 0.0,
+        "isolated_void_fraction": 0.0036713286713286712
+      },
+      {
+        "row": 31,
+        "kind": "gyroid",
+        "wall_ratio_requested": 0.2800000011920929,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.6435546875,
+        "solid_fraction_measured": 0.65673828125,
+        "neck_min_m": 0.003999893882531823,
+        "isolated_void_fraction": 0.0021337126600284497
+      },
+      {
+        "row": 32,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.20000000298023224,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.607421879802132,
+        "solid_fraction_measured": 0.6085205078125,
+        "neck_min_m": 0.003999740711849557,
+        "isolated_void_fraction": 0.0
+      },
+      {
+        "row": 32,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.20000000298023224,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.607421879802132,
+        "solid_fraction_measured": 0.610809326171875,
+        "neck_min_m": 0.003999590133032718,
+        "isolated_void_fraction": 0.007057163020465773
+      },
+      {
+        "row": 33,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.20000000298023224,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.607421879802132,
+        "solid_fraction_measured": 0.608154296875,
+        "neck_min_m": 0.007313343772360509,
+        "isolated_void_fraction": 0.01339563862928349
+      },
+      {
+        "row": 33,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.20000000298023224,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.607421879802132,
+        "solid_fraction_measured": 0.608154296875,
+        "neck_min_m": 0.015595825255873972,
+        "isolated_void_fraction": 0.010280373831775701
+      },
+      {
+        "row": 34,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.20000000298023224,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.607421879802132,
+        "solid_fraction_measured": 0.607421875,
+        "neck_min_m": 0.013888098442861804,
+        "isolated_void_fraction": 0.0
+      },
+      {
+        "row": 34,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.20000000298023224,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.607421879802132,
+        "solid_fraction_measured": 0.6136474609375,
+        "neck_min_m": 0.013888098442861804,
+        "isolated_void_fraction": 0.002369668246445498
+      },
+      {
+        "row": 35,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.23999999463558197,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.6718749913561624,
+        "solid_fraction_measured": 0.6788330078125,
+        "neck_min_m": 0.007313581093273725,
+        "isolated_void_fraction": 0.06670467502850627
+      },
+      {
+        "row": 35,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.23999999463558197,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.6718749913561624,
+        "solid_fraction_measured": 0.673095703125,
+        "neck_min_m": 0.003999893882531823,
+        "isolated_void_fraction": 0.028379387602688575
+      },
+      {
+        "row": 36,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.23999999463558197,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.6718749913561624,
+        "solid_fraction_measured": 0.671875,
+        "neck_min_m": 0.013888098442861804,
+        "isolated_void_fraction": 0.0
+      },
+      {
+        "row": 36,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.23999999463558197,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.6718749913561624,
+        "solid_fraction_measured": 0.6729736328125,
+        "neck_min_m": 0.013888098442861804,
+        "isolated_void_fraction": 0.0
+      },
+      {
+        "row": 37,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.23999999463558197,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.6718749913561624,
+        "solid_fraction_measured": 0.6876220703125,
+        "neck_min_m": 0.009856406928705205,
+        "isolated_void_fraction": 0.07444314185228605
+      },
+      {
+        "row": 37,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.23999999463558197,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.6718749913561624,
+        "solid_fraction_measured": 0.67913818359375,
+        "neck_min_m": 0.003999590133032718,
+        "isolated_void_fraction": 0.023016929807875213
+      },
+      {
+        "row": 38,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.2800000011920929,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.736328125,
+        "solid_fraction_measured": 0.7445068359375,
+        "neck_min_m": 0.0,
+        "isolated_void_fraction": 0.019111323459149548
+      },
+      {
+        "row": 38,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.2800000011920929,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.736328125,
+        "solid_fraction_measured": 0.7396240234375,
+        "neck_min_m": 0.007313302912230844,
+        "isolated_void_fraction": 0.010314111579934365
+      },
+      {
+        "row": 39,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.2800000011920929,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.736328125,
+        "solid_fraction_measured": 0.737060546875,
+        "neck_min_m": 0.003999590133032718,
+        "isolated_void_fraction": 0.017177344475394613
+      },
+      {
+        "row": 39,
+        "kind": "diamond",
+        "wall_ratio_requested": 0.2800000011920929,
+        "in_anchor_envelope": true,
+        "solid_fraction_target": 0.736328125,
+        "solid_fraction_measured": 0.739013671875,
+        "neck_min_m": 0.0,
+        "isolated_void_fraction": 0.017305893358278764
+      }
+    ]
+  },
+  "ranking": {
+    "out_of_envelope_excluded": 0,
+    "gyroid": {
+      "spearman_rho": 0.9858410828256231,
+      "n": 34
+    },
+    "diamond": {
+      "spearman_rho": 0.9859917654528424,
+      "n": 34
+    },
+    "primitive": {
+      "spearman_rho": 0.9494253265550825,
+      "n": 12
+    }
+  }
+}
