@@ -3,6 +3,10 @@
 Stages (each may run as its own queue job; `run` executes them back to back):
   mesh  (cpu)  STEP -> tessellate (build123d/OCP) -> centre-point voxelisation on the envelope grid
                -> mask.npy, mesh.json (solid fraction, voxel volume vs B-rep volume), mask_slices.png
+               A multi-solid STEP whose fused tessellation is not watertight is voxelised solid by solid and the
+               masks are ORed (mesh.json "watertight": "per-solid-union(n)"): interfering parts (wing roots in a
+               fuselage) tessellate open when fused, and the dilated fallback over-fills by up to 2x (the rig
+               operator's patch of 2026-10-06, upstreamed in rig-golden-1.1)
   solve (gpu)  VoxelFEAEvaluator with the case's supports/loads -> compliance, u_max, VM max, mass;
                fields.npz (u per node in mm, VM per element in MPa)
   post  (cpu)  VM + |u| slice PNGs through the hot spot, fields.vtk (ParaView), case.md, results.json
@@ -18,15 +22,18 @@ Case parameters (mm, N, MPa; coordinates in the STEP's own frame):
   loads          [{"box": [...], "force": [Fx,Fy,Fz], "axis": "x"|"y"|"z"}]  axis => consistent face traction
   vm_exclude     [[box], ...]  stress read-out ignores these zones (load patches)
   tol, maxiter, dtype
-  fea_solver     "pcg" (default: Jacobi-PCG on the fictitious-domain operator) or "mg" (geometric-multigrid PCG on the
-                 solid-only operator, gendesign.mg; maxiter capped at 2000 by the evaluator); stage_solve passes it to
-                 VoxelFEAEvaluator(solver=...) and solve.json records it as "solver"
+  fea_solver     "mg" (default: geometric-multigrid PCG on the solid-only operator, gendesign.mg; maxiter capped at
+                 2000 by the evaluator) or "pcg" (Jacobi-PCG on the fictitious-domain operator); stage_solve passes it
+                 to VoxelFEAEvaluator(solver=...) and solve.json records it as "solver". The rig operator's key
+                 "solver" (the rig's step_structures.py since 2026-10-06; 14 of the rig's case files use it) is
+                 honoured too; fea_solver wins when both are given.
+  emin           default 1e-9: the relative stiffness of void cells (the rig operator's key, same patch)
   repair         default true: gendesign.connectivity.repair_mask drops unsupported unloaded islands and welds loaded
                  ones across a one-voxel gap before the solve (solve.json "connectivity"); false solves the mask as given
                  (the aces golden path passes false so the solved mask is the mask it hashed)
-  mg_levels      default 4: the most multigrid levels when fea_solver is "mg"
-                 Without these three keys the solve is exactly what the rig ran before they existed (the evaluator's
-                 own defaults: pcg, repair on, 4 levels).
+  mg_levels      default 4: the most multigrid levels when the solver is "mg"
+                 Without these keys the solve is exactly what the rig has run since the operator's patch of
+                 2026-10-06: mg, repair on, 4 levels, emin 1e-9 (the evaluator's own default solver is pcg).
 """
 from __future__ import annotations
 
@@ -118,7 +125,30 @@ class Adapter:
             # fallback in voxelize_mesh over-fills by a layer and we say so
             tm.merge_vertices()
             tm.fix_normals()
-        mask = voxelize_mesh(tm, env, h, origin)
+        if not tm.is_watertight and len(solids) > 1:
+            # per-solid union: interfering parts (wing roots in the fuselage, equipment
+            # blocks on the deck) make the fused shape tessellate open and the dilated
+            # fallback over-fills by up to 2x; each source solid is clean, so voxelise
+            # each one and OR the masks - overlaps union correctly by construction
+            mask = None
+            n_sub = 0
+            for si, s_ in enumerate(solids):
+                p_ = os.path.join(run_dir, f"tess_{si}.stl")
+                try:
+                    export_stl(s_, p_, tolerance=tol, angular_tolerance=0.1)
+                except TypeError:
+                    export_stl(s_, p_)
+                t_ = trimesh.load(p_, force="mesh")
+                if not t_.is_watertight:
+                    t_.merge_vertices()
+                    t_.fix_normals()
+                m_ = voxelize_mesh(t_, env, h, origin)
+                mask = m_ if mask is None else (mask | m_)
+                n_sub += 1
+            watertight = f"per-solid-union({n_sub})"
+        else:
+            mask = voxelize_mesh(tm, env, h, origin)
+            watertight = bool(tm.is_watertight)
         np.save(os.path.join(run_dir, "mask.npy"), mask)
         vox_volume = float(mask.sum()) * h ** 3
         info = {
@@ -126,7 +156,7 @@ class Adapter:
             "elem_mm": h, "origin_mm": origin, "envelope_mm": env, "shape": [int(v) for v in mask.shape],
             "cells": int(mask.size), "solid_cells": int(mask.sum()), "solid_fraction": float(mask.mean()),
             "voxel_volume_mm3": vox_volume, "volume_ratio_voxel_over_brep": vox_volume / brep_volume if brep_volume else None,
-            "watertight": bool(tm.is_watertight), "tessellation_faces": int(len(tm.faces)),
+            "watertight": watertight, "tessellation_faces": int(len(tm.faces)),
             "wall_s": time.time() - t0,
         }
         with open(os.path.join(run_dir, "mesh.json"), "w", encoding="utf-8") as f:
@@ -160,7 +190,9 @@ class Adapter:
                                tol=float(case.get("tol", 1e-8 if dtype == "float64" else 1e-4)),
                                maxiter=int(case.get("maxiter", 20000)), warm_start=False,
                                vm_exclude_boxes=[_box_to_grid(b, origin) for b in case.get("vm_exclude", [])],
-                               solver=str(case.get("fea_solver", "pcg")), repair=bool(case.get("repair", True)),
+                               emin=float(case.get("emin", 1e-9)),
+                               solver=str(case.get("fea_solver", case.get("solver", "mg"))),
+                               repair=bool(case.get("repair", True)),
                                mg_levels=int(case.get("mg_levels", 4)))
         if tuple(ev.shape) != tuple(mask.shape):
             raise ValueError(f"grid {ev.shape} != mask {mask.shape}")

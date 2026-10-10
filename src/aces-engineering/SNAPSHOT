@@ -1,8 +1,8 @@
 # Vendored snapshot of cudax-sim-runtime (written by sync.sh; do not edit by hand)
-source: /c/Users/shedm/cudax-sim-runtime @ rig-golden-1 (clean clone)
-synced_utc: 2026-10-10T03:26:43Z
-source_commit: 16aedb15236c2d803a1bed7352e4bc9ce3fc1d5e (clean clone at rig-golden-1; 0 uncommitted changes)
-content_sha256: df19e43c98fc7770018b83b0d37545bcc68f62253ee6d5f2f79e42568fa8f653
+source: /c/Users/shedm/cudax-sim-runtime @ rig-golden-1.1 (clean clone)
+synced_utc: 2026-10-10T08:27:21Z
+source_commit: 62de9811e555e2b46d23a7923fecbbb3124192ac (clean clone at rig-golden-1.1; 0 uncommitted changes)
+content_sha256: da7c28a37dabbe8ba55e1817d668c734a4cf951da15740d1e9f837d611ed8ac9
 files: 59
 excluded: __pycache__, simlab/solvers.json.bak-*, simlab/console (rig-hosted UI)
 line_endings: normalised to LF on copy (source files are CRLF)
@@ -54,7 +54,7 @@ ec8b882f4827221d083395027114c1868954d7c667b0f24227ffc9ab6ab3e2f9 *simlab/solvers
 384487c3e41eb98e5e5f03bfcb78d6122ef61d2e4ec5908cc7f398427b4c74bb *simlab/solvers/golden_check.py
 5b4316b8376d2d19fd3a47987124a0fb9e5a26ff4c6f03da25152ef90e59c4ad *simlab/solvers/nozzle_angelino.py
 0780de0e72f0e349d0ca1b4851cf15c443851773ae8d96e71187e255e1bf3eab *simlab/solvers/pyfr_solver.py
-20a08472c1ad06411a1cd5a5337c9cf33ee3d2a5004255f24f4af72c2b23774d *simlab/solvers/step_structures.py
+103497387087a2d1ab406911d9ab12e5d416cb1471191b43737e5923f715dd3d *simlab/solvers/step_structures.py
 ae111c4b4484e5ea5f87e38d5231016fd5851c9d6c94b71af8cbf5cb59fd0c5e *simlab/solvers/surrogate_predict.py
 b2e335e305ef66ec9327158d28f16e4b1e92366ba12e3814689704939dea0aa2 *simlab/spec.py
 aa61d253ea1a779d799f3cbc20afe501f7d8476abacf93d051ab6f7120862681 *simlab/specstore.py

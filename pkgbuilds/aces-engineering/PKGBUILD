@@ -10,7 +10,7 @@
 # Sources are packed from src/aces-engineering by bin/build; pip downloads the wheels inside the build container.
 pkgname=aces-engineering
 pkgver=0.1.0
-pkgrel=3
+pkgrel=4
 _py=3.14  # the venv belongs to this interpreter minor version (the aces-builder image's python, 3.14.7 on 2026-10-09)
 pkgdesc="ACES engineering: locked Python venv with the simlab client, gendesign CPU paths and the golden path (aces-simlab, aces-evidence, aces-gendesign, aces-golden)"
 arch=('x86_64')
@@ -41,8 +41,8 @@ _root=opt/aces/engineering
 # The vendored snapshot this package may carry: SNAPSHOT's source commit and content hash, set by the integrator from
 # SNAPSHOT after `bash src/aces-engineering/sync.sh --commit REV <cudax-sim-runtime>` (see sync.sh). build() refuses
 # any other vendor/ tree, so a snapshot can only change through sync.sh, SNAPSHOT and these two lines together.
-_snapshot_commit=16aedb15236c2d803a1bed7352e4bc9ce3fc1d5e
-_snapshot_content_sha256=df19e43c98fc7770018b83b0d37545bcc68f62253ee6d5f2f79e42568fa8f653
+_snapshot_commit=62de9811e555e2b46d23a7923fecbbb3124192ac
+_snapshot_content_sha256=da7c28a37dabbe8ba55e1817d668c734a4cf951da15740d1e9f837d611ed8ac9
 
 build() {
   cd "$srcdir/$pkgname"
