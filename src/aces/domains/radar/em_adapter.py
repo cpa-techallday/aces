@@ -1066,11 +1066,19 @@ class Adapter:
         timeout = int(case.get("timeout_seconds", 2400))
         margins = {"margin_cells": int(case.get("margin_cells", 16)),
                    "air_cells": int(case.get("air_cells", 16))}
-        graph = {"net": case.get("graph", {}).get("net", "nport"),
-                 "junction_mm": tuple(case["graph"]["junction_mm"]),
-                 "branches": [{"points_mm": [tuple(p) for p in b["points_mm"]],
-                               "width_mm": float(b["width_mm"])}
-                              for b in case["graph"]["branches"]]}
+        if case.get("pcb") and case.get("net"):
+            # job31: extract the junction graph from the KiCad net topology
+            graph = ki.net_graph(ki.parse_pcb(case["pcb"]), case["net"],
+                                 case.get("layer", "F.Cu"))
+        elif case.get("graph"):
+            graph = {"net": case.get("graph", {}).get("net", "nport"),
+                     "junction_mm": tuple(case["graph"]["junction_mm"]),
+                     "branches": [{"points_mm": [tuple(p) for p in b["points_mm"]],
+                                   "width_mm": float(b["width_mm"])}
+                                  for b in case["graph"]["branches"]]}
+        else:
+            raise ValueError("kicad_net_nport needs either pcb+net (job31 "
+                             "extraction) or an explicit graph")
         pour = case.get("pour")
         if pour is not None:
             pour = {"polygon_mm": [tuple(p) for p in pour["polygon_mm"]],

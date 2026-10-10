@@ -297,6 +297,91 @@ def net_sections(pcb: Pcb, net_name: str) -> dict:
             "n_vias_used": hops, "pads": pads}
 
 
+def net_graph(pcb: Pcb, net_name: str, layer: str = "F.Cu") -> dict:
+    """Extract an N-port junction graph from a net's segment topology
+    (job31) for ``deck_kicad_nport``.
+
+    Single-layer only: the net must live entirely on ``layer`` with no
+    vias (multi-layer junction extraction is future work).  Topology
+    rules, honest raises:
+      - no segments               -> raise
+      - exactly 2 degree-1 nodes and no junction -> a simple chain;
+        route to kicad_net instead (raise with that guidance)
+      - more than one degree>=3 junction node -> unsupported (raise)
+      - any loop (E > N-1)        -> raise
+      - mixed widths on a branch  -> raise
+    Returns ``{"net": ..., "junction_mm": (x, y), "branches":
+    [{"points_mm": [junction ... end], "width_mm": w}], "ends_mm": [...]}``
+    with branches ordered by descending angle from +x (deterministic).
+    Pads are not modelled by the nport deck (ports are the branch ends).
+    """
+    segs = [s for s in pcb.segments if s.net == net_name]
+    if not segs:
+        raise ValueError(f"net {net_name!r}: no segments")
+    off = [s for s in segs if s.layer != layer]
+    if off:
+        raise ValueError(f"net {net_name!r}: {len(off)} segment(s) off {layer} — "
+                         "nport junction graphs are single-layer (multi-layer "
+                         "junction extraction is future work)")
+    vias = [v for v in pcb.vias if v["net"] == net_name]
+    if vias:
+        raise ValueError(f"net {net_name!r}: {len(vias)} via(s) — nport "
+                         "junction graphs are single-layer")
+
+    def key(p):
+        return (round(p[0], 4), round(p[1], 4))
+
+    adj: dict = {}
+    for s in segs:
+        a, b = key(s.start), key(s.end)
+        adj.setdefault(a, []).append((b, s))
+        adj.setdefault(b, []).append((a, s))
+    n_nodes, n_edges = len(adj), len(segs)
+    if n_edges > n_nodes - 1:
+        raise ValueError(f"net {net_name!r}: loop in the segment graph "
+                         f"({n_edges} edges, {n_nodes} nodes)")
+    ends = [p for p, nbrs in adj.items() if len(nbrs) == 1]
+    junctions = [p for p, nbrs in adj.items() if len(nbrs) >= 3]
+    if not junctions:
+        raise ValueError(f"net {net_name!r}: no junction — a simple chain; "
+                         "use kicad_net / kicad_net_ml instead")
+    if len(junctions) != 1:
+        raise ValueError(f"net {net_name!r}: {len(junctions)} junction nodes — "
+                         "only single-junction stars are supported")
+    jn = junctions[0]
+    if len(ends) != len(adj[jn]):
+        raise ValueError(f"net {net_name!r}: junction degree {len(adj[jn])} but "
+                         f"{len(ends)} endpoints — nested structure unsupported")
+
+    # walk each branch from the junction to its endpoint
+    branches = []
+    for first, s0 in adj[jn]:
+        pts = [jn]
+        widths = []
+        prev, cur = jn, first
+        widths.append(s0.width)
+        pts.append(cur)
+        while len(adj[cur]) == 2:
+            nxt = [(n, s) for n, s in adj[cur] if n != prev]
+            if not nxt:
+                break
+            n, s = nxt[0]
+            widths.append(s.width)
+            prev, cur = cur, n
+            pts.append(n)
+        if cur not in ends:
+            raise ValueError(f"net {net_name!r}: branch from junction did not "
+                             "reach an endpoint (loop or stub)")
+        if len(set(widths)) != 1:
+            raise ValueError(f"net {net_name!r}: mixed widths on a branch "
+                             f"({sorted(set(widths))} mm)")
+        branches.append({"points_mm": pts, "width_mm": widths[0]})
+    branches.sort(key=lambda b: -math.atan2(b["points_mm"][1][1] - jn[1],
+                                            b["points_mm"][1][0] - jn[0]))
+    return {"net": net_name, "junction_mm": jn, "branches": branches,
+            "ends_mm": [b["points_mm"][-1] for b in branches]}
+
+
 # ------------------------------------------------------------------ via coupon
 def stripline_z0_t(er: float, b: float, w: float, t: float = CU_T_M) -> float:
     """Symmetric stripline, IPC-2141 form with thickness correction
