@@ -2,11 +2,11 @@
 
 The parts come from the run's promoted BREP/NPZ files (geom.load), never from the run's record, and every number in
 the returned summary is re-derived here. part.step is build123d's export_step with the header time fixed at
-2000-01-01T00:00:00 and the part names as labels, so equal geometry under the same build123d and OCP gives equal
-bytes (decision D9); a STEP written straight from the script's shape would differ from one written after the BREP
-round trip in signed zeros, which is why the pull always goes through the BREP. part.stl is one binary STL of every
-part; part.3mf goes through lib3mf (build123d's Mesher) and is not byte-reproducible (D10). Heavy libraries are
-imported inside the functions only.
+2000-01-01T00:00:00 and the part names as labels, so equal geometry with equal names (the run's name is in the
+FILE_NAME and top PRODUCT records) under the same build123d and OCP gives equal bytes (decision D9); a STEP written
+straight from the script's shape would differ from one written after the BREP round trip in signed zeros, which is why
+the pull always goes through the BREP. part.stl is one binary STL of every part; part.3mf goes through lib3mf
+(build123d's Mesher) and is not byte-reproducible (D10). Heavy libraries are imported inside the functions only.
 """
 from __future__ import annotations
 

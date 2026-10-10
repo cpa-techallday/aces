@@ -32,6 +32,11 @@ def sha_file(path: Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def step_records(path: Path) -> list[str]:
+    """A STEP file's records (text between semicolons) without whitespace, so line wrapping does not count."""
+    return ["".join(r.split()) for r in Path(path).read_text(encoding="utf-8").split(";")]
+
+
 class PullTest(WorkerTestCase):
 
     def pull(self, run_id: str, **kw) -> dict:
@@ -119,6 +124,39 @@ class PullTest(WorkerTestCase):
         rerun = self.run_script("aces_plate", name="plate")
         self.assertEqual(self.pull(rerun["run_id"])["geometry_sha256"], out["geometry_sha256"],
                          "two runs of one script and parameters")
+        # review finding 4: the run's name is in the STEP (FILE_NAME and PRODUCT), so the same geometry run under
+        # another name hashes differently, while the pull's own name (the bundle's) does not count
+        self.assertEqual(self.pull(run["run_id"], name="bracket")["geometry_sha256"], out["geometry_sha256"])
+        renamed = self.pull(self.run_script("aces_plate", name="plate-b")["run_id"])
+        self.assertNotEqual(renamed["geometry_sha256"], out["geometry_sha256"])
+        mine = step_records(bundle / "part.step")
+        theirs = step_records(Path(renamed["bundle"]) / "part.step")
+        self.assertEqual(len(mine), len(theirs))
+        differ = [(a, b) for a, b in zip(mine, theirs) if a != b]
+        self.assertEqual(len(differ), 2, differ)
+        for a, b in differ:
+            self.assertTrue(a.startswith("FILE_NAME(") or "=PRODUCT(" in a, a)
+            self.assertEqual(a.replace("plate", "NAME"), b.replace("plate-b", "NAME"))
+
+    def test_w13_the_skill_gyroid_is_closed_and_pulls(self):
+        """The skill's implicit-field example (tests/scripts/skill_gyroid.py, the SKILL.md block verbatim: test_static
+        S04c) at its defaults is a closed, valid mesh that pulls as STL (review finding 3: it came out open and the
+        pull refused it)."""
+        run = self.run_script("skill_gyroid")
+        part = run["result"]["parts"][0]
+        self.assertEqual((run["result"]["kind"], part["kind"]), ("mesh", "mesh"))
+        self.assertIs(part["watertight"], True, part)
+        self.assertIs(part["valid"], True, part)
+        self.assertEqual(run["problems"], [])
+        self.assert_expected(part["volume_mm3"], "skill_gyroid.volume_mm3")
+        out = self.pull(run["run_id"])
+        bundle = Path(out["bundle"])
+        self.assertIs(out["valid"], True)
+        self.assertEqual(sorted(p.name for p in bundle.iterdir()),
+                         ["outcome.json", "parameters.json", "part.stl", "source.json", "source.py"])
+        self.assertEqual(out["geometry_sha256"], sha_file(bundle / "part.stl"))
+        done = self.check_bundle(out)
+        self.assertEqual(done.returncode, 0, done.stdout.decode() + done.stderr.decode())
 
     def test_w13_without_ledger_record(self):
         self.use_fake_aces("old")

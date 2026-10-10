@@ -97,9 +97,9 @@ import numpy as np
 from aces_cad.worker.sdf import mesh_from_sdf
 
 PARAMS = {
-    "size": {"default": 30.0, "min": 10.0, "max": 120.0, "unit": "mm", "doc": "cube edge"},
-    "cell": {"default": 10.0, "min": 4.0, "max": 40.0, "unit": "mm", "doc": "gyroid period"},
-    "wall": {"default": 1.2, "min": 0.4, "max": 5.0, "unit": "mm", "doc": "sheet thickness (approximate)"},
+    "size": {"default": 30.0, "min": 10.0, "max": 36.0, "unit": "mm", "doc": "cube edge"},
+    "cell": {"default": 10.0, "min": 10.0, "max": 40.0, "unit": "mm", "doc": "gyroid period"},
+    "wall": {"default": 1.2, "min": 1.0, "max": 5.0, "unit": "mm", "doc": "sheet thickness (approximate)"},
 }
 
 
@@ -113,11 +113,17 @@ def build(p):
         box = np.maximum(np.maximum(np.abs(X), np.abs(Y)), np.abs(Z)) - half
         return np.maximum(sheet, box)                # the sheet, clipped to the cube
 
-    return mesh_from_sdf(sdf, (-half,) * 3, (half,) * 3, h=p.cell / 16)
+    # h: about four grid steps across the thinnest wall, and at most cell / 16
+    return mesh_from_sdf(sdf, (-half,) * 3, (half,) * 3, h=min(p.cell / 16, p.wall / 4))
 ```
 
-The grid is capped at 256³ cells. A mesh has no B-rep: it is rendered and inspected, but it pulls as STL only, and
-drawings refuse it.
+`mesh_from_sdf` counts grid values that lie exactly on the level as outside: the clip box's faces here lie on grid
+planes, and without that rule marching cubes left edges shared by more than two triangles, so the run reported
+`watertight: false` (reason `open_shell`) and `cad_pull` refused the part. Read `watertight` and `valid` in the run
+result before you pull. The example takes about four grid steps across the thinnest wall. The grid is capped at 256³
+points (size / h at most 255) and a mesh part at 2,000,000 triangles: a 60 mm cube at a 10 mm period and a 1 mm wall
+needs 6.6 million and is refused, which is why the example stops at a 36 mm cube, a 10 mm period and a 1 mm wall. A mesh
+has no B-rep: it is rendered and inspected, but it pulls as STL only, and drawings refuse it.
 
 **Inputs.** Project files the script reads (vendor STEP parts, or a golden winner STL to bring back to CAD) go in
 `inputs`; the script sees their absolute paths in `INPUTS`:
@@ -213,7 +219,10 @@ report the last error verbatim.
 - **validity**: BRepCheck, free edges, signed volumes, self-intersection, manifold, mesh watertightness; `ok`.
 - **topology**: counts and face/edge types; `list_faces` gives `f<n>` refs.
 - **holes**: diameter, depth, through or blind, counterbore, countersink and position, from full-circle concave
-  cylinders; an inner fillet is not a hole (it shows up in radii).
+  cylinders; an inner fillet is not a hole (it shows up in radii). A counterbore or countersink sits at an open end
+  (a cone at a blind bottom is a drill point, not a countersink), and a blind hole's depth is that of its
+  full-diameter bore from the entry face, without the drill point. Ids `h1`, `h2`, ... and groups `g1`, ... are
+  per run and part; at most 100 holes are reported, and `holes_truncated` says when a part has more.
 - **thickness**: one inward ray per triangle of a tessellation: a normal-direction thickness, not a medial-axis one;
   it overestimates in sharp concave corners.
 - **draft**: per face against one `pull_direction`; parting lines are not inferred.
@@ -239,9 +248,13 @@ right and iso; third-angle projection unless you ask for first-angle):
 - `drawing.json` with every dimension's value and rendered text.
 
 Dimension values are measured from the B-rep, never typed. It is not a GD&T drawing: no tolerances, datums or
-surface finish, so check it before manufacture. The DXF is the deliverable. Meshes are refused. Hole detection
-reports at most 100 holes per part: when a part has more, the drawing and its warnings say the hole counts and
-positions are incomplete, and the inspect holes check sets holes_truncated. For laser or plasma cut files use the `dxf` and `sendcutsend` skills.
+surface finish, so check it before manufacture. The DXF is the deliverable. Meshes are refused. A hole's `feature`
+in `drawing.json` (and the `pos_h1_x` style position features) uses the `cad_inspect` holes ids of the same run and
+part (`h1`, or `g1` for a callout of a group), and the hole table rows are those ids in capitals (`H1`): match the
+two outputs by id. Callouts and table rows are laid out by position, not by id. Hole detection reports at most 100
+holes per part: when a part has more, the drawing and its warnings say the hole counts and positions are
+incomplete, and the inspect holes check sets `holes_truncated`. For laser or plasma cut files use the `dxf` and
+`sendcutsend` skills.
 
 ## 8. Pull and the golden hand-off
 
@@ -253,9 +266,12 @@ positions are incomplete, and the inspect holes check sets holes_truncated. For 
 - `source.json` (sha256 of every file, versions, environment, the re-derived part numbers) and `outcome.json`.
 
 It records a `cad.pull` ledger entry and the project's CAD source. `geometry_sha256` is the sha256 of `part.step`
-(written from the run's BREP with a fixed header time and the part names as labels): the same geometry gives the same
-hash. 3MF is not byte-reproducible; its hash is recorded and never compared. An invalid part is refused unless
-`allow_invalid` is set, and then `valid: false` is recorded.
+(written from the run's BREP with a fixed header time and the part names as labels): equal geometry with equal names
+gives the same hash. The run's name is written into the STEP (its `FILE_NAME` and top `PRODUCT` records; a single-part
+result carries it as its part name, an assembly carries its part names too), so the same script run as `plate` and as
+`bracket` gives two hashes, while the pull's own `name` (the bundle's name) does not change it. Compare hashes of runs
+with the same name. 3MF is not byte-reproducible; its hash is recorded and never compared. An invalid part is refused
+unless `allow_invalid` is set, and then `valid: false` is recorded.
 
 `golden` in the result says what comes next: `init` (`aces golden init <project> --step <bundle>/part.step`) or, once
 `golden/spec.json` exists, `run`. A good organic-ready design space is:

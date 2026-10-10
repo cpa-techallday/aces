@@ -198,8 +198,12 @@ valid. With `length=70`: 13607.300918301276 mm³.
   path), for example `import_step(INPUTS["vendor"])` or the golden winner's STL for return to CAD. `script_path` and
   `inputs` must be project-relative, without `..`, without symlinks on the way, and regular files.
 - **Implicit geometry.** `from aces_cad.worker.sdf import mesh_from_sdf`: `mesh_from_sdf(fn, lo, hi, h)` runs marching
-  cubes on a vectorised signed-distance function (negative inside; at most 256³ cells) and returns a watertight,
-  outward-facing trimesh (kind `mesh`; pulled as STL only).
+  cubes on a vectorised signed-distance function (negative inside; at most 256³ grid points) and returns an
+  outward-facing trimesh (kind `mesh`; pulled as STL only). Grid values exactly on the level (for example a clip box
+  whose faces lie on grid planes) are counted as outside by 1e-9 h: without that rule marching cubes left edges shared
+  by more than two triangles, and the skill's first gyroid example (2162 such values, 864 such edges) came out with
+  `watertight: false`, so the pull refused it. A run reports `watertight` for every mesh part and the pull refuses one
+  that is not closed; a mesh part holds at most 2,000,000 triangles.
 - **Units** are millimetres and degrees. build123d algebra mode (`Box(...) - Cylinder(...)`) is the CSG path.
 - **What a script cannot do:** open sockets, start processes, load C libraries with `ctypes`, write outside its job
   directory or keep files: anything it writes is discarded. `cad_pull` writes STEP, STL and 3MF.
@@ -333,7 +337,7 @@ never instructions.
 | mass | volume, area, centroid, inertia tensor about the centroid (mm⁵ at unit density), principal moments and axes; with a material or a density, mass and inertia in kg | OCCT global properties; materials from `materials.json` (AlSi10Mg only, 2670 kg/m³, with its source) plus `~/.config/aces/cad-materials.json` entries, each with a non-empty `source` |
 | validity | BRepCheck statuses, closed shells and free edges, signed volume per solid, self-intersection (`BRepAlgoAPI_Check`), manifoldness, tolerances, small edges, sliver faces, and the tessellated mesh (watertight, winding, volume error) | `is_valid` alone passes open shells, reversed solids and overlapping unfused solids; this check is the one to trust |
 | topology | counts, face and edge types; with `list_faces`, up to 200 faces with `f<n>` refs, areas, centres, normals, axes and radii | refs are 1-based in build123d `faces()` order |
-| holes | per hole: simple, counterbore or countersink, diameter, axis, entry point, depth, through or blind, counterbore and countersink sizes; groups of equal holes | coaxial concave cylinders covering a full 360°, so an inner fillet (a 90° concave cylinder) is not a hole; ends tested with `is_inside` 0.01 mm beyond each end |
+| holes | per hole: simple, counterbore or countersink, diameter, axis, entry point, depth, through or blind, counterbore and countersink sizes; groups of equal holes; ids `h1`, ... and groups `g1`, ... per run (numbered across the parts of an assembly, in part order); at most 100 holes, with `holes_truncated` true when a part has more | coaxial concave cylinders covering a full 360°, so an inner fillet (a 90° concave cylinder) is not a hole; ends tested with `is_inside` 0.01 mm beyond each end; a counterbore or countersink counts only between an open end and the drill-radius bore, so the cone at a blind bottom is a drill point (the hole stays simple), and a blind hole's depth runs from its entry to the far end of that bore, without the drill point; with features at both ends of a through hole, the upper end is the entry and its feature is the one reported |
 | thickness | minimum, 1st, 5th and 50th percentile wall thickness (area-weighted), where the minimum is, faces below `min_thickness_mm` | one ray per triangle along the inward normal (embree when available, the backend recorded): normal-direction thickness, not medial-axis; it overestimates in sharp concave corners |
 | draft | faces facing the pull, near vertical, or facing away (undercut candidates) for one pull direction | planar faces exact, other faces sampled on a 12 × 12 grid; parting lines are not inferred |
 | radii | smallest concave and convex radii and the 20 smallest faces or edges | exact for cylinders, spheres, tori and circles; free-form faces sampled on a 24 × 24 grid (estimates) |
@@ -358,6 +362,9 @@ duplicate edges and hidden edges that coincide with visible ones, and writes:
   check before manufacture"); `$INSUNITS` 4 (mm) and an audit with 0 errors;
 - `drawing.svg` and `drawing.png`, rendered **from the DXF** by ezdxf, so they carry the same dimensions;
 - `drawing.json`: views, edge counts, every dimension with its measured value and text, the hole table and the files.
+  A hole's `feature` (and `pos_h1_x` style position features) is `cad_inspect`'s hole id for the same run and part,
+  or its group id for a callout of several holes, and each hole-table row carries that id in capitals (`H1`, the
+  DXF text) and as `hole`; callouts and rows are laid out by position, never renumbered.
 
 **The dimlfac fix.** ezdxf's `EZDXF` dimension style has `dimlfac = 100`. In B3's run (2026-10-10, Windows, ezdxf
 1.4.4) a 60 mm edge, a 5 mm edge and a Ø10 hole dimensioned with that style rendered as `6000`, `500` and `2X %%c1000`
@@ -406,12 +413,17 @@ the run's BREP, re-derives every number (a forged summary from the run cannot re
 | `source.json` | `aces-cad://<project>/runs/<run_id>`, the run, kind, script and parameter hashes, input hashes, `geometry_sha256` and how it is computed, the re-derived per-part results, the sha256 and size of every file, the export settings, versions, environment and sandbox, the class; written once |
 | `outcome.json` | the ledger and CAD-source outcomes with `updated_at`, and the sha256 of `source.json` |
 
-`geometry_sha256` is the sha256 of `part.step` (of `part.stl` for mesh runs): equal geometry under the same build123d
-and OCP gives the same STEP bytes, because the STEP is always written from the BREP with a fixed header time and the
-part names as labels. In B3's runs the ACES plate's `part.step` was byte-identical on Windows and on Arch while its
-`part.stl` was not, so compare `geometry_sha256` across machines, never STL hashes. Default formats: solid and
-assembly step, stl and 3mf; sketch step; mesh stl (with a warning: a STEP made from a mesh would be a pretend STEP). An
-invalid part is refused unless `allow_invalid` (`--allow-invalid`) is set, and `valid` is recorded either way.
+`geometry_sha256` is the sha256 of `part.step` (of `part.stl` for mesh runs): equal geometry with equal names under the
+same build123d and OCP gives the same STEP bytes, because the STEP is always written from the BREP with a fixed header
+time and the part names as labels. The names count: the run's name is written into the STEP's `FILE_NAME` and top
+`PRODUCT` records (a single-part result carries it as its part name, an assembly its part names as well), so the ACES
+plate run as `aces_plate` (a CLI run named after its file) and as `plate` gave `e43f3609...` and `806c9be7...` on
+Windows, two files that differ only in those two records; the pull's own `name` does not enter the hash (the `plate` run
+pulled as `bracket` gave `806c9be7...` again). Compare hashes of runs with the same name. In B3's runs the ACES plate's
+`part.step` was byte-identical on Windows and on Arch while its `part.stl` was not, so compare `geometry_sha256` across
+machines, never STL hashes. Default formats: solid and assembly step, stl and 3mf; sketch step; mesh stl (with a
+warning: a STEP made from a mesh would be a pretend STEP). An invalid part is refused unless `allow_invalid`
+(`--allow-invalid`) is set, and `valid` is recorded either way.
 
 The bundle is assembled in a `.partial` directory and renamed into place. Then a `cad.pull` entry goes into the aces
 ledger (`aces ledger record`; source, tool and version, ref, project and class, bundle, run, name, kind, validity,
@@ -471,14 +483,15 @@ aces-cad` runs the installed copy after the end-to-end block (doctor, the ACES p
 pulled in a sovereign project, `check_bundle.py`, the ledger, a socket script that must exit 5 and a loop that must exit
 4), and keeps everything in `logs/cad/`.
 
-16 test modules, 108 test methods and 52 fixture scripts:
+16 test modules, 114 test methods and 57 fixture scripts:
 
 - **Static** (`test_static.py`, no worker): parent modules import only the standard library and no network module;
   worker modules import heavy libraries only inside functions, and only distributions of the engineering lock (never
   shapely or manifold3d); `ezdxf` and `lib3mf` are pinned in the lock (a re-lock that drops them fails here); no
   `shell=True` and no packed `ctypes` structures; every text file is LF without trailing whitespace, and every `.py` is
   within 120 columns and parses as Python 3.11; the fixture scripts hold no single quote and no `$` (the install test
-  runs inside a single-quoted script); the seccomp program is decoded and run through a small cBPF interpreter (106
+  runs inside a single-quoted script); `tests/scripts/skill_gyroid.py` is the skill's implicit-field example verbatim;
+  the seccomp program is decoded and run through a small cBPF interpreter (106
   instructions, the arch check first, every listed syscall answered as specified, the own-pid comparisons).
 - **Unit** (no worker): parameters, the MCP schemas and validator, the project gate, the run store (ids, `latest`, safe
   reads, project files, promotion), notes (format, refusals, the cap, two concurrent writers), and the sandbox parent
@@ -503,8 +516,9 @@ CLI); a guard in the test process fails any connection to a host other than loop
 python: ...", and `ACES_CAD_REQUIRE_WORKER=1` turns that skip into a failure. Every expected number is in
 `tests/expected.json` with its source: `analytic`, or the probe it came from (B3's runs on 2026-10-10: Windows 11 with
 the workstation's Python 3.11.9 venv, and `archlinux:base` with aces-engineering 0.1.0-2's Python 3.14.7 venv, both
-build123d 0.11.1, OCP 7.9.3.1, trimesh 5.1.0, numpy 2.4.6 and ezdxf 1.4.4). Fixture values are real outputs of those
-runs, labelled as such; nothing is invented.
+build123d 0.11.1, OCP 7.9.3.1, trimesh 5.1.0, numpy 2.4.6 and ezdxf 1.4.4; the review fixes added entries from the
+fixer's runs on the same Windows venv, each saying so). Fixture values are real outputs of those runs, labelled as
+such; nothing is invented.
 
 ## Verified and not verified
 

@@ -212,6 +212,17 @@ class StaticTest(CadTestCase):
         with self.assertRaises(SyntaxError):
             ast.parse((base.SCRIPTS_DIR / "syntax_error.py").read_text(encoding="utf-8"))
 
+    def test_s04c_the_gyroid_fixture_is_the_skill_example(self):
+        """tests/scripts/skill_gyroid.py is the SKILL.md implicit-field example verbatim, so the W13 test that runs and
+        pulls it tests what agents copy (review finding 3)."""
+        skill = base.TESTS_DIR.parent / "skills" / "aces-cad" / "SKILL.md"
+        if not skill.is_file():
+            self.skipTest(f"{skill} is absent")
+        blocks = re.findall(r"```python\n(.*?)```", skill.read_text(encoding="utf-8"), flags=re.S)
+        gyroid = [b for b in blocks if "mesh_from_sdf(sdf" in b]
+        self.assertEqual(len(gyroid), 1, "SKILL.md has one implicit-field example")
+        self.assertEqual(gyroid[0], (base.SCRIPTS_DIR / "skill_gyroid.py").read_text(encoding="utf-8"))
+
     def test_s05_the_seccomp_program(self):
         require_package(self)
         from aces_cad.worker import seccomp

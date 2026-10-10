@@ -125,6 +125,17 @@ class WorkerRunTest(WorkerTestCase):
         self.assertEqual(datums["kind"], "solid")
         self.assertEqual([d["name"] for d in datums["datums"]], ["@top"])
 
+    def test_w04b_grid_values_on_the_level_do_not_open_a_mesh(self):
+        """mesh_from_sdf counts grid values exactly on the level as outside (review finding 3). The skill's first gyroid
+        example (h = cell / 16, its clip-box faces on grid planes) had 864 edges shared by more than two triangles and
+        was not watertight; it is closed now."""
+        text = self.script("skill_gyroid")
+        coarse = text.replace("h=min(p.cell / 16, p.wall / 4)", "h=p.cell / 16")
+        self.assertNotEqual(coarse, text)
+        part = self.op("run", project="p", script=coarse, name="gyroid-coarse")["result"]["parts"][0]
+        self.assertIs(part["watertight"], True, part)
+        self.assertIs(part["valid"], True, part)
+
     def test_w05_errors(self):
         runs = self.runs_dir()
         err = self.run_error("syntax_error", "script")
