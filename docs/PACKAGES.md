@@ -535,7 +535,7 @@ against the code before the fix is named with each).
   `mesh_from_sdf` now counts values exactly on the level as outside by 1e-9 h; after that, 17 of 17 probed gyroid runs
   were watertight and valid, including the old h = cell / 16 in 8 parameter sets of which 6 had been open. The example
   keeps the finer h, with ranges that stay under the 2,000,000-triangle mesh cap (a 60 mm cube at a 10 mm period and a 1
-  mm wall needs 6,632,352). `tests/scripts/skill_gyroid.py` is the SKILL.md block verbatim (S04c); W13 runs it at its
+  mm wall needs 6,613,936). `tests/scripts/skill_gyroid.py` is the SKILL.md block verbatim (S04c); W13 runs it at its
   defaults (watertight, valid, 6534.400079864546 mm³ on Windows) and pulls it, and W04b runs the old example (red on
   ff3c166).
 - Finding 4, the hash depends on the name. The run's name is written into the STEP's `FILE_NAME` and top `PRODUCT`
