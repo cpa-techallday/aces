@@ -1,0 +1,3 @@
+#!/bin/sh
+# aces-cad-mcp: the local text-to-CAD MCP server over stdio (package aces-cad); the code lives in /opt/aces/cad/lib
+exec /usr/bin/python3 -I -B -c 'import sys; sys.path.insert(0, "/opt/aces/cad/lib"); from aces_cad.mcp_server import main; sys.exit(main())' "$@"

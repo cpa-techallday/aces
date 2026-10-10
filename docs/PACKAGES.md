@@ -29,6 +29,7 @@ is a development key: rotate it before anything is distributed.
 | `aces-engineering` | 0.1.0-1 | One locked Python 3.14 venv at `/opt/aces/engineering/venv` (76 distributions, each hash-pinned in `requirements.txt`, binary wheels only; 907.6 MiB installed, 255 MB package) with a vendored snapshot of cudax-sim-runtime's `simlab` and `gendesign` (commit `28d92a8`, content sha256 in `SNAPSHOT`) on its path. Commands: `aces-simlab` (validate, local run, report, evidence, surrogate, export, capacity, `remote` MCP client), `aces-evidence` (ledger and bundle verification, relocates ledgers from other machines), `aces-gendesign` (list, selftest, topopt, parametric, nozzle, fusion); `mcp.json.example` for the rig's simlab `:8022` and rig-state `:8010`; LICENSES.md. Not installed: rig-only rq, redis, uvicorn, mcp, starlette, gmsh, rocketcea, physicsnemo, and the GPU packages cupy, warp, torch (mlflow too); the wrappers keep the queue, leases, MCP-server and console commands off the desktop CLI. Depends on `libglvnd` and `libx11` (the OCP wheel links libGL and libX11) | built (x86_64, signed); `check()` = `aces-gendesign selftest` passed | `check()`: 56/56 imports, fea3d element test, the 1 mm cantilever on NumPy reproduces the workstation's GPU record (0.1989054912444315 mm) to 8.3e-13 in 401 PCG iterations, evidence bundle and chain verified, md/html/docx report, 8 SIMP iterations, L-bracket STEP round trip at 26,694 voxels as on the workstation (needs `embreex`; trimesh's rtree fallback gives 26,616, all 78 differences on one 45-degree face). Clean container (own script, `SigLevel = Optional TrustAll`): relocated shebangs, `pyvenv.cfg` and bytecode paths, selftest again, `aces-voxel fea` of the bracket STEP at 2 mm (converged, 1,232 iterations), the workstation's 4-bundle evidence ledger verified (4 entries relocated) and a hand-edited bundle rejected, `aces-simlab remote` against a local mcp 2.0.0 server (JSON and SSE replies, bearer token, 401 on a wrong one), a 10-trial parametric study and a GP surrogate in a per-user registry, `pacman -R` leaves nothing under `/opt/aces`. After the full signed rebuild, `bin/install-test aces-base aces-engineering aces-voxel` passed under `SigLevel = Required DatabaseRequired`: `aces-engineering selftest: all hard checks passed`, `aces-voxel fea --self-test` PASS (STEP round trip at 26,694 voxels in 0.3 s) |
 | `aces-voxel` | 0.1.0-1 | `aces-voxel`: `fea` (STEP to voxel H8 FEA through simlab's step-structures stages, or `--self-test`), `topopt` (3-D SIMP), `lattice` (Warp rod lattices, GPU only), `export` (density to STL); `docs/VOXEL_KERNEL.md` (what is standard, what is not, the source modules) in `/usr/share/doc/aces-voxel`; an `aces-voxel` agent skill in `/usr/share/aces/voxel/skills` (linked by `aces-omarchy-setup` 0.1.0-2). Runs in the aces-engineering venv, no second venv | built (any, signed) with its dependency installed (`pkgbuilds/ORDER` no longer marks it `nodeps`), so `check()` runs against the installed aces-engineering: fea self-test, 6 SIMP iterations, export, a build123d bar STEP through `fea`, `lattice` exits 2 without a GPU | Clean container: `--help`, `fea --self-test`, `fea` of the bracket STEP, `export` of a SIMP density, `lattice` exit 2 with its reason |
 | `aces-cad-onshape` | 0.1.0-2 | -2 changes two unit tests only: the reply-that-cannot-be-encoded test uses a circular reference instead of a list nested 100,000 deep (json encoded that list on the GitHub runner, whose containers run with an unlimited stack, so CI run 37948580881 failed the package's `check()` while the same test passed on DARKNESS and the VM with the default 8 MB stack). Onshape adapter (cloud; every write, evaluation, export and pull runs the project class gate and is refused for sovereign and controlled projects): standard-library REST client, `aces-onshape` CLI (whoami, documents, create-document, elements, fs read/write, eval, features, add-feature, add-custom-feature, update-feature, delete-feature, version, massprops, export step/stl, pull), `aces-onshape-mcp` stdio MCP server (17 tools; descriptions name every write; changing a feature or Feature Studio it did not create needs confirm_foreign, writing into a public document needs allow_public), the `aces-cad-onshape` agent skill in `/usr/share/aces/cad-onshape/skills`, `mcp.json.example` with this server and the official Onshape FeatureScript MCP Server (Onshape Labs, `https://fs-mcp.labs.onshape.app/mcp`, browser sign-in after an App Store subscription). `aces-onshape pull onshape://<did>/<wid>/<eid> --project NAME` writes `part.step`, `parameters.json`, `source.json` and `outcome.json` under `~/Work/NAME/cad/onshape/` and a `cad.pull` ledger entry with the sha256 of the first three where `aces` offers `ledger record` | built (any, signed) on main, 0.1.0-2 on 2026-10-09 15:14 UTC with `bin/build aces-cad-onshape`: `check()` ran the 69 unit tests (the 62 originals plus the seven review regressions) against the fake Onshape server, all OK on Python 3.14.7, namcap reported nothing; the same 69 pass in the builder image with the runner's unlimited stack (`docker run --ulimit stack=-1:-1`), which is where 0.1.0-1's test 34c had failed in CI. 0.1.0-1 (14:49 UTC, same sources apart from that test) and the earlier unsigned worktree build (62 tests, before the review fixes) are superseded | Clean container, the default `bin/install-test` set (aces-base, aces-creative, aces-consoles, aces-omarchy, aces-cad-onshape) from the signed repo (`SigLevel = Required DatabaseRequired`, 2026-10-09 14:52 UTC, exit 0): `aces-onshape --help`; `aces-onshape whoami` exits 3 with `no Onshape API keys: ...`; the installed tests in `/usr/share/aces/cad-onshape/tests` 69/69 as root against the installed package; `pacman -Sp aces-os` (0.1.0-4) resolves to 508 packages. Earlier, unsigned, with `bin/install-test aces-base aces-omarchy aces-cad-onshape` (62/62 before the review fixes): `aces-omarchy-setup` links the skill as `~/.claude/skills/aces-cad-onshape` and `~/.agents/skills/aces-cad-onshape`, and `--remove` unlinks both. Workstation: 62 tests OK on Python 3.11.9 and 3.13.13 (one skipped there, the POSIX file-mode test), 62/62 on 3.14.7 in `aces-builder`; the stdio MCP server driven through the skill's whole loop against the fake server. Real Omarchy 4.0.4 (the rehearsal VM, 2026-10-09 14:55 UTC): `pacman -Sy aces-cad-onshape aces-os` from the signed LAN repo installed 0.1.0-1 and upgraded aces-os to 0.1.0-4 (pacman lists the new optional dependency as installed); `aces-onshape whoami` exits 3 with the keys message; the installed tests 69/69; `aces-omarchy-setup` linked the skill into `~/.claude/skills` and `~/.agents/skills`; `aces-onshape-mcp` answered `initialize` and `tools/list` (17 tools) over stdio with `ACES_ONSHAPE_PROJECT=golden-demo`; upgraded to 0.1.0-2 from the same repo at 15:16 UTC, installed tests 69/69 again, whoami exit 3. No live Onshape run yet (no credentials on DARKNESS or the VM) |
+| `aces-cad` | 0.1.0-1 | Local text-to-CAD (no network, no quota, every project class): agents write build123d Python; `aces-cad-mcp` (stdio MCP server, 8 tools) and the `aces-cad` CLI run it in a sandboxed child of the aces-engineering venv (seccomp, Landlock, rlimits, a scrubbed environment; strict mode by default), report volume, area, bbox, validity and topology, inspect (mass, validity, holes, thickness, draft, radii, interference, section, measure, design space), render PNGs in the golden-path look, draw dimensioned DXF/SVG/PNG, and pull a run into `cad/local/` as STEP + parameters + sha256 with a `cad.pull` ledger entry; the `aces-cad` agent skill; no venv of its own (section "Local CAD" below) | not built yet | not built yet |
 
 ## Changed for the golden path
 
@@ -291,6 +292,178 @@ and the blog posts above.
   code and inspect the geometry its code produces.
 - Not connected from this machine; tool list and OAuth scopes unknown.
 - Never for sovereign or controlled projects: the ACES class gate cannot see its calls.
+
+## Local CAD (aces-cad), 2026-10-10
+
+**Why.** Aaron, 2026-10-10: "The cloud-based system from Onshape is useless: the API calls will burn through the annual
+allocation straight away, and I don't feel like paying huge amounts if we can build our own integration." `aces-cad` is
+that integration. The agent (Claude Code, OpenCode, Codex, Hermes) writes build123d Python; this machine runs it in a
+sandboxed child of the aces-engineering venv; the agent inspects, renders, draws and fixes the part, then pulls it into
+the ACES project as STEP + parameters + sha256 with a `cad.pull` ledger entry. No API call, no allocation and no
+network, so every project class may use it, sovereign and controlled included: the class gate still runs on every tool
+and records the class, and an unknown or missing class is refused with the `aces project classify` fix. The package's
+`README.md` (`/usr/share/doc/aces-cad/README.md`) has the details.
+
+**Process model.**
+
+- `aces-cad-mcp` (stdio MCP server) and the `aces-cad` CLI run on the system `python3` with the standard library only.
+  They never import a network module and never `exec` agent code.
+- Every geometry job is a fresh child process: `/opt/aces/engineering/venv/bin/python -I -B -X utf8 -X faulthandler
+  /opt/aces/cad/lib/aces_cad/worker/main.py`, with the job JSON on stdin, stdout and stderr in files of the job
+  directory, and `result.json` written atomically and validated by the parent. Jobs: `run` (the only one that runs agent
+  code) and the data-only `env`, `selftest`, `inspect`, `render`, `drawing` and `export`. Nothing is kept between jobs,
+  so an OCCT crash or hang costs one worker, never the server; the price is the imports, about 2 s per job (probe
+  below).
+- The server reads requests on one thread and runs tool calls on one executor thread (at most 8 waiting).
+  `notifications/cancelled` kills the running job, progress notifications go out every 5 s, and the hostile-input
+  hardening is aces-onshape's plus a 4 MiB line cap.
+- Runs live in `<ACES_WORK>/<project>/cad/local/runs/<run_id>/` (mode 0700). Failed runs are kept, so an agent that lost
+  its context gets the script back with `cad_runs`; outputs are promoted from the job directory only after validation.
+
+**Sandbox.** In the order the worker installs it, before any heavy import:
+
+1. its own session, `PR_SET_PDEATHSIG` (the worker dies with its parent) and nice 10;
+2. rlimits with soft = hard: address space 4096 MiB, file size 1024 MiB, at most 1024 open files, no core dumps, CPU
+   time just past the wall clock; 2 threads for BLAS/OpenMP and the OCCT pool;
+3. seccomp-bpf (x86_64, 106 instructions, applied to every thread with TSYNC): `socket` fails with EACCES; `fork`,
+   `vfork`, `execve`, `execveat`, `ptrace`, `unshare`, `setns`, `bpf`, `io_uring_*`, `pidfd_*`, `userfaultfd` and the
+   other listed calls fail with EPERM; `clone` only makes threads; `kill`, `tgkill`, `prlimit64`, `sched_setaffinity`
+   and `setpriority` reach only the worker itself;
+4. Landlock: read-only `/usr`, `/etc`, `/opt/aces`, the venv and the run directory; read-write only the job directory,
+   where symlinks, FIFOs, sockets, devices and executables cannot be created; `$HOME`, `/tmp`, `/run`, `/dev/shm` and
+   other processes' `/proc` are out of reach; ABI 4 and later deny all TCP a second time, ABI 6 and later scope signals
+   and abstract sockets;
+5. a scrubbed environment (an allowlist: no `ACES_*`, `ONSHAPE_*`, proxy, SSH agent, display or D-Bus variables);
+6. op `run` only, after the imports: a 16 MiB memory reserve (so a MemoryError is reported, not a crash) and the Python
+   audit hook, which refuses sockets, processes, `ctypes`, tracing and writes outside the job directory with a clear
+   message. The hook is not a boundary: OCCT's C++ I/O bypasses it.
+
+The parent adds the wall clock (`cad_run` 120 s by default, at most 600 s), size caps on stdout, stderr and the job
+directory, and a process-group kill (`killpg`; `taskkill /F /T` on Windows) so that no grandchild survives.
+`ACES_CAD_SANDBOX=strict`, the default, runs no agent code unless seccomp **and** Landlock are both active (otherwise
+exit 3, kind `sandbox_unavailable`); `permissive` runs with whatever is available, and every result then says `confined:
+false` and names what is missing. Windows and macOS are permissive only (development: the audit hook, the wall clock and
+the tree kill).
+
+**Probe (B3's run of the judge's sandbox probe, 2026-10-10).** `archlinux:base` on Docker Desktop, kernel
+6.6.114.1-microsoft-standard-WSL2 (no `/sys/kernel/security/lsm` in the container), aces-engineering 0.1.0-2's venv
+(Python 3.14.7, build123d 0.11.1, OCP 7.9.3.1, trimesh 5.1.0, ezdxf 1.4.4, numpy 2.4.6), as uid 1000, guards installed
+before the imports, RLIMIT_AS 4096 MiB, 2 threads:
+
+- seccomp active (106 BPF instructions, TSYNC); Landlock ABI 3 (no TCP rules and no scoping at this ABI), every rule
+  added, no root skipped;
+- imports 2.02 s; VmPeak 1256184 kB, VmHWM 566140 kB, 16 threads;
+- worked inside the guards: a two-hole plate (11214.60183660255 mm³), BREP, STEP (sha256
+  `ef07b1340bc61c27c9cae49dfc2e8b074e523fce5d46c31ace9bf4b14a2565d8`), STL, 3MF, `BRepAlgoAPI_Check`, embree rays
+  (`trimesh.ray.ray_pyembree`, thickness 4.9999), a watertight SDF mesh, a matmul, a Python thread, a matplotlib PNG, an
+  ezdxf dimension (60.0, audit 0 errors) and an ezdxf PNG preview;
+- refused: `socket` (AF_INET and AF_UNIX) errno 13; `fork` and `posix_spawn` errno 1; `kill(parent | 1 | -1, 0)` errno 1
+  (its own pid allowed); `prlimit` on the parent errno 1; raising the hard RLIMIT_AS ValueError; `setpriority` on the
+  user or the parent errno 1; `sched_setaffinity` on the parent errno 1; `symlink` and `mkfifo` in the run directory
+  errno 13; a hard link of a secret into it errno 18; reading the secret, listing `$HOME`, and reading
+  `/proc/<parent>/environ` and `/proc/1/environ` errno 13; writing `/tmp` or `/dev/shm` errno 13; OCCT `export_step`
+  outside the job directory `RuntimeError: Failed to write STEP file`, and no file appeared;
+- allowed: reading `/etc/hostname`, writing `/dev/null`;
+- memory: a growing list hit MemoryError at VmHWM 1678912 kB under RLIMIT_AS 2048 MiB and at 3777008 kB under 4096 MiB;
+  `np.ones(2**33)` hit MemoryError under both; an OCCT allocation bomb exited 1 under both, which is why the worker
+  keeps a memory reserve.
+
+**Tools (8).** `cad_start` (the class gate, the project's `cad/NOTES.md` lessons, the last runs, the conventions, the
+limits and the sandbox status), `cad_run` (inline script, a project `.py` or a re-run, with parameter overrides and
+input files; per-part volume, area, bbox, centroid, validity and topology), `cad_runs` (list or show runs, with the
+script), `cad_inspect` (mass, validity, topology, holes, thickness, draft, radii, interference, section, measure,
+design_space), `cad_render` (PNG views in the golden-path look, inline), `cad_drawing` (DXF with dimensions, plus SVG
+and PNG rendered from it), `cad_pull` (the CadSource pull) and `cad_note` (one lesson appended verbatim to
+`cad/NOTES.md`). The CLI has the same operations plus `doctor`, `selftest`, `params`, `prune` and `notes`.
+
+**Pull bundle.** `cad_pull` re-derives the numbers in an export worker that runs no agent code and writes
+`<ACES_WORK>/<project>/cad/local/<UTC stamp>-<name>/`: `part.step` (from the run's BREP, header time
+`2000-01-01T00:00:00`, part names as labels), `part.stl`, `part.3mf` (written, never compared: it is not
+byte-reproducible), `parameters.json`, `source.py` (its sha256 checked against the run), `inputs/`, `source.json`
+(sha256 and size of every file, versions, environment, sandbox) and `outcome.json` (the ledger and cad-source outcomes,
+with the sha256 of `source.json`). `geometry_sha256` is the sha256 of `part.step` (of `part.stl` for mesh runs). The
+`cad.pull` ledger entry carries the class, the bundle, every file's sha256 and the versions, and `aces project
+add-cad-source` records `cad/local/<bundle>/part.step`. An invalid part is refused unless `allow_invalid` is set, and
+`valid` is recorded either way. The pull result names the golden hand-off (`aces golden init` or `aces golden run
+--step`).
+
+**FreeCAD is not used.** In a clean `archlinux:base` (B3's run, 2026-10-10, resolution only: `pacman -Sp freecad`,
+nothing installed), FreeCAD 1.1.4-3 (LGPL-2.0-only in Arch's metadata) brings 141 packages, 403.5 MiB to download and
+1905.3 MiB installed, and architect B's probe found no headless page-SVG export in TechDraw. build123d's OCCT
+hidden-line removal plus ezdxf makes the drawing (DIMENSION entities in the DXF, SVG and PNG rendered from the DXF)
+without it.
+
+**Changed for local CAD.**
+
+| Package | Version | What changed | Test evidence |
+|---|---|---|---|
+| `aces-cad` | 0.1.0-1 | new (its row is in "Built and tested") | not built yet |
+| `aces-os` | 0.1.0-6 | `aces-cad` added to `depends` (the sovereign CAD path). Written against main (aces-os 0.1.0-4) on the assumption that golden-rig/packaging merges first: its aces-os 0.1.0-5 adds `calculix-ccx-bin`, and the merged 0.1.0-6 lists both. golden-rig/packaging records that calculix-ccx-bin 2.23-1 does not build (it needs `libgfortran.so.4`), so this aces-os does not resolve until it does | not built yet; `pacman -Sp aces-os` not run (package count not measured) |
+
+`bin/install-test` gains an aces-cad block, which runs when aces-cad is in the package set (doctor, the ACES plate run,
+inspected, rendered, drawn and pulled in a sovereign project, `check_bundle.py`, the ledger, two hostile scripts by exit
+code, the installed tests; artefacts in `logs/cad/`), and CI a third install test, `bin/install-test aces-base
+aces-engineering aces-cad`. The default install test is unchanged.
+
+**Pre-integration check (B3, 2026-10-10).** The suite and the packaging ran against copies of builders B1's and B2's
+uncommitted working trees (taken at 16:19 AEDT), in a scratch tree whose unsigned repository held only aces-base
+0.1.0-3, aces-engineering 0.1.0-2 and the new package. The integrator's build of the merged branch replaces these
+results in the cells above.
+
+- `bin/build aces-cad`: `aces-cad-0.1.0-1-any.pkg.tar.zst` built; `check()` ran the 107 tests as the builder user in
+  strict mode, OK in 391.6 s with one skip (S02b: the makepkg tree has no lock file); namcap printed nothing.
+- `bin/install-test aces-base aces-engineering aces-cad`: exit 0. `aces-cad doctor`: ready, strict, seccomp (106 BPF
+  instructions, TSYNC), Landlock ABI 3, 14 of 14 checks passed; Python 3.14.7, build123d 0.11.1, OCP 7.9.3.1, ezdxf
+  1.4.4, lib3mf 2.5.0, trimesh 5.1.0. The ACES plate: 11607.300918301276 mm³, counts 1/1/7/15/10, valid, 2.5 s wall
+  (imports 1.7 s), peak 500.7 MB. Inspect: 0.030991493451864402 kg in AlSi10Mg, one simple through Ø10 hole entering at
+  (30, 20, 5), minimum thickness 5.0 mm, validity ok. The drawing read 60, 40, 5, 30, 20 and Ø10 THRU (checked by eye).
+  The pull: `geometry_sha256` `806c9be7a86c8ae60308ee75d9a910f371d5f5aae6fe6517fa5ce6aa5fd1742f`, the `cad.pull`
+  ledger entry written, the CAD source recorded, `check_bundle.py` passed. The socket script exited 5 (kind sandbox)
+  and the loop 4 (kind timeout). The installed tests, as root: 107, OK in 364.2 s (one skip, S02b).
+- In a clean `archlinux:base` as uid 1000 (strict), before two test fixes: 105 of 107 passed. Both failures were test
+  defects (an unpaced print flood can finish between two of the parent's 100 ms checks; the None-result test expected
+  the word NoneType where the message names None) and were fixed before the build above.
+- Windows 11 with the workstation's Python 3.11.9 venv (permissive), before the same fixes: 107 run, 93 passed, 1
+  failed (the None-result test), 13 skipped (strict-only tests, POSIX-only checks, and symlinks, which need a privilege
+  there); after them the two changed modules passed (sandbox unit 12 and worker run 6, one skip each). On Windows
+  every aces CLI call that `aces-cad-mcp` made waited out its 30 s timeout: the child inherits the server's stdin pipe,
+  which the reader thread is blocked on (a B3 probe: the same child finished in 0.08 s with stdin set to DEVNULL);
+  reported for a fix.
+- The ACES plate pulled on Windows had the same `geometry_sha256` as on Arch; `part.stl` differed between the two
+  (OCCT tessellation), so STL hashes are not compared across operating systems.
+
+**Not verified.**
+
+- The merged branch has not been built, install-tested or run in CI, and the VM acceptance has not run: the result
+  cells above say "not built yet".
+- Whether the VM kernel has Landlock, and which ABI (acceptance step 2).
+- Whether GitHub runners allow the Landlock syscalls under Docker's seccomp profile; if not, the CI install test runs
+  permissive and says so in its log.
+- Which MCP clients show image content to the model (acceptance step 9).
+- Cross-OS equality of `geometry_sha256` beyond the ACES plate on the two platforms above, and on the VM (acceptance
+  step 8).
+
+**Known gaps (aces-cad).**
+
+- Strict mode needs Landlock (and x86_64 for the seccomp filter): a kernel without it refuses every agent run until the
+  operator chooses permissive, which runs without the filesystem guard and says so in every result.
+- 3MF is not byte-reproducible; its sha256 is recorded and never compared.
+- Mesh pulls (SDF and TPMS results) are STL only: no 3MF and no faceted STEP.
+- One sourced material (AlSi10Mg, 2670 kg/m³, the golden demo's nominal value); others go in
+  `~/.config/aces/cad-materials.json` with a non-empty `source`.
+- Drawings have no section hatching, no radius dimensions and no centre marks, and they are not GD&T.
+- No `aces cad` passthrough in aces-base 0.1.0: the commands are `aces-cad` and `aces-cad-mcp`.
+- The aces-omarchy agent skill does not mention aces-cad yet (golden-rig owns that file now).
+
+**VM acceptance** (exact commands in `rehearsal/README.md`, "aces-cad on the VM"). On the Omarchy VM: install aces-cad
+from the LAN repo; `aces-cad doctor` (expected: ready, strict, seccomp 106 instructions with TSYNC, the Landlock ABI
+recorded); `aces-cad selftest`; a sovereign project; the ACES plate (11607.300918301276 ± 1e-6 mm³, 60 × 40 × 5 mm,
+counts 1/1/7/15/10, valid); inspect (one through Ø10 hole entering at (30, 20, 5), minimum thickness 5.0 mm, mass 0.0310
+kg in AlSi10Mg); the renders and the drawing checked by eye (60, 40, 5, 30, 20 and Ø10 THRU); pull, `check_bundle.py`,
+`aces ledger verify`, the `cad.pull` entry with `class: sovereign`, and a second pull with the same `geometry_sha256`;
+the agent loop in Claude Code, with Esc during a long run; the hostile scripts as the desktop user (socket exit 5, loop
+exit 4, memory exit 4, secret exit 5, OCCT export outside fails, kill parent exit 5); desktop responsiveness during a 60
+s loop; optionally the golden hand-off. Not run yet (2026-10-10).
 
 ## Known gaps
 

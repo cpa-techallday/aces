@@ -1,0 +1,3 @@
+#!/bin/sh
+# aces-cad: the local text-to-CAD CLI (package aces-cad); the code lives in /opt/aces/cad/lib
+exec /usr/bin/python3 -I -B -c 'import sys; sys.path.insert(0, "/opt/aces/cad/lib"); from aces_cad.cli import main; sys.exit(main(sys.argv[1:]))' "$@"

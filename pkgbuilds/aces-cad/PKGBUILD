@@ -1,0 +1,44 @@
+# Maintainer: Carbon Project Australia
+# Local text-to-CAD for ACES: build123d scripts run in a sandboxed child of the aces-engineering venv (seccomp,
+# Landlock, rlimits; no network), are inspected, rendered and drawn (DXF/SVG/PNG), and pulled into the project as
+# STEP + parameters + sha256 with a cad.pull ledger entry; the aces-cad-mcp stdio MCP server, the aces-cad CLI and the
+# aces-cad skill. No second venv. Sources are packed from src/aces-cad by bin/build.
+pkgname=aces-cad
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="ACES local text-to-CAD: sandboxed build123d runs, geometry checks, renders, dimensioned drawings and the CadSource pull (STEP + parameters + sha256) as an MCP server, a CLI and a skill (no network)"
+arch=('any')
+url="file:///usr/share/doc/aces-cad"
+license=('MIT')
+depends=('aces-base>=0.1.0-3' 'aces-engineering>=0.1.0-2' 'python')
+source=("$pkgname-src.tar.gz")
+sha256sums=('SKIP')
+_lib=opt/aces/cad/lib
+
+check() {
+  cd "$srcdir/$pkgname"
+  mkdir -p "$srcdir/home"
+  local py=/opt/aces/engineering/venv/bin/python req=1
+  if [[ ! -x "$py" ]]; then
+    echo "check: aces-engineering is not installed here (built with --nodeps?): the worker tests are skipped; aces-cad was NOT exercised against build123d"
+    req=0
+  fi
+  HOME="$srcdir/home" ACES_CAD_PYTHON="$py" ACES_CAD_REQUIRE_WORKER="$req" PYTHONPATH="$srcdir/$pkgname" \
+    PYTHONDONTWRITEBYTECODE=1 NO_COLOR=1 python -m unittest discover -s tests -v
+}
+
+package() {
+  cd "$srcdir/$pkgname"
+  install -dm755 "$pkgdir/$_lib"
+  cp -r aces_cad "$pkgdir/$_lib/"
+  find "$pkgdir/$_lib" -name __pycache__ -type d -prune -exec rm -rf {} +
+  python -m compileall -q --invalidation-mode checked-hash -s "$pkgdir" -p / "$pkgdir/$_lib"
+  install -Dm755 packaging/aces-cad packaging/aces-cad-mcp -t "$pkgdir/usr/bin"
+  install -Dm644 skills/aces-cad/SKILL.md -t "$pkgdir/usr/share/aces/cad/skills/aces-cad"
+  install -Dm644 mcp.json.example -t "$pkgdir/usr/share/aces/cad"
+  install -dm755 "$pkgdir/usr/share/aces/cad/tests"
+  cp -r tests/. "$pkgdir/usr/share/aces/cad/tests/"
+  find "$pkgdir/usr/share/aces/cad/tests" -name __pycache__ -type d -prune -exec rm -rf {} +
+  install -Dm644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+}

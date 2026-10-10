@@ -39,6 +39,9 @@ jobs:
       - name: Install-test the engineering stack and the golden path
         run: bash bin/install-test aces-base aces-engineering aces-voxel
 
+      - name: Install-test the local CAD server (aces-cad)
+        run: bash bin/install-test aces-base aces-engineering aces-cad
+
       - name: Keep the build logs
         if: always()
         uses: actions/upload-artifact@v4

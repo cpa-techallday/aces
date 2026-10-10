@@ -11,11 +11,12 @@ ACES Server (the 8-GPU rig) as its compute. Planning repo, started 2026-10-08.
 | `pkgbuilds/<pkg>/PKGBUILD` | One Arch package per directory: the `aces-*` packages and pinned copies of the seven ArtCraft AUR `-bin` recipes |
 | `src/<pkg>/` | Sources for the `aces-*` packages (packed into `pkgbuilds/<pkg>/<pkg>-src.tar.gz` by the build script) |
 | `src/aces-cad-onshape/` | The Onshape adapter (package `aces-cad-onshape`): standard-library REST client, the `aces-onshape` CLI, the `aces-onshape-mcp` stdio MCP server and the text -> FeatureScript -> CAD -> STEP agent skill; `onshape://` pulls write STEP + parameters + sha256 into the project; writes, evaluation, exports and pulls are refused for sovereign and controlled projects |
+| `src/aces-cad/` | The local text-to-CAD package (`aces-cad`): sandboxed build123d runs, inspection, renders, dimensioned drawings and the CadSource pull (`aces-cad://` into `cad/local/` as STEP + parameters + sha256 with a `cad.pull` ledger entry); the `aces-cad` CLI, the `aces-cad-mcp` stdio MCP server and the `aces-cad` agent skill; no network and no quota, allowed for every project class |
 | `bin/build [--nodeps] [pkg ...]` | Builds packages inside the `aces-builder` Docker image (Arch `base-devel`) and adds them to the local `[aces]` repo in `repo/x86_64/`; with no arguments it follows `pkgbuilds/ORDER` (members before dependants, `nodeps` flags for meta-packages); signs packages and the database when `keys/aces-pkgs.sec.asc` is present; logs in `logs/` |
 | `bin/install-test [pkg ...]` | Installs the built packages into a clean `archlinux:base` container from the `[aces]` repo (trusting the signing key and requiring signatures when the database is signed), exercises the `aces` CLI and dry-runs dependency resolution for the meta-packages; with aces-engineering in the package set it runs `aces golden run --demo`, verifies the run and both ledgers, and copies the report to `logs/golden/` |
 | `docker/builder.Dockerfile` | The builder image: `base-devel`, `namcap`, Python build tools, an unprivileged `builder` user, the `[aces]` repo pre-configured |
 | `keys/` | `aces-pkgs.pub.asc` and `FINGERPRINT` are committed (ed25519 development signing key, expires 2028-10-08); the secret key and GnuPG home are ignored. Rotate before anything is distributed |
-| `.github/workflows/build.yml` | CI: every push builds all packages in the builder container and runs the default install test, then `bin/install-test aces-base aces-engineering aces-voxel` (the golden path); the `ACES_SIGNING_KEY` secret makes the CI build signed |
+| `.github/workflows/build.yml` | CI: every push builds all packages in the builder container and runs the default install test, then `bin/install-test aces-base aces-engineering aces-voxel` (the golden path) and `bin/install-test aces-base aces-engineering aces-cad` (local CAD: the sandbox doctor, the ACES plate run, inspected, rendered, drawn and pulled in a sovereign project, two hostile scripts, the installed tests); the `ACES_SIGNING_KEY` secret makes the CI build signed |
 | `docs/BENCHMARKS.md` | Lane qualification table appended by `aces lane bench` (every row is also a ledger entry) and golden-path wall-time rows from `aces golden show RUN --bench-out` |
 | `rehearsal/` | Omarchy rehearsal-VM kit for Hyper-V on DARKNESS (unattended install from a `cidata` drive, then the `[aces]` repo) |
 
@@ -24,7 +25,8 @@ Repository: private, `github.com/cpa-techallday/aces-os` (the sibling `cudax-sim
 Build everything from Git Bash on Windows (Docker Desktop) or from Linux:
 
 ```bash
-bash bin/build && bash bin/install-test && bash bin/install-test aces-base aces-engineering aces-voxel
+bash bin/build && bash bin/install-test && bash bin/install-test aces-base aces-engineering aces-voxel &&
+  bash bin/install-test aces-base aces-engineering aces-cad
 ```
 
 The simulation runtime, generative design stack, SIMLAB console and evidence ledger live in `C:\Users\shedm\cudax-sim-runtime`
