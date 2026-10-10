@@ -2,7 +2,9 @@
 Hard checks: imports; fea3d.self_test; a `simlab run` of examples/exp_beam_validation.yaml at 1 mm (local worker,
 FP64) reproducing the workstation record to 1e-9, with an evidence bundle verified in a temporary root and an
 md/html/docx report; 8 SIMP iterations of examples/cantilever3d.json at 2 mm with STL and slices; a build123d
-STEP round trip to a voxel mask. Reported only: bracket voxel counts vs the workstation, rig-only and optional modules.
+STEP round trip to a voxel mask; the conforming second discretisation's bar patch test (golden.conforming: gmsh C3D10
+and CalculiX ccx, every closed-form value to 1e-6), reported as not run when no ccx is installed and failed when an
+installed ccx does not run. Reported only: bracket voxel counts vs the workstation, rig-only and optional modules.
 References (workstation DARKNESS 2026-10-05, untracked outputs in cudax-sim-runtime/out/): exp/beam-validation-v1/
 c000/results.json delta_fea_mm 0.1989054912444315; bracket_b3d/check.json solid_b3d 26694, solid_analytic 26766."""
 from __future__ import annotations
@@ -41,6 +43,12 @@ DESKTOP_MODULES = [
     "aces_engineering.golden.render", "aces_engineering.golden.compute", "aces_engineering.golden.surrogate",
     "aces_engineering.golden.optimise", "aces_engineering.golden.verify", "aces_engineering.golden.evidence",
     "aces_engineering.golden.report",
+    # the rig lane and the conforming second discretisation: the desktop client, the rig-side runner (imported, never
+    # run here), the conforming check, simlab-mcp's file and spec stores, the rig shims, the upstreamed gendesign
+    # multigrid and mask repair, and gmsh (in the lock)
+    "aces_engineering.golden.rig", "aces_engineering.golden.rigside", "aces_engineering.golden.conforming",
+    "simlab.filestore", "simlab.specstore", "simlab.solvers.golden_case", "simlab.solvers.golden_check",
+    "simlab.solvers.ccx_check", "gendesign.mg", "gendesign.connectivity", "gmsh",
     "numpy", "scipy", "skimage.measure", "trimesh", "rtree", "optuna", "matplotlib", "yaml", "pydantic", "docx",
     "markdown", "sklearn.gaussian_process", "sklearn.ensemble", "joblib", "build123d", "embreex",
     "tqdm", "threadpoolctl", "psutil"]
@@ -129,6 +137,35 @@ def check_step(res: dict, ex: Path, work: Path) -> None:
                                            f"(ws 26766), agreement {agree:.4f} (ws 0.9995)")
 
 
+def check_conforming(res: dict, ex: Path, work: Path) -> None:
+    """The section 12.8 bar patch test through golden.conforming.run_check (gmsh C3D10 at 1 mm, ccx linear static):
+    PASS when every closed-form value holds to 1e-6 and the reactions balance; INFO when it did not run because no
+    ccx is installed (or no gmsh); FAIL when it ran and missed, and when an installed ccx does not run."""
+    from .golden import conforming
+
+    t0 = time.time()
+    out = conforming.bar_patch_test(work / "conforming", threads=1)
+    rec = out["record"]
+    if out["ok"] is None:
+        if out["status"] == "ccx-not-found" and rec["solver"]["path"] is not None:
+            res["conforming"] = (False, f"an installed ccx does not run: {rec['message']}")
+        else:
+            res["conforming"] = (None, f"not run: {rec['message']}")
+        return
+    if out["status"] != "ok":
+        res["conforming"] = (False, f"{out['status']}: {rec['message']}")
+        return
+    worst = max(out["checks"], key=lambda k: out["checks"][k]["rel"])
+    res["conforming"] = (bool(out["ok"]), "bar patch test, gmsh {} C3D10 at 1 mm ({} elements, {} route), CalculiX "
+                         "ccx {}: tip u_x {!r} mm, umax {!r} mm, vm_p99 {!r} MPa, compliance {!r} N.mm, mass {!r} kg; "
+                         "worst rel diff {:.1e} ({}), equilibrium {:.1e}, {:.1f} s".format(
+                             rec["mesh"]["version"], rec["mesh"]["elements"], rec["mesh"]["route"],
+                             rec["solver"]["version"], out["checks"]["tip_ux_mm"]["got"],
+                             out["checks"]["umax_mm"]["got"], out["checks"]["vm_p99_MPa"]["got"],
+                             out["checks"]["compliance_Nmm"]["got"], out["checks"]["mass_kg"]["got"],
+                             out["checks"][worst]["rel"], worst, out["equilibrium"], time.time() - t0))
+
+
 def main(argv: list | None = None) -> int:
     ap = argparse.ArgumentParser(prog="aces-gendesign selftest", description=__doc__.splitlines()[0])
     ap.add_argument("--out", default=None, help="keep the outputs here (default: a temporary directory)")
@@ -140,7 +177,8 @@ def main(argv: list | None = None) -> int:
     check_imports(res := {})
     res["element"] = (bool(self_test(verbose=False)), "fea3d.self_test: KE symmetry, rigid-body modes, uniaxial patch test")
     ex = examples_dir()
-    for name, fn in (("beam", check_beam), ("simp", check_simp), ("step", check_step)):
+    for name, fn in (("beam", check_beam), ("simp", check_simp), ("step", check_step),
+                     ("conforming", check_conforming)):
         try:
             fn(res, ex, work)
         except Exception as exc:

@@ -37,11 +37,12 @@ class TestRecordedRun(unittest.TestCase):
         cls.tmp.cleanup()
 
     def test_sections_and_files(self):
-        for n, title in enumerate(["Key numbers", "Inputs and provenance", "Design-space voxelisation", "Compute used",
-                                   "Generative sweep", "Surrogate", "Optimisation", "Verification",
-                                   "Independent check and device parity", "Winner", "Evidence", "Environment",
-                                   "Limits and reproduction"], start=1):
-            self.assertIn(f"## {n}. {title}", self.md)
+        titles = ["Key numbers", "Inputs and provenance", "Design-space voxelisation", "Compute used", "Generative sweep",
+                  "Surrogate", "Optimisation", "Verification", "Independent check and device parity",
+                  "Conforming second discretisation", "Rig", "Winner", "Evidence", "Environment",
+                  "Limits and reproduction"]
+        at = [self.md.index(f"## {n}. {title}") for n, title in enumerate(titles, start=1)]
+        self.assertEqual(at, sorted(at))
         self.assertTrue(self.md.startswith(f"# aces golden: b2-test ({self.rd.run_id})"))
         self.assertIn(f"**{self.doc['verdict_line']}**", self.md)
         self.assertNotIn("\r", self.md)
@@ -51,13 +52,20 @@ class TestRecordedRun(unittest.TestCase):
         for key in ("run_id", "verdict_line", "verdict", "outcome", "grade", "sections", "provenance"):
             self.assertIn(key, self.doc)
         for key in ("title", "summary", "key_numbers", "inputs", "voxel", "compute", "sweep", "surrogate", "optimise",
-                    "verification", "check", "winner", "evidence", "environment", "limits"):
+                    "verification", "check", "conforming", "rig", "winner", "evidence", "environment", "limits"):
             self.assertIn(key, self.doc["sections"])
+        # this recorded run (golden 0.1 records: no conforming block, no lane) says so instead of inventing either
+        self.assertTrue(self.doc["sections"]["conforming"]["status"].startswith("not run: "))
+        self.assertEqual(self.doc["sections"]["rig"]["status"], "not run: no rig lane was used (desktop only)")
+        self.assertIn("| level | case | h (mm) | device | host |", self.md)
+        self.assertNotIn("conforming tet10", self.doc["verdict_line"])
+        self.assertIn("no rig run (desktop only)", self.doc["sections"]["limits"]["not_verified"])
         for fig in ("sweep_scatter.png", "optimise_map.png", "check_levels.png"):
             p = Path(self.rd.path("figures", fig))
             self.assertTrue(p.is_file(), fig)
             self.assertGreater(p.stat().st_size, 10_000)
             self.assertIn(f"figures/{fig}", self.md)
+        self.assertFalse(Path(self.rd.path("figures", "conforming.png")).exists())   # no conforming check ran
         self.assertIn("Material source: test input", self.md)
         self.assertIn(golden.sha256_file(self.rd.path("inputs", "spec.json")), self.md)
 
@@ -174,6 +182,8 @@ class TestEmptyStates(unittest.TestCase):
             self.assertTrue(s["verification"]["status"].startswith("not run"))
             self.assertTrue(s["evidence"]["status"].startswith("not run"))
             self.assertTrue(s["winner"]["status"].startswith("not run"))
+            self.assertTrue(s["conforming"]["status"].startswith("not run"))
+            self.assertTrue(s["rig"]["status"].startswith("not run"))
             self.assertIsNone(data["verdict"])
             self.assertTrue(data["verdict_line"].startswith("USAGE · golden: spec error at material.source"))
             paths = report.write(run, data)
