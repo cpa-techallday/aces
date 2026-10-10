@@ -10,7 +10,7 @@
 # Sources are packed from src/aces-engineering by bin/build; pip downloads the wheels inside the build container.
 pkgname=aces-engineering
 pkgver=0.1.0
-pkgrel=4
+pkgrel=5
 _py=3.14  # the venv belongs to this interpreter minor version (the aces-builder image's python, 3.14.7 on 2026-10-09)
 pkgdesc="ACES engineering: locked Python venv with the simlab client, gendesign CPU paths and the golden path (aces-simlab, aces-evidence, aces-gendesign, aces-golden)"
 arch=('x86_64')

@@ -451,6 +451,43 @@ class DevicesUsed(unittest.TestCase):
         self.assertEqual(golden_cli.devices_used(rows),
                          "cpu/numpy x8, rig: NVIDIA CMP 170HX x2 (cupy, mg), rig cpu (ccx x16)")
 
+    def test_rows_that_ran_on_several_rig_gpus(self):
+        """The device strings of the compute-used rows of run 20261010T084243Z-b3ac99 (the demo with --rig-sweep on
+        the ACES Server, 2026-10-10), plus two parity rows modelled on that run: a sweep row names three rig GPUs and
+        the CPU in one string, one row records a GPU without its name. Before this test the greedy regex turned
+        `rig gpu 0 (NVIDIA CMP 170HX), rig gpu 2 (NVIDIA CMP 170HX)` into a GPU named `NVIDIA CMP 170HX), rig gpu 2
+        (NVIDIA CMP 170HX`, and the string with the CPU at its end was dropped."""
+        from aces_engineering import golden_cli
+
+        cmp = "NVIDIA CMP 170HX"
+        rows = [{"device": "cpu; gpu", "solver": "gendesign.fea3d.self_test; GPU patch test", "count": 2, "grade": "-"},
+                {"device": f"rig gpu 0 ({cmp}), rig gpu 2 ({cmp}), rig gpu 3 ({cmp}), cpu/numpy",
+                 "solver": "gendesign.topopt3d.run_case (OC, FFT filter)", "count": 11, "grade": "-"},
+                {"device": f"rig gpu 0 ({cmp}), rig gpu 2 ({cmp}), rig gpu 3 (None), cpu",
+                 "solver": "golden.organic (EDT SDF, smooth unions, Taubin)", "count": 11, "grade": "-"},
+                {"device": f"rig gpu 0 ({cmp}), rig gpu 2 ({cmp})", "solver": "step-structures stage_solve, Jacobi-PCG FP64",
+                 "count": 9, "grade": "preview-grade"},
+                {"device": f"rig gpu 0 ({cmp})", "count": 1, "grade": "independent check -> verified-desktop",
+                 "solver": "golden-check on the rig (step-structures stage_solve, pcg FP64)"},
+                {"device": f"rig gpu 2 ({cmp})", "count": 1, "grade": "informational (agrees)",
+                 "solver": "golden-check on the rig (step-structures stage_solve, mg FP64)"},
+                {"device": "NVIDIA RTX PRO 4000 Blackwell SFF Edition", "solver": "gendesign.fea3d (cupy)", "count": 1,
+                 "grade": "max rel diff 3.1e-12"},
+                {"device": "NVIDIA RTX PRO 4000 Blackwell SFF Edition", "solver": "gendesign.fea3d (warp)", "count": 1,
+                 "grade": "max rel diff 9.9e-12"},
+                {"device": "rig gpu 0,2,3", "solver": "golden-case (aces-golden:0.1)", "count": 9, "grade": "used"},
+                {"device": "rig gpu 0,2", "solver": "golden-check (aces-golden:0.1)", "count": 2, "grade": "used"},
+                {"device": "rig cpu", "solver": "ccx-check (aces-golden:0.1)", "count": 1, "grade": "used"},
+                {"device": "rig cpu x16", "solver": "gmsh 4.15.2 + CalculiX ccx 2.23", "count": 1,
+                 "grade": "second discretisation -> agrees"}]
+        self.assertEqual(golden_cli.devices_used(rows),
+                         "cpu/numpy, NVIDIA RTX PRO 4000 Blackwell SFF Edition (cupy, warp), "
+                         "rig: NVIDIA CMP 170HX x3 (cupy, mg), rig cpu (ccx x16)")
+        # a GPU that no row names is reported as such, never under an invented name
+        rows2 = [{"device": "rig gpu 5 (None)", "solver": "step-structures stage_solve, Jacobi-PCG FP64", "count": 1,
+                  "grade": "preview-grade"}]
+        self.assertEqual(golden_cli.devices_used(rows2), "rig gpu 5 (name not recorded)")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -313,22 +313,28 @@ def cmd_show(args: argparse.Namespace) -> int:
     return 0
 
 
-_RIG_GPU = re.compile(r"rig gpu (\S+) \((.+)\)\Z")
+_RIG_GPU = re.compile(r"rig gpu (\d+) \(([^()]*)\)\Z")
+# a row that ran on several devices joins them with ", " (`rig gpu 0 (X), rig gpu 2 (X), cpu/numpy`) or ";"
+_DEVICE_SPLIT = re.compile(r";|,\s*(?=rig gpu \d|rig cpu|cpu\b|gpu\b)")
 
 
 def devices_used(rows: list) -> str:
     """The devices of the compute-used rows that ran, e.g. `cpu/numpy x10, <GPU name> (cupy, warp)`: CPU entries
     without the ones another entry already names (`cpu` inside `cpu/numpy x10`), GPUs with the backends that ran
     on them. Rig tokens aggregate: `rig gpu <n> (<name>)` to `rig: <name> x<k> (cupy[, mg])` (k distinct GPUs; numpy
-    when the rig solve ran on its CPU), `rig cpu ...` to `rig cpu (ccx x16)`."""
+    when the rig solve ran on its CPU), `rig cpu ...` to `rig cpu (ccx x16)`. A device string may name several devices
+    joined with ", " or ";" (a sweep row: `rig gpu 0 (X), rig gpu 2 (X), rig gpu 3 (X), cpu/numpy`); each is one token.
+    A rig GPU whose name a row did not record (`rig gpu 3 (None)`) counts under the name another row gives that index,
+    else as `rig gpu <n> (name not recorded)`."""
     ran = [r for r in rows if isinstance(r, dict) and (r.get("count") or 0) > 0 and r.get("grade") != "not used"]
     cpu: list[str] = []
     gpus: dict[str, list[str]] = {}
     rig_gpus: dict[str, dict] = {}
+    unnamed: set[str] = set()
     rig_cpu = False
     for r in ran:
         solver = str(r.get("solver") or "").lower()
-        for tok in str(r.get("device") or "").split(";"):
+        for tok in _DEVICE_SPLIT.split(str(r.get("device") or "")):
             tok = tok.strip()
             if not tok or tok in ("-", "rig", "gpu"):
                 continue
@@ -337,11 +343,15 @@ def devices_used(rows: list) -> str:
                 continue
             if tok.startswith("rig"):
                 m = _RIG_GPU.match(tok)
-                if m is None:  # an experiment row (`rig gpu 0, 2`): the case rows name the GPUs
+                if m is None:  # an experiment row (`rig gpu 0,2,3`): the case rows name the GPUs
                     continue
-                ent = rig_gpus.setdefault(m.group(2), {"idx": set(), "backends": []})
+                name = m.group(2).strip()
+                if name in ("", "None"):
+                    unnamed.add(m.group(1))
+                    continue
+                ent = rig_gpus.setdefault(name, {"idx": set(), "backends": []})
                 ent["idx"].add(m.group(1))
-                for b in ("numpy" if m.group(2).lower().startswith("cpu") else "cupy",
+                for b in ("numpy" if name.lower().startswith("cpu") else "cupy",
                           "mg" if ", mg fp64" in solver else None):
                     if b and b not in ent["backends"]:
                         ent["backends"].append(b)
@@ -356,6 +366,9 @@ def devices_used(rows: list) -> str:
     cpu = [c for c in cpu if not any(o != c and o.startswith(c) for o in cpu)]
     out = cpu + [f"{name} ({', '.join(b)})" for name, b in gpus.items()]
     out += [f"rig: {name} x{len(e['idx'])} ({', '.join(e['backends'])})" for name, e in rig_gpus.items()]
+    unnamed -= {i for e in rig_gpus.values() for i in e["idx"]}
+    if unnamed:
+        out.append(f"rig gpu {', '.join(sorted(unnamed))} (name not recorded)")
     if rig_cpu:
         out.append("rig cpu (ccx x16)")
     return ", ".join(out) or "-"

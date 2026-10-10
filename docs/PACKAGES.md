@@ -379,7 +379,10 @@ and the blog posts above.
 ## Known gaps
 
 - Rig acceptance 2026-10-10: the sim pool is shared with the rig operator's hand-run containers, which take no lease; `rig_capacity` reports those GPUs as unavailable, so golden cases serialise on the free ones (GPU 0 for most of the day; one sweep case waited 239 s). The golden client behaves as designed; this is the rig's current use.
-- The bench row's "Devices used" text mis-joins the rig device names when a run used more than one rig GPU (`report.py`; cosmetic, the records themselves are right). Fix queued for the next aces-engineering build.
+- The bench row's "Devices used" text mis-joined the rig device names when a run used more than one rig GPU (the
+  four rows of 2026-10-10 in BENCHMARKS.md show it; the records themselves are right). Fixed in `golden_cli.devices_used`
+  (aces-engineering 0.1.0-5: every `rig gpu N (name)` of a device string is one token; a GPU without a recorded name
+  is reported as such); the 0.1.0-5 row is written when the package is built.
 - `scripts/golden_validate.py` (cudax) writes the registry rows' `record` field as the absolute DARKNESS path of its out directory; for `rig-golden-2` the three rows were pointed by hand at `docs/validation/golden-20261010T082807Z/validation-record.json`, committed with the record and the six specs. The script should write a repo-relative path (cudax follow-up).
 - The merged `step_structures.py` (cudax rig-golden-1.1, vendored in aces-engineering 0.1.0-4) defaults to `mg`, the rig's behaviour since the rig operator's patch of 2026-10-06, not the build spec's `pcg`; `fea_solver` wins over the rig's `solver` key when both are given. The desktop uses only its mesh stage.
 - Two deferred `post` jobs of the rig operator (`mach-dart2-wing-44g`, `-b`, created 2026-10-06, parents failed) sit in the rig's cpu deferred registry; the deploy gate reports them as orphaned and does not wait for them. They are the rig operator's to remove; a note was left in Kimi's workspace and in `/home/pi` on the rig.
