@@ -538,7 +538,8 @@ such; nothing is invented.
   ready and strict with seccomp and Landlock ABI 3, the ACES plate, inspect, render, drawing, pull, the ledger entry,
   `check_bundle.py`, the socket script exit 5, the loop exit 4, and the installed tests as root, 107 with the same one
   skip). On Windows (permissive) the suite ran with only test-side failures, fixed since. The ACES plate's
-  `geometry_sha256` was the same on Windows (Python 3.11.9) and Arch (Python 3.14.7), while `part.stl` differed.
+  `geometry_sha256` was the same on Windows (Python 3.11.9) and Arch (Python 3.14.7), while `part.stl` differed
+  (equal hashes mean equal run names too: the name is part of the hash, see "Pull bundle and ledger").
 
 **Verified at integration on 2026-10-10** (the merged branch, `cad-local/integration` at 032c1d0; details and every
 number in `docs/PACKAGES.md`, "Local CAD"):
@@ -553,13 +554,34 @@ number in `docs/PACKAGES.md`, "Local CAD"):
   passed), and the agent loop through `aces-cad-mcp` with a project made by the real aces CLI (start, run, inspect,
   render, drawing, pull, note, runs; 17 of 17 steps). On Windows (permissive): 108 tests OK (14 skips), the selftest
   (12 passed, 9d skipped) and the same loop (17 of 17).
-- The integration fixed four defects the merged code showed (children inheriting the server's stdin, the ledger
-  result losing `n`, `hash` and `path` on long paths, the 100-hole cap report, job clean-up under the call's
-  environment) and set aces-os to 0.1.0-5 by the spec's merge-order rule; `docs/PACKAGES.md` describes each.
+- The integration fixed four defects the merged code showed (children inheriting the server's stdin, the ledger result
+  losing `n`, `hash` and `path` on long paths, the 100-hole cap report, job clean-up under the call's environment) and
+  set aces-os by the spec's merge-order rule: 0.1.0-5 while golden-rig/packaging was not on main, 0.1.0-6 after main
+  took it (review finding 1); `docs/PACKAGES.md` describes each. The ACES plate run named `plate` had `geometry_sha256`
+  `806c9be7a86c8ae60308ee75d9a910f371d5f5aae6fe6517fa5ce6aa5fd1742f` on both platforms.
+
+**Verified after the review on 2026-10-10** (`cad-local/integration` at 3651c59: main 954332c merged in and the fixes
+for review findings 1 to 7; details in `docs/PACKAGES.md`, "Review fixes"):
+
+- `bin/build aces-cad` (unsigned, against main's aces-engineering 0.1.0-4): `check()` passed the 114 tests as the
+  builder user in strict mode on Python 3.14.7 (one skip, S02b); namcap printed nothing. `bin/build aces-os`: 0.1.0-6,
+  depending on calculix-ccx-bin and aces-cad.
+- `bin/install-test aces-base aces-engineering aces-voxel calculix-ccx-bin` and then the new CI step (move `logs/golden`
+  aside, `bin/install-test aces-base aces-engineering aces-cad`), both exit 0: doctor ready and strict (seccomp, 106
+  instructions with TSYNC; Landlock ABI 3; 14 of 14 checks), the ACES plate, inspect, render, drawing, pull
+  (`806c9be7...` for the run named `plate`, ledger entry 7), `check_bundle.py`, the socket script exit 5, the loop exit
+  4, the installed tests as root (114, one skip), and the engineering step's golden records (with the CalculiX
+  conforming check) kept in `logs/golden-engineering`. The default install test passed; `pacman -Sp aces-os` resolves to
+  510 packages there.
+- Windows (permissive): 114 tests OK in 1311.8 s with 13 skips. The new tests fail on the code before each fix (seven of
+  eight on ff3c166, the cap tests on a3905e9).
+- Probes behind the fixes: the hole records of the earlier fixtures are byte-identical before and after the hole fix; 17
+  of 17 gyroid runs (the skill's example over its ranges, and the old example) were watertight and valid after the
+  marching-cubes fix.
 
 **Not verified yet:**
 
-- CI and the VM acceptance steps (`rehearsal/README.md`) have not run on the merged branch, and its packages so far are
+- CI and the VM acceptance steps (`rehearsal/README.md`) have not run on the branch, and its packages so far are
   unsigned integration builds.
 - Whether the VM kernel has Landlock and which ABI (acceptance step 2).
 - Whether GitHub's runners allow the Landlock syscalls under Docker's seccomp profile; if not, the CI install test runs

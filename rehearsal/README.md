@@ -250,9 +250,11 @@ an agent session at the console. Results are written here and into the aces-cad 
 **Not run yet (2026-10-10).** Each step below records its result when it has run.
 
 1. On DARKNESS: `bash bin/build aces-cad` (and `bash bin/build aces-os`), then `.\serve-repo.ps1` (check the web root
-   byte for byte against `repo\x86_64`). On the VM: `sudo pacman -Sy aces-cad`, then `sudo pacman -S aces-os` if it
-   resolves; while aces-os depends on `calculix-ccx-bin` (golden-rig/packaging), which does not build yet, it does not.
-   Record the installed versions (`pacman -Q aces-cad aces-engineering aces-base aces-os`).
+   byte for byte against `repo\x86_64`). On the VM: `sudo pacman -Sy aces-cad`, then `sudo pacman -S aces-os`.
+   aces-os 0.1.0-6 depends on `calculix-ccx-bin` (golden-rig's, which builds now and ships the Fortran runtime it
+   needs) and on `aces-cad`; in clean containers on 2026-10-10 it resolved to 510 packages after the default
+   install-test set and 522 after aces-base, aces-engineering and aces-cad. Record the installed versions
+   (`pacman -Q aces-cad aces-engineering aces-base calculix-ccx-bin aces-os`).
 2. `uname -r`, `cat /sys/kernel/security/lsm`, `aces-cad doctor --json > ~/cad-doctor.json`. Expect verdict `ready`,
    mode `strict`, seccomp active (106 instructions, TSYNC), Landlock active with its ABI recorded (4 or more adds the
    TCP rules, 6 or more the signal and abstract-socket scoping), every check passing, and Python 3.14.7, build123d
