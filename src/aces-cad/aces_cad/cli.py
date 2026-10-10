@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import threading
 from pathlib import Path
@@ -28,6 +29,7 @@ DRAWING_VIEWS = ("front", "back", "top", "bottom", "right", "left", "iso")
 CHECKS = ("mass", "validity", "topology", "holes", "thickness", "draft", "radii", "interference", "section", "measure",
           "design_space")
 JOIN_AFTER_CANCEL_S = 30.0
+NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,39}$")
 
 
 class _ArgError(Exception):
@@ -231,6 +233,17 @@ def _inputs(args) -> dict | None:
     return out or None
 
 
+def _run_name(args) -> str | None:
+    """--name, else a run started from a file is named after it (plate.py -> plate) when the stem is a valid name."""
+    if args.name is not None:
+        return args.name
+    source = args.script if args.script not in (None, "-") else args.script_path
+    if not source:
+        return None
+    stem = Path(source).stem
+    return stem if NAME_RE.match(stem) else None
+
+
 def _drop_none(d: dict) -> dict:
     return {k: v for k, v in d.items() if v is not None}
 
@@ -248,7 +261,7 @@ def operation(args) -> tuple[str, dict]:
         if len(given) != 1:
             raise errors.UsageError("give exactly one of SCRIPT (a file or -), --script-path REL or --from RUN")
         kw = {"script_path": args.script_path, "from_run": args.from_run, "params": _overrides(args),
-              "inputs": _inputs(args), "name": args.name, "timeout_s": args.timeout,
+              "inputs": _inputs(args), "name": _run_name(args), "timeout_s": args.timeout,
               "render": True if args.render else None, "project": project}
         if args.script is not None:
             kw["script"] = read_text(args.script, "script")
