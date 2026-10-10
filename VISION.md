@@ -268,7 +268,9 @@ lives on the LAN (rig NVMe) and is mounted by both boots; ACES never writes to t
 2. **Pull geometry.** `aces cad pull fusion://<doc>` (through the VM bridge, behind the broker) or
    `onshape://<doc>/<ws>/<el>` (REST export) → STEP + parameter snapshot + sha256. Sovereign projects use build123d and
    the voxel kernel; Fusion documents live in Autodesk's cloud *(assessment)* and Onshape is a cloud service, so neither
-   is allowed for `sovereign` or `controlled` classes.
+   is allowed for `sovereign` or `controlled` classes. *2026-10-10: local build123d is implemented as aces-cad: scripts
+   run in a sandboxed child of the engineering venv and pull `aces-cad://<project>/runs/<id>` into `cad/local/` as
+   STEP + parameters + sha256 with a `cad.pull` ledger entry, for every class, sovereign included (docs/PACKAGES.md).*
 3. **Voxelise or model implicitly.** `aces voxel from-step part.step --res 0.5mm` (exact `mesh.contains`
    voxelisation) or an implicit script (SDF primitives, formgen lattices) → a field the solvers understand.
 4. **Simulate.** `simlab submit exp.yaml` → the rig's queue, one case per GPU, FP64 by default, validation record
@@ -288,6 +290,7 @@ lives on the LAN (rig NVMe) and is mounted by both boots; ACES never writes to t
 Skills that exist today: `cad`, `dxf`, `gcode`, `bambu-labs`, `sendcutsend`, `step-parts`, `implicit-cad`, `cad-viewer`,
 `cad-electronics`, `fusion-cad-agent`, `engineering-viz`, the simlab agent brief. To write: `aces-engineering` (the loop
 as a procedure with the MCP tools), `aces-cad-onshape`, `aces-voxel`, `aces-studio`, `aces-evidence`, `aces-field`.
+*2026-10-10: `aces-cad-onshape` and `aces-cad` exist (docs/PACKAGES.md).*
 
 **Mechanisms the engineer's draft added (Rev B):**
 
