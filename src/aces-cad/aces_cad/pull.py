@@ -336,7 +336,7 @@ def op_pull(ctx, args: dict, *, now: datetime | None = None) -> dict:
             shutil.rmtree(tmp, ignore_errors=True)
         raise
     finally:
-        sandbox.finish_job(outcome.job_dir)
+        sandbox.finish_job(outcome.job_dir, env=ctx.env)
 
     ledger_payload = {"source": "build123d", "tool": "aces-cad", "tool_version": __version__, "ref": ref,
                       "project": info["name"], "class": info.get("class"), "bundle": str(bundle), "run_id": run.id,

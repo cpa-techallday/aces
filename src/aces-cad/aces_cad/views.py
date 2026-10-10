@@ -201,7 +201,7 @@ def op_render(ctx, args: dict) -> dict:
         dest = store.ensure_subdir(run.root, "renders")
         promoted = store.promote(outcome.out_dir, files, dest, max_file_bytes=max_file, max_total_bytes=max_total)
     finally:
-        sandbox.finish_job(outcome.job_dir)
+        sandbox.finish_job(outcome.job_dir, env=ctx.env)
     renders = []
     for view in views:
         name = names[view]
@@ -294,7 +294,7 @@ def op_drawing(ctx, args: dict) -> dict:
         promoted = store.promote(outcome.out_dir, sorted(wanted), dest, max_file_bytes=max_file,
                                  max_total_bytes=max_total)
     finally:
-        sandbox.finish_job(outcome.job_dir)
+        sandbox.finish_job(outcome.job_dir, env=ctx.env)
     files_out = {}
     for f in formats:
         info = promoted[f"{stem}.{f}"]
