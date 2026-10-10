@@ -318,8 +318,10 @@ never reported as a rig result.
 
 - `calculix-ccx-bin` brings GCC 7's `libgfortran.so.4` (from Ubuntu 20.04's `libgfortran4` 7.5.0-6ubuntu2, privately
   under `/usr/lib/calculix-ccx-bin`), because the official ccx_2.23 binary needs it (symbol version GFORTRAN_7) and no
-  Arch package provides it (Arch's is `.so.5`). That second download was the integration fixer's decision (review
-  finding 4); it stands until it is confirmed or ccx is built from source against Arch's gfortran.
+  Arch package provides it (Arch's is `.so.5`). The operator's decisions of 2026-10-10 chose that deb (item 1, with a
+  wrapper script at `/usr/bin/ccx`); the package keeps the binary itself behind `/usr/bin/ccx` and the library behind
+  an `ld.so.conf.d` entry instead (review finding 4), so the ccx sha256 a conforming record names stays the binary's.
+  The layout waits for confirmation.
 - A mesh above 800,000 DOF (`SPOOLES_MAX_DOF`) is not solved (`too-large`), so the `MAX_DOF` limits are not reached
   until SPOOLES is measured at those sizes against the time limits (review finding 1).
 - The rig registry's `golden-check` and `ccx-check` rows are `pending` until the operator validates them on the rig

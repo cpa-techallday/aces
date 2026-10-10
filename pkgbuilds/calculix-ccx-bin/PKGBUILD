@@ -20,8 +20,9 @@
 # author's: realpath(/usr/bin/ccx) is that binary, and the ccx sha256 a conforming record names
 # (31be21fc2f0902bd9a05acc2651dbac6dc2a2573dabbf235e39a38cb6f458862) is the rig image's. A wrapper script at
 # /usr/bin/ccx would hide the binary from that hash; patchelf would change it. The entry exposes only the soname
-# libgfortran.so.4, which nothing else on Arch asks for. This second download was decided by the integration fixer
-# (review finding 4, 2026-10-10): without it the official binary cannot run on Arch at all.
+# libgfortran.so.4, which nothing else on Arch asks for. Without this runtime the official binary cannot run on Arch.
+# The operator's decisions of 2026-10-10 (item 1) chose this deb, with a wrapper script at /usr/bin/ccx; the
+# integration fixer took this layout instead for review finding 4 (the reviewer's option (a)), for the hash above.
 #
 # Statically linked, as the binary's symbol table shows: SPOOLES 2.2 (FrontMtx_*, InpMtx_*, SubMtx_*, Chv_*, ETree_*,
 # IVL_*; SPOOLES is in the public domain), ARPACK (dsaupd, dnaupd, dseupd; BSD-3-Clause) and LAPACK/BLAS routines

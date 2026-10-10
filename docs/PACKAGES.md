@@ -80,14 +80,15 @@ as expected; the real block has not run, since aces-engineering 0.1.0-3 was not 
 ## Integration build after review (2026-10-10, branch `golden-rig/integration`)
 
 Built and install-tested by the integration fixer in its own worktree (`aces-os-golden-integration`, unsigned: there
-is no key there) on DARKNESS, at 6db440f: the integrated tree (the cudax snapshot `rig-golden-1` and the golden rig
-client, 30bee52) plus the fixes for review findings 1 to 4. The cells hold only what was run there; the rows above
-stay as the packaging branch measured them. The engineering block of `bin/install-test` ran for real here for the
-first time.
+is no key there) on DARKNESS, at 6db440f (calculix-ccx-bin and aces-engineering built again after the `bin/build`
+change below): the integrated tree (the cudax snapshot `rig-golden-1` and the golden rig client, 30bee52) plus the
+fixes for review findings 1 to 4. The cells hold only what was run there; the rows above
+stay as the packaging branch measured them. The engineering block of `bin/install-test` ran here from the committed
+recipe; the integrator had run it before only with an uncommitted variant of calculix-ccx-bin in a separate worktree.
 
 | Package | Version | What changed | Build | Test evidence |
 |---|---|---|---|---|
-| `calculix-ccx-bin` | 2.23-1 | Review finding 4: the package brings the GCC 7 Fortran runtime the binary needs. A second pinned source, Ubuntu 20.04's `libgfortran4_7.5.0-6ubuntu2_amd64.deb` (`archive.ubuntu.com`, 492,528 bytes, sha256 `9191a744ea8e1cb877c26bfb1cb6efa06305be49c7053eecfee5f1037a8005d5`), the deb the rig image takes it from; `prepare()` checks its `libgfortran.so.4.0.0` against `3f198ada9cdcda0c6b2fba24d6654c839ea91d0e8246c8ddba5b1b2851dff4b2`, the sha256 the image pins; installed privately as `/usr/lib/calculix-ccx-bin/libgfortran.so.4.0.0` (with the `.so.4` link) behind `/etc/ld.so.conf.d/calculix-ccx-bin.conf`; licence += `GPL-3.0-or-later WITH GCC-exception-3.1`. The ccx binary is unchanged (no wrapper script, no patchelf), so the ccx sha256 a conforming record names is the image's | `bash bin/build calculix-ccx-bin` exit 0: both sources `Passed`, `libgfortran.so.4.0.0: OK`, in `check()` `libgfortran.so.4 => /build/work/src/gf4/libgfortran.so.4` and `This is Version 2.23`, `Finished making: calculix-ccx-bin 2.23-1`. In the package: `usr/bin/ccx_2.23` sha256 `31be21fc2f0902bd9a05acc2651dbac6dc2a2573dabbf235e39a38cb6f458862`, `.PKGINFO` depends glibc, libgcc, libgomp, libquadmath | installed by `makepkg -s` as aces-engineering's checkdepends, and by `bin/install-test aces-base aces-engineering aces-voxel calculix-ccx-bin` in a clean `archlinux:base`: `ccx: /usr/sbin/ccx: This is Version 2.23`; the demo's conforming record names solver sha256 `31be21fc...` (above), `*STATIC, SOLVER=SPOOLES`, rc 0 |
+| `calculix-ccx-bin` | 2.23-1 | Review finding 4: the package brings the GCC 7 Fortran runtime the binary needs. A second pinned source, Ubuntu 20.04's `libgfortran4_7.5.0-6ubuntu2_amd64.deb` (`archive.ubuntu.com`, 492,528 bytes, sha256 `9191a744ea8e1cb877c26bfb1cb6efa06305be49c7053eecfee5f1037a8005d5`), the deb the rig image takes it from; `prepare()` checks its `libgfortran.so.4.0.0` against `3f198ada9cdcda0c6b2fba24d6654c839ea91d0e8246c8ddba5b1b2851dff4b2`, the sha256 the image pins; installed privately as `/usr/lib/calculix-ccx-bin/libgfortran.so.4.0.0` (with the `.so.4` link) behind `/etc/ld.so.conf.d/calculix-ccx-bin.conf` (the reviewer's option (a); the operator's decision 1 named the same deb with a wrapper at `/usr/bin/ccx`, see Known gaps); licence += `GPL-3.0-or-later WITH GCC-exception-3.1`. The ccx binary is unchanged (no wrapper script, no patchelf), so the ccx sha256 a conforming record names is the image's | `bash bin/build calculix-ccx-bin` exit 0: both sources `Passed`, `libgfortran.so.4.0.0: OK`, in `check()` `libgfortran.so.4 => /build/work/src/gf4/libgfortran.so.4` and `This is Version 2.23`, `Finished making: calculix-ccx-bin 2.23-1`. In the package: `usr/bin/ccx_2.23` sha256 `31be21fc2f0902bd9a05acc2651dbac6dc2a2573dabbf235e39a38cb6f458862`, `.PKGINFO` depends glibc, libgcc, libgomp, libquadmath | installed by `makepkg -s` as aces-engineering's checkdepends, and by `bin/install-test aces-base aces-engineering aces-voxel calculix-ccx-bin` in a clean `archlinux:base`: `ccx: /usr/sbin/ccx: This is Version 2.23`; the demo's conforming record names solver sha256 `31be21fc...` (above), `*STATIC, SOLVER=SPOOLES`, rc 0 |
 | `aces-engineering` | 0.1.0-3 | the integrated tree with the fixes for review findings 1 (a mesh above `SPOOLES_MAX_DOF`, 800,000 DOF, is `too-large`, not run), 2 and 3 (a file the rig will not hand over, or an internal error in a rig case, is not delivered and falls back to the desktop) | `bash bin/build aces-engineering aces-omarchy aces-os` exit 0 (07:14:43Z to 07:21:39Z), `Finished making: aces-engineering 0.1.0-3`. `check()` with calculix-ccx-bin installed: selftest `92/92 import`, `conforming` PASS (bar patch test, 539 C3D10 at 1 mm on the remesh route, ccx 2.23, worst rel diff 2.3e-08, equilibrium 5.4e-09), `all hard checks passed`; golden tests `Ran 300 tests in 222.753s`, `OK (skipped=2)`; the demo with `--conforming off`, `aces golden verify 20261010T071953Z-b3ac99: all checks pass`; venv 1.1G (78 distributions) | `bin/install-test aces-base aces-engineering aces-voxel calculix-ccx-bin` exit 0: `import gmsh` 4.15.2; `aces golden compute --lane sim/pool` exit 2 (`it is not in the fabric manifest (sim lanes: none); nothing was submitted`); `aces golden run --demo` exit 0 after 53 s, PASS, verified-desktop, `golden: conforming status ok \| agrees within its bands and meets every constraint` (row in the golden path table below); `aces golden verify` all checks pass (11 PASS, 2 INFO: rig, resolve); `aces ledger verify` 5 entries, chain intact; `aces-evidence verify` ok |
 | `aces-omarchy` | 0.1.0-6 | no change since the packaging branch; rebuilt in the same call | built (any, unsigned) | `bash bin/install-test` (default set) exit 0: `aces-omarchy-setup` linked the skills into `~/.claude/skills` and `~/.agents/skills`, `aces doctor`: `skills ok`, and `--remove` unlinked them |
 | `aces-os` | 0.1.0-5 | no change since the packaging branch; rebuilt with `--nodeps` | built (any, unsigned) | resolves now: `aces-os: resolves, 509 packages in the transaction` (default install test) and 520 (engineering install test), next to `aces-field` 372 and 375 and `aces-survey` 256 and 261 |
@@ -95,6 +96,19 @@ first time.
 Both install tests ran `aces fabric refresh`, a step `bin/install-test` has always had, which probes the configured
 rig endpoints: from the containers every probe timed out (`unreachable: <urlopen error timed out>`) and the manifest
 listed no lanes.
+
+`bin/build` now also drops cached `calculix-ccx-bin-*` files before each build, as it already did for `aces-*` and
+`*craft-bin-*` (found while verifying finding 4). pacman does not fetch a cached file of the expected size again, so
+after a same-version rebuild of calculix-ccx-bin that compresses to the same size, the next aces-engineering build
+would install the stale copy and stop. Reproduced with a fixture, the repo's file with its last byte changed, in
+`cache/pacman` (same size, 3,420,468 bytes), through the committed pacman steps: no download, then `File
+/var/cache/pacman/pkg/calculix-ccx-bin-2.23-1-x86_64.pkg.tar.zst is corrupted (invalid or corrupted package
+(checksum))`, exit 1 (a rebuilt file one byte longer than the cached one had been fetched again and installed). With
+the change, over the same kind of fixture: `bash bin/build calculix-ccx-bin` exit 0, then `bash bin/build
+aces-engineering` exit 0 (07:41:48Z to 07:51:47Z; pacman fetched calculix-ccx-bin, `Total Download Size: 3.26 MiB`;
+`check()` again `92/92 import`, `conforming` PASS, `Ran 300 tests in 344.088s`, `OK (skipped=2)`, `aces golden verify
+20261010T074932Z-b3ac99: all checks pass`), and `bin/install-test aces-base aces-engineering aces-voxel
+calculix-ccx-bin` exit 0 again (the second integration row of the golden path table).
 
 ## Golden path (`aces golden`)
 
@@ -133,6 +147,7 @@ GPUs and the conforming check on its CPUs, through simlab-mcp. The loop is descr
 | Rehearsal VM (Omarchy 4.0.4, Python 3.14.7, 4 vCPUs, no GPU) | 2026-10-09 | `aces golden run --demo` from a login shell over ssh, after `pacman -Sy` upgraded aces-base, aces-engineering, aces-voxel and aces-omarchy from the signed LAN repo (packaged venv, CPU only; the 2 mm check ran on the CPU, estimate 2.8 s within the 60 s budget); then `aces golden verify latest` (10 PASS, 1 INFO), `aces-evidence verify` ok, `aces doctor` golden row `ok ... PASS`, the linked skills carry the new text | pass (exit 0, 25 s including interpreter start) | verified-desktop | 23.7 | `20261009T144006Z-b3ac99` | `070c439672c8` | 1 | 2 |
 | DARKNESS (workstation) | 2026-10-09 | `python -m aces_engineering.golden_cli run --demo` (workstation dev venv, Python 3.11.9: CPU sweep in 10 workers, check and parity on the RTX PRO 4000 through CuPy and Warp) | pass (exit 0) | verified-desktop | 42.8 | `20261009T143033Z-b3ac99` | `d8977ebb61f8` | 1 | 2 |
 | Clean container (`bin/install-test aces-base aces-engineering aces-voxel calculix-ccx-bin`, integration 6db440f) | 2026-10-10 | `aces golden run --demo --json --progress lines` (packaged venv, Python 3.14.7, CPU only; the conforming check on this host with calculix-ccx-bin 2.23-1: 38,618 C3D10, 187,011 DOF, 8 threads, 28.7 s, SPOOLES, equilibrium 3.6e-08); then `aces golden verify latest` (11 PASS, 2 INFO), `aces ledger verify` and `aces-evidence verify` ok | pass (exit 0, 53 s including interpreter start) | verified-desktop | 51.7 | `20261010T072618Z-b3ac99` | `0b0eedd7f5b2` | 1 | 5 |
+| Clean container, the same install test after the `bin/build` change (calculix-ccx-bin and aces-engineering built again) | 2026-10-10 | same; the conforming check 38,618 C3D10, 187,011 DOF, 8 threads, 52.2 s (ccx 35.9 s), SPOOLES, equilibrium 3.6e-08, the comparison rows as in the run above; `aces golden verify latest` (11 PASS, 2 INFO) | pass (exit 0, 97 s including interpreter start) | verified-desktop | 94.0 | `20261010T075326Z-b3ac99` | `acdb7c4cc597` | 1 | 5 |
 
 ### Golden path on the rig
 
@@ -374,11 +389,14 @@ and the blog posts above.
   both are distribution-gate items, not trial-mode blockers.
 - aces-cad-onshape has not run against a live Onshape account; see its section.
 - `calculix-ccx-bin` 2.23-1 brings GCC 7's `libgfortran.so.4` from Ubuntu 20.04's `libgfortran4` 7.5.0-6ubuntu2: the
-  official binary needs it and no Arch package provides it. That second download was the integration fixer's decision
-  for review finding 4, outside the downloads build spec section 3.2 lists, and it stands until the judge confirms it
-  or ccx is built from source against Arch's gfortran, ARPACK and a SPOOLES build (which would change the ccx sha256
-  every conforming record names). An image that gives the binary only `libgfortran.so.5` (Ubuntu 24.04's
-  `libgfortran5`, for example) still cannot run it.
+  official binary needs it and no Arch package provides it. That second download is outside the downloads build spec
+  section 3.2 lists; the operator's decisions of 2026-10-10 (item 1) chose the same deb and sha256, with a wrapper
+  script at `/usr/bin/ccx` and no `ld.so.conf.d` entry. The fixer committed the reviewer's layout for finding 4
+  instead (the library in its own directory behind an `ld.so.conf.d` entry, the binary itself behind `/usr/bin/ccx`),
+  because the conforming check hashes `realpath(ccx)` and a wrapper would put the wrapper's sha256 in every desktop
+  record. The layout waits for the judge or the operator to confirm it. Building ccx from source against Arch's
+  gfortran, ARPACK and a SPOOLES build would change the ccx sha256 every conforming record names. An image that gives
+  the binary only `libgfortran.so.5` (Ubuntu 24.04's `libgfortran5`, for example) still cannot run it.
 - The conforming check solves with SPOOLES only: a mesh above `SPOOLES_MAX_DOF` (800,000 DOF) is `too-large`, not
   run, on the desktop and on the rig alike, so the `MAX_DOF` limits (1,500,000 here, 3,000,000 on the rig) are not
   reached (review finding 1: ccx's iterative solver left the reactions out of balance by 1.46e-3 to 2.71e-3 relative
