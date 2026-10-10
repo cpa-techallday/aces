@@ -2,10 +2,17 @@
 
 run_check() meshes the part's STL into quadratic tetrahedra (gmsh, C3D10 with straight edges: second-order linear),
 maps the spec's supports and traction loads onto the mesh surface, solves the linear static problem with CalculiX ccx
-(SPOOLES, or the iterative Cholesky solver above SPOOLES_MAX_DOF), parses ccx.dat and derives the outputs the voxel
-solves report: mass from the tet mesh volume, compliance, umax, and the von Mises percentiles over the elements
-outside the boundary-condition zones the voxel solves exclude. compare() sets the result beside the finest voxel solve
-inside bands that were fixed before any run (bands()).
+(SPOOLES), parses ccx.dat and derives the outputs the voxel solves report: mass from the tet mesh volume, compliance,
+umax, and the von Mises percentiles over the elements outside the boundary-condition zones the voxel solves exclude.
+compare() sets the result beside the finest voxel solve inside bands that were fixed before any run (bands()).
+
+Size limits. A part whose estimate (37 V / h^3) is above max_dof is not meshed, and a mesh whose 3 x nodes is above
+max_dof or above SPOOLES_MAX_DOF is not solved: status too-large (NOT_RUN), never a silently coarser size. Above
+SPOOLES_MAX_DOF write_deck would ask ccx for its iterative Cholesky solver, and that solver stops on its own
+convergence rule with the reactions out of balance far beyond EQUILIBRIUM_TOL, so every such solve would end as a false
+"equilibrium" failure. Measured on DARKNESS 2026-10-10 in aces-golden:0.1 (ccx 2.23) with the card forced: the section
+12.8 cantilever at 2 mm stopped after 567 iterations at ccx's own limit ("error condition 0=good") with a relative
+equilibrium residual of 2.71e-3, the bar patch test at 1.46e-3; SPOOLES gave 1.2e-11 and 5.4e-9 on the same inputs.
 
 The meshing runs in a child process (`python -m aces_engineering.golden.conforming mesh --stl S --out D --size H
 --threads N`) under MESH_TIMEOUT_S, so a gmsh hang or crash cannot take the caller with it. run_check() never raises
@@ -545,7 +552,8 @@ def _fnum(x: float) -> str:
 def write_deck(path, nodes, tets, mapped: dict, material: dict, *, heading: str) -> dict:
     """ccx.inp (section 12.4): nodes NALL (coordinates by repr), C3D10 elements EALL, one NSET SUP_<i> per support,
     the material, a linear *STATIC step (SPOOLES, or ITERATIVE CHOLESKY above SPOOLES_MAX_DOF), *BOUNDARY, *CLOAD
-    (non-zero components), U for NALL, RF totals per support, S for EALL. Returns {"dof", "linear_solver_card"}."""
+    (non-zero components), U for NALL, RF totals per support, S for EALL. Returns {"dof", "linear_solver_card"}.
+    run_check() never hands it a mesh above SPOOLES_MAX_DOF (see "Size limits" in the module docstring)."""
     import numpy as np
 
     X = np.asarray(nodes, dtype=np.float64)
@@ -1304,9 +1312,16 @@ def run_check(stl_path, eff: dict, domain: dict, out_dir, *, case_id: str, size_
             rec["mesh"]["version"] = tetmesh.get("gmsh_version") or rec["mesh"]["version"]
         if status != "ok":
             return finish(status, message)
-        if 3 * int(tetmesh["nodes"]) > max_dof:
-            return finish("too-large", f"the mesh has {3 * int(tetmesh['nodes'])} DOF at {float(size_mm):g} mm, over "
-                                       f"max_dof {max_dof} on the {where}")
+        dof = 3 * int(tetmesh["nodes"])
+        if dof > max_dof:
+            return finish("too-large", f"the mesh has {dof} DOF at {float(size_mm):g} mm, over max_dof {max_dof} on "
+                                       f"the {where}")
+        if dof > SPOOLES_MAX_DOF:  # see "Size limits" in the module docstring: the iterative solver cannot pass
+            return finish("too-large", f"the mesh has {dof} DOF at {float(size_mm):g} mm, over SPOOLES_MAX_DOF "
+                                       f"{SPOOLES_MAX_DOF}: above it ccx would run its iterative Cholesky solver, which "
+                                       f"stops with the reactions out of balance far beyond the equilibrium tolerance "
+                                       f"{EQUILIBRIUM_TOL:g}, so the solve is not run (the size is never coarsened "
+                                       f"silently)")
         with np.load(out_dir / "mesh.npz") as z:
             X, T = z["nodes"], z["tets"]
 

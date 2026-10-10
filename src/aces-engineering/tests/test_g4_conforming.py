@@ -9,7 +9,8 @@ are REAL output of the official CalculiX ccx 2.23 binary (ccx_2.23.tar.bz2 sha25
 on a deck written by conforming.write_deck: a 2 mm cube in six C3D10 under a 40 N uniaxial patch load. Their sha256 are
 checked below. gmsh tests (skipped when gmsh is not importable): a 10 mm cube on the remesh route, an icosphere and a
 sphere inside a sphere on the discrete route, through the real mesher child process. ccx tests (skipped without a
-usable ccx): the bar patch test and the cantilever of section 12.8 through run_check.
+usable ccx): the bar patch test and the cantilever of section 12.8 through run_check. A mesh above SPOOLES_MAX_DOF is
+too-large and never solved (review finding 1): with gmsh and a stand-in ccx that must not run, and with the real ccx.
 Run: python -m unittest discover -s tests -p "test_g4_conforming.py"."""
 from __future__ import annotations
 
@@ -672,6 +673,29 @@ class TestRunCheckWithoutTools(unittest.TestCase):
             self.assertFalse(rec["source"]["watertight"])
 
     @unittest.skipUnless(HAVE_GMSH and HAVE_TRIMESH, "gmsh or trimesh is not importable")
+    def test_a_mesh_over_spooles_max_dof_is_too_large_and_never_solved(self):
+        """Review finding 1: above SPOOLES_MAX_DOF the deck would ask ccx for its iterative Cholesky solver, whose answer
+        cannot pass EQUILIBRIUM_TOL, so run_check stops after meshing with too-large (NOT_RUN). The ccx here is a test
+        stand-in that must never run (test input: the 10 x 10 x 40 mm box at 5 mm, SPOOLES_MAX_DOF patched low)."""
+        with tempfile.TemporaryDirectory() as td, mock.patch.object(cf, "available", return_value=self.usable()), \
+                mock.patch.object(cf, "SPOOLES_MAX_DOF", 30):
+            stl = cf.write_box_stl(Path(td) / "p.stl", (0, 0, 0), (10, 10, 40))
+            eff = eff_fixture()
+            eff["derived"]["grid"] = {"origin_mm": [0.0, 0.0, 0.0], "envelope_mm": [10.0, 10.0, 40.0]}
+            rec = cf.run_check(stl, eff, {"stress_exclude": []}, Path(td) / "m001", case_id="m001", size_mm=5.0,
+                               where="desktop", threads=1)
+            self.assertEqual(rec["status"], "too-large", rec["message"])
+            self.assertIn(rec["status"], cf.NOT_RUN)
+            self.assertGreater(rec["mesh"]["dof"], 30)
+            self.assertLessEqual(rec["mesh"]["dof"], rec["max_dof"])        # under max_dof: the SPOOLES limit refused it
+            self.assertTrue(rec["message"].startswith(f"the mesh has {rec['mesh']['dof']} DOF at 5 mm, over "
+                                                      "SPOOLES_MAX_DOF 30: above it ccx would run its iterative "
+                                                      "Cholesky solver"), rec["message"])
+            self.assertEqual(sorted(rec["files"]), ["mesh.log", "mesh.npz", "tetmesh.json"])   # no deck, no ccx run
+            self.assertIsNone(rec["solver"]["card"])
+            self.assertIsNone(rec["wall_s_solve"])
+
+    @unittest.skipUnless(HAVE_GMSH and HAVE_TRIMESH, "gmsh or trimesh is not importable")
     def test_bc_mapping_failed_keeps_the_partial_mapping(self):
         with tempfile.TemporaryDirectory() as td, mock.patch.object(cf, "available", return_value=self.usable()):
             stl = cf.write_box_stl(Path(td) / "p.stl", (0, 0, 0), (10, 10, 40))
@@ -838,6 +862,22 @@ class TestCcx(unittest.TestCase):
             self.assertEqual(out["status"], "ok", out["record"]["message"])
             self.assertTrue(out["ok"])
             self.assertEqual(out["record"]["source"]["stl"], "bar.stl")
+
+    def test_over_spooles_max_dof_the_real_ccx_is_never_asked(self):
+        """Review finding 1 with the real ccx: the bar patch test with SPOOLES_MAX_DOF patched below its mesh's DOF is
+        too-large (NOT_RUN) and ccx never runs, where the iterative Cholesky solver would have ended with an
+        equilibrium residual far above EQUILIBRIUM_TOL (measured: see the module docstring of golden.conforming);
+        test_bar_patch_test is the same bar under the real limit."""
+        with tempfile.TemporaryDirectory() as td, mock.patch.object(cf, "SPOOLES_MAX_DOF", 300):
+            out = cf.bar_patch_test(Path(td), threads=1)
+            rec = out["record"]
+            self.assertEqual(out["status"], "too-large", rec["message"])
+            self.assertIsNone(out["ok"])                                    # not run: neither a pass nor a failure
+            self.assertIn("over SPOOLES_MAX_DOF 300", rec["message"])
+            self.assertGreater(rec["mesh"]["dof"], 300)
+            self.assertIsNone(rec["solver"]["rc"])
+            self.assertFalse((Path(td) / "m001" / "ccx.log").exists())
+            self.assertFalse((Path(td) / "m001" / "ccx.inp.gz").exists())
 
     def test_cantilever(self):
         with tempfile.TemporaryDirectory() as td:
