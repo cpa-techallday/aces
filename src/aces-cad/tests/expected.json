@@ -1,0 +1,650 @@
+{
+ "schema": "aces.cad.test-expected/1",
+ "about": "Every number the aces-cad tests compare with. source is analytic (with its formula, checked against both probes when checked_by is present) or a probe made on 2026-10-10 by running the fixture scripts in tests/scripts with real build123d on the two platforms below. tol is {abs: x} or {rel: x}; null means exact. These are real measured outputs, not invented values.",
+ "probes": {
+  "windows": "probe 2026-10-10 Windows 11 workstation (cudax-sim-runtime .venv), Python 3.11.9, build123d 0.11.1, OCP 7.9.3.1, trimesh 5.1.0, numpy 2.4.6, ezdxf 1.4.4",
+  "arch": "probe 2026-10-10 archlinux:base on Docker Desktop (kernel 6.6.114.1-microsoft-standard-WSL2), aces-engineering 0.1.0-2 venv, Python 3.14.7, build123d 0.11.1, OCP 7.9.3.1, trimesh 5.1.0, numpy 2.4.6, ezdxf 1.4.4"
+ },
+ "values": {
+  "aces_plate.volume_mm3": {
+   "value": 11607.300918301276,
+   "tol": {
+    "abs": 1e-06
+   },
+   "source": "analytic",
+   "formula": "60*40*5 - pi*5**2*5",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (aces_plate.volume)"
+  },
+  "aces_plate.area_mm2": {
+   "value": 5800.0,
+   "tol": {
+    "abs": 1e-06
+   },
+   "source": "analytic",
+   "formula": "2*(60*40 - pi*25) + 2*(60 + 40)*5 + 2*pi*5*5",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (aces_plate.area)"
+  },
+  "aces_plate.bbox_mm": {
+   "value": [
+    0.0,
+    0.0,
+    0.0,
+    60.0,
+    40.0,
+    5.0
+   ],
+   "tol": {
+    "abs": 1e-06
+   },
+   "source": "analytic",
+   "formula": "corner at the origin, 60 x 40 x 5",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (aces_plate.bbox)"
+  },
+  "aces_plate.centroid_mm": {
+   "value": [
+    30.0,
+    20.0,
+    2.5
+   ],
+   "tol": {
+    "abs": 1e-09
+   },
+   "source": "analytic",
+   "formula": "symmetric about the centre hole",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (aces_plate.centroid)"
+  },
+  "aces_plate.counts": {
+   "value": {
+    "solids": 1,
+    "shells": 1,
+    "faces": 7,
+    "edges": 15,
+    "vertices": 10
+   },
+   "tol": null,
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance"
+  },
+  "aces_plate.inertia_diag_mm5": {
+   "value": [
+    1621727.5076525128,
+    3621727.507652512,
+    5195091.261478767
+   ],
+   "tol": {
+    "rel": 1e-09
+   },
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance",
+   "note": "matrix_of_inertia diagonal, unit density, about the centroid; analytic box minus cylinder: 12000*(40**2 + 5**2)/12 - 125*pi*(3*25 + 25)/12 and so on"
+  },
+  "aces_plate.mass_alsi10mg_kg": {
+   "value": 0.03099149345186441,
+   "tol": {
+    "rel": 1e-09
+   },
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance",
+   "note": "volume_mm3 * 2670 kg/m3 * 1e-9"
+  },
+  "aces_plate.length70_volume_mm3": {
+   "value": 13607.300918301276,
+   "tol": {
+    "abs": 1e-06
+   },
+   "source": "analytic",
+   "formula": "70*40*5 - pi*5**2*5",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (aces_plate.len70)"
+  },
+  "aces_plate.length70_width50_volume_mm3": {
+   "value": 17107.300918301276,
+   "tol": {
+    "abs": 1e-06
+   },
+   "source": "analytic",
+   "formula": "70*50*5 - pi*5**2*5",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (aces_plate.len70_width50)"
+  },
+  "aces_plate.section_y20.area_mm2": {
+   "value": 250.0,
+   "tol": {
+    "abs": 1e-06
+   },
+   "source": "analytic",
+   "formula": "2 rectangles of 25 x 5 (the hole removes 10 of 60)",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (aces_plate.section_y20.area)"
+  },
+  "aces_plate.section_y20.I_u_mm4": {
+   "value": 520.8333333333334,
+   "tol": {
+    "abs": 0.001
+   },
+   "source": "analytic",
+   "formula": "2 * 25*5**3/12 (integral v**2 dA)",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (aces_plate.section_y20.I_u)"
+  },
+  "aces_plate.section_y20.I_v_mm4": {
+   "value": 89583.33333333333,
+   "tol": {
+    "abs": 0.01
+   },
+   "source": "analytic",
+   "formula": "2 * (5*25**3/12 + 125*17.5**2) (integral u**2 dA about the centroid u = 30)",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (aces_plate.section_y20.I_v)"
+  },
+  "aces_plate.thickness_min_mm": {
+   "value": 5.0,
+   "tol": {
+    "abs": 0.01
+   },
+   "source": "analytic",
+   "formula": "the plate thickness (every inward ray crosses 5 mm)"
+  },
+  "aces_plate.top_to_bottom_mm": {
+   "value": 5.0,
+   "tol": {
+    "abs": 1e-06
+   },
+   "source": "analytic",
+   "formula": "plate:+z to plate:-z",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (aces_plate.top_bottom_distance)"
+  },
+  "aces_plate.hole": {
+   "value": {
+    "diameter_mm": 10.0,
+    "entry_point_mm": [
+     30.0,
+     20.0,
+     5.0
+    ],
+    "axis_dir": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "depth_mm": 5.0,
+    "through": true,
+    "kind": "simple"
+   },
+   "tol": null,
+   "source": "analytic: design of tests/scripts/aces_plate.py; through ends checked by is_inside on both probes",
+   "note": "entry: a through hole enters at the end with the larger coordinate along its axis (section 12.4)"
+  },
+  "materials.AlSi10Mg.density_kg_m3": {
+   "value": 2670,
+   "tol": null,
+   "source": "materials.json (section 12.1): aces-engineering golden demo spec"
+  },
+  "two_hole_plate.volume_mm3": {
+   "value": 11214.60183660255,
+   "tol": {
+    "rel": 1e-09
+   },
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance"
+  },
+  "two_hole_plate.area_mm2": {
+   "value": 5800.0,
+   "tol": {
+    "abs": 1e-06
+   },
+   "source": "analytic",
+   "formula": "as the ACES plate: two holes add and remove the same area",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (two_hole_plate.area)"
+  },
+  "two_hole_plate.bbox_mm": {
+   "value": [
+    -30.0,
+    -20.0,
+    -2.5,
+    30.0,
+    20.0,
+    2.5
+   ],
+   "tol": {
+    "abs": 1e-06
+   },
+   "source": "analytic",
+   "formula": "centred Box(60, 40, 5)",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (two_hole_plate.bbox)"
+  },
+  "two_hole_plate.counts": {
+   "value": {
+    "solids": 1,
+    "shells": 1,
+    "faces": 8,
+    "edges": 18,
+    "vertices": 12
+   },
+   "tol": null,
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance"
+  },
+  "two_hole_plate.inertia_diag_mm5": {
+   "value": [
+    1618455.0153050215,
+    3441740.428540596,
+    5013467.936193106
+   ],
+   "tol": {
+    "rel": 1e-09
+   },
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance"
+  },
+  "two_hole_plate.section_xz_area_mm2": {
+   "value": 200.0,
+   "tol": {
+    "abs": 1e-06
+   },
+   "source": "analytic",
+   "formula": "60*5 - 2*10*5 (Plane.XZ through both holes)",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (two_hole_plate.section_xz_area)"
+  },
+  "holes_block.volume_mm3": {
+   "value": 60373.414555734314,
+   "tol": {
+    "rel": 1e-09
+   },
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance"
+  },
+  "holes_block.counts": {
+   "value": {
+    "solids": 1,
+    "shells": 1,
+    "faces": 14,
+    "edges": 29,
+    "vertices": 19
+   },
+   "tol": null,
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance"
+  },
+  "holes_block.holes": {
+   "value": [
+    {
+     "kind": "simple",
+     "diameter_mm": 10.0,
+     "through": true,
+     "depth_mm": 20.0,
+     "entry_point_mm": [
+      15.0,
+      20.0,
+      20.0
+     ],
+     "cbore": null,
+     "csk": null
+    },
+    {
+     "kind": "simple",
+     "diameter_mm": 6.0,
+     "through": false,
+     "depth_mm": 8.0,
+     "entry_point_mm": [
+      35.0,
+      20.0,
+      20.0
+     ],
+     "cbore": null,
+     "csk": null
+    },
+    {
+     "kind": "counterbore",
+     "diameter_mm": 6.6,
+     "through": true,
+     "depth_mm": 20.0,
+     "entry_point_mm": [
+      52.0,
+      20.0,
+      20.0
+     ],
+     "cbore": {
+      "diameter_mm": 11.0,
+      "depth_mm": 6.0
+     },
+     "csk": null
+    },
+    {
+     "kind": "countersink",
+     "diameter_mm": 6.6,
+     "through": true,
+     "depth_mm": 20.0,
+     "entry_point_mm": [
+      68.0,
+      20.0,
+      20.0
+     ],
+     "cbore": null,
+     "csk": {
+      "diameter_mm": 12.0,
+      "angle_deg": 90.0
+     }
+    }
+   ],
+   "tol": null,
+   "source": "analytic: design of tests/scripts/holes_block.py; faces checked on both probes (cylinders r 5, 3, 3.3 + 5.5, 3.3; cone semi-angle -45 deg, ref radius 6.0; is_inside 0.01 mm below the blind bottom True, below the through hole False)",
+   "note": "depth of a through hole is the full stack along the axis (20 mm); every entry is on the top face z = 20"
+  },
+  "l_bracket.volume_mm3": {
+   "value": 10993.008881569225,
+   "tol": {
+    "rel": 1e-09
+   },
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance"
+  },
+  "l_bracket.bbox_mm": {
+   "value": [
+    0.0,
+    0.0,
+    0.0,
+    40.0,
+    30.0,
+    40.0
+   ],
+   "tol": {
+    "abs": 1e-06
+   },
+   "source": "analytic",
+   "formula": "corner at the origin",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (l_bracket.bbox)"
+  },
+  "l_bracket.counts": {
+   "value": {
+    "solids": 1,
+    "shells": 1,
+    "faces": 11,
+    "edges": 27,
+    "vertices": 18
+   },
+   "tol": null,
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance"
+  },
+  "l_bracket.holes": {
+   "value": {
+    "count": 2,
+    "diameter_mm": 6.0,
+    "through": true
+   },
+   "tol": null,
+   "source": "analytic: design; concave cylinders r 3.0 spanning 360 deg on both probes"
+  },
+  "l_bracket.fillet": {
+   "value": {
+    "radius_mm": 2.0,
+    "concave": true,
+    "u_span_deg": 90.0
+   },
+   "tol": null,
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance; the fillet is not a hole (it spans 90 deg, not 360)"
+  },
+  "loft_blend.volume_mm3": {
+   "value": 54115.91962295156,
+   "tol": {
+    "rel": 1e-09
+   },
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance",
+   "arch_value": 54115.91962295169
+  },
+  "loft_blend.faces": {
+   "value": 3,
+   "tol": null,
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance",
+   "note": "one BSPLINE side and two PLANE caps"
+  },
+  "sketch_plate.area_mm2": {
+   "value": 171.72566611769187,
+   "tol": {
+    "abs": 1e-06
+   },
+   "source": "analytic",
+   "formula": "20*10 - pi*3**2",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (sketch_plate.summary.area)"
+  },
+  "sdf_sphere.exact_volume_mm3": {
+   "value": 4188.790204786391,
+   "tol": {
+    "rel": 0.02
+   },
+   "source": "analytic",
+   "formula": "4/3*pi*10**3; the mesh is within 2 % of it"
+  },
+  "sdf_sphere.mesh_volume_mm3": {
+   "value": 4163.609220142088,
+   "tol": {
+    "rel": 1e-09
+   },
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance",
+   "note": "marching cubes at h 1 mm through a TEST DOUBLE of mesh_from_sdf written from section 7.7 (the real module is B1's); informational, the tests compare with the exact volume"
+  },
+  "assembly_pin.clearance_mm": {
+   "value": 11.0,
+   "tol": {
+    "abs": 1e-06
+   },
+   "source": "analytic",
+   "formula": "pin surface at x = 16, cube face at x = 5",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (assembly_pin.distance)"
+  },
+  "assembly_pin.closest_points_mm": {
+   "value": [
+    [
+     5.0,
+     0.0,
+     5.0
+    ],
+    [
+     16.0,
+     0.0,
+     5.0
+    ]
+   ],
+   "tol": {
+    "abs": 1e-06
+   },
+   "source": "analytic",
+   "formula": "the probe's closest points (any z in -5..5 is equally close; the probe returned z = 5)",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (assembly_pin.closest)"
+  },
+  "assembly_overlap.intersection_mm3": {
+   "value": 500.0,
+   "tol": {
+    "abs": 1e-06
+   },
+   "source": "analytic",
+   "formula": "5 x 10 x 10 shared",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (assembly_overlap.amp_volume)"
+  },
+  "overlap_compound.bop_status": {
+   "value": "BOPAlgo_SelfIntersect",
+   "tol": null,
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance",
+   "note": "BRepAlgoAPI_Check(shape, True, True) result statuses; BRepCheck passes the compound"
+  },
+  "overlap_compound.volume_sum_mm3": {
+   "value": 2000.0,
+   "tol": {
+    "abs": 1e-06
+   },
+   "source": "analytic",
+   "formula": "2 x 1000: the overlap counts twice",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (overlap_compound.summary.volume)"
+  },
+  "reversed_box.signed_volume_mm3": {
+   "value": -1000.0,
+   "tol": {
+    "abs": 1e-06
+   },
+   "source": "analytic",
+   "formula": "a reversed 10 mm cube",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (reversed_box.signed_volume)"
+  },
+  "bowtie_face.is_valid": {
+   "value": false,
+   "tol": null,
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance",
+   "note": "make_face returns a Sketch with one PLANE face; BRepCheck fails it"
+  },
+  "disc_domain.volume_mm3": {
+   "value": 314159.26535897935,
+   "tol": {
+    "abs": 1e-06
+   },
+   "source": "analytic",
+   "formula": "pi*50**2*40",
+   "checked_by": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance (disc_domain.volume)"
+  },
+  "disc_domain.design_space_gen4": {
+   "value": {
+    "cells": [
+     25,
+     25,
+     10
+    ],
+    "ok": true
+   },
+   "tol": null,
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance; the probe reimplemented the 12.11 rule and counted 136 void boxes (limit 2000)"
+  },
+  "perforated_block.design_space_gen0.5": {
+   "value": {
+    "cells": [
+     200,
+     200,
+     40
+    ],
+    "ok": false,
+    "void_boxes_more_than": 2000
+   },
+   "tol": null,
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance; the probe reimplemented the 12.11 rule and counted 5200 void boxes (limit 2000)"
+  },
+  "errors.fillet_too_big": {
+   "value": {
+    "exception": "ValueError",
+    "message_prefix": "Failed creating a fillet"
+   },
+   "tol": null,
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance",
+   "note": "Failed creating a fillet with radius of 50, try a smaller value or use max_fillet() to find the largest valid fillet radius"
+  },
+  "errors.zero_extrude": {
+   "value": {
+    "exception": "Standard_ConstructionError",
+    "module_prefix": "OCP",
+    "message": "BRepSweep_Translation::Constructor"
+   },
+   "tol": null,
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance"
+  },
+  "errors.syntax_error": {
+   "value": {
+    "line": 4
+   },
+   "tol": null,
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance",
+   "note": "offset 13 on 3.11 and 13 on 3.14"
+  },
+  "errors.empty_boolean": {
+   "value": {
+    "returned": "Compound",
+    "solids": 0
+   },
+   "tol": null,
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance"
+  },
+  "errors.returns_builder": {
+   "value": {
+    "returned": "BuildPart"
+   },
+   "tol": null,
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance"
+  },
+  "worker_env.added_by_imports": {
+   "value": [
+    "FONTCONFIG_FILE",
+    "FONTCONFIG_PATH",
+    "KMP_DUPLICATE_LIB_OK",
+    "KMP_INIT_AT_FORK"
+   ],
+   "tol": null,
+   "source": "probe 2026-10-10: importing build123d, OCP, numpy, scipy, skimage.measure, trimesh, matplotlib, ezdxf and lib3mf in the venv with only the section 8.1 keys set; Linux adds FONTCONFIG_FILE, FONTCONFIG_PATH, KMP_DUPLICATE_LIB_OK and KMP_INIT_AT_FORK, Windows the two KMP_ keys",
+   "note": "on Windows ezdxf refuses to import (RuntimeError: Could not determine home directory) unless USERPROFILE is set; section 8.1 lists HOME but not USERPROFILE"
+  },
+  "audit.events": {
+   "value": [
+    "sys.addaudithook",
+    "sys.setprofile",
+    "sys.settrace"
+   ],
+   "tol": null,
+   "source": "probe 2026-10-10 on both platforms (see probes.windows and probes.arch), equal within the tolerance",
+   "note": "audit events raised by sys.addaudithook, sys.settrace and sys.setprofile on 3.11 and 3.14"
+  },
+  "drill_point_block.holes": {
+   "value": [
+    {
+     "kind": "simple",
+     "diameter_mm": 6.0,
+     "through": false,
+     "depth_mm": 10.0,
+     "entry_point_mm": [
+      15.0,
+      20.0,
+      20.0
+     ],
+     "axis_dir": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "cbore": null,
+     "csk": null
+    },
+    {
+     "kind": "countersink",
+     "diameter_mm": 6.6,
+     "through": true,
+     "depth_mm": 20.0,
+     "entry_point_mm": [
+      45.0,
+      20.0,
+      20.0
+     ],
+     "axis_dir": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "cbore": null,
+     "csk": {
+      "diameter_mm": 12.0,
+      "angle_deg": 90.0
+     }
+    }
+   ],
+   "tol": null,
+   "source": "analytic: design of tests/scripts/drill_point_block.py (a d6 bore 10 mm deep from the 20 mm top face with a 118 degree point below it; a d6.6 through hole with 90 degree countersinks, d12 at the top and d8 at the bottom); sorted by the entry x",
+   "checked_by": "fixer probe 2026-10-10 on Windows (probes.windows): geom.find_holes in that venv, and aces-cad run and inspect in permissive mode",
+   "note": "review finding 2: before the fix (HEAD ff3c166, fixer probe on Windows) the first hole read countersink, axis (0, 0, -1), entry (15, 20, 8.1974) at the drill point's tip, depth 11.8026, csk d0 x 118 degrees, and the second countersink, axis (0, 0, -1), entry (45, 20, 0), csk d28 (measured on the top cone at the bottom face)"
+  },
+  "perforated_block.holes": {
+   "value": {
+    "count": 100,
+    "holes_truncated": false
+   },
+   "tol": null,
+   "source": "analytic: design of tests/scripts/perforated_block.py (a 10 x 10 grid of through holes); spec 12.4 reports at most 100",
+   "checked_by": "fixer probe 2026-10-10 on Windows (probes.windows): geom.find_holes in that venv, and aces-cad run and inspect in permissive mode"
+  },
+  "perforated_block_101.holes": {
+   "value": {
+    "count": 100,
+    "holes_truncated": true
+   },
+   "tol": null,
+   "source": "analytic: design of tests/scripts/perforated_block_101.py (101 through holes); spec 12.4 reports at most 100, and holes_truncated says a part has more",
+   "checked_by": "fixer probe 2026-10-10 on Windows (probes.windows): geom.find_holes in that venv, and aces-cad run and inspect in permissive mode"
+  },
+  "skill_gyroid.volume_mm3": {
+   "value": 6534.400079864546,
+   "tol": {
+    "rel": 0.0001
+   },
+   "source": "probe 2026-10-10 on Windows (probes.windows): aces-cad run of tests/scripts/skill_gyroid.py (the SKILL.md example) at its defaults, permissive, with mesh_from_sdf counting grid values on the level as outside (run 20261010T091709Z-087e: watertight, valid, 572800 triangles)",
+   "note": "a marching-cubes volume: a grid value within rounding of the level may fall on either side on another platform and move about one cell (0.027 mm3), hence rel 1e-4; before the exact-level rule the same script gave 6561.871596953505 and the first SKILL.md example (h = cell / 16) an open mesh"
+  }
+ }
+}

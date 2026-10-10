@@ -239,3 +239,61 @@ ran. If the `pacman` line of step 7 still stops at `calculix-ccx-bin`, or the de
   then steps 3 to 5, and step 2 first if `cidata/` changed (the ISO stays). Rebuild the cidata drive only while no
   running VM has it attached.
 - Stop serving: `.\serve-repo.ps1 -Stop`. Remove everything: delete `D:\HyperV\aces-rehearsal`.
+
+## aces-cad on the VM
+
+The operator's acceptance of the local text-to-CAD package (`aces-cad` 0.1.0-1, build spec section 29) runs on this
+VM: the same signed packages a customer machine installs, the real Omarchy kernel (Landlock decides strict mode), and
+an agent session at the console. Results are written here and into the aces-cad section of `docs/PACKAGES.md`; copy
+`cad-doctor.json`, the run and pull JSON, the renders, the drawing and the bundle to `rehearsal/reports/`.
+
+**Not run yet (2026-10-10).** Each step below records its result when it has run.
+
+1. On DARKNESS: `bash bin/build aces-cad` (and `bash bin/build aces-os`), then `.\serve-repo.ps1` (check the web root
+   byte for byte against `repo\x86_64`). On the VM: `sudo pacman -Sy aces-cad`, then `sudo pacman -S aces-os`.
+   aces-os 0.1.0-6 depends on `calculix-ccx-bin` (golden-rig's, which builds now and ships the Fortran runtime it
+   needs) and on `aces-cad`; in clean containers on 2026-10-10 it resolved to 510 packages after the default
+   install-test set and 522 after aces-base, aces-engineering and aces-cad. Record the installed versions
+   (`pacman -Q aces-cad aces-engineering aces-base calculix-ccx-bin aces-os`).
+2. `uname -r`, `cat /sys/kernel/security/lsm`, `aces-cad doctor --json > ~/cad-doctor.json`. Expect verdict `ready`,
+   mode `strict`, seccomp active (106 instructions, TSYNC), Landlock active with its ABI recorded (4 or more adds the
+   TCP rules, 6 or more the signal and abstract-socket scoping), every check passing, and Python 3.14.7, build123d
+   0.11.1, OCP 7.9.3.1, ezdxf 1.4.4, lib3mf 2.5.0, trimesh 5.1.0 and the embree ray backend. If it is not ready, record
+   the lsm line and stop: strict mode needs Landlock, and no agent code runs without it.
+3. `aces-cad selftest`: every check PASS; record the wall time.
+4. `aces project new cad-vm --class sovereign`.
+5. `aces-cad run /usr/share/aces/cad/tests/scripts/aces_plate.py --project cad-vm --name plate`: 11607.300918301276 mm3
+   within 1e-6, 60 x 40 x 5 mm, counts 1/1/7/15/10, valid; record the wall time.
+6. `aces-cad inspect --project cad-vm --check mass,validity,holes,thickness --material AlSi10Mg`: one through Ø10 hole
+   entering at (30, 20, 5), thickness min 5.0 within 0.01, mass 0.0310 kg, validity ok.
+7. `aces-cad render --project cad-vm --view iso,front,cutaway` and `aces-cad drawing --project cad-vm`. Open the
+   drawing's SVG in a browser and its DXF in a DXF viewer: the dimensions read 60, 40, 5, 30, 20 and Ø10 THRU (never
+   6000), hidden lines are grey and dashed, and the Ø sign is clean.
+8. `aces-cad pull --project cad-vm --json > ~/cad-pull.json`, then
+   `python3 /usr/share/aces/cad/tests/check_bundle.py ~/cad-pull.json`, `aces ledger verify`,
+   `aces ledger show --kind cad.pull --json` (the entry carries `class: sovereign`) and `aces project show cad-vm` (it
+   lists `cad/local/<bundle>/part.step`). Run and pull again: the same `geometry_sha256`. Compare it with the CI value
+   and record whether they are equal (cross-OS equality is not verified yet).
+9. Agent: `aces-omarchy-setup` (the skill is linked as `~/.claude/skills/aces-cad`); add the `aces-cad` entry of
+   `/usr/share/aces/cad/mcp.json.example` to Claude Code with `ACES_CAD_PROJECT=cad-vm`; `/mcp` lists 8 tools. Ask
+   "make a 60 x 40 x 5 mm plate with a 10 mm hole in the middle, check it, show it, draw it, pull it" and record the
+   tool calls, whether the render images reached the model, the total wall time and the bundle. Press Esc during a long
+   run: `pgrep -f aces_cad/worker` must be empty within 3 s.
+10. Hostile, as the desktop user, from `/usr/share/aces/cad/tests/scripts/`:
+    - `aces-cad run hostile_socket.py --project cad-vm` exits 5;
+    - `aces-cad run hostile_loop.py --project cad-vm --timeout 5` exits 4, and `pgrep -f aces_cad/worker` is empty;
+    - `aces-cad run hostile_memory_list.py --project cad-vm` exits 4 with kind memory;
+    - plant `~/.config/aces/onshape.env` (any marker value), then
+      `aces-cad run hostile_read_secret.py --project cad-vm --param secret="$HOME/.config/aces/onshape.env"` exits 5;
+    - `aces-cad run hostile_occt_export_outside.py --project cad-vm --param target="$HOME/escape.step"` fails, and
+      `~/escape.step` does not exist;
+    - `aces-cad run hostile_kill_parent.py --project cad-vm` exits 5.
+11. During a 60 s loop (`hostile_loop.py --timeout 60`) the desktop stays responsive (2 threads, nice 10); note
+    anything else.
+12. Optional golden hand-off: run `disc_domain.py` and pull it; `aces golden spec --demo root-mount --out /tmp/rm.json`;
+    `aces golden run --spec /tmp/rm.json --step <bundle>/part.step --project cad-gold --new`. Record the exit code and
+    the grade (expected like the built-in demo domain; unverified until run).
+13. Write the results here and into `docs/PACKAGES.md`, and copy the files listed above to `rehearsal/reports/`.
+
+`post-install/aces-install.sh` runs `aces-cad doctor` and `aces-cad selftest` on a fresh install when aces-cad is
+installed (steps 2 and 3 in short form).

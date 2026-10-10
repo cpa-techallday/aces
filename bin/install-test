@@ -158,6 +158,40 @@ if command -v aces-onshape >/dev/null 2>&1; then
 else
   echo "== onshape adapter: aces-cad-onshape not in this run"
 fi
+if command -v aces-cad >/dev/null 2>&1; then
+  echo "== local CAD (aces-cad): doctor, the ACES plate end to end in a sovereign project, hostile scripts, installed tests"
+  rm -rf /logs/cad; mkdir -p /logs/cad
+  rc=0; aces-cad doctor --json > /logs/cad/doctor.json || rc=$?
+  cat /logs/cad/doctor.json
+  if [ "$rc" -eq 3 ]; then
+    echo "aces-cad: the strict sandbox (seccomp and Landlock) is not available in this container: this block runs with ACES_CAD_SANDBOX=permissive, so the kernel guards were NOT exercised here"
+    export ACES_CAD_SANDBOX=permissive
+  elif [ "$rc" -ne 0 ]; then echo "aces-cad doctor failed (exit $rc)"; exit 1; fi
+  aces project new cadtest --class sovereign --hypothesis "aces-cad install test"
+  aces-cad run /usr/share/aces/cad/tests/scripts/aces_plate.py --project cadtest --name plate --json > /logs/cad/run.json
+  python3 -c "import json, math; p = json.load(open(\"/logs/cad/run.json\"))[\"result\"][\"parts\"][0]; e = 60*40*5 - math.pi*25*5; assert abs(p[\"volume_mm3\"] - e) < 1e-6 and p[\"valid\"], p; print(\"plate volume\", p[\"volume_mm3\"], \"expected\", e)"
+  aces-cad inspect latest --project cadtest --check mass,validity,holes,thickness --material AlSi10Mg --json > /logs/cad/inspect.json
+  aces-cad render latest --project cadtest --view iso,front --json > /logs/cad/render.json
+  aces-cad drawing latest --project cadtest --json > /logs/cad/drawing.json
+  aces-cad pull latest --project cadtest --json > /logs/cad/pull.json
+  python3 /usr/share/aces/cad/tests/check_bundle.py /logs/cad/pull.json
+  aces ledger show --kind cad.pull -n 1
+  aces ledger verify
+  aces project show cadtest
+  rc=0; aces-cad run /usr/share/aces/cad/tests/scripts/hostile_socket.py --project cadtest --json > /logs/cad/hostile-socket.json || rc=$?
+  if [ "$rc" -ne 5 ]; then echo "aces-cad: the socket script must be refused by the sandbox (exit 5), got $rc"; cat /logs/cad/hostile-socket.json; exit 1; fi
+  rc=0; aces-cad run /usr/share/aces/cad/tests/scripts/hostile_loop.py --project cadtest --timeout 3 --json > /logs/cad/hostile-loop.json || rc=$?
+  if [ "$rc" -ne 4 ]; then echo "aces-cad: the endless loop must time out (exit 4), got $rc"; cat /logs/cad/hostile-loop.json; exit 1; fi
+  ACES_CAD_REQUIRE_WORKER=1 PYTHONPATH=/opt/aces/cad/lib PYTHONDONTWRITEBYTECODE=1 NO_COLOR=1 python -m unittest discover -s /usr/share/aces/cad/tests
+  bundle="$(python3 -c "import json; print(json.load(open(\"/logs/cad/pull.json\"))[\"bundle\"])")"
+  cp -r "$bundle" /logs/cad/bundle
+  for f in /root/Work/cadtest/cad/local/runs/*/renders/*.png /root/Work/cadtest/cad/local/runs/*/drawings/*; do
+    if [ -f "$f" ]; then cp "$f" /logs/cad/; fi
+  done
+  chmod -R a+rX /logs/cad
+else
+  echo "== local CAD: aces-cad not in this run"
+fi
 echo "== dependency dry-run for the meta-packages (resolution only, nothing downloaded)"
 for m in aces-field aces-survey aces-os; do
   if pacman -Sp "$m" >/tmp/out 2>/tmp/err; then echo "$m: resolves, $(wc -l </tmp/out) packages in the transaction"; else echo "$m: FAILS"; cat /tmp/err; fi

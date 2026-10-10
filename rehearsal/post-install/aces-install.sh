@@ -115,6 +115,12 @@ if pacman -Q aces-engineering >/dev/null 2>&1; then  # the golden path from the 
 else
   note "SKIP  aces golden (aces-engineering not installed)"
 fi
+if pacman -Q aces-cad >/dev/null 2>&1; then  # local text-to-CAD: sandbox self-checks and the ACES plate end to end
+  run "aces-cad doctor" aces-cad doctor
+  TAIL=30 run "aces-cad selftest" aces-cad selftest
+else
+  note "SKIP  aces-cad (not installed)"
+fi
 [[ -d /usr/lib/modules/$(uname -r) ]] || note "note     no /usr/lib/modules/$(uname -r): the kernel was replaced, reboot before using the desktop"
 note ""
 note "summary: $(grep -c '^PASS' "$report") passed, $fails failed"

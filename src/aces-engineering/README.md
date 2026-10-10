@@ -345,3 +345,13 @@ never reported as a rig result.
   config file` (no fontconfig installed) or `Fontconfig warning: ... invalid constant used` lines (with Arch's
   fontconfig). Cosmetic: build123d `Text` with system fonts was checked to work. `FONTCONFIG_FILE` did not quiet it.
 - `pkgbuilds/ORDER` builds aces-voxel with `nodeps`; its `check()` then skips (it needs this venv installed).
+
+## Local CAD (aces-cad)
+
+aces-cad (`src/aces-cad/`, package `aces-cad`) runs build123d in this venv, in sandboxed child processes of
+`/opt/aces/engineering/venv/bin/python` (seccomp, Landlock, rlimits, no network); it has no venv of its own. It relies
+on build123d 0.11.1, cadquery-ocp-novtk 7.9.3.1.1, trimesh, scipy, scikit-image, matplotlib and embreex, and on
+ezdxf 1.4.4 (drawings) and lib3mf 2.5.0 (3MF export) from `requirements.txt`; the last two are transitive pins of
+build123d (it requires `ezdxf>=1.1.0,<2` and `lib3mf>=2.4.1`), not entries of `requirements.in`. After a re-lock,
+rebuild aces-cad and run its tests: its static test S03 fails when `ezdxf==` or `lib3mf==` is no longer pinned here,
+and its `check()` checks that the installed venv still imports both.

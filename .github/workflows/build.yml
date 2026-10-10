@@ -39,6 +39,13 @@ jobs:
       - name: Install-test the engineering stack, CalculiX and the golden path
         run: bash bin/install-test aces-base aces-engineering aces-voxel calculix-ccx-bin
 
+      # aces-engineering is in this set, so the install test runs its golden block again, and that block starts with
+      # rm -rf /logs/golden: move the engineering step's golden records (with the CalculiX conforming check) aside first
+      - name: Install-test the local CAD server (aces-cad)
+        run: |
+          if [ -d logs/golden ]; then mv logs/golden logs/golden-engineering; fi
+          bash bin/install-test aces-base aces-engineering aces-cad
+
       - name: Keep the build logs
         if: always()
         uses: actions/upload-artifact@v4
