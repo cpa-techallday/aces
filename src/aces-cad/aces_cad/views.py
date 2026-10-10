@@ -240,6 +240,17 @@ def drawing_stem(label: str, options: dict) -> str:
     return f"{label}-{params.sha256_json(options)[:8]}"
 
 
+def hole_table(data: dict) -> list | None:
+    """drawing.json's hole_table: the worker returns it in chunks (each list in a worker result is capped at 500)."""
+    chunks = data.get("hole_table_chunks")
+    if chunks is None:
+        return None
+    if not isinstance(chunks, list) or not all(isinstance(c, list) and all(isinstance(r, dict) for r in c)
+                                               for c in chunks):
+        raise run_failed("crash", "the drawing worker returned a malformed hole table")
+    return [row for chunk in chunks for row in chunk] or None
+
+
 def op_drawing(ctx, args: dict) -> dict:
     """args: run_id, part, views, projection, formats, dimensions, section, title, inline, timeout_s."""
     run_id = _run_id(args)
@@ -293,7 +304,7 @@ def op_drawing(ctx, args: dict) -> dict:
         warnings.append("inline needs the png format: no image is returned")
     doc = {"schema": "aces.cad.drawing/1", "run_id": run.id, "part": part, "projection": projection, "units": "mm",
            "scale": "1:1", "views": data.get("views") or [], "dimensions": data.get("dimensions") or [],
-           "hole_table": data.get("hole_table"), "audit_errors": data.get("audit_errors"), "files": files_out,
+           "hole_table": hole_table(data), "audit_errors": data.get("audit_errors"), "files": files_out,
            "method": "OCCT hidden-line removal (build123d project_to_viewport), ezdxf DIMENSION entities on values "
                      "measured from the B-rep",
            "notes": [str(n) for n in data.get("notes") or []], "warnings": warnings}

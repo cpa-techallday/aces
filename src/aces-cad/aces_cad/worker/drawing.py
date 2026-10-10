@@ -26,6 +26,9 @@ AXES = "xyz"
 HOLE_VIEWS = {2: ("top", "bottom"), 1: ("front", "back"), 0: ("right", "left")}
 MAX_DIMENSIONS = 200
 MAX_POSITION_DIMS = 12
+TABLE_CHUNK = 250       # hole-table rows per list in the result: spec 5.4 caps every list there at 500 items
+MAX_TABLE_ROWS = 10_000  # rows returned for drawing.json (the result file is capped at 4 MiB); the DXF has them all
+MAX_TABLE_COLUMNS = 6
 CHAR_W = 0.85          # monospace advance per character, as a multiple of the text height (DejaVu Sans Mono)
 HIDDEN_PATTERN = [4.5, 3.0, -1.5]
 METHOD = ("OCCT hidden-line removal (build123d project_to_viewport), ezdxf DIMENSION entities on values measured "
@@ -472,13 +475,26 @@ def hole_dims(dims: Dims, views: dict, holes: list, c: tuple, occupied: set, not
     return table or None
 
 
+def table_chunks(table: list | None, notes: list) -> list | None:
+    """The hole table for the result file: at most MAX_TABLE_ROWS rows, in lists of at most TABLE_CHUNK rows (the
+    parent joins them into drawing.json's hole_table)."""
+    if not table:
+        return None
+    if len(table) > MAX_TABLE_ROWS:
+        notes.append(f"the hole table has {len(table)} rows: drawing.json lists the first {MAX_TABLE_ROWS}, the DXF "
+                     f"lists them all")
+        table = table[:MAX_TABLE_ROWS]
+    return [table[i:i + TABLE_CHUNK] for i in range(0, len(table), TABLE_CHUNK)]
+
+
 def place_hole_table(msp, table: list, gap: float, h: float) -> None:
-    """The hole table as TEXT on TITLE, right of everything drawn so far, in columns no taller than the drawing."""
+    """The hole table as TEXT on TITLE, right of everything drawn so far, in columns no taller than the drawing; a
+    table that would need more than MAX_TABLE_COLUMNS such columns gets taller columns instead of a wider sheet."""
     from ezdxf.enums import TextEntityAlignment
 
     x0, x1, y0, y1 = _extents(msp)
     pitch = 1.6 * h
-    per_column = max(8, int((y1 - y0) / pitch) - 1)
+    per_column = max(8, int((y1 - y0) / pitch) - 1, math.ceil(len(table) / MAX_TABLE_COLUMNS))
     width = (max(len(r["text"]) for r in table) + 3) * CHAR_W * h
     views = sorted({r["view"] for r in table})
     header = (f"HOLE TABLE ({', '.join(v.upper() for v in views)} VIEW): POSITIONS IN mm FROM THE MODEL ORIGIN")
@@ -749,7 +765,8 @@ def op_drawing(args: dict, ctx) -> dict:
                           "offset_mm": [v.off[0], v.off[1]], "extent_mm": [v.width, v.height],
                           "visible_edges": len(v.visible), "hidden_edges": len(v.hidden),
                           "duplicates_removed": v.dups, "hidden_coincident_removed": v.coincident})
+    chunks = table_chunks(hole_table, notes)
     return {"part": args.get("part"), "projection": a["projection"], "views": out_views,
-            "dimensions": dims.records, "hole_table": hole_table, "audit_errors": len(auditor.errors),
-            "section": section, "text_height_mm": h, "gap_mm": gap, "files": files, "notes": notes,
-            "warnings": warnings}
+            "dimensions": dims.records, "hole_table_chunks": chunks, "audit_errors": len(auditor.errors),
+            "section": section, "text_height_mm": h, "gap_mm": gap, "files": files,
+            "notes": list(dict.fromkeys(notes)), "warnings": list(dict.fromkeys(warnings))}
