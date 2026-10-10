@@ -180,15 +180,17 @@ def ledger_record(kind: str, payload: dict, env: Mapping[str, str] | None = None
     if done.returncode != 0:
         return {"written": False, "kind": kind,
                 "reason": f"aces ledger record exited {done.returncode}: {_first_line(done.stderr)}"}
-    first = _first_line(done.stdout)
+    # parse the whole first line: _first_line cuts at 300 characters, and the --print json line is about 245 plus the
+    # ledger path, so a long path (any Windows path, a long ACES_STATE) would lose n, hash and path
+    text = (done.stdout or b"").decode("utf-8", "replace").strip()
     try:
-        data = json.loads(first)
+        data = json.loads(text.splitlines()[0]) if text else None
     except ValueError:
         data = None
     if isinstance(data, dict):
         return {"written": True, "kind": kind, "via": "aces ledger record", "n": data.get("n"),
                 "hash": data.get("hash"), "path": data.get("path")}
-    return {"written": True, "kind": kind, "via": "aces ledger record", "output": first}
+    return {"written": True, "kind": kind, "via": "aces ledger record", "output": _first_line(done.stdout)}
 
 
 def add_cad_source(name: str, ref: str, env: Mapping[str, str] | None = None) -> dict:

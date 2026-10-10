@@ -133,6 +133,19 @@ class ProjectTest(CadTestCase):
         self.assertFalse(added["recorded"])
         self.assertIn("add-cad-source", added["reason"])
 
+    def test_u03_a_long_ledger_line_is_parsed_whole(self):
+        # integration regression: the --print json line was cut at 300 characters before json.loads, so a long
+        # ledger path (every Windows path) lost n, hash and path from the pull result's ledger block
+        self.make_project("p", "sovereign")
+        self.use_fake_aces("new")
+        long_path = "/" + "/".join(["a-long-ledger-directory"] * 16) + "/ledger.jsonl"
+        os.environ["FAKE_ACES_LEDGER_PATH"] = long_path
+        cap = self.project.ledger_capability()
+        done = self.project.ledger_record("cad.pull", {"source": "build123d"}, capability=cap)
+        self.assertTrue(done["written"], done)
+        self.assertEqual((done.get("n"), done.get("path")), (1, long_path), done)
+        self.assertRegex(done.get("hash") or "", r"^[0-9a-f]{64}$")
+
     def test_u03_run_aces_without_cli_is_none(self):
         self.assertIsNone(self.project.run_aces(["--version"]))
 

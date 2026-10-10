@@ -79,7 +79,7 @@ def main(argv: list[str]) -> int:
             print(json.dumps({"recorded": True, "n": 1, "kind": argv[2],
                               "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
                               "hash": hashlib.sha256(stdin.encode("utf-8")).hexdigest(), "prev": "0" * 64,
-                              "path": "fake-ledger.jsonl (fixture)"}))
+                              "path": os.environ.get("FAKE_ACES_LEDGER_PATH") or "fake-ledger.jsonl (fixture)"}))
             return 0
     if argv[:2] == ["project", "add-cad-source"]:
         if mode != "new":

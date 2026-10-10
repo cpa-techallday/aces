@@ -67,7 +67,7 @@ LINUX_X86_64 = sys.platform.startswith("linux") and platform.machine() in ("x86_
 PROXY_VARS = {"HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY", "FTP_PROXY"}
 DROP_VARS = {"FORCE_COLOR", "PYTHON_COLORS", "PYTHONPATH", "PYTHONHOME", "PYTHONSTARTUP", "XDG_CACHE_HOME",
              "XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "FAKE_ACES_MODE", "FAKE_ACES_LOG",
-             "FAKE_WORKER_MODE"}
+             "FAKE_WORKER_MODE", "FAKE_ACES_LEDGER_PATH"}
 
 TOOL_NAMES = ["cad_start", "cad_run", "cad_runs", "cad_inspect", "cad_render", "cad_drawing", "cad_pull", "cad_note"]
 RUN_ID_RE = r"^[0-9]{8}T[0-9]{6}Z-[0-9a-f]{4}$"
