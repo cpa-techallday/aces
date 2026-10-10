@@ -34,7 +34,13 @@ listed: cupy-cuda12x, warp-lang, torch (optional GPU); rq, redis, uvicorn, mcp, 
 mlflow (rig-side or optional). The Python interpreter is Arch's `python` package (PSF-2.0), a dependency. CalculiX
 `ccx`, which the conforming check runs as a separate process, is not in the venv: it is its own package,
 `calculix-ccx-bin` (GPL-2.0-or-later; it statically contains SPOOLES, public domain, and ARPACK with LAPACK/BLAS
-routines, BSD-3-Clause), an optional dependency here.
+routines, BSD-3-Clause), an optional dependency here. That package also carries the GCC 7 Fortran runtime the official
+binary is linked against, `libgfortran.so.4.0.0` (GPL-3.0-or-later WITH GCC-exception-3.1), which no Arch package
+provides: it is taken from Ubuntu 20.04's `libgfortran4` 7.5.0-6ubuntu2 (`libgfortran4_7.5.0-6ubuntu2_amd64.deb`,
+492,528 bytes, sha256 `9191a744ea8e1cb877c26bfb1cb6efa06305be49c7053eecfee5f1037a8005d5`, from archive.ubuntu.com on
+2026-10-10; the library inside hashes to `3f198ada9cdcda0c6b2fba24d6654c839ea91d0e8246c8ddba5b1b2851dff4b2`, the file
+the rig's aces-golden image installs too) and installed privately under `/usr/lib/calculix-ccx-bin`. The deb's
+copyright text lives in Ubuntu's `gcc-7-base` package and is not shipped with it.
 
 ## LicenseRef-Gmsh-GPL-2.0-or-later-with-exceptions
 
