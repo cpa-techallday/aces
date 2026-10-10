@@ -29,6 +29,9 @@ MAX_POSITION_DIMS = 12
 TABLE_CHUNK = 250       # hole-table rows per list in the result: spec 5.4 caps every list there at 500 items
 MAX_TABLE_ROWS = 10_000  # rows returned for drawing.json (the result file is capped at 4 MiB); the DXF has them all
 MAX_TABLE_COLUMNS = 6
+HOLE_LIMIT = 100        # spec 12.4: hole detection reports at most 100 holes, so 100 found may mean more exist
+HOLE_LIMIT_NOTE = (f"NOTE: HOLE DETECTION STOPS AT {HOLE_LIMIT} HOLES PER PART: HOLE COUNTS AND POSITIONS MAY BE "
+                   "INCOMPLETE")
 CHAR_W = 0.85          # monospace advance per character, as a multiple of the text height (DejaVu Sans Mono)
 HIDDEN_PATTERN = [4.5, 3.0, -1.5]
 METHOD = ("OCCT hidden-line removal (build123d project_to_viewport), ezdxf DIMENSION entities on values measured "
@@ -712,6 +715,7 @@ def op_drawing(args: dict, ctx) -> dict:
     dims = Dims(msp, h, notes)
     hole_table = None
     holes = []
+    capped = []
     if a["dimensions"]:
         extent_dims(dims, views, b, c, occupied, sketch)
         if not sketch:
@@ -721,6 +725,8 @@ def op_drawing(args: dict, ctx) -> dict:
                 except Exception as e:  # noqa: BLE001 (hole detection is best effort for a drawing)
                     warnings.append(f"hole detection failed on {p.name}: {type(e).__name__}: {str(e)[:200]}")
                     found = []
+                if len(found) >= HOLE_LIMIT:
+                    capped.append(p.name)
                 for hole in found:
                     if not _hole_ok(hole):
                         warnings.append("a hole record without the expected fields was skipped")
@@ -739,6 +745,11 @@ def op_drawing(args: dict, ctx) -> dict:
         place_hole_table(msp, hole_table, gap, h)
     x0, x1, y0, y1 = _extents(msp)
     lines = _title_lines(a["title_block"], a["projection"], build123d.__version__)
+    if capped:
+        warnings.append(f"hole detection reports at most {HOLE_LIMIT} holes per part (spec 12.4) and found that many "
+                        f"in {', '.join(capped)}: the part may have more holes than this drawing shows, so check the "
+                        f"hole counts, callouts and positions against the model")
+        lines.append(HOLE_LIMIT_NOTE)
     top = y0 - 2.0 * h
     for i, line in enumerate(lines):
         _add_text(msp, line, (x1, top - i * 1.6 * h), h, TextEntityAlignment.TOP_RIGHT)
