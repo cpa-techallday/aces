@@ -187,3 +187,25 @@ Ordered by value-per-byte for the current tier-0 → tier-1 path:
 
 Everything above the line is open and downloadable on the rig's schedule without
 license risk at research stage.
+
+## §10. Pull status (2026-10-10)
+
+Shortlist executed against the rig's `/mnt/nvme2/data-library/` — **301 files,
+~494 GB queued** in a resumable background pull (`research/data-pull/` has the
+driver + manifests; see `research/data-pull/README.md` for live status):
+
+1. AirfRANS — **queued** (preprocessed 10 GB + raw OpenFOAM 71 GB)
+2. The Well shear_flow + rayleigh_benard — **queued** (full valid+test splits;
+   L-shaped train subsets ~230 + ~168 GB; full trains were 376 + 294 GB — over
+   the disk budget, on-demand per-combo later)
+3. MCB — **queued** (A + B via working direct Box links, ~5 GB)
+4. KAB lattice tests — **queued** (Drive folder was 401; got the *entire* 5-dataset
+   KABlab collection from open.bu.edu instead, incl. quasi-static + impact raw test
+   data, ~4.6 GB, plus both code repos)
+5. NIST AM Bench IN718 — **queued** (challenge description + residual stress +
+   thermography derived data; raw camera files up to 119 GB each excluded on
+   disk budget, documented for on-demand fetch)
+6. JHTDB — **blocked**: needs a free personal CILogon token from
+   turbulence.pha.jhu.edu before scripted queries can run
+7. ABC subset — **queued** (8 parquet shards of the processed ABC HF mirror, ~6 GB;
+   full chunks are 50–100 GB each — for when tier-1 training actually starts)
