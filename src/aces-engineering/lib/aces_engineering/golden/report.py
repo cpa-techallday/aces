@@ -2,15 +2,16 @@
 
 `assemble(run)` reads every record on disk and returns the report as data, section by section (0 title and verdict,
 1 key numbers, 2 inputs and provenance, 3 voxelisation, 4 compute used, 5 sweep, 6 surrogate, 7 optimisation,
-8 verification, 9 independent check and device parity, 10 winner or candidate, 11 evidence, 12 environment, 13 limits
-and reproduction). It tolerates gaps: a section whose records do not exist says `not run: <reason>`, with the reason
-taken from run.json's stage notes or the validation record. Nothing is invented: every number is copied from a record,
-and every number in the verdict line and the validation, check, compute and evidence tables carries a provenance entry
-(a JSON pointer into report.json, the source file and the key) that `aces golden verify` resolves again.
+8 verification, 9 independent check and device parity, 10 conforming second discretisation, 11 rig, 12 winner or
+candidate, 13 evidence, 14 environment, 15 limits and reproduction). It tolerates gaps: a section whose records do not
+exist says `not run: <reason>`, with the reason taken from run.json's stage notes or the validation record. Nothing is
+invented: every number is copied from a record, and every number in the verdict line and the validation, check,
+conforming, rig, compute and evidence tables carries a provenance entry (a JSON pointer into report.json, the source
+file and the key) that `aces golden verify` resolves again.
 
 `verdict_line(data)` is the one-line answer (pinned formats, 4 significant digits); `charts(run)` draws the sweep
-scatter, the optimisation map and the check-levels plot; `write(run, data)` writes report.md, report.html (through
-the vendored simlab.report.to_html) and report.json.
+scatter, the optimisation map, the check-levels plot and, when the conforming check ran, the conforming plot;
+`write(run, data)` writes report.md, report.html (through the vendored simlab.report.to_html) and report.json.
 """
 from __future__ import annotations
 
@@ -189,6 +190,145 @@ def _wall(run_doc: dict):
     return stage_wall_sum(run_doc.get("stages"), names), "sum:stages.wall_s:" + ",".join(names)
 
 
+# ----------------------------------------------------------------------------- rig and conforming sections
+
+def _image12(image_id) -> str | None:
+    """The first 12 hex digits of an image id ("sha256:<hex>" or "<hex>")."""
+    if not image_id:
+        return None
+    s = str(image_id).split()[0]
+    return s.split(":", 1)[1][:12] if ":" in s else s[:12]
+
+
+def _conforming_section(R: _Reader, P: _Prov, val, run_doc: dict) -> dict:
+    """Section 10 from validation.json `conforming` and the case's conforming.json: mesh, boundary-condition mapping,
+    solver, equilibrium, the comparison rows with their bands, the verdict."""
+    if not isinstance(val, dict):
+        return {"status": _stage_why(run_doc, "check", "no validation.json")}
+    cv = val.get("conforming")
+    if not isinstance(cv, dict):
+        return {"status": "not run: this run's validation record has no conforming check (golden code before 0.2.0)"}
+    sec = {k: cv.get(k) for k in ("ran", "passed", "case_id", "host", "mode", "reason", "h_mm", "source_case",
+                                  "reference", "bands", "rows", "constraints_met", "record", "rig", "rig_attempt")}
+    sec["ran"] = bool(cv.get("ran"))
+    sec["check_status"] = cv.get("status")
+    if _num(cv.get("h_mm")):
+        P.add("/sections/conforming/h_mm", "validation.json", "conforming.h_mm")
+    P.walk(cv.get("reference") or {}, "/sections/conforming/reference", "validation.json", "conforming.reference")
+    P.walk(cv.get("bands") or {}, "/sections/conforming/bands", "validation.json", "conforming.bands")
+    P.walk(cv.get("rows") or [], "/sections/conforming/rows", "validation.json", "conforming.rows")
+    rel = cv.get("record")
+    cj = R.json(rel) if rel else None
+    if isinstance(cj, dict):
+        mesh = {k: (cj.get("mesh") or {}).get(k) for k in ("tool", "version", "route", "algorithm_3d", "size_mm",
+                                                            "element", "nodes", "elements", "dof", "volume_mm3",
+                                                            "volume_rel_err", "min_sicn", "p01_sicn")}
+        P.walk(mesh, "/sections/conforming/mesh", rel, "mesh")
+        bcs = {"window_mm": (cj.get("bcs") or {}).get("window_mm"), "supports": [], "loads": []}
+        if _num(bcs["window_mm"]):
+            P.add("/sections/conforming/bcs/window_mm", rel, "bcs.window_mm")
+        for kind in ("supports", "loads"):
+            for i, b in enumerate((cj.get("bcs") or {}).get(kind) or []):
+                e = {k: b.get(k) for k in ("name", "mode", "axis", "plane_mm", "faces", "nodes", "area_mm2",
+                                           "projected_mm2", "footprint_mm2", "coverage", "plane_offset_mm")}
+                bcs[kind].append(e)
+                P.walk(e, f"/sections/conforming/bcs/{kind}/{i}", rel, f"bcs.{kind}.{i}")
+        solver = {k: (cj.get("solver") or {}).get(k) for k in ("tool", "version", "linear_solver", "threads", "rc",
+                                                              "wall_s", "sha256")}
+        P.walk({k: v for k, v in solver.items() if k != "sha256"}, "/sections/conforming/solver", rel, "solver")
+        eq = {k: (cj.get("equilibrium") or {}).get(k) for k in ("applied_N", "reaction_N", "rel_residual")}
+        P.walk(eq, "/sections/conforming/equilibrium", rel, "equilibrium")
+        metrics = dict(cj.get("metrics") or {})
+        P.walk(metrics, "/sections/conforming/metrics", rel, "metrics")
+        wall = {k: cj.get(k) for k in ("wall_s_mesh", "wall_s_solve", "wall_s_post", "wall_s")}
+        P.walk(wall, "/sections/conforming/wall", rel, "")
+        stress = {k: (cj.get("stress") or {}).get(k) for k in ("elements_total", "elements_included",
+                                                              "volume_included_mm3")}
+        P.walk(stress, "/sections/conforming/stress", rel, "stress")
+        sec.update(mesh=mesh, bcs=bcs, solver=solver, equilibrium=eq, metrics=metrics, wall=wall, stress=stress,
+                   message=cj.get("message"))
+    else:
+        sec["solver"] = cv.get("solver")
+    sec["chart"] = "figures/conforming.png" if R.exists("figures/conforming.png") else None
+    return sec
+
+
+def _rig_section(R: _Reader, P: _Prov, val, comp) -> dict:
+    """Section 11 from validation.json `rig`, rig/session.json and each rig case's rig.json: the lane, the server and
+    the probe notes, one row per experiment and per case, cancellations and the integrity error."""
+    rv = (val or {}).get("rig") if isinstance(val, dict) else None
+    session = R.json("rig/session.json")
+    if not isinstance(rv, dict) and not isinstance(session, dict):
+        return {"status": "not run: no rig lane was used (desktop only)"}
+    rv = rv if isinstance(rv, dict) else {}
+    ses = session if isinstance(session, dict) else {}
+    server = rv.get("server") or ses.get("server") or {}
+    probe = ((comp or {}).get("rig") or {}).get("probe") or {}
+    sec = {"lane": rv.get("lane") or ses.get("lane"), "url": rv.get("url") or ses.get("url"),
+           "principal": rv.get("principal") or ses.get("principal"), "policy": rv.get("policy") or ses.get("policy"),
+           "server_version": server.get("version") if isinstance(server, dict) else None,
+           "token_source": rv.get("token_source") or ses.get("token_source"),
+           "scope": rv.get("scope") or ses.get("scope"), "notes": list(probe.get("notes") or []),
+           "budget_s": ses.get("budget_s"), "experiments": [], "cases": [],
+           "cancelled": list(ses.get("cancelled") or []),
+           "integrity_error": rv.get("integrity_error") if rv else ses.get("integrity_error"),
+           "code_identity_ok": (rv.get("code_identity") or {}).get("ok") if rv else None,
+           "session": "rig/session.json" if session is not None else None}
+    if _num(ses.get("budget_s")):
+        P.add("/sections/rig/budget_s", "rig/session.json", "budget_s")
+    counts = {e.get("id"): (k, e) for k, e in enumerate(rv.get("experiments") or []) if isinstance(e, dict)}
+    for j, e in enumerate(ses.get("experiments") or []):
+        if not isinstance(e, dict):
+            continue
+        i = len(sec["experiments"])
+        cases = e.get("cases") or {}
+        rows = {}
+        for rc in sorted(cases):
+            gid = cases[rc]
+            rows[rc] = (gid, R.json(f"{gid}/rig.json") or {})
+        ent = {"id": e.get("id"), "stage": e.get("stage"), "solver": e.get("solver"), "image_id12": None, "cases": None,
+               "finished": None, "failed": None, "gpus": [], "wall_s": e.get("wall_s"), "max_wait_s": None}
+        for gid, rj in rows.values():
+            if rj.get("image_id") and not ent["image_id12"]:
+                ent["image_id12"] = _image12(rj.get("image_id"))
+                ent["image"] = rj.get("image")
+        if _num(e.get("wall_s")):
+            P.add(f"/sections/rig/experiments/{i}/wall_s", "rig/session.json", f"experiments.{j}.wall_s")
+        if e.get("id") in counts:
+            k, c = counts[e.get("id")]
+            for src_key, key in (("n_cases", "cases"), ("n_finished", "finished"), ("n_failed", "failed")):
+                ent[key] = c.get(src_key)
+                if _num(c.get(src_key)):
+                    P.add(f"/sections/rig/experiments/{i}/{key}", "validation.json", f"rig.experiments.{k}.{src_key}")
+        seen_gpu = set()
+        for gid, rj in rows.values():
+            g = rj.get("gpu")
+            if _num(g) and g not in seen_gpu:
+                seen_gpu.add(g)
+                ent["gpus"].append(g)
+        ent["gpus"].sort()
+        for n, g in enumerate(ent["gpus"]):
+            gid = next(gd for gd, rj in rows.values() if rj.get("gpu") == g)
+            P.add(f"/sections/rig/experiments/{i}/gpus/{n}", f"{gid}/rig.json", "gpu")
+        waits = [(gid, rj.get("wait_s")) for gid, rj in rows.values() if _num(rj.get("wait_s"))]
+        if waits:
+            gid, w = max(waits, key=lambda t: t[1])
+            ent["max_wait_s"] = w
+            P.add(f"/sections/rig/experiments/{i}/max_wait_s", f"{gid}/rig.json", "wait_s")
+        sec["experiments"].append(ent)
+        for rc, (gid, rj) in rows.items():
+            n = len(sec["cases"])
+            row = {"case_id": gid, "rig_case": rc, "experiment": e.get("id"),
+                   "job_id": rj.get("job_id") or (e.get("jobs") or {}).get(rc), "gpu": rj.get("gpu"),
+                   "gpu_name": rj.get("gpu_name"), "wait_s": rj.get("wait_s"), "run_s": rj.get("run_s"),
+                   "state": rj.get("state"), "design_status": rj.get("design_status"), "reason": rj.get("reason")}
+            for key in ("gpu", "wait_s", "run_s"):
+                if _num(row[key]):
+                    P.add(f"/sections/rig/cases/{n}/{key}", f"{gid}/rig.json", key)
+            sec["cases"].append(row)
+    return sec
+
+
 # ----------------------------------------------------------------------------- assemble
 
 def assemble(run) -> dict:
@@ -284,7 +424,26 @@ def assemble(run) -> dict:
                   f"independent_check.levels.{li}.rows.{j}.rel_gap")
         chk["constraints_met"] = all(r.get("meets_fine") is True for r in lv1.get("rows") or []
                                      if r.get("role") == "constraint") if lv1.get("rows") else None
+        chk["host"] = lv1.get("host")
+        rig1 = lv1.get("rig") if isinstance(lv1.get("rig"), dict) else {}
+        if lv1.get("host") == "rig" and _num(rig1.get("gpu")):
+            chk["gpu"] = rig1["gpu"]
+            P.add("/sections/summary/check/gpu", "validation.json", f"independent_check.levels.{li}.rig.gpu")
         summ["check"] = chk
+    cv = (val or {}).get("conforming")
+    if isinstance(cv, dict):
+        cs = {"ran": bool(cv.get("ran")), "passed": cv.get("passed"), "status": cv.get("status"),
+              "case_id": cv.get("case_id"), "host": cv.get("host"), "h_mm": cv.get("h_mm"), "reason": cv.get("reason"),
+              "solver_version": (cv.get("solver") or {}).get("version"), "constraints_met": cv.get("constraints_met")}
+        if _num(cv.get("h_mm")):
+            P.add("/sections/summary/conforming/h_mm", "validation.json", "conforming.h_mm")
+        gating = [(j, r) for j, r in enumerate(cv.get("rows") or [])
+                  if r.get("role") in ("objective", "constraint", "gating") and _num(r.get("rel_gap"))]
+        if gating:
+            j, r = max(gating, key=lambda t: abs(t[1]["rel_gap"]))
+            cs["max_gap"] = {"value": r["rel_gap"], "output": r["output"]}
+            P.add("/sections/summary/conforming/max_gap/value", "validation.json", f"conforming.rows.{j}.rel_gap")
+        summ["conforming"] = cs
     thin = (val or {}).get("thin")
     if thin:
         summ["thin"] = dict(thin)
@@ -466,7 +625,11 @@ def assemble(run) -> dict:
         S["verification"] = {"rounds": [], "status": loop_why}
         S["check"] = {"status": _stage_why(run_doc, "check", "no validation.json")}
 
-    # 10 winner or candidate
+    # 10 conforming second discretisation, 11 rig
+    S["conforming"] = _conforming_section(R, P, val, run_doc)
+    S["rig"] = _rig_section(R, P, val, comp)
+
+    # 12 winner or candidate
     if winner:
         ren = {k2: v for k2, v in (winner.get("renders") or {}).items() if R.exists(v)}
         case_dir = winner.get("case_id")
@@ -482,7 +645,7 @@ def assemble(run) -> dict:
     else:
         S["winner"] = {"status": _stage_why(run_doc, "export", "no verified or candidate design was exported")}
 
-    # 11 evidence
+    # 13 evidence
     if isinstance(ledgers, dict):
         anchor_p = "evidence/files.sha256"
         n_files = None
@@ -501,7 +664,7 @@ def assemble(run) -> dict:
         S["evidence"] = {"status": _stage_why(run_doc, "evidence", "the evidence stage has not run yet"),
                          "commands": [f"aces golden verify {run.run_id}", "aces-evidence verify", "aces ledger verify"]}
 
-    # 12 environment
+    # 14 environment
     env: dict = {}
     if comp:
         cpu = comp.get("cpu") or {}
@@ -523,7 +686,7 @@ def assemble(run) -> dict:
                              if srounds else "no surrogate was fitted, so no GP warnings"]
     S["environment"] = env
 
-    # 13 limits and reproduction
+    # 15 limits and reproduction
     simp = {}
     for c in R.cases():
         if c.get("role") in ("sweep", "verify"):
@@ -533,9 +696,22 @@ def assemble(run) -> dict:
                                                              "final_change")}
                 P.walk(simp[c["case_id"]], f"/sections/limits/simp/{_esc(c['case_id'])}",
                        f"{c['case_id']}/status.json", "diagnostics.generator")
+    conf_sec, rig_sec = S["conforming"], S["rig"]
+    not_verified = []
+    if not conf_sec.get("ran"):
+        why = conf_sec.get("reason") or conf_sec.get("status") or "not in this run's records"
+        why = str(why)[len("not run: "):] if str(why).startswith("not run: ") else str(why)
+        not_verified.append(f"no conforming-mesh second discretisation ({why})")
+    if rig_sec.get("status"):
+        not_verified.append("no rig run (desktop only)")
+    not_verified += ["no fatigue or buckling check", "nominal material properties (see the material source)"]
     S["limits"] = {
         "grade_meaning": "every desktop solve is preview-grade; verified-desktop means the finer-resolution "
-                         "independent check agreed within tol and the constraints held there; neither is sign-off",
+                         "independent check agreed within tol and the constraints held there; rig-verified adds that "
+                         "the level-1 check was solved on the rig with a validated image, that the conforming tet10 "
+                         "second discretisation ran on the rig and agreed within its bands with every constraint met, "
+                         "and that the rig ran this desktop's golden code; a conforming check that violates a "
+                         "constraint caps the grade at preview-grade",
         "method": "linear static voxel FEA (H8 elements, fictitious domain with a soft void, Jacobi-PCG, FP64)",
         "generator": "SIMP topology optimisation without projection: grey zones remain in the density field, so the "
                      "organic skin is the iso-surface of a partly grey field (M_nd below, per design)",
@@ -544,8 +720,7 @@ def assemble(run) -> dict:
         "stress": "the constrained stress is vm_p99 outside the boundary-condition zones; vm_max is recorded but is "
                   "resolution-sensitive and is never constrained",
         "check": (ic.get("reason") if ic else None),
-        "not_verified": ["no conforming-mesh second discretisation", "no rig run", "no fatigue or buckling check",
-                         "nominal material properties (see the material source)"],
+        "not_verified": not_verified,
         "argv": ((run_doc.get("tool") or {}).get("argv")), "seed": d.get("seed"),
         "determinism": "BLAS runs one thread per solve and sweep.csv carries no wall times, so the same seed on the "
                        "same machine reproduces sweep.csv byte for byte for any --jobs",
@@ -592,6 +767,9 @@ def verdict_line(data: dict, *, evidence: bool = True) -> str:
         chk = s.get("check")
         if chk:
             h = g4(chk.get("h_mm"))
+            where = ""
+            if chk.get("host") == "rig":
+                where = f" on the rig (GPU {g4(chk['gpu'])})" if chk.get("gpu") is not None else " on the rig"
             if not chk.get("ran"):
                 why = str(chk.get("reason") or "not run")
                 why = why[len("not run: "):] if why.startswith("not run: ") else why
@@ -600,10 +778,14 @@ def verdict_line(data: dict, *, evidence: bool = True) -> str:
                 gap = chk.get("max_gap")
                 gap_txt = (f"max gap {_pct(gap['value'], signed=True)} on {gap['output']}" if gap else "no gaps")
                 if chk.get("passed"):
-                    parts.append(f"check {h} mm: {gap_txt}, constraints met")
+                    parts.append(f"check {h} mm{where}: {gap_txt}, constraints met")
                 else:
                     met = "constraints met" if chk.get("constraints_met") else "constraints not met"
-                    parts.append(f"check {h} mm: {gap_txt}, {met if chk.get('constraints_met') is not None else 'failed'}")
+                    parts.append(f"check {h} mm{where}: {gap_txt}, "
+                                 f"{met if chk.get('constraints_met') is not None else 'failed'}")
+        conf = s.get("conforming")
+        if conf:
+            parts.append(conforming_fragment(conf))
         return " · ".join(parts + tail)
     if verdict == "FAIL":
         first = (s.get("reasons") or ["verification failed"])[0]
@@ -619,6 +801,23 @@ def verdict_line(data: dict, *, evidence: bool = True) -> str:
     outcome = s.get("outcome") or data.get("outcome") or "error"
     msg = s.get("message") or "the run did not reach a verdict"
     return " · ".join([f"{str(outcome).upper()} · {name}: {msg}"] + [t for t in tail if not t.startswith("evidence")])
+
+
+def conforming_fragment(conf: dict) -> str:
+    """The verdict line's conforming fragment: `conforming tet10 2 mm (ccx 2.23, rig): max gap -4.8 % on vm_p99_MPa,
+    constraints met`, `... constraints not met`, `...: failed (<status>)`, or `conforming tet10: not run (<reason>)`."""
+    if not conf.get("ran"):
+        why = str(conf.get("reason") or conf.get("status") or "not run")
+        why = why[len("not run: "):] if why.startswith("not run: ") else why
+        return f"conforming tet10: not run ({why})"
+    who = f"ccx {conf['solver_version']}" if conf.get("solver_version") else "ccx"
+    head = f"conforming tet10 {g4(conf.get('h_mm'))} mm ({who}, {conf.get('host')})"
+    gap = conf.get("max_gap")
+    if not gap:
+        return f"{head}: failed ({conf.get('status')})"
+    text = f"{head}: max gap {_pct(gap['value'], signed=True)} on {gap['output']}"
+    met = conf.get("constraints_met")
+    return text + ("" if met is None else ", constraints met" if met else ", constraints not met")
 
 
 # ----------------------------------------------------------------------------- charts
@@ -786,6 +985,64 @@ def _check_levels(R: _Reader, run, eff: dict) -> Path | None:
     return save_chart(fig, Path(run.path("figures", "check_levels.png")))
 
 
+def _conforming_chart(R: _Reader, run, eff: dict) -> Path | None:
+    """figures/conforming.png: for each gating output (objective, constraints, compliance) the voxel values against h
+    (the verify solve and each check level), the tet10 value as a point at its element size, and the conforming band
+    shaded around the reference voxel value. Only when the conforming check ran and produced numbers."""
+    val = R.json("validation.json") or {}
+    cv = val.get("conforming") or {}
+    if not cv.get("ran"):
+        return None
+    rows = [r for r in cv.get("rows") or [] if r.get("role") in ("objective", "constraint", "gating")
+            and _num(r.get("conforming")) and _num(r.get("voxel"))]
+    if not rows:
+        return None
+    ic = val.get("independent_check") or {}
+    ran = [lv for lv in ic.get("levels") or [] if lv.get("ran") and lv.get("rows")]
+    h0 = (val.get("resolution_mm") or {}).get("solve")
+    limits = {c["output"]: c for c in val.get("constraints") or []}
+    fig, axes = chart_figure(1, len(rows), size=(4.4 * len(rows), 4.0))
+    for i, r in enumerate(rows):
+        ax, o = axes[i], r["output"]
+        pts, labels = [], []
+        first = next((x for x in (ran[0]["rows"] if ran else []) if x.get("output") == o), None)
+        if first is not None and _num(first.get("coarse")) and _num(h0):
+            pts.append((float(h0), float(first["coarse"])))
+            labels.append("verify")
+        for lv in ran:
+            x = next((x for x in lv["rows"] if x.get("output") == o), None)
+            if x is not None and _num(x.get("fine")) and _num(lv.get("h_mm")):
+                pts.append((float(lv["h_mm"]), float(x["fine"])))
+                labels.append(f"{lv.get('case_id')} ({lv.get('host') or 'desktop'})")
+        ref, band = float(r["voxel"]), float(r.get("band") or 0.0)
+        lo, hi = ref - band * abs(ref), ref + band * abs(ref)
+        ax.axhspan(lo, hi, color=CHART["series"][0], alpha=0.16, zorder=1, label=f"band +-{100 * band:g} %")
+        if pts:
+            ax.plot([q[0] for q in pts], [q[1] for q in pts], color=CHART["series"][0], linewidth=2.0, marker="o",
+                    markersize=8, markeredgecolor=CHART["bg"], markeredgewidth=1.5, zorder=3, label="voxel H8")
+            for (h, v), lab in zip(pts, labels):
+                ax.annotate(f"{lab}\n{g4(v)}", (h, v), xytext=(0, 9), textcoords="offset points", ha="center",
+                            va="bottom", color=CHART["text"], fontsize=8, family="monospace")
+        hc, vc = float(cv.get("h_mm") or 0.0), float(r["conforming"])
+        ax.scatter([hc], [vc], s=150, marker="D", c=CHART["series"][1], edgecolors=CHART["bg"], linewidths=1.0,
+                   zorder=4, label=f"tet10 C3D10 ({cv.get('case_id')}, {cv.get('host')})")
+        ax.annotate(f"tet10\n{g4(vc)}", (hc, vc), xytext=(8, -14), textcoords="offset points", ha="left", va="top",
+                    color=CHART["text"], fontsize=8, family="monospace")
+        vals = [q[1] for q in pts] + [vc, lo, hi]
+        if o in limits:
+            _limit_line(ax, float(limits[o]["limit"]), False, f"limit {limits[o]['op']} {g4(float(limits[o]['limit']))}")
+            vals.append(float(limits[o]["limit"]))
+        span = (max(vals) - min(vals)) or abs(ref) or 1.0
+        ax.set_ylim(min(vals) - 0.15 * span, max(vals) + 0.3 * span)
+        ax.invert_xaxis()
+        chart_axes(ax, "element size h (mm), finer to the right", o)
+        if i == 0:
+            chart_legend(ax, markerscale=0.7)
+    fig.suptitle(f"{eff.get('name')}: conforming tet10 against the voxel solves, gating outputs (band shaded)",
+                 color=CHART["text"], fontsize=10, x=0.01, ha="left")
+    return save_chart(fig, Path(run.path("figures", "conforming.png")))
+
+
 def _map(R: _Reader, run, eff: dict) -> Path | None:
     from . import optimise as opt_mod
     from . import surrogate as sur_mod
@@ -812,12 +1069,13 @@ def _map(R: _Reader, run, eff: dict) -> Path | None:
 
 
 def charts(run) -> dict:
-    """figures/sweep_scatter.png, figures/optimise_map.png and figures/check_levels.png, each when its records exist.
-    Returns {name: path} for the charts written."""
+    """figures/sweep_scatter.png, figures/optimise_map.png, figures/check_levels.png and figures/conforming.png, each
+    when its records exist. Returns {name: path} for the charts written."""
     R = _Reader(run)
     eff = R.json("inputs/spec.effective.json", {}) or {}
     out = {}
-    for key, fn in (("sweep_scatter", _sweep_scatter), ("optimise_map", _map), ("check_levels", _check_levels)):
+    for key, fn in (("sweep_scatter", _sweep_scatter), ("optimise_map", _map), ("check_levels", _check_levels),
+                    ("conforming", _conforming_chart)):
         p = fn(R, run, eff)
         if p is not None:
             out[key] = Path(p)
@@ -832,6 +1090,97 @@ def _img(path: str | None, alt: str) -> list[str]:
 
 def _status(sec: dict) -> list[str]:
     return [str(sec.get("status")), ""] if sec.get("status") else []
+
+
+def _conforming_markdown(cf: dict) -> list[str]:
+    L = ["## 10. Conforming second discretisation", ""]
+    if cf.get("status"):
+        return L + _status(cf)
+    where = f"on the {cf.get('host')}" if cf.get("host") in ("rig", "desktop") else f"on {cf.get('host') or '-'}"
+    if not cf.get("ran"):
+        why = str(cf.get("reason") or cf.get("check_status") or "not run")
+        L += [why if why.startswith("not run") else f"not run: {why}", "",
+              f"Mode `{cf.get('mode') or '-'}`; status `{cf.get('check_status') or '-'}`; "
+              f"case `{cf.get('case_id') or '-'}` {where}.",
+              ""]
+        if isinstance(cf.get("rig_attempt"), dict):
+            att = cf["rig_attempt"]
+            L += [f"The rig did not deliver {att.get('case_id')} ({att.get('design_status')}: {att.get('reason')}).", ""]
+        return L
+    m, sv, eq, wall = cf.get("mesh") or {}, cf.get("solver") or {}, cf.get("equilibrium") or {}, cf.get("wall") or {}
+    ref = cf.get("reference") or {}
+    L += [f"Case `{cf.get('case_id')}` {where} (mode `{cf.get('mode')}`), the part of `{cf.get('source_case')}`: "
+          f"{m.get('tool')} {m.get('version')} {m.get('element')} (straight-sided tet10) at {g4(cf.get('h_mm'))} mm, "
+          f"{m.get('route')} route (Algorithm3D {m.get('algorithm_3d')}): {m.get('elements')} elements, "
+          f"{m.get('nodes')} nodes, {m.get('dof')} DOF; minimum SICN {g4(m.get('min_sicn'))} (1st percentile "
+          f"{g4(m.get('p01_sicn'))}); mesh volume {g4(m.get('volume_mm3'))} mm3 ({_pct(m.get('volume_rel_err'), True)} "
+          "against the STL).", ""]
+    bcs = cf.get("bcs") or {}
+    rows = [["support", b.get("name"), b.get("mode"), b.get("faces"), b.get("nodes"), b.get("area_mm2"),
+             b.get("projected_mm2"), b.get("footprint_mm2"), b.get("coverage"), b.get("plane_offset_mm")]
+            for b in bcs.get("supports") or []]
+    rows += [["load", b.get("name"), b.get("mode"), b.get("faces"), b.get("nodes"), b.get("area_mm2"),
+              b.get("projected_mm2"), b.get("footprint_mm2"), b.get("coverage"), b.get("plane_offset_mm")]
+             for b in bcs.get("loads") or []]
+    if rows:
+        L += [f"Boundary conditions on the mesh surface (window {g4(bcs.get('window_mm'))} mm, faces facing within 45 "
+              "degrees of the plane normal):", "",
+              _table(["kind", "name", "mode", "faces", "nodes", "area (mm2)", "projected (mm2)", "footprint (mm2)",
+                      "coverage", "plane offset (mm)"], rows), ""]
+    L += [f"Solver: {sv.get('tool') or 'CalculiX ccx'} {sv.get('version') or '-'}"
+          + (f" ({sv.get('linear_solver')})" if sv.get("linear_solver") else "")
+          + f", {sv.get('threads')} threads; mesh {g4(wall.get('wall_s_mesh'))} s, solve {g4(wall.get('wall_s_solve'))} s, "
+          f"post {g4(wall.get('wall_s_post'))} s. Equilibrium: applied {_list4(eq.get('applied_N'))} N, reactions "
+          f"{_list4(eq.get('reaction_N'))} N, relative residual {g4(eq.get('rel_residual'))}.", ""]
+    L += [_table(["output", "role", f"voxel ({ref.get('case_id')}, {g4(ref.get('h_mm'))} mm)", "tet10", "gap", "band",
+                  "agree", "limit", "meets on tet10"],
+                 [[r.get("output"), r.get("role"), r.get("voxel"), r.get("conforming"), _pct(r.get("rel_gap"), True),
+                   _pct(r.get("band")), r.get("agree"), f"{r.get('op')} {g4(r.get('limit'))}" if r.get("op") else "-",
+                   r.get("meets_conforming")] for r in cf.get("rows") or []]), ""]
+    L += _img(cf.get("chart"), "conforming against voxel")
+    if cf.get("passed"):
+        verdict = "agrees within its bands and meets every constraint"
+    elif cf.get("check_status") != "ok":
+        verdict = f"failed: {cf.get('check_status')}" + (f" ({cf.get('message')})" if cf.get("message") else "")
+    else:
+        verdict = ("does not agree within its bands" if cf.get("constraints_met") is not False
+                   else "violates a constraint on the conforming mesh (the grade is capped at preview-grade)")
+    L += [f"Verdict: **{verdict}**." + (f" {cf.get('reason')}" if cf.get("reason") and not cf.get("passed") else ""), ""]
+    if isinstance(cf.get("rig"), dict):
+        rg = cf["rig"]
+        L += [f"On the rig: experiment `{rg.get('experiment')}`, rig case `{rg.get('rig_case')}`, job `{rg.get('job_id')}`, "
+              f"image `{rg.get('image')}` id {_image12(rg.get('image_id')) or '-'}, ccx-check validation "
+              f"{rg.get('solver_validation')}.", ""]
+    return L
+
+
+def _rig_markdown(rg: dict) -> list[str]:
+    L = ["## 11. Rig", ""]
+    if rg.get("status"):
+        return L + _status(rg)
+    scope = rg.get("scope") or {}
+    sc = ", ".join(f"{k} {'yes' if v else 'no'}" for k, v in scope.items()) if isinstance(scope, dict) else str(scope)
+    L += [f"Lane `{rg.get('lane')}` at `{rg.get('url')}` (simlab {rg.get('server_version') or '-'}, principal "
+          f"`{rg.get('principal')}`, policy {rg.get('policy')}, token from {rg.get('token_source')}); scope: {sc or '-'}; "
+          f"budget {g4(rg.get('budget_s'))} s per experiment; code identity "
+          f"{'ok' if rg.get('code_identity_ok') else 'not ok' if rg.get('code_identity_ok') is False else '-'}.", ""]
+    if rg.get("notes"):
+        L += ["Probe notes: " + "; ".join(str(n) for n in rg["notes"]), ""]
+    if rg.get("experiments"):
+        L += [_table(["experiment", "stage", "solver", "image id", "cases", "finished", "GPUs", "wall s",
+                      "max queue wait s"],
+                     [[e.get("id"), e.get("stage"), e.get("solver"), e.get("image_id12") or "-", e.get("cases"),
+                       e.get("finished"), ", ".join(g4(g) for g in e.get("gpus") or []) or "-", e.get("wall_s"),
+                       e.get("max_wait_s")] for e in rg["experiments"]]), ""]
+    if rg.get("cases"):
+        L += [_table(["case", "rig case", "job id", "GPU", "wait s", "run s", "state"],
+                     [[c.get("case_id"), c.get("rig_case"), c.get("job_id"), c.get("gpu"), c.get("wait_s"),
+                       c.get("run_s"), c.get("state") if c.get("state") != "not-run" else
+                       f"not delivered: {c.get('design_status')}"] for c in rg["cases"]]), ""]
+    cancelled = rg.get("cancelled") or []
+    L += [f"Cancelled: {', '.join(str(c) for c in cancelled) if cancelled else 'none'}. Integrity error: "
+          f"{rg.get('integrity_error') or 'none'}.", ""]
+    return L
 
 
 def render_markdown(data: dict) -> str:
@@ -1042,10 +1391,16 @@ def render_markdown(data: dict) -> str:
         L += _status(ck)
     else:
         ic = ck.get("independent_check") or {}
-        L += [_table(["level", "case", "h (mm)", "device", "gating", "estimate s", "budget s", "ran", "passed", "reason"],
-                     [[lv.get("level"), lv.get("case_id"), lv.get("h_mm"), lv.get("device"), lv.get("gating"),
-                       lv.get("est_s"), lv.get("budget_s"), lv.get("ran"), lv.get("passed"), lv.get("reason")]
-                      for lv in ic.get("levels") or []]), ""]
+        L += [_table(["level", "case", "h (mm)", "device", "host", "gating", "estimate s", "budget s", "ran", "passed",
+                      "reason"],
+                     [[lv.get("level"), lv.get("case_id"), lv.get("h_mm"), lv.get("device"), lv.get("host") or "desktop",
+                       lv.get("gating"), lv.get("est_s"), lv.get("budget_s"), lv.get("ran"), lv.get("passed"),
+                       lv.get("reason")] for lv in ic.get("levels") or []]), ""]
+        for lv in ic.get("levels") or []:
+            att = lv.get("rig_attempt")
+            if isinstance(att, dict):
+                L += [f"Level {lv.get('level')} ran on this desktop as {lv.get('case_id')}: the rig did not deliver "
+                      f"{att.get('case_id')} ({att.get('design_status')}: {att.get('reason')}).", ""]
         for lv in ic.get("levels") or []:
             if lv.get("rows"):
                 L += [f"Level {lv['level']} ({g4(lv.get('h_mm'))} mm):", "",
@@ -1065,8 +1420,14 @@ def render_markdown(data: dict) -> str:
               f"Scope: {ck.get('scope')}", ""]
 
     # 10
+    L += _conforming_markdown(S.get("conforming") or {})
+
+    # 11
+    L += _rig_markdown(S.get("rig") or {})
+
+    # 12
     wn = S.get("winner") or {}
-    L += ["## 10. " + ("Winner" if wn.get("label") == "winner" else "Candidate" if wn.get("label") else "Winner"), ""]
+    L += ["## 12. " + ("Winner" if wn.get("label") == "winner" else "Candidate" if wn.get("label") else "Winner"), ""]
     if wn.get("status"):
         L += _status(wn)
     else:
@@ -1094,9 +1455,9 @@ def render_markdown(data: dict) -> str:
             L += [f"- {wn['cavity_note']}"]
         L += [""]
 
-    # 11
+    # 13
     ev = S.get("evidence") or {}
-    L += ["## 11. Evidence", ""]
+    L += ["## 13. Evidence", ""]
     if ev.get("status"):
         L += _status(ev)
     else:
@@ -1118,9 +1479,9 @@ def render_markdown(data: dict) -> str:
               + (f"; warnings: {'; '.join(pj.get('messages'))}" if pj.get("messages") else "")]
     L += ["- verify offline: " + ", ".join(f"`{c}`" for c in ev.get("commands") or []), ""]
 
-    # 12
+    # 14
     en = S.get("environment") or {}
-    L += ["## 12. Environment", ""]
+    L += ["## 14. Environment", ""]
     cpu = en.get("cpu") or {}
     gpu = en.get("gpu") or {}
     if en.get("host"):
@@ -1134,9 +1495,9 @@ def render_markdown(data: dict) -> str:
         L += ["- packages: " + ", ".join(f"{k} {v}" for k, v in en["packages"].items())]
     L += ["- known warnings: " + "; ".join(en.get("known_warnings") or []), ""]
 
-    # 13
+    # 15
     lm = S.get("limits") or {}
-    L += ["## 13. Limits and reproduction", ""]
+    L += ["## 15. Limits and reproduction", ""]
     L += [f"- {lm.get('grade_meaning')}", f"- {lm.get('method')}", f"- {lm.get('generator')}"]
     simp = lm.get("simp") or {}
     if simp:

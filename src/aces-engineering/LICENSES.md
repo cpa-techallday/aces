@@ -2,9 +2,11 @@
 
 Read 2026-10-09 from the metadata of every distribution installed in the venv (what `pip show` reports: the
 `License-Expression` field, else a one-line `License` field, else the trove classifiers), from the licence files
-inside the wheels, and from upstream projects where a wheel states nothing. Nothing here has been reviewed by a
-lawyer. The operator policy (trial mode) allows all of it on Carbon Project machines; the flags matter at the
-distribution gate (VISION.md section 12, decision 6).
+inside the wheels, and from upstream projects where a wheel states nothing. gmsh (added in 0.1.0-3) was read
+2026-10-10 from the locked wheel itself (`gmsh-4.15.2-py2.py3-none-manylinux_2_24_x86_64.whl`, sha256
+`4076a948...108c` as in `requirements.txt`): its METADATA, `LICENSE.txt` and `CREDITS.txt`, and the build options
+its `libgmsh.so.4.15` reports. Nothing here has been reviewed by a lawyer. The operator policy (trial mode) allows
+all of it on Carbon Project machines; the flags matter at the distribution gate (VISION.md section 12, decision 6).
 
 ## ACES code in this package
 
@@ -25,12 +27,32 @@ distribution gate (VISION.md section 12, decision 6).
 | `embreex` 4.4.0 | its LICENSE is the two-clause BSD text; `embreex.libs/` bundles Intel Embree 4 and oneTBB with no licence files (both Apache-2.0 upstream) | add their licence texts before any distribution |
 | `ocpsvg` 0.6.0 | no licence in its PyPI metadata; the upstream repository snoyer/ocpsvg carries an Apache-2.0 LICENSE | metadata gap only |
 | `pillow` 12.3.0 | MIT-CMU; bundles freetype, harfbuzz, lcms2, libjpeg, libpng, libtiff, libwebp, libavif, openjpeg, brotli, zstd, xz, libxcb, libXau (texts in its LICENSE) | permissive; FreeType is used under the FTL |
+| `gmsh` 4.15.2 | **GPL-2.0-or-later with the Gmsh exception** (below). The wheel is the Python API (`gmsh.py`, loading the library with ctypes) plus one native library, `libgmsh.so.4.15` (92,641,960 bytes), into which its build options compile OpenCASCADE and OpenCASCADE-CAF, Netgen, Mmg, MED, CGNS, METIS, PETSc (its BLAS and LAPACK), HXT, TetGen/BR, ALGLIB, ANN, Bamg, Blossom, Eigen, Gmm, Kbipack, MathEx, Voro++, TinyXML2, tinyobjloader, FLTK, OpenGL, libjpeg, libpng and zlib (`General.BuildOptions` of that library, read 2026-10-10). Only the Gmsh `LICENSE.txt` and `CREDITS.txt` ship in the wheel | strong copyleft: aces-engineering runs gmsh in-process in the mesher child (`python -m aces_engineering.golden.conforming mesh`), so a distributed venv carries GPL obligations (source of gmsh and of the bundled LGPL/GPL parts). The bundled components' licences are not stated in the wheel; upstream, several are copyleft (OpenCASCADE LGPL-2.1 with its exception, Netgen LGPL-2.1, Mmg and MED LGPL-3.0, FLTK LGPL-2.0 with its exceptions, ALGLIB's free edition GPL). Blossom comes from Concorde, whose own terms are for academic use. TODO: confirm each against the gmsh build recipe before any distribution |
 
 Everything else below is MIT, BSD, Apache-2.0, ISC, PSF-2.0 or the PSF-based matplotlib licence. Not installed, so not
 listed: cupy-cuda12x, warp-lang, torch (optional GPU); rq, redis, uvicorn, mcp, starlette, physicsnemo, rocketcea,
-gmsh, mlflow (rig-side or optional). The Python interpreter is Arch's `python` package (PSF-2.0), a dependency.
+mlflow (rig-side or optional). The Python interpreter is Arch's `python` package (PSF-2.0), a dependency. CalculiX
+`ccx`, which the conforming check runs as a separate process, is not in the venv: it is its own package,
+`calculix-ccx-bin` (GPL-2.0-or-later; it statically contains SPOOLES, public domain, and ARPACK with LAPACK/BLAS
+routines, BSD-3-Clause), an optional dependency here. That package also carries the GCC 7 Fortran runtime the official
+binary is linked against, `libgfortran.so.4.0.0` (GPL-3.0-or-later WITH GCC-exception-3.1), which no Arch package
+provides: it is taken from Ubuntu 20.04's `libgfortran4` 7.5.0-6ubuntu2 (`libgfortran4_7.5.0-6ubuntu2_amd64.deb`,
+492,528 bytes, sha256 `9191a744ea8e1cb877c26bfb1cb6efa06305be49c7053eecfee5f1037a8005d5`, from archive.ubuntu.com on
+2026-10-10; the library inside hashes to `3f198ada9cdcda0c6b2fba24d6654c839ea91d0e8246c8ddba5b1b2851dff4b2`, the file
+the rig's aces-golden image installs too) and installed privately under `/usr/lib/calculix-ccx-bin`. The deb's
+copyright text lives in Ubuntu's `gcc-7-base` package and is not shipped with it.
 
-## Distributions in the venv (77: the 76 locked in requirements.txt plus pip itself)
+## LicenseRef-Gmsh-GPL-2.0-or-later-with-exceptions
+
+The `license` array of the aces-engineering PKGBUILD names gmsh with this LicenseRef because SPDX has no identifier
+for its terms. The wheel's METADATA says `License: GPLv2+` (classifier "GNU General Public License v2 or later
+(GPLv2+)"), and its `share/doc/gmsh/LICENSE.txt` is the GNU GPL version 2 preceded by an exception from the Gmsh
+copyright holders: Gmsh may be combined with code from the standard releases of Netgen, METIS, OpenCASCADE and
+ParaView under those projects' own licences, provided their source code is included when the GPL requires source
+distribution. People who modify Gmsh may drop the exception. `CREDITS.txt` lists the contributed codes a build may
+contain, each under its own licence; which ones this build contains is in the flags table above.
+
+## Distributions in the venv (78: the 77 locked in requirements.txt plus pip itself)
 
 | Distribution | Version | Licence as stated | Field | Note |
 |---|---|---|---|---|
@@ -50,6 +72,7 @@ gmsh, mlflow (rig-side or optional). The Python interpreter is Arch's `python` p
 | executing | 2.2.1 | MIT | License |  |
 | ezdxf | 1.4.4 | MIT License | classifier |  |
 | fonttools | 4.66.1 | MIT | License |  |
+| gmsh | 4.15.2 | GPLv2+ | License | GPL-2.0-or-later with the Gmsh exception (`LicenseRef-Gmsh-GPL-2.0-or-later-with-exceptions`, above); bundles `libgmsh` with OpenCASCADE, Netgen, Mmg, MED, PETSc and more (see the flag) |
 | idna | 3.20 | BSD-3-Clause | License-Expression |  |
 | ImageIO | 2.38.1 | BSD-2-Clause | License-Expression |  |
 | ipython | 9.17.1 | BSD-3-Clause | License-Expression |  |

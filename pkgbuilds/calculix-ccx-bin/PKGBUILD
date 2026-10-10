@@ -1,0 +1,104 @@
+# Maintainer: Carbon Project Australia
+# CalculiX ccx, the author's own Linux x86_64 binary, for the conforming tet10 second discretisation of aces golden
+# (aces_engineering.golden.conforming: gmsh C3D10 mesh of a verified part, ccx linear static). The tarball holds one
+# file, ./CalculiX/ccx_2.23/src/ccx_2.23; its banner says it was made on 19 Oct 2025, and its .comment strings
+# name SUSE gcc 7.3.1 and 7.5.0. Arch has no calculix in its official repositories (the AUR builds calculix-ccx from
+# source with spooles and arpack); this recipe installs the author's binary unchanged, pinned by the tarball's sha256,
+# which must equal CCX_SHA256 in cudax-sim-runtime scripts/build_golden_image.sh (the rig image ships the same binary).
+#
+# Libraries, read with ldd and pacman -F in aces-builder on 2026-10-10. The binary NEEDs libpthread.so.0, libm.so.6,
+# libc.so.6 (glibc), libgomp.so.1 (libgomp), libgcc_s.so.1 (libgcc), libquadmath.so.0 (libquadmath) and
+# libgfortran.so.4 with symbol version GFORTRAN_7: the GCC 7 Fortran runtime. No package in Arch's repositories provides
+# libgfortran.so.4 (pacman -F finds none; Arch's libgfortran is .so.5, GCC 8 and later, a different ABI). Never point
+# the binary at libgfortran.so.5.
+#
+# The GCC 7 runtime comes from the same place the rig's aces-golden image takes it (cudax docker/aces-golden.Dockerfile):
+# Ubuntu 20.04's libgfortran4 7.5.0-6ubuntu2. The .deb is pinned by its sha256 (492,528 bytes, downloaded from
+# archive.ubuntu.com on 2026-10-10), and prepare() checks the one file taken from it, libgfortran.so.4.0.0, against the
+# sha256 the image pins (3f198ada...). It is installed privately under /usr/lib/calculix-ccx-bin with an
+# /etc/ld.so.conf.d entry (pacman runs ldconfig after the transaction), so the ccx binary stays byte for byte the
+# author's: realpath(/usr/bin/ccx) is that binary, and the ccx sha256 a conforming record names
+# (31be21fc2f0902bd9a05acc2651dbac6dc2a2573dabbf235e39a38cb6f458862) is the rig image's. A wrapper script at
+# /usr/bin/ccx would hide the binary from that hash; patchelf would change it. The entry exposes only the soname
+# libgfortran.so.4, which nothing else on Arch asks for. Without this runtime the official binary cannot run on Arch.
+# The operator's decisions of 2026-10-10 (item 1) chose this deb, with a wrapper script at /usr/bin/ccx; the
+# integration fixer took this layout instead for review finding 4 (the reviewer's option (a)), for the hash above.
+#
+# Statically linked, as the binary's symbol table shows: SPOOLES 2.2 (FrontMtx_*, InpMtx_*, SubMtx_*, Chv_*, ETree_*,
+# IVL_*; SPOOLES is in the public domain), ARPACK (dsaupd, dnaupd, dseupd; BSD-3-Clause) and LAPACK/BLAS routines
+# (dgetrf, dgemm; reference LAPACK is BSD-3-Clause). CalculiX itself is GPL-2.0-or-later as recorded for this plan; the
+# binary's banner points to gpl.htm, which the tarball does not contain. libgfortran is GPL-3.0-or-later with the GCC
+# Runtime Library Exception 3.1. The version option is -v: ccx 2.23 prints "This is Version 2.23" and exits 201 (run
+# on the binary in a container with the GCC 7 runtime, 2026-10-10).
+pkgname=calculix-ccx-bin
+pkgver=2.23
+pkgrel=1
+pkgdesc="CalculiX ccx $pkgver, the author's x86_64 binary (linear and nonlinear FEA; SPOOLES and ARPACK linked in)"
+arch=('x86_64')
+url="http://www.dhondt.de/"
+license=('GPL-2.0-or-later' 'LicenseRef-SPOOLES-public-domain' 'BSD-3-Clause'
+         'GPL-3.0-or-later WITH GCC-exception-3.1')
+depends=('glibc' 'libgcc' 'libgomp' 'libquadmath')
+provides=('calculix-ccx')
+conflicts=('calculix-ccx' 'calculix')
+options=('!strip' '!debug')
+_gf4deb=libgfortran4_7.5.0-6ubuntu2_amd64.deb
+_gf4so_sha256=3f198ada9cdcda0c6b2fba24d6654c839ea91d0e8246c8ddba5b1b2851dff4b2
+source=("ccx_${pkgver}.tar.bz2::http://www.dhondt.de/ccx_${pkgver}.tar.bz2"
+        "${_gf4deb}::http://archive.ubuntu.com/ubuntu/pool/universe/g/gcc-7/${_gf4deb}")
+sha256sums=('35d426fed5eb164fbbaaafa20819d13d22e30bc2b9bc9c6c4ed957e9468355dd'
+            '9191a744ea8e1cb877c26bfb1cb6efa06305be49c7053eecfee5f1037a8005d5')
+# makepkg's file-type test does not see the tar inside this .bz2 and only decompresses it ("Extracting ... with
+# bzip2", no ccx_2.23 afterwards; bin/build on 2026-10-10), so prepare() unpacks it, and the .deb (an ar archive) too
+noextract=("ccx_${pkgver}.tar.bz2" "${_gf4deb}")
+
+prepare() {
+  bsdtar -xf "$srcdir/ccx_${pkgver}.tar.bz2" -C "$srcdir"
+  rm -rf "$srcdir/gf4deb" "$srcdir/gf4"
+  mkdir -p "$srcdir/gf4deb" "$srcdir/gf4"
+  bsdtar -xf "$srcdir/${_gf4deb}" -C "$srcdir/gf4deb"
+  bsdtar -xf "$srcdir"/gf4deb/data.tar.* -C "$srcdir/gf4deb"
+  local so="$srcdir/gf4deb/usr/lib/x86_64-linux-gnu/libgfortran.so.4.0.0"
+  echo "${_gf4so_sha256}  $so" | sha256sum -c -
+  install -m755 "$so" "$srcdir/gf4/libgfortran.so.4.0.0"
+  ln -s libgfortran.so.4.0.0 "$srcdir/gf4/libgfortran.so.4"
+}
+
+_bin() {
+  find "$srcdir" -name "ccx_$pkgver" -type f | head -n 1
+}
+
+check() {
+  local f out
+  f="$(_bin)"
+  if [[ -z "$f" ]]; then
+    echo "check: no ccx_$pkgver in the tarball" >&2
+    return 1
+  fi
+  # the binary with the private GCC 7 runtime, as the installed package resolves it through ld.so.conf.d
+  LD_LIBRARY_PATH="$srcdir/gf4" ldd "$f"
+  if LD_LIBRARY_PATH="$srcdir/gf4" ldd "$f" | grep -q "not found"; then
+    echo "check: ccx_$pkgver needs a library this system does not have (see the ldd lines above)" >&2
+    return 1
+  fi
+  if ldd "$srcdir/gf4/libgfortran.so.4.0.0" | grep -q "not found"; then
+    ldd "$srcdir/gf4/libgfortran.so.4.0.0"
+    echo "check: libgfortran.so.4.0.0 needs a library this system does not have" >&2
+    return 1
+  fi
+  out="$(cd "$srcdir" && LD_LIBRARY_PATH="$srcdir/gf4" "$f" -v 2>&1 || true)"  # ccx -v prints the version, exits 201
+  echo "$out"
+  if ! grep -q "Version $pkgver" <<<"$out"; then
+    echo "check: ccx_$pkgver -v did not report version $pkgver" >&2
+    return 1
+  fi
+}
+
+package() {
+  install -Dm755 "$(_bin)" "$pkgdir/usr/bin/ccx_$pkgver"
+  ln -s "ccx_$pkgver" "$pkgdir/usr/bin/ccx"
+  install -Dm755 "$srcdir/gf4/libgfortran.so.4.0.0" "$pkgdir/usr/lib/calculix-ccx-bin/libgfortran.so.4.0.0"
+  ln -s libgfortran.so.4.0.0 "$pkgdir/usr/lib/calculix-ccx-bin/libgfortran.so.4"
+  install -dm755 "$pkgdir/etc/ld.so.conf.d"
+  printf '%s\n' /usr/lib/calculix-ccx-bin > "$pkgdir/etc/ld.so.conf.d/calculix-ccx-bin.conf"
+}

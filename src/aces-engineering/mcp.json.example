@@ -1,4 +1,5 @@
 {
+  "_comment": "Copy to a project's .mcp.json (or merge into the agent's MCP config). An agent expands ${SIMLAB_MCP_TOKEN} from its own environment, so export it there. The aces tools (aces golden run/compute --lane, aces-simlab remote) look for the token in ACES_SIMLAB_TOKEN, then SIMLAB_MCP_TOKEN, then a line ACES_SIMLAB_TOKEN=... (or SIMLAB_MCP_TOKEN=...) in ~/.config/aces/simlab.env ($ACES_USER_CONFIG/simlab.env; chmod 600). It is a token from the rig's SIMLAB_MCP_TOKENS and is sent only as the bearer header. simlab-mcp is port 8022; 8020 on the rig is the Univer workbench.",
   "mcpServers": {
     "simlab": {
       "type": "http",

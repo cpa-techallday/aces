@@ -1,0 +1,21 @@
+{
+ "_comment": "aces golden path rig solvers (aces-os src/aces-engineering, image aces-golden:0.1). A drop-in so simlab/solvers.json is never rewritten; these rows win over same-named rows there. golden.* says which golden code the image carries; validation stays pending until scripts/golden_validate.py passes on the rig with that image id (docs/GOLDEN_RIG.md).",
+ "golden-case": {
+  "module": "simlab.solvers.golden_case", "physics": ["structures"], "precision": ["float64"], "image": "aces-golden:0.1",
+  "description": "aces golden path, one sweep design on a rig GPU: SIMP (gendesign.topopt3d) -> organic implicit skin -> voxel FEA (step-structures stage_solve, Jacobi-PCG FP64), run by aces_engineering.golden.case inside the aces-golden image",
+  "golden": {"kind": "design", "params_schema": "aces-golden-rig/1", "compute_sha256": null, "image_id": null, "aces_os_commit": null},
+  "validation": {"status": "pending", "date": null, "image_id": null, "device": null, "dtype": "float64", "cases": [], "note": "pending until case GK-1 of scripts/golden_validate.py passes on the rig with this image (docs/GOLDEN_RIG.md)", "record": null}
+ },
+ "golden-check": {
+  "module": "simlab.solvers.golden_check", "physics": ["structures"], "precision": ["float64"], "image": "aces-golden:0.1",
+  "description": "aces golden path finer-resolution independent check on a rig GPU: a verified part.stl re-voxelised at the check resolution (or a supplied mask) and solved by aces_engineering.golden.fea (step-structures stage_solve; Jacobi-PCG, or geometric-multigrid PCG on the solid-only operator for one-component masks from 200,000 cells), FP64",
+  "golden": {"kind": "mesh", "params_schema": "aces-golden-rig/1", "compute_sha256": null, "image_id": null, "aces_os_commit": null},
+  "validation": {"status": "pending", "date": null, "image_id": null, "device": null, "dtype": "float64", "cases": [], "note": "pending until cases GC-1, GC-2 and GC-3 of scripts/golden_validate.py pass on the rig with this image", "record": null}
+ },
+ "ccx-check": {
+  "module": "simlab.solvers.ccx_check", "physics": ["structures"], "precision": ["float64"], "image": "aces-golden:0.1",
+  "description": "aces golden path conforming second discretisation on the rig CPU: gmsh 4.15.2 C3D10 (tet10) mesh of a verified part.stl, CalculiX ccx 2.23 linear static with the spec's supports and tractions mapped onto the mesh surface",
+  "golden": {"kind": "conforming", "params_schema": "aces-golden-rig/1", "compute_sha256": null, "image_id": null, "aces_os_commit": null},
+  "validation": {"status": "pending", "date": null, "image_id": null, "device": null, "dtype": "float64", "cases": [], "note": "pending until cases CC-1 and CC-2 of scripts/golden_validate.py pass on the rig with this image", "record": null}
+ }
+}

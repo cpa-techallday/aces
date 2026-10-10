@@ -18,6 +18,15 @@ Case parameters (mm, N, MPa; coordinates in the STEP's own frame):
   loads          [{"box": [...], "force": [Fx,Fy,Fz], "axis": "x"|"y"|"z"}]  axis => consistent face traction
   vm_exclude     [[box], ...]  stress read-out ignores these zones (load patches)
   tol, maxiter, dtype
+  fea_solver     "pcg" (default: Jacobi-PCG on the fictitious-domain operator) or "mg" (geometric-multigrid PCG on the
+                 solid-only operator, gendesign.mg; maxiter capped at 2000 by the evaluator); stage_solve passes it to
+                 VoxelFEAEvaluator(solver=...) and solve.json records it as "solver"
+  repair         default true: gendesign.connectivity.repair_mask drops unsupported unloaded islands and welds loaded
+                 ones across a one-voxel gap before the solve (solve.json "connectivity"); false solves the mask as given
+                 (the aces golden path passes false so the solved mask is the mask it hashed)
+  mg_levels      default 4: the most multigrid levels when fea_solver is "mg"
+                 Without these three keys the solve is exactly what the rig ran before they existed (the evaluator's
+                 own defaults: pcg, repair on, 4 levels).
 """
 from __future__ import annotations
 
@@ -150,7 +159,9 @@ class Adapter:
                                supports=supports, loads=loads, dtype=dtype, prefer_gpu=not case.get("cpu", False),
                                tol=float(case.get("tol", 1e-8 if dtype == "float64" else 1e-4)),
                                maxiter=int(case.get("maxiter", 20000)), warm_start=False,
-                               vm_exclude_boxes=[_box_to_grid(b, origin) for b in case.get("vm_exclude", [])])
+                               vm_exclude_boxes=[_box_to_grid(b, origin) for b in case.get("vm_exclude", [])],
+                               solver=str(case.get("fea_solver", "pcg")), repair=bool(case.get("repair", True)),
+                               mg_levels=int(case.get("mg_levels", 4)))
         if tuple(ev.shape) != tuple(mask.shape):
             raise ValueError(f"grid {ev.shape} != mask {mask.shape}")
         m = ev.evaluate(mask, return_fields=True)

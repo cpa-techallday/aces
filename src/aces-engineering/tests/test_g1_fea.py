@@ -8,6 +8,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 _HERE = Path(__file__).resolve().parent
 for _p in (_HERE.parent / "lib", _HERE.parent / "vendor"):
@@ -88,6 +89,75 @@ class SolveBox(unittest.TestCase):
         # excluded: x centres 2 and 6 at the wall (all 5 x 4), x 34 and 38 under the load patch (3 x 2)
         self.assertEqual(out["stress"]["n_elements"], 200 - 2 * 5 * 4 - 2 * 3 * 2)
 
+    def test_solver_fields(self):
+        r = self.out["results"]
+        self.assertEqual((r["fea_solver"], r["fea_solver_reason"]), ("pcg", "pcg requested"))
+        self.assertNotIn("mg_levels", r)
+        self.assertNotIn("fea_solver_attempts", r)
+
+    def test_auto_on_a_small_mask_is_pcg_and_identical(self):
+        out = fea.solve_mesh(self.stl, self.dom, self.eff, self.root / "x001", h_mm=4.0, device="cpu", solver="auto")
+        r = out["results"]
+        self.assertEqual(r["fea_solver"], "pcg")
+        if fea.mg_available():
+            self.assertEqual(r["fea_solver_reason"], "auto: Jacobi-PCG (200 cells < 200,000)")
+        else:
+            self.assertEqual(r["fea_solver_reason"], "auto: Jacobi-PCG (gendesign.mg is not importable here)")
+        for k in ("compliance_Nmm", "umax_mm", "vm_max_MPa", "vm_p99_MPa"):
+            self.assertEqual(r[k], self.out["results"][k], k)
+        with self.assertRaises(ValueError):
+            fea.solve_mesh(self.stl, self.dom, self.eff, self.root / "x002", h_mm=4.0, device="cpu", solver="cg")
+
+    def test_explicit_mg_solves_and_agrees_with_pcg(self):
+        """A real multigrid solve through solve_mesh (the vendored gendesign.mg, CPU): results carry fea_solver mg and
+        mg_levels as the number of levels solve.json lists (the patched evaluator records the hierarchy there), and
+        the metrics agree with Jacobi-PCG on the same 2 mm mask (test input)."""
+        if not fea.mg_available():
+            self.skipTest("gendesign.mg is not importable here (a snapshot before rig-golden-1)")
+        mg = fea.solve_mesh(self.stl, self.dom, self.eff, self.root / "mg2", h_mm=2.0, device="cpu", solver="mg")
+        pcg = fea.solve_mesh(self.stl, self.dom, self.eff, self.root / "pcg2", h_mm=2.0, device="cpu", solver="pcg")
+        self.assertEqual(mg["status"], "ok", mg["message"])
+        self.assertEqual(pcg["status"], "ok", pcg["message"])
+        r, p = mg["results"], pcg["results"]
+        self.assertEqual((r["fea_solver"], p["fea_solver"]), ("mg", "pcg"))
+        sj = golden.read_json(self.root / "mg2" / "solve.json")
+        self.assertEqual(sj["solver"], "mg")
+        self.assertIsInstance(sj["mg_levels"], list)
+        self.assertIsInstance(r["mg_levels"], int)
+        self.assertEqual(r["mg_levels"], len(sj["mg_levels"]))
+        self.assertGreaterEqual(r["mg_levels"], 2)
+        self.assertNotIn("fea_solver_attempts", r)
+        for k in ("compliance_Nmm", "umax_mm", "vm_max_MPa", "vm_p99_MPa", "mass_voxel_kg"):
+            self.assertLess(abs(r[k] - p[k]) / abs(p[k]), 1e-6, k)
+
+    def test_mg_that_stops_above_tol_is_solved_again_with_pcg(self):
+        """The fallback path, emulated: resolve_solver says mg and the first solve reports solver mg with relative
+        residual 1.0 (a test input standing in for a multigrid solve that stopped above tol); the second solve is the
+        real PCG. Needs no gendesign.mg."""
+        real = fea._solve_adapter
+        calls = []
+
+        def fake_adapter(fcase, case_dir):
+            calls.append(fcase["fea_solver"])
+            sj = real(dict(fcase, fea_solver="pcg"), case_dir)
+            if len(calls) == 1:
+                sj = dict(sj, solver="mg", pcg_relres=1.0, mg_levels=4)
+            return sj
+
+        with mock.patch.object(fea, "resolve_solver", return_value=("mg", "mg requested (test input)")), \
+                mock.patch.object(fea, "_solve_adapter", fake_adapter):
+            out = fea.solve_mesh(self.stl, self.dom, self.eff, self.root / "m-fallback", h_mm=4.0, device="cpu",
+                                 solver="mg")
+        r = out["results"]
+        self.assertEqual(calls, ["mg", "pcg"])
+        self.assertEqual(out["status"], "ok", out["message"])
+        self.assertEqual(r["fea_solver"], "pcg")
+        self.assertEqual([a["solver"] for a in r["fea_solver_attempts"]], ["mg", "pcg"])
+        self.assertEqual(r["fea_solver_attempts"][0]["relres"], 1.0)
+        self.assertIn("multigrid stopped at relative residual 1.000e+00", r["fea_solver_reason"])
+        self.assertNotIn("mg_levels", r)
+        self.assertEqual(r["compliance_Nmm"], self.out["results"]["compliance_Nmm"])
+
     def test_files_and_post(self):
         d = self.root / "c000"
         for name in ("mask.npy", "mesh.json", "solve.json", "fields.npz", "vm_slices.png", "disp_slices.png", "fields.vtk", "case.md"):
@@ -130,6 +200,48 @@ class SolveBox(unittest.TestCase):
             ref = self.out["results"][o]
             self.assertLessEqual(abs(cu["results"][o] - ref) / abs(ref), 1e-6, o)
             self.assertLessEqual(abs(wp["results"][o] - ref) / abs(ref), 1e-6, o)
+
+
+class SolverChoice(unittest.TestCase):
+    """fea.resolve_solver (section 11): auto is multigrid only with gendesign.mg, >= MG_MIN_CELLS cells and one solid
+    component; an explicit mg without the module or with more than one component falls back to PCG."""
+
+    def test_with_the_module(self):
+        with mock.patch.object(fea, "mg_available", return_value=True):
+            self.assertEqual(fea.resolve_solver("auto", 10 ** 6, 1)[0], "mg")
+            self.assertEqual(fea.resolve_solver("auto", fea.MG_MIN_CELLS, 1)[0], "mg")
+            self.assertEqual(fea.resolve_solver("auto", fea.MG_MIN_CELLS - 1, 1),
+                             ("pcg", "auto: Jacobi-PCG (199,999 cells < 200,000)"))
+            self.assertEqual(fea.resolve_solver("auto", 10 ** 6, 2),
+                             ("pcg", "auto: Jacobi-PCG (2 solid components; multigrid needs one)"))
+            self.assertEqual(fea.resolve_solver("mg", 10, 1), ("mg", "mg requested"))
+            self.assertEqual(fea.resolve_solver("mg", 10, 3)[0], "pcg")
+        self.assertEqual((fea.MG_MIN_CELLS, fea.MG_LEVELS, fea.FEA_SOLVERS), (200_000, 4, ("pcg", "mg", "auto")))
+
+    def test_without_the_module(self):
+        with mock.patch.object(fea, "mg_available", return_value=False):
+            self.assertEqual(fea.resolve_solver("auto", 10 ** 6, 1),
+                             ("pcg", "auto: Jacobi-PCG (gendesign.mg is not importable here)"))
+            self.assertEqual(fea.resolve_solver("mg", 10 ** 6, 1),
+                             ("pcg", "mg requested; gendesign.mg is not importable here: Jacobi-PCG"))
+        self.assertEqual(fea.resolve_solver("pcg", 10 ** 6, 1), ("pcg", "pcg requested"))
+        with self.assertRaises(ValueError):
+            fea.resolve_solver("cg", 10, 1)
+
+    def test_evaluator_kwargs_follow_the_signature(self):
+        class Patched:  # the rig's patched evaluator (test input)
+            def __init__(self, fea, E=1.0, solver="pcg", repair=True, mg_levels=4):
+                pass
+
+        class Old:  # the vendored snapshot's evaluator (test input)
+            def __init__(self, fea, E=1.0):
+                pass
+
+        self.assertEqual(fea._evaluator_kwargs(Patched, solver="pcg", repair=False), {"solver": "pcg", "repair": False})
+        self.assertEqual(fea._evaluator_kwargs(Old, solver="pcg", repair=False), {})
+        from gendesign.evaluators import VoxelFEAEvaluator
+
+        self.assertIsInstance(fea._evaluator_kwargs(VoxelFEAEvaluator, solver="pcg", repair=False), dict)
 
 
 class Checks(unittest.TestCase):

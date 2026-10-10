@@ -1,5 +1,5 @@
-"""B2 unit tests: golden.compute (detection never raises, rig-lane fixtures, plan and plan_check rules, the
-compute-used table). Every manifest, detection snapshot and record below is a labelled test input; nothing here is
+"""B2 unit tests: golden.compute (detection never raises, rig-lane fixtures with and without a lane probe, plan,
+plan_rig, plan_conforming and plan_check rules on the desktop and on a rig lane, the compute-used table). Every manifest, detection snapshot and record below is a labelled test input; nothing here is
 presented as a measured result. Run: python -m unittest discover -s tests -p "test_g2_compute.py"."""
 from __future__ import annotations
 
@@ -67,7 +67,8 @@ def eff_fixture(**derived_over) -> dict:
     return {"name": "b2-test", "derived": d, "generator": {"skin": {"upsample": 2}}}
 
 
-def detected(*, gpu_usable=False, free_mib=20000, warp_usable=False, usable_cpus=8, mem_gb=32.0) -> dict:
+def detected(*, gpu_usable=False, free_mib=20000, warp_usable=False, usable_cpus=8, mem_gb=32.0,
+             conforming_usable=False) -> dict:
     """A detection snapshot (test input) in the shape detect() returns."""
     return {"schema": golden.SCHEMA["compute"], "host": "test-host", "platform": "test-platform", "python": "3.x",
             "cpu": {"logical": usable_cpus, "usable": usable_cpus, "model": "test cpu", "mem_total_gb": 64.0,
@@ -82,11 +83,22 @@ def detected(*, gpu_usable=False, free_mib=20000, warp_usable=False, usable_cpus
                      "cuda_devices": 1 if warp_usable else None, "reason": "test"},
             "torch": {"installed": False, "use": "not used", "reason": compute.FNO_REASON},
             "physicsnemo": {"installed": False, "use": "not used", "reason": compute.FNO_REASON},
-            "conforming_mesh": {"ccx": None, "code_aster": None, "use": "not used", "reason": compute.CONFORMING_REASON},
+            "conforming_mesh": ({"gmsh": "4.15.2-test", "gmsh_reason": None, "ccx": "/test/ccx", "ccx_version": "2.23-test",
+                                 "ccx_sha256": "0" * 64, "usable": True, "code_aster": None, "use": "available",
+                                 "reason": "gmsh and CalculiX ccx found (test fixture)"} if conforming_usable else
+                                {"gmsh": None, "gmsh_reason": None, "ccx": None, "ccx_version": None, "ccx_sha256": None,
+                                 "usable": False, "code_aster": None, "use": "not used",
+                                 "reason": "gmsh and ccx not found (test fixture)"}),
             "rig": {"manifest": {"path": None, "present": False}, "simlab_mcp": {"url": None, "health": None},
                     "lanes": [{"id": None, "kind": "sim", "gpus": None, "endpoint": None, "status": "no-manifest",
-                               "use": "not used", "reason": "no fabric manifest: run aces fabric refresh; "
-                               + compute.NOT_WIRED}]}}
+                               "use": "not used", "reason": "no fabric manifest: run aces fabric refresh"}],
+                    "probe": None}}
+
+
+def rig_view(*, sweep=False, check=True, conforming=True, lane="sim/pool", source="cli") -> dict:
+    """What a plan needs of a rig session (test input; golden.rig.RigSession has the same attributes)."""
+    return {"lane": lane, "lane_source": source, "url": "http://rig.test:8022/mcp", "budget_s": 1800.0,
+            "scope": {"sweep": sweep, "check": check, "conforming": conforming}}
 
 
 class TestDetect(unittest.TestCase):
@@ -118,13 +130,15 @@ class TestDetect(unittest.TestCase):
     def test_detect_survives_failing_probes(self):
         boom = mock.Mock(side_effect=RuntimeError("probe exploded (test)"))
         with mock.patch.object(compute, "_cpu", boom), mock.patch.object(compute, "_kernel_selftest", boom), \
-                mock.patch.object(compute, "_rig", boom), mock.patch.object(compute.shutil, "which", boom):
+                mock.patch.object(compute, "_rig", boom), mock.patch.object(compute.shutil, "which", boom), \
+                mock.patch.object(compute, "conforming_available", boom):
             det = compute.detect(device="cpu")
         self.assertIn("error", det["cpu"])
         self.assertIn("error", det["kernel_selftest"])
         self.assertEqual(det["rig"]["lanes"][0]["use"], "not used")
-        self.assertIn("not wired", det["rig"]["lanes"][0]["reason"])
+        self.assertIn("rig lane lookup failed (RuntimeError: probe exploded (test))", det["rig"]["lanes"][0]["reason"])
         self.assertIn("lookup failed", det["conforming_mesh"]["reason"])
+        self.assertFalse(det["conforming_mesh"]["usable"])
 
     def _manifest(self, *, health, endpoint="http://rig.test:8022/mcp", age_s=0.0):
         m = {"generated": "2026-10-09T00:00:00+00:00", "server": {"simlab_mcp": "http://rig.test:8022/mcp"},
@@ -137,7 +151,7 @@ class TestDetect(unittest.TestCase):
             t = time.time() - age_s
             os.utime(p, (t, t))
 
-    def test_rig_lane_fixtures_all_say_not_wired(self):
+    def test_rig_lane_fixtures_without_a_lane(self):
         cases = {
             "absent": (None, "no-manifest"),
             "available": (dict(health="http 404"), "available"),
@@ -155,24 +169,41 @@ class TestDetect(unittest.TestCase):
                 lane = rig["lanes"][0]
                 self.assertEqual(lane["status"], status)
                 self.assertEqual(lane["use"], "not used")
-                self.assertIn("not wired yet", lane["reason"])
+                self.assertIsNone(rig["probe"])
                 if kw is None:
-                    self.assertIn("no fabric manifest: run aces fabric refresh", lane["reason"])
+                    self.assertEqual(lane["reason"], "no fabric manifest: run aces fabric refresh")
                     self.assertFalse(rig["manifest"]["present"])
                 else:
+                    self.assertEqual(lane["reason"], compute.DESKTOP_ONLY.format(id="sim/pool"))
                     self.assertEqual(lane["id"], "sim/pool")
                     self.assertEqual(rig["manifest"]["mode"], "sim-lab-4")
 
-    def test_lane_refusal_texts(self):
-        msg = compute.lane_refusal("sim/pool")
-        self.assertIn("rig submission through lane 'sim/pool' is not wired into the golden path yet (v0)", msg)
-        self.assertIn("not in the fabric manifest", msg)
-        self.assertIn("nothing was submitted", msg)
+    def test_lane_use_with_a_probe(self):
+        """detect(probe=...) marks the probed lane used or not used, with the section 14.5 reasons (probe records here
+        are test inputs; golden.rig.probe makes the real ones)."""
         self._manifest(health="http 404")
-        self.assertIn("the lane is available in the fabric manifest", compute.lane_refusal("sim/pool"))
-        self.assertIn("the lane is not in the fabric manifest", compute.lane_refusal("sim/other"))
-        self._manifest(health="http 404", age_s=3600)
-        self.assertIn("the lane is in a stale manifest", compute.lane_refusal("sim/pool"))
+        ok = {"ok": True, "lane": "sim/pool", "lane_source": "cli", "refusal": None}
+        det = compute.detect(device="cpu", probe=ok, rig_scope={"sweep": False, "check": True, "conforming": True})
+        lane = det["rig"]["lanes"][0]
+        self.assertEqual((lane["use"], lane["reason"]),
+                         ("used", "--lane sim/pool: the independent check and the conforming check"))
+        self.assertEqual(det["rig"]["probe"], ok)
+        cfg = dict(ok, lane_source="config")
+        lane = compute.detect(device="cpu", probe=cfg, rig_scope={"sweep": True, "check": True, "conforming": False}
+                              )["rig"]["lanes"][0]
+        self.assertEqual(lane["reason"], "[golden] lane sim/pool (aces.toml): the sweep's designs and the independent "
+                                         "check")
+        refused = {"ok": False, "lane": "sim/pool", "lane_source": "cli",
+                   "refusal": "lane 'sim/pool' cannot be used: simlab-mcp at http://rig.test:8022/mcp did not answer "
+                              "(timed out (test)); nothing was submitted"}
+        lane = compute.detect(device="cpu", probe=refused)["rig"]["lanes"][0]
+        self.assertEqual((lane["use"], lane["reason"]), ("not used", refused["refusal"]))
+        lane = compute.detect(device="cpu", probe=dict(refused, lane_source="config"))["rig"]["lanes"][0]
+        self.assertEqual(lane["reason"], "rig lane sim/pool (from aces.toml) unavailable: simlab-mcp at "
+                                         "http://rig.test:8022/mcp did not answer (timed out (test)); computing on this "
+                                         "desktop")
+        other = dict(ok, lane="sim/other")
+        self.assertEqual(compute.detect(device="cpu", probe=other)["rig"]["lanes"][0]["reason"], compute.OTHER_LANE)
 
 
 class TestPlan(unittest.TestCase):
@@ -227,6 +258,58 @@ class TestPlan(unittest.TestCase):
         self.assertEqual(p["sweep"]["device"], "cpu")
         self.assertEqual(p["parity"], [])
 
+    def test_plan_rig_without_and_with_a_lane(self):
+        p = compute.plan(detected(), eff_fixture())
+        self.assertEqual(set(p["rig"]), {"submit", "lane", "url", "sweep", "check", "conforming", "budget_s", "reason"})
+        self.assertFalse(p["rig"]["submit"])
+        self.assertTrue(p["rig"]["reason"].startswith("no rig lane: everything runs on this desktop"))
+        p = compute.plan(detected(), eff_fixture(), rig=rig_view())
+        self.assertEqual({k: p["rig"][k] for k in ("submit", "lane", "sweep", "check", "conforming", "budget_s")},
+                         {"submit": True, "lane": "sim/pool", "sweep": False, "check": True, "conforming": True,
+                          "budget_s": 1800.0})
+        self.assertEqual(p["rig"]["reason"], "--lane sim/pool: the independent check and the conforming check through "
+                                             "simlab-mcp at http://rig.test:8022/mcp; budget 1800 s per experiment")
+        self.assertEqual(p["sweep"]["device"], "cpu")  # the sweep stays here without --rig-sweep
+        swept = compute.plan(detected(gpu_usable=True), eff_fixture(), rig=rig_view(sweep=True))
+        self.assertEqual((swept["sweep"]["device"], swept["sweep"]["jobs"]), ("rig", 1))
+        self.assertEqual(swept["verify"]["device"], "cpu")  # verification follows the desktop plan
+        self.assertEqual([x["case_id"] for x in swept["parity"]], ["p001"])
+        refused = {"ok": False, "lane": "sim/pool", "lane_source": "config",
+                   "refusal": "lane 'sim/pool' cannot be used: it is not in the fabric manifest (sim lanes: none); "
+                              "nothing was submitted"}
+        det = dict(detected(), rig=dict(detected()["rig"], probe=refused))
+        self.assertEqual(compute.plan(det, eff_fixture())["rig"]["reason"],
+                         "rig lane sim/pool (from aces.toml) unavailable: it is not in the fabric manifest (sim lanes: "
+                         "none); computing on this desktop")
+
+    def test_plan_conforming_modes(self):
+        keys = {"mode", "host", "fallback", "h_mm", "threads", "max_dof", "timeout_s", "reason"}
+        off = compute.plan_conforming(detected(conforming_usable=True), eff_fixture(), mode="off")
+        self.assertEqual(set(off), keys)
+        self.assertEqual((off["host"], off["reason"]), (None, "conforming check disabled (--conforming off)"))
+        here = compute.plan_conforming(detected(conforming_usable=True, usable_cpus=24), eff_fixture())
+        self.assertEqual((here["host"], here["h_mm"], here["threads"], here["max_dof"], here["timeout_s"]),
+                         ("desktop", 2.0, 8, 1_500_000, 900.0))
+        small = compute.plan_conforming(detected(conforming_usable=True, usable_cpus=4), eff_fixture(), mode="local")
+        self.assertEqual(small["threads"], 4)
+        absent = compute.plan_conforming(detected(), eff_fixture())
+        self.assertEqual((absent["host"], absent["reason"]), (None, "not available here: gmsh and ccx not found (test "
+                                                                    "fixture)"))
+        rig = compute.plan_conforming(detected(conforming_usable=True), eff_fixture(), rig=rig_view())
+        self.assertEqual((rig["host"], rig["fallback"], rig["threads"], rig["max_dof"], rig["timeout_s"]),
+                         ("rig", "desktop", 16, 3_000_000, 3000.0))
+        self.assertTrue(rig["reason"].endswith("; this desktop runs it when the rig does not deliver it"), rig["reason"])
+        no_fb = compute.plan_conforming(detected(), eff_fixture(), rig=rig_view())
+        self.assertEqual((no_fb["host"], no_fb["fallback"]), ("rig", None))
+        self.assertIn("no desktop fallback (gmsh and ccx not found (test fixture))", no_fb["reason"])
+        only_rig = compute.plan_conforming(detected(conforming_usable=True), eff_fixture(), mode="rig", rig=rig_view())
+        self.assertEqual((only_rig["host"], only_rig["fallback"]), ("rig", None))
+        self.assertEqual(compute.plan_conforming(detected(), eff_fixture(), mode="rig")["reason"],
+                         "--conforming rig needs a usable rig lane")
+        with self.assertRaises(golden.GoldenError) as cm:
+            compute.plan_conforming(detected(), eff_fixture(), mode="sometimes")
+        self.assertEqual(cm.exception.code, golden.EXIT_USAGE)
+
 
 class TestPlanCheck(unittest.TestCase):
     def test_budget_arithmetic(self):
@@ -265,6 +348,27 @@ class TestPlanCheck(unittest.TestCase):
         l1 = compute.plan_check(detected(gpu_usable=True), big, coarse_solve_s=0.5)[0]
         self.assertFalse(l1["run"])
         self.assertIn("exceed the 2,000,000-cell limit", l1["reason"])
+        on_rig = compute.plan_check(detected(), big, coarse_solve_s=0.5, rig=rig_view())
+        self.assertTrue(all(not lv["run"] and "2,000,000-cell limit" in lv["reason"] for lv in on_rig))
+
+    def test_rig_levels_and_the_level_1_fallback(self):
+        l1, l2 = compute.plan_check(detected(), eff_fixture(), coarse_solve_s=0.5, rig=rig_view())
+        for lv in (l1, l2):
+            self.assertEqual((lv["device"], lv["host"], lv["run"]), ("rig", "rig", True))
+        self.assertEqual((l1["h_mm"], l2["h_mm"]), (2.0, 1.0))
+        self.assertEqual(l1["reason"], "finer check on the rig (golden-check through lane sim/pool)")
+        self.assertEqual(l2["reason"], "extra level on the rig (golden-check through lane sim/pool)")
+        fb = l1["fallback"]  # the desktop plan an undelivered x001 falls back to (x101)
+        self.assertEqual((fb["device"], fb["run"], fb["host"]), ("cpu", True, "desktop"))
+        self.assertAlmostEqual(fb["est_s"], 8.0)
+        self.assertIsNone(l2["fallback"])
+        slow = compute.plan_check(detected(), eff_fixture(), coarse_solve_s=5.0, rig=rig_view())[0]
+        self.assertTrue(slow["run"])  # the rig runs it; only the fallback is bound by the CPU budget
+        self.assertFalse(slow["fallback"]["run"])
+        off = compute.plan_check(detected(), eff_fixture(check_mode="off"), coarse_solve_s=0.5, rig=rig_view())
+        self.assertTrue(all(not lv["run"] and lv["reason"] == "check disabled (--check off)" for lv in off))
+        no_check = compute.plan_check(detected(), eff_fixture(), coarse_solve_s=0.5, rig=rig_view(check=False))
+        self.assertEqual(no_check[0]["host"], "desktop")  # the lane does not carry the check: the desktop rules
 
 
 class TestSummaryAndLog(unittest.TestCase):

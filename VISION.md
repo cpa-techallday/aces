@@ -300,7 +300,10 @@ as a procedure with the MCP tools), `aces-cad-onshape`, `aces-voxel`, `aces-stud
 - **Independent second discretisation for sign-off.** A voxel winner that is stress-critical is cross-checked on a
   conforming-mesh solver (CalculiX or Code_Aster on CPU, MFEM+cuDSS when built) before it is called verified; the
   voxel resolution is recorded in every validation record. This answers the pre-mortem's point that the signing-off
-  solver is itself voxel FEA (validated on beams and one bracket so far).
+  solver is itself voxel FEA (validated on beams and one bracket so far). *2026-10-10: implemented for the golden
+  path with gmsh 4.15.2 (straight-sided C3D10, meshed in a child process) and CalculiX ccx 2.23, on the rig's CPUs
+  with a lane or on the desktop (`aces_engineering.golden.conforming`); its acceptance bands are fixed before any
+  run, and a constraint it violates caps the grade. Code_Aster and MFEM+cuDSS are not used.*
 - **Measurements are evidence.** CAN logs, instrument traces, robot run logs and SDR captures (stored as SigMF) join
   the ledger beside solver runs; a model-versus-measurement residual becomes a validation record. This is how the
   platform closes its own "no hardware validation" gap (FP §2) without a hot-fire.
@@ -607,7 +610,9 @@ write outside a twin.
 14. **Does the LTX Community License allow ACES to host video lanes for third parties, and is delivering an
     ACES-trained adapter a "transfer"?** (lawyer, LICENSE-2_x)
 15. **Artifact transport from DARKNESS to the rig while SSH is denied:** HTTP through simlab-mcp, the OCI mirror, or a
-    new channel; and which process serves `:8020` today.
+    new channel; and which process serves `:8020` today. *2026-10-10: implemented for the golden path:
+    `sim_put_file` / `sim_get_file` over simlab-mcp; the OCI mirror was not built. (`:8020` serves the Univer
+    workbench; simlab-mcp is `:8022`, docs/PACKAGES.md.)*
 16. **What test-rig hardware exists** (CAN adapters, PLC vendor, SDR), so driver priority is not guesswork.
 17. **Does an RFC 3161 timestamp strengthen the ledger as contemporaneous evidence?** (adviser)
 18. **Can an int8 LTX worker lease one simulation-pool card** for a single render, or must renders wait for a video
