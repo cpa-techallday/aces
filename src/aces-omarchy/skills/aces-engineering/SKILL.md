@@ -1,6 +1,6 @@
 ---
 name: aces-engineering
-description: Work inside ACES OS - read the lane manifest before choosing compute, respect the operator policy and the end-use gate, record overrides and project classes in the ledger, submit simulation work through simlab, never switch the server's GPU mode, and run the golden path (aces golden) to compute, verify and evidence organic parts from a design space.
+description: Work inside ACES OS - read the lane manifest before choosing compute, respect the operator policy and the end-use gate, record overrides and project classes in the ledger, submit simulation work through simlab, never switch the server's GPU mode, and run the golden path (aces golden) to compute, verify and evidence organic parts from a design space, on the rig only when asked (never in CI), reading the grade and its reasons and never presenting a desktop result as a rig result.
 ---
 
 # ACES engineering
@@ -60,33 +60,50 @@ report a person can read (`report.md`) and an agent can parse (`report.json`, `r
 
 | Command | Use |
 |---|---|
-| `aces golden compute` | What can compute here and the plan (CPU, CuPy GPU, Warp, rig lanes); computes nothing |
+| `aces golden compute [--lane sim/pool]` | What can compute here and the plan (CPU, CuPy GPU, Warp, gmsh and ccx, rig lanes); with a lane, probe its simlab-mcp (exit 0 usable, 2 not); computes nothing |
 | `aces golden run --demo --json` | The whole loop on the built-in root mount; prints exactly one JSON document (`result.json`) |
 | `aces golden run --spec spec.json --project <p> [--new]` | The loop on your spec (without `--spec`: `~/Work/<p>/golden/spec.json`) |
+| `aces golden run ... --lane sim/pool [--rig-sweep] [--rig-budget S]` | Only when the person asks for a rig run: the independent check and the conforming check go to the rig (`--rig-sweep` also sends the sweep) |
+| `aces golden run ... --conforming auto\|rig\|local\|off` / `--require-grade G` | Where the conforming tet10 check runs (default `auto`); exit 1 when a PASS has a grade below G |
 | `aces golden spec --demo root-mount --out spec.json` | A spec to start from (`--schema` prints the JSON schema) |
 | `aces golden init <p> --step part.step` | Project, the STEP in `<p>/cad/`, a spec template to fill in (supports, loads, keep-ins, material with its source) |
 | `aces golden show [--json]` | Runs, newest first; `show RUN` for one |
-| `aces golden verify [RUN]` | Audit a run (files, bundle, both ledgers, tables, models, verdict, report provenance) |
+| `aces golden verify [RUN]` | Audit a run, 13 checks (files, bundle, both ledgers, tables, models, verdict, report provenance, compute rows, rig records, conforming check, manifest, resolve); never contacts the rig |
 
 Rules:
 
-1. **Read `outcome`, `verdict_line` and `grade` from the JSON and quote the verdict line.** Desktop results are
-   `preview-grade`; `verified-desktop` means the finer-resolution independent check agreed within the tolerance and
-   the constraints held there. None of it is sign-off (that needs a rig run and a conforming-mesh second
-   discretisation, which v0 does not do).
-2. **`--lane` is not wired yet** (exit 2, nothing submitted). Say so; never fake a rig run or present a desktop run as
-   one. The report lists the rig lanes it saw and marks them not used.
-3. **Exit codes**: 0 pass, 1 verification failed (or `--strict` without `verified-desktop`), 2 usage, 3 thin sweep (too
-   few designs finished), 4 under-resolved (the resolution guard refused the spec), 5 infeasible (no candidate
-   predicted feasible), 6 evidence or ledger failure (when only the aces ledger write failed, the message carries the
-   replay command), 7 internal error (traceback in the run's `log.txt`), 130 interrupted. A non-zero exit is a result
-   to report, not to hide. `aces golden` itself exits 127 with nothing on stdout when aces-engineering is not installed
-   (`aces doctor` shows `golden absent`; install it with `sudo pacman -S aces-engineering`).
-4. **Stress**: the constrained stress is `vm_p99` outside the support and load zones. Quote `vm_max` only with its
+1. **Read `outcome`, `verdict_line`, `grade` and `grade_reasons` from the JSON and quote the verdict line.** The
+   grades are `preview-grade` < `verified-desktop` < `rig-verified`. `verified-desktop` means the finer-resolution
+   independent check agreed within the tolerance and the constraints held there. `rig-verified` means the check and
+   the conforming tet10 check (gmsh C3D10 + CalculiX ccx) ran on the rig and passed, on images the rig registry
+   validated, with matching code and no integrity error. A constraint violated on the conforming mesh caps the grade
+   at `preview-grade`. None of it is sign-off by a person.
+2. **Read the grade reasons and quote them.** `not rig-verified: ...` names the first condition that failed (a
+   pending registry validation, another image, the conforming check not agreeing or not run, code identity, an
+   integrity error). Report it; never change bands, tolerances or the spec to chase a grade: raise it with the
+   operator.
+3. **Never present a desktop result as a rig result.** The verdict line says where the check ran (`check 2 mm on the
+   rig (GPU n)` against `check 2 mm`) and where the conforming check ran (`ccx 2.23, rig` or `desktop`). A fallback
+   (`x101`, `m101`) is a desktop result; a conforming check that was not run is quoted with its reason.
+4. **The rig only on request, never in CI.** Use `--lane` only when the person asks for a rig run; never in CI or an
+   unattended job (there is no rig there, and a refused lane exits 2). Lanes come from the fabric manifest
+   (`aces fabric refresh`); probe with `aces golden compute --lane sim/pool` and read its `rig:` lines; never guess a
+   URL or a lane id. If the rig's mode releases no simulation GPU, say so and ask: switching modes is a human act in
+   GRID CONTROL. The simlab token lives in `ACES_SIMLAB_TOKEN` or `~/.config/aces/simlab.env`; never print, log or
+   paste it.
+5. **Exit codes**: 0 pass, 1 verification failed (or `--strict`/`--require-grade` not met), 2 usage (including a lane
+   that cannot be used: nothing was submitted and there is no run directory), 3 thin sweep (too few designs finished),
+   4 under-resolved (the resolution guard refused the spec), 5 infeasible (no candidate predicted feasible), 6
+   evidence, ledger or rig-integrity failure (when only the aces ledger write failed, the message carries the replay
+   command), 7 internal error (traceback in the run's `log.txt`), 130 interrupted (rig jobs are cancelled). A non-zero
+   exit is a result to report, not to hide. `aces golden` itself exits 127 with nothing on stdout when
+   aces-engineering is not installed (`aces doctor` shows `golden absent`; install it with
+   `sudo pacman -S aces-engineering`, and `calculix-ccx-bin` for the conforming check).
+6. **Stress**: the constrained stress is `vm_p99` outside the support and load zones. Quote `vm_max` only with its
    caveat: it is resolution-sensitive (it grows as the voxels shrink) and is not a design value.
-5. **Before citing a run, run `aces golden verify latest`** (or the run id). The run is in the simlab evidence ledger,
+7. **Before citing a run, run `aces golden verify latest`** (or the run id). The run is in the simlab evidence ledger,
    in the aces ledger (`golden.run`) and in the project's `aces.yaml`; `aces project classify` still gates end use.
-6. **Never edit a run directory.** Anything in it may be anchored by hash; change the spec or the flags and run again.
+8. **Never edit a run directory.** Anything in it may be anchored by hash; change the spec or the flags and run again.
 
 ## Honesty
 

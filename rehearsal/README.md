@@ -156,6 +156,61 @@ gives the same winner and the same numbers as the workstation and the clean cont
 directory was copied to `D:\HyperV\aces-rehearsal\reports\golden-20261010-013959\` (report, renders, evidence). The
 `aces-install.sh` kit script runs the same two commands as steps 12 and 13 on a fresh install.
 
+## Rig run from the VM
+
+The acceptance runs of the golden path on the real rig (build spec section 24, steps 7 to 9) end on this VM: the
+same packages a customer machine installs, with the independent check on the rig's GPUs and the conforming check on
+its CPUs. Before them, on DARKNESS, the operator has shipped the `aces-golden:0.1` image, deployed `rig-golden-1`,
+validated the registry rows (tag `rig-golden-2`) and made the DARKNESS lane run (steps 1 to 6); the integrated packages
+are built and signed, and `.\serve-repo.ps1` has re-synced the web root from `repo\x86_64` (check it byte for byte, as
+above). The VM is a LAN host on HA-External, so it reaches the rig directly.
+
+The simlab token, when the rig's simlab-mcp asks for one: put `ACES_SIMLAB_TOKEN=...` in `~/.config/aces/simlab.env` on
+the VM and `chmod 600` it (a group- or world-readable file gets a warning). A missing or wrong token is refused before
+anything is submitted (exit 2, HTTP 401).
+
+Step 7, the lane run, from a login shell over SSH (`ssh aces@192.168.1.195`):
+
+```bash
+sudo pacman -Sy aces-engineering calculix-ccx-bin aces-omarchy aces-os
+aces fabric refresh
+aces golden run --demo --lane sim/pool --json --progress lines
+aces golden verify latest
+aces-evidence verify
+aces ledger verify
+aces golden show latest --bench-out /tmp/bench-vm.md
+```
+
+Copy the row from `/tmp/bench-vm.md` into `docs/BENCHMARKS.md`. Record the grade exactly as it comes out (the target
+is `rig-verified`); the verdict line names where the check ran (`check 2 mm on the rig (GPU n)`) and the conforming
+check's host.
+
+Step 8, desktop only (no lane): the conforming check runs on the VM itself as `m001`.
+
+```bash
+aces golden run --demo
+aces golden verify latest
+```
+
+Record the grade honestly: the constraint cap may give `preview-grade`.
+
+Step 9, the offline refusal: a lane that cannot be used must stop before anything is computed.
+
+```bash
+aces golden run --demo --lane sim/none --json; echo "exit $?"
+```
+
+It must print exactly one JSON document, exit 2, and leave no new run directory under `~/Work/golden-demo/golden/`.
+
+Afterwards (steps 10 and 11): the rig gate is ok, `rig_capacity` shows the pool free again, no `simlab-golden-*`
+container is left, and the `docs/PACKAGES.md` table "Golden path on the rig" and the BENCHMARKS rows are filled from
+these runs' records. If the grade is not `rig-verified` because of a band, the cap or a validation, no band is changed.
+
+`calculix-ccx-bin` 2.23-1 does not build on Arch yet (the official binary needs `libgfortran.so.4`; see
+`docs/PACKAGES.md`). Until it does, the `pacman` line of step 7 stops at `target not found: calculix-ccx-bin` and the
+desktop conforming check of step 8 is recorded as not run (`ccx-not-found`); record that, and do not work around it on
+the VM.
+
 ## Known problems to expect
 
 - With the VHDX cidata the VM has two SCSI disks; the config names `/dev/sda`, which should be the OS disk at LUN 0, but
