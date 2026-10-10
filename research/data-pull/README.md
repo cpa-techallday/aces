@@ -32,7 +32,7 @@ the simlab queue on the same disk).
 | The Well full train splits (376 + 294 GB) | exceed disk budget | bigger disk, or pull per-combo on demand |
 | AM Bench raw thermography Signal/Te05 (~140 GB for B6 alone) | disk budget | pull individual files from mds2-2715 when analysis needs them |
 | KAB Google Drive folder | 401 — Google now requires sign-in for folder listing | bypassed: full collection pulled from open.bu.edu DSpace instead |
-| JHTDB channel DNS (Re_τ 1000–5200) | needs a free CILogon access token tied to a person | register at turbulence.pha.jhu.edu, then scripted queries for f(Re) and Nu(Pr) profiles |
+| JHTDB channel DNS (Re_τ 1000–5200) | ~~needs token~~ **done 2026-10-10** via public testing token + `giverny` client | results in `research/jhtdb/` (repo) and `/mnt/nvme2/data-library/jhtdb/` (rig); heavier queries (time-averaged statistics, more datasets) need a personal CILogon token |
 | ABC full chunks (50–100 GB each, 1M models) | disk budget + registration on the official site | pull when tier-1 generative training actually starts |
 | DrivAerNet++ (39 TB) | far beyond rig storage | revisit with dedicated storage; smoke-test subset exists on HF |
 | Mechanical MNIST (70k FEM) | not in this round's shortlist | open.bu.edu handle 2144/39371 when tier-4 starts |

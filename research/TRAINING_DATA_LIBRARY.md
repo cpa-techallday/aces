@@ -205,7 +205,8 @@ driver + manifests; see `research/data-pull/README.md` for live status):
 5. NIST AM Bench IN718 — **queued** (challenge description + residual stress +
    thermography derived data; raw camera files up to 119 GB each excluded on
    disk budget, documented for on-demand fetch)
-6. JHTDB — **blocked**: needs a free personal CILogon token from
-   turbulence.pha.jhu.edu before scripted queries can run
+6. JHTDB — **pulled** (2026-10-10, public testing token via `giverny`): channel
+   Re_τ 1000 + 5200 mean profiles and wall-gradient-derived cf/Re_b; pipeline
+   validated by Blasius Re^(−1/4) check within 1.1%. See `research/jhtdb/`.
 7. ABC subset — **queued** (8 parquet shards of the processed ABC HF mirror, ~6 GB;
    full chunks are 50–100 GB each — for when tier-1 training actually starts)
