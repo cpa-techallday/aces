@@ -118,6 +118,16 @@ built and signed in the Arch builder container (calculix-ccx-bin fetched its two
 test and the engineering install test (CalculiX and the golden path) passed. cudax-sim-runtime CI on main ee67548
 (run 38039674084) and 36d0446 (run 38040391660) passed on Python 3.11 and 3.12.
 
+GitHub Actions on main e165872 (run 38045748248, 2026-10-10 10:40:57 to 11:23:08 UTC, 42 min 11 s, the aces-cad merge
+61ac8a4 plus the acceptance docs): every package built and signed in the Arch builder container, aces-cad 0.1.0-1 and
+aces-os 0.1.0-6 among them; the default install test, the engineering install test (CalculiX and the golden path:
+PASS / verified-desktop in 51 s, `aces golden verify` all checks pass) and the new aces-cad install test passed. On
+the runner (ubuntu-latest, Docker's default seccomp profile) the aces-cad doctor ran strict and confined with Landlock
+ABI 7 (18 rules), so GitHub runners allow the Landlock syscalls and the TCP rules and scoping are in force there too;
+the ACES plate exact (11607.300918301276 mm³), its geometry_sha256 `806c9be7…` equal to the Windows, Arch and VM
+values, `check_bundle.py` clean, the ledger intact (7 entries), 114 unit tests OK in 592 s (one skip), and aces-os
+resolving to 522 packages.
+
 ## Golden path (`aces golden`)
 
 One command from a design space to a computed, verified and evidenced organic part (VISION section 11.1: STEP ->
@@ -602,13 +612,9 @@ Results (runs of 2026-10-10, UTC):
 
 **Not verified.**
 
-- CI has not run the merged branch yet; it runs when this is pushed, and the CI paragraph above records the run when
-  it finishes. The VM ran the packages `bin/build` made on DARKNESS from the merged main (61ac8a4).
 - The TCP rules (ABI 4) and the signal and abstract-socket scoping (ABI 6) are in force on the VM (Landlock ABI 10,
   acceptance step 2) and were exercised there by the doctor checks only; the Docker Desktop kernel used for the
   container tests, `6.6.114.1-microsoft-standard-WSL2`, offers ABI 3 and does not cover them.
-- Whether GitHub runners allow the Landlock syscalls under Docker's seccomp profile; if not, the CI install test runs
-  permissive and says so in its log.
 - Which MCP clients show image content to the model: Codex 0.133.0 does not (acceptance step 9: the server sent valid
   `image/png` content with the render and the drawing, the model saw the text and the path); Claude Code is untested
   as a client (its CLI login on DARKNESS had expired on the day).
@@ -658,7 +664,7 @@ bench row in BENCHMARKS.md), and `aces golden verify` passes 11 checks with rig 
 - The bench row's "Devices used" text mis-joined the rig device names when a run used more than one rig GPU (the
   four rows of 2026-10-10 in BENCHMARKS.md show it; the records themselves are right). Fixed in `golden_cli.devices_used`
   (aces-engineering 0.1.0-5: every `rig gpu N (name)` of a device string is one token; a GPU without a recorded name
-  is reported as such); the 0.1.0-5 row is written when the package is built.
+  is reported as such); the row as 0.1.0-5 renders it is in BENCHMARKS.md, under the --rig-sweep section of 2026-10-10.
 - `scripts/golden_validate.py` (cudax) writes the registry rows' `record` field as the absolute DARKNESS path of its out directory; for `rig-golden-2` the three rows were pointed by hand at `docs/validation/golden-20261010T082807Z/validation-record.json`, committed with the record and the six specs. The script should write a repo-relative path (cudax follow-up).
 - The merged `step_structures.py` (cudax rig-golden-1.1, vendored in aces-engineering 0.1.0-4) defaults to `mg`, the rig's behaviour since the rig operator's patch of 2026-10-06, not the build spec's `pcg`; `fea_solver` wins over the rig's `solver` key when both are given. The desktop uses only its mesh stage.
 - Two deferred `post` jobs of the rig operator (`mach-dart2-wing-44g`, `-b`, created 2026-10-06, parents failed) sit in the rig's cpu deferred registry; the deploy gate reports them as orphaned and does not wait for them. They are the rig operator's to remove; a note was left in Kimi's workspace and in `/home/pi` on the rig.
