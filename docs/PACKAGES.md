@@ -1,7 +1,9 @@
 # ACES OS package register
 
-State as of 2026-10-09. Packages are built by `bin/build` inside the `aces-builder` image (Arch `base-devel`) into the
-local `[aces]` repo at `repo/x86_64/`, and install-tested by `bin/install-test` in a clean `archlinux:base` container.
+State as of 2026-10-09; the section "Changed for the rig lane and the conforming check" is 2026-10-10 and comes from
+a builder's worktree, before integration. Packages are built by `bin/build` inside the `aces-builder` image (Arch
+`base-devel`) into the local `[aces]` repo at `repo/x86_64/`, and install-tested by `bin/install-test` in a clean
+`archlinux:base` container.
 Every package and the repo database are signed with the development key (`keys/aces-pkgs.pub.asc`, fingerprint in
 `keys/FINGERPRINT`, ed25519, expires 2028-10-08); the install test trusts that key and installs with
 `SigLevel = Required DatabaseRequired`. CI (`.github/workflows/build.yml`) repeats the build and the install test on every
@@ -53,13 +55,37 @@ on a USB SSD that stalled on the evening of 2026-10-09, and the guest's btrfs ro
 | `aces-voxel` | 0.1.0-2 | the skill names the end-to-end generative loop (`aces golden run --demo`); depends on `aces-engineering>=0.1.0-2`, the first version with `aces golden` | built (any, signed); its `check()` ran against the installed aces-engineering 0.1.0-2 (the build after review). Clean container with aces-engineering 0.1.0-2: `aces-voxel fea --self-test` OK |
 | `aces-omarchy` | 0.1.0-5 | the aces-engineering skill documents `aces golden` (commands, grades, exit codes including the passthrough's 127, rules); depends on `aces-base>=0.1.0-3`, the first version with the commands the skill documents | built (any, signed); default install test (`bin/install-test`: aces-base, aces-creative, aces-consoles, aces-omarchy) passed, `aces-omarchy-setup` linked the skill into `~/.claude/skills` and `~/.agents/skills` |
 
+## Changed for the rig lane and the conforming check (2026-10-10, branch `golden-rig/packaging`, not yet integrated)
+
+Built and tested by the packaging builder in its own worktree (`aces-os-golden-packaging`, unsigned: there is no key
+there), on DARKNESS. The cells hold only what was run there. The integration build and install test (with the
+cudax snapshot `rig-golden-1` and the golden rig client merged) and the operator's rig runs come later and get their
+own rows.
+
+| Package | Version | What changed | Build | Test evidence |
+|---|---|---|---|---|
+| `calculix-ccx-bin` | 2.23-1 | New: the CalculiX author's ccx 2.23 binary (`http://www.dhondt.de/ccx_2.23.tar.bz2`, sha256 `35d426fed5eb164fbbaaafa20819d13d22e30bc2b9bc9c6c4ed957e9468355dd`, unpacked with bsdtar in `prepare()`) as `/usr/bin/ccx_2.23` with the symlink `/usr/bin/ccx`; licence GPL-2.0-or-later plus SPOOLES (public domain) and ARPACK/LAPACK/BLAS (BSD-3-Clause) found in the binary; depends glibc, libgcc, libgomp, libquadmath; `check()` requires `ldd` without "not found" and `Version 2.23` from `ccx -v` (which exits 201). `pkgbuilds/ORDER` builds it before aces-engineering | `bash bin/build calculix-ccx-bin`: **failed in `check()`**, `libgfortran.so.4 => not found`. The binary was linked against GCC 7's Fortran runtime (symbol version GFORTRAN_7); Arch ships only `libgfortran.so.5`, and no Arch package provides `.so.4` | Not installable from this repo (`bin/install-test aces-base aces-engineering aces-voxel calculix-ccx-bin`: `error: target not found: calculix-ccx-bin`). The binary itself: with `libgfortran.so.4` from Ubuntu 20.04's `libgfortran4` 7.5.0-6ubuntu2 on the loader path it ran in a throwaway `archlinux:base` container and wrote a `ccx.dat` byte-identical to the Ubuntu run; in a throwaway Ubuntu 24.04 test image with the same runtime, the 35 conforming tests passed, including the bar patch test (exact to 1e-6) and the cantilever (mean tip u_z 0.70 % from Timoshenko's 0.20153 mm) |
+| `aces-engineering` | 0.1.0-3 | gmsh 4.15.2 in the lock (77 distributions; psutil, threadpoolctl and tqdm become direct pins at their locked versions); `aces_engineering.golden.conforming` (the C3D10 + CalculiX second discretisation); report sections 10 (conforming) and 11 (rig), the check table's host column and the new verdict-line fragments; the selftest's `conforming` check and the rig and conforming modules in its import list; depends += glu, libxcursor, libxft, libxinerama, libxrender, libxfixes, libxext, fontconfig (what libgmsh needs beyond libGL and libX11); optdepends and checkdepends calculix-ccx-bin; licence += `LicenseRef-Gmsh-GPL-2.0-or-later-with-exceptions`; `build()` first checks the vendored snapshot against two pins (`_snapshot_commit`, `_snapshot_content_sha256`, re-hashing `vendor/` with `sha256sum -b`); `sync.sh --commit REV` copies from a clean clone; `check()`'s demo runs with `--conforming off` | **Not built.** `makepkg -s` cannot install its checkdepends (calculix-ccx-bin, above), and on this branch alone the selftest's import check names nine modules that only arrive with the integration (dev layout: `83/92 import`, missing `aces_engineering.golden.rig`, `.rigside`, `simlab.filestore`, `simlab.specstore`, `simlab.solvers.golden_case`, `.golden_check`, `.ccx_check`, `gendesign.mg`, `gendesign.connectivity`) | `bash src/aces-engineering/lock.sh` (Python 3.14.7, pip 26.2.1): 77 distributions, the diff adds gmsh and moves the three pins with unchanged hashes. Snapshot gate in `aces-builder`: the committed tree passes; one appended line in a vendored file, and a SNAPSHOT naming another commit, are both refused. `sync.sh --commit 28d92a8` reproduced the committed snapshot exactly (51 files, content sha256 `3ed0ee68...`). The locked gmsh wheel in a clean `archlinux:base` with exactly the declared libraries: `ldd` finds every library of `libgmsh.so.4.15`, `import gmsh` reports 4.15.2 on Python 3.14.7, and an OCC box meshes (1,140 tets). Unit tests in the dev layout (workstation, Python 3.11.9): 215 golden tests OK, 5 skipped (2 of them the ccx tests). Ubuntu 24.04 test image with ccx 2.23: the 35 conforming tests OK; the selftest's `conforming` check PASS (539 C3D10, worst relative difference 2.3e-08, equilibrium 5.4e-09), INFO without ccx, FAIL with a ccx that cannot start |
+| `aces-omarchy` | 0.1.0-6 | the aces-engineering skill: the grade ladder and `grade_reasons`, `--lane` only on request and never in CI, lanes only from the fabric manifest, mode switching stays human, never a desktop result as a rig result, the new flags and exit codes, the 13 audit checks | built (any, unsigned) with `bash bin/build aces-base aces-omarchy aces-os` | `bash bin/install-test aces-base aces-omarchy` exit 0: `aces-omarchy-setup` linked the skill into `~/.claude/skills` and `~/.agents/skills` (`aces doctor`: `skills ok`) and `--remove` unlinked both; the packaged `SKILL.md` carries the new rules |
+| `aces-os` | 0.1.0-5 | depends += `calculix-ccx-bin` | built with `--nodeps` (unsigned) in the same `bin/build` call; `.PKGINFO` lists `depend = calculix-ccx-bin` | `pacman -Sp aces-os` does not resolve in this worktree's repo (most of its members were not built there, and calculix-ccx-bin cannot be): `error: failed to prepare transaction (could not satisfy dependencies)` |
+
+`bin/install-test` gains, for the engineering block: the ccx version when ccx is present; `import gmsh` in the
+packaged venv as a hard check; `aces golden compute --lane sim/pool`, which must exit 2 from the container and must
+not be an argparse usage error; with calculix-ccx-bin installed, a conforming status other than `ccx-not-found` or
+`gmsh-not-found` (printed, not gated on `ran`); `m001/conforming.json` and `m001/ccx.log` copied to `logs/golden/`.
+CI's engineering step installs `calculix-ccx-bin` too. The block's logic was exercised with stub commands in five
+cases (check ran; no ccx; ccx installed but not found by the check; `compute` without `--lane`; a usable lane), all
+as expected; the real block has not run, since aces-engineering 0.1.0-3 was not built.
+
 ## Golden path (`aces golden`)
 
 One command from a design space to a computed, verified and evidenced organic part (VISION section 11.1: STEP ->
 voxel -> sweep -> surrogate -> verify -> evidence -> report). `aces golden run --demo` computes a six-foot root mount
 inside a disc design space: every design is SIMP topology optimisation turned into an organic implicit skin and solved
 on the real voxel FEA; a GP surrogate fitted to the sweep proposes the winner, which is solved again, checked at a
-finer resolution, and re-solved on CuPy and Warp when they are usable. The loop is described in
+finer resolution, re-solved on CuPy and Warp when they are usable, and (from aces-engineering 0.1.0-3) solved a
+second time on a conforming tet10 mesh with CalculiX. With `--lane sim/pool` the independent check runs on the rig's
+GPUs and the conforming check on its CPUs, through simlab-mcp. The loop is described in
 `src/aces-engineering/README.md` (section "Golden path") and in the aces-engineering skill.
 
 - Run directory: `$ACES_WORK/<project>/golden/<run-id>/` (a simlab experiment directory plus `run.json`,
@@ -70,11 +96,16 @@ finer resolution, and re-solved on CuPy and Warp when they are usable. The loop 
   gets the evidence reference and the components used.
 - Exit codes: 0 pass, 1 verification failed (or `--strict` without `verified-desktop`), 2 usage (including `--lane`),
   3 thin sweep, 4 under-resolved, 5 infeasible, 6 evidence or ledger failure, 7 internal error, 130 interrupted; 127
-  from the `aces golden` passthrough when aces-engineering is not installed.
+  from the `aces golden` passthrough when aces-engineering is not installed. From 0.1.0-3: 2 also for a lane that
+  cannot be used (nothing submitted, no run directory) and for `--rig-sweep`, `--rig-budget` or `--conforming rig`
+  without a lane; 6 also for a rig integrity failure; 1 also for a PASS below `--require-grade`.
 - Verify: `aces golden verify RUN` (files, bundle, both ledgers, sweep table, surrogate models, verdict, report
-  provenance, compute-used rows, manifest), `aces-evidence verify`, `aces ledger verify`.
+  provenance, compute-used rows, manifest; from 0.1.0-3 13 checks, adding `rig` and `conforming` before the manifest
+  and `resolve` last), `aces-evidence verify`, `aces ledger verify`.
 - Grades: desktop solves are `preview-grade`; `verified-desktop` when the finer-resolution check agreed; neither is a
-  sign-off.
+  sign-off. From 0.1.0-3, `rig-verified` when the level-1 check and the conforming check both ran on the rig and
+  passed, on images whose `golden-check` and `ccx-check` validations are `pass` in the rig registry, with matching
+  code and no integrity error; a constraint violated on the conforming mesh caps any run at `preview-grade`.
 
 | Where | Date | Command | Outcome | Grade | Wall s | Run id | Bundle sha12 | simlab entry | aces entry |
 |---|---|---|---|---|---|---|---|---|---|
@@ -82,6 +113,15 @@ finer resolution, and re-solved on CuPy and Warp when they are usable. The loop 
 | CI (GitHub Actions run 37946810947 on commit 24e86af, ubuntu-latest: AMD EPYC 9V74, 2 logical CPUs, no GPU) | 2026-10-09 | same (`bin/install-test aces-base aces-engineering aces-voxel`, after the build step's makepkg `check()` had already run the 169 golden tests and the demo; build 7.5 min, default install test 50 s, this step 91 s). The run's only failure was the log upload after the tests: the copied run records were root-owned 0600 and the runner could not read them (fixed in `bin/install-test` with `chmod -R a+rX /logs/golden`) | pass (exit 0, 40 s including interpreter start) | verified-desktop | 40 (command time; result.json not kept) | `20261009T145633Z-b3ac99` | `0dcdf22e36c3` | 1 | 5 |
 | Rehearsal VM (Omarchy 4.0.4, Python 3.14.7, 4 vCPUs, no GPU) | 2026-10-09 | `aces golden run --demo` from a login shell over ssh, after `pacman -Sy` upgraded aces-base, aces-engineering, aces-voxel and aces-omarchy from the signed LAN repo (packaged venv, CPU only; the 2 mm check ran on the CPU, estimate 2.8 s within the 60 s budget); then `aces golden verify latest` (10 PASS, 1 INFO), `aces-evidence verify` ok, `aces doctor` golden row `ok ... PASS`, the linked skills carry the new text | pass (exit 0, 25 s including interpreter start) | verified-desktop | 23.7 | `20261009T144006Z-b3ac99` | `070c439672c8` | 1 | 2 |
 | DARKNESS (workstation) | 2026-10-09 | `python -m aces_engineering.golden_cli run --demo` (workstation dev venv, Python 3.11.9: CPU sweep in 10 workers, check and parity on the RTX PRO 4000 through CuPy and Warp) | pass (exit 0) | verified-desktop | 42.8 | `20261009T143033Z-b3ac99` | `d8977ebb61f8` | 1 | 2 |
+
+### Golden path on the rig
+
+Filled from the acceptance runs on the real rig (build spec section 24), each row from that run's records
+(`result.json`, `rig/session.json`, `validation.json`, `compute_used.json`). No row is written before such a run
+exists.
+
+| Where | Date | Command | Outcome | Grade | Wall s | Run id | Bundle sha12 | simlab entry | aces entry | Rig experiments | Rig GPUs | Image id12 | Conforming gaps |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 
 ## Not yet written
 
@@ -313,6 +353,20 @@ and the blog posts above.
   yet), and the OCP wheel it installs bundles OpenCASCADE (LGPL), libjbig (GPL) and FreeImage without licence files:
   both are distribution-gate items, not trial-mode blockers.
 - aces-cad-onshape has not run against a live Onshape account; see its section.
+- `calculix-ccx-bin` 2.23-1 does not build: the official binary needs `libgfortran.so.4` (GCC 7's Fortran runtime),
+  which no Arch package provides. Until a sanctioned source for that runtime exists (or ccx is built from source
+  against Arch's gfortran, ARPACK and a SPOOLES build), aces-engineering 0.1.0-3's `checkdepends` cannot be met,
+  `aces-os` 0.1.0-5 does not resolve, CI's engineering install step cannot install it, and the conforming check on
+  ACES OS reports not run (`ccx-not-found`). The same applies to any image that gives the binary only
+  `libgfortran.so.5` (Ubuntu 24.04's `libgfortran5`, for example).
+- Validation is pending until it runs: the rig registry's `golden-check` and `ccx-check` rows stay `pending` until the
+  operator validates them on the rig, so `rig-verified` is unreachable until then, and every image rebuild
+  invalidates the validation.
+- The rig's patched gendesign evaluator multiplies `self.fea.loads` in place in `evaluate()`, and
+  `cases/bracket_param.py` reuses one evaluator, so this matters there (build spec section 1, item 10). Recorded,
+  not fixed.
+- `CHECK_MAX_CELLS` (2,000,000) on the rig: a check level above it is not run on the rig, so a finer level 2 than that
+  stays undone with a lane.
 
 ## How to reproduce
 

@@ -1,0 +1,71 @@
+# Maintainer: Carbon Project Australia
+# CalculiX ccx, the author's own Linux x86_64 binary, for the conforming tet10 second discretisation of aces golden
+# (aces_engineering.golden.conforming: gmsh C3D10 mesh of a verified part, ccx linear static). The tarball holds one
+# file, ./CalculiX/ccx_2.23/src/ccx_2.23; its banner says it was made on 19 Oct 2025, and its .comment strings
+# name SUSE gcc 7.3.1 and 7.5.0. Arch has no calculix in its official repositories (the AUR builds calculix-ccx from
+# source with spooles and arpack); this recipe installs the author's binary unchanged, pinned by the tarball's sha256,
+# which must equal CCX_SHA256 in cudax-sim-runtime scripts/build_golden_image.sh (the rig image ships the same binary).
+#
+# Libraries, read with ldd and pacman -F in aces-builder on 2026-10-10. The binary NEEDs libpthread.so.0, libm.so.6,
+# libc.so.6 (glibc), libgomp.so.1 (libgomp), libgcc_s.so.1 (libgcc), libquadmath.so.0 (libquadmath) and
+# libgfortran.so.4 with symbol version GFORTRAN_7: the GCC 7 Fortran runtime. No package in Arch's repositories provides
+# libgfortran.so.4 (pacman -F finds none; Arch's libgfortran is .so.5, GCC 8 and later, a different ABI), so check()
+# below fails on the "not found" line until a provider is decided. That needs a decision, not a workaround: a pinned
+# second source for the GCC 7 Fortran runtime installed privately for this binary, or a source build of ccx 2.23
+# against Arch's gcc-fortran, arpack and a SPOOLES build. Never point the binary at libgfortran.so.5.
+#
+# Statically linked, as the binary's symbol table shows: SPOOLES 2.2 (FrontMtx_*, InpMtx_*, SubMtx_*, Chv_*, ETree_*,
+# IVL_*; SPOOLES is in the public domain), ARPACK (dsaupd, dnaupd, dseupd; BSD-3-Clause) and LAPACK/BLAS routines
+# (dgetrf, dgemm; reference LAPACK is BSD-3-Clause). CalculiX itself is GPL-2.0-or-later as recorded for this plan; the
+# binary's banner points to gpl.htm, which the tarball does not contain. The version option is -v: ccx 2.23 prints
+# "This is Version 2.23" and exits 201 (run on the binary in a container with the GCC 7 runtime, 2026-10-10).
+pkgname=calculix-ccx-bin
+pkgver=2.23
+pkgrel=1
+pkgdesc="CalculiX ccx $pkgver, the author's x86_64 binary (linear and nonlinear FEA; SPOOLES and ARPACK linked in)"
+arch=('x86_64')
+url="http://www.dhondt.de/"
+license=('GPL-2.0-or-later' 'LicenseRef-SPOOLES-public-domain' 'BSD-3-Clause')
+# libgfortran.so.4 has no provider in Arch (see above); everything else ldd lists is covered here
+depends=('glibc' 'libgcc' 'libgomp' 'libquadmath')
+provides=('calculix-ccx')
+conflicts=('calculix-ccx' 'calculix')
+options=('!strip' '!debug')
+source=("ccx_${pkgver}.tar.bz2::http://www.dhondt.de/ccx_${pkgver}.tar.bz2")
+sha256sums=('35d426fed5eb164fbbaaafa20819d13d22e30bc2b9bc9c6c4ed957e9468355dd')
+# makepkg's file-type test does not see the tar inside this .bz2 and only decompresses it ("Extracting ... with
+# bzip2", no ccx_2.23 afterwards; bin/build on 2026-10-10), so prepare() unpacks it
+noextract=("ccx_${pkgver}.tar.bz2")
+
+prepare() {
+  bsdtar -xf "$srcdir/ccx_${pkgver}.tar.bz2" -C "$srcdir"
+}
+
+_bin() {
+  find "$srcdir" -name "ccx_$pkgver" -type f | head -n 1
+}
+
+check() {
+  local f out
+  f="$(_bin)"
+  if [[ -z "$f" ]]; then
+    echo "check: no ccx_$pkgver in the tarball" >&2
+    return 1
+  fi
+  ldd "$f"
+  if ldd "$f" | grep -q "not found"; then
+    echo "check: ccx_$pkgver needs a library this system does not have (see the ldd lines above)" >&2
+    return 1
+  fi
+  out="$("$f" -v 2>&1 || true)"  # ccx -v prints the version and exits 201
+  echo "$out"
+  if ! grep -q "Version $pkgver" <<<"$out"; then
+    echo "check: ccx_$pkgver -v did not report version $pkgver" >&2
+    return 1
+  fi
+}
+
+package() {
+  install -Dm755 "$(_bin)" "$pkgdir/usr/bin/ccx_$pkgver"
+  ln -s "ccx_$pkgver" "$pkgdir/usr/bin/ccx"
+}
