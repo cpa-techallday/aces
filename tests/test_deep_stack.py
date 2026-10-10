@@ -119,12 +119,38 @@ def test_per_via_transit():
     assert g5["via_transits_s"][0] > 2 * g2["via_transits_s"][0]
 
 
-def test_expectations_use_per_via_transits():
+def test_via_lines_in_cascade():
+    """Expectations interleave via barrels as line sections (job30): the
+    barrel's electrical length moves the S11 null; a series-L does not fit
+    (L = 0 optimum on the deep coupon)."""
     _, g5 = ki.deck_kicad_net_ml(_chain("In5.Cu"), CELL, 4e-9, 10.5e9)
+    assert len(g5["via_lines"]) == 2
+    vl = g5["via_lines"][0]
+    span = (4 * (N_FR4 + 1) + N_RO + 1) * CELL     # In5 -> F.Cu
+    assert vl["length_m"] == pytest.approx(span)
+    assert vl["z0_ohm"] == pytest.approx(
+        ki.stripline_z0_cohn(4.10, (2 * N_FR4 + 1) * CELL, 4 * CELL, t=CELL))
     e5 = ki.expectations_kicad_net_ml(g5, 10.5e9)
+    kinds = [s["kind"] for s in e5["sections"]]
+    assert kinds == ["microstrip", "via_barrel", "stripline",
+                     "via_barrel", "microstrip"]
+    # delay is the sum over ALL line sections (barrels carry their own
+    # transit now; via_transits_s not double-counted)
     assert e5["delay_s_model"] == pytest.approx(
         sum(s["length_m"] * math.sqrt(s["er_eff"]) / C0
-            for s in e5["sections"]) + sum(g5["via_transits_s"]), rel=1e-6)
+            for s in e5["sections"]), rel=1e-9)
+
+
+def test_expectations_legacy_fallback():
+    """Geometry without via_lines keeps the job27 delay convention."""
+    _, g2 = ki.deck_kicad_net_ml(_chain("In2.Cu"), CELL, 4e-9, 10.5e9)
+    g2 = dict(g2)
+    g2.pop("via_lines")
+    e2 = ki.expectations_kicad_net_ml(g2, 10.5e9)
+    assert e2["delay_s_model"] == pytest.approx(
+        sum(s["length_m"] * math.sqrt(s["er_eff"]) / C0
+            for s in e2["sections"])
+        + sum(g2["via_transits_s"]), rel=1e-9)
 
 
 def test_other_layers_still_raise():

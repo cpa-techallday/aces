@@ -1,6 +1,6 @@
 # ACES radar domain — the AERIS-X64 EM simulation pipeline
 
-Doc: CPA-ACES-RADAR-001 · Rev L · 2026-10-10 · status: fast tier live, verification tier live on gprMax AND Palace — patch_xband, wr90_through, tile_coupon, tile_multiport PASS on workstation, in the `aces-em:0.1` rig image, and wr90_through cross-checked FEM-vs-FDTD (S21 agreement 0.005 dB); patch far-field CLOSED with a verified matched-feed realized gain **5.33 dBi @ 9.88 GHz** (job22); **KiCad-layout import LIVE** (job23: `kicad_net` case, RXO_1 PASS — measured Z0 76.5 Ω vs 50 Ω spec: a real design finding); **50 Ω redesign verified** (job24: w = 0.51 mm → measured 52.7 Ω, inside the ±7 % fab band); **via transitions LIVE** (job25: `via_coupon` case PASS — stitched F.Cu→In2→F.Cu transition, delay 0.3 %, S21 0.30 dB vs cascade); **arbitrary-angle routes LIVE** (job26: staircase-rasterised diagonal import, coupon PASS — Z0 bias ≤ 0.02 %, er_eff fringe +3.1 % at h/4 → +1.7 % at h/5); **multi-layer import LIVE** (job27: `kicad_net_ml` case PASS — F.Cu↔In2.Cu via chains, coupon-equivalence vs job25 within 0.05 dB; the real PAI/TR/CAL nets raise honestly: component-interrupted or stub-ended); **F.Cu pour / GCPW LIVE** (job28: zone polygons parsed, pour rasterised onto decks, coupon PASS — pour drops Z0 8.7 % at 0.2 mm gap, monotonic in gap; RXO_1 with its real pour measures **67.4 Ω**, 11.8 % below the pour-free line); **N-port decomposition LIVE** (job29: `kicad_net_nport` case, 3-port Tee coupon PASS — reciprocity 0.012 dB, column power 0.98–0.99, junction discontinuity sub-dB quantified vs the ideal lossless Tee)
+Doc: CPA-ACES-RADAR-001 · Rev M · 2026-10-10 · status: fast tier live, verification tier live on gprMax AND Palace — patch_xband, wr90_through, tile_coupon, tile_multiport PASS on workstation, in the `aces-em:0.1` rig image, and wr90_through cross-checked FEM-vs-FDTD (S21 agreement 0.005 dB); patch far-field CLOSED with a verified matched-feed realized gain **5.33 dBi @ 9.88 GHz** (job22); **KiCad-layout import LIVE** (job23: `kicad_net` case, RXO_1 PASS — measured Z0 76.5 Ω vs 50 Ω spec: a real design finding); **50 Ω redesign verified** (job24: w = 0.51 mm → measured 52.7 Ω, inside the ±7 % fab band); **via transitions LIVE** (job25: `via_coupon` case PASS — stitched F.Cu→In2→F.Cu transition, delay 0.3 %, S21 0.30 dB vs cascade); **arbitrary-angle routes LIVE** (job26: staircase-rasterised diagonal import, coupon PASS — Z0 bias ≤ 0.02 %, er_eff fringe +3.1 % at h/4 → +1.7 % at h/5); **multi-layer import LIVE** (job27: `kicad_net_ml` case PASS — F.Cu↔In2.Cu via chains, coupon-equivalence vs job25 within 0.05 dB; the real PAI/TR/CAL nets raise honestly: component-interrupted or stub-ended); **F.Cu pour / GCPW LIVE** (job28: zone polygons parsed, pour rasterised onto decks, coupon PASS — pour drops Z0 8.7 % at 0.2 mm gap, monotonic in gap; RXO_1 with its real pour measures **67.4 Ω**, 11.8 % below the pour-free line); **N-port decomposition LIVE** (job29: `kicad_net_nport` case, 3-port Tee coupon PASS — reciprocity 0.012 dB, column power 0.98–0.99, junction discontinuity sub-dB quantified vs the ideal lossless Tee); **In5.Cu deep stack LIVE** (job30: full TILE_8L depth — In4/In6 planes, deep via antipads + full-cage stitching; via barrels are LINE sections in the cascade, not series L — deep coupon PASS, S11 residual 0.060)
 
 This adds the AERIS-X64 X-band phased-array radar as an ACES domain
 (`radar.phased_array`) and wires the simulation pipeline that carries a radar
@@ -287,6 +287,28 @@ recorded with measured deltas — S_ii −9.24 dB vs −9.69 dB ideal,
 S_ij −3.62 dB vs −3.45 dB: the junction discontinuity is sub-dB at
 10.5 GHz for w/h = 2, now quantified rather than assumed.
 
+**In5.Cu deep stack (job30, LIVE):** `deck_kicad_net_ml` accepts In5.Cu
+sections — the deep region (In4/In6 GND planes, three 0.162 mm FR4 gaps
+below In3, per the TILE_8L budget in `09_STACKUP_IMPEDANCE/stackup.py`) is
+added only when a chain uses it, so In2-only decks are bit-identical to
+job27.  In5.Cu is the same symmetric-stripline environment as In2.Cu
+(b = 0.324 mm FR4, er 4.10 — same Cohn model).  Deep vias get antipads on
+every crossed GND plane (In1/In3/In4) and full plane-cage stitching
+(In6..In1); shallow vias keep the job25 recipe untouched.  The deep coupon
+(F.Cu–via–In5–via–F.Cu, job27 geometry) exposed a real model gap,
+diagnosed honestly in three steps: the raw cascade fails (S11 residual
+0.265 vs 0.15 — measured S11 null at ~8.5 GHz vs model 12.36 GHz); a
+fitted series L does NOT reconcile it (L = 0 optimum — not inductive, and
+the power balance matches the dielectric-loss model, so not leakage); the
+via barrels are **line sections** (1.118 mm at er_fr4, Cohn Z0 at the
+barrel width) and with them the coupon **PASSES** (S11 residual 0.060,
+S21 0.146 dB, delay 0.4 %).  The job25 shallow-via fit (L_eff < 0.02 nH)
+does not extend to 2.4× longer barrels — but no fit is needed, just the
+barrel's electrical length.  job27 regression with the new cascade: S11
+0.118 / S21 0.268 dB, unchanged PASS.  Real-net honesty is unchanged with
+the stack off the table: PAI_1/TR_CH1 are component-interrupted chains,
+CAL_2 trips the triad guard.
+
 **Patch far-field (job14 + job20 audit, resolved):** gprMax 4.x
 layered-background NTFF (`#ntff_layered_background` with the PEC-terminated
 RO4350B stack — the Sommerfeld formulation; a conventional Huygens box is
@@ -425,7 +447,7 @@ records factors and provenance, not geometry.
 | Domain package | `src/aces/domains/radar/` (`array`, `cascade`, `linkbudget`, `model`, `calibrate`, `em_adapter`) |
 | Registration | `src/aces/domains/__init__.py` (`MODELS`) |
 | Spec template | `specs/templates/radar_phased_array.yaml` (X64 baseline values, datasheet-cited chain) |
-| Tests | `tests/test_radar.py` (16 tests), `tests/test_em_adapter.py` (25 tests), `tests/test_kicad_import.py` (11 tests), `tests/test_via_coupon.py` (13 tests), `tests/test_staircase_import.py` (8 tests), `tests/test_kicad_net_ml.py` (7 tests), `tests/test_gcpw_pour.py` (7 tests), `tests/test_nport_tee.py` (9 tests) |
+| Tests | `tests/test_radar.py` (16 tests), `tests/test_em_adapter.py` (25 tests), `tests/test_kicad_import.py` (11 tests), `tests/test_via_coupon.py` (13 tests), `tests/test_staircase_import.py` (8 tests), `tests/test_kicad_net_ml.py` (7 tests), `tests/test_gcpw_pour.py` (7 tests), `tests/test_nport_tee.py` (9 tests), `tests/test_deep_stack.py` (8 tests) |
 
 ## 6. What this does not do yet
 
@@ -458,9 +480,11 @@ records factors and provenance, not geometry.
   The F.Cu GND pour is modelled (job28 — zone polygons rasterised onto
   the trace layer, coupon PASS, RXO_1 with its real pour at 67.4 Ω) and
   N-port junctions decompose (job29, kicad_net_nport PASS — 3-port Tee
-  coupon, junction discontinuity sub-dB quantified).  Junction-graph
-  extraction from the KiCad net topology
-  and the In5.Cu stack region remain future work.  CAL_* nets are deferred (0.6 mm
+  coupon, junction discontinuity sub-dB quantified), and the In5.Cu deep
+  stack region is modelled (job30 PASS — deep via barrels are cascade
+  line sections; antipads on every crossed plane, full-cage stitching).
+  Junction-graph extraction from the KiCad net topology remains future
+  work.  CAL_* nets are deferred (0.6 mm
   end sections cannot host a probe
   triad, CPL pad offsets odd — recorded finding).  The gprMax
   eigenmode-port sweep beta degrades mid-anchor (up to

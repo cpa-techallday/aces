@@ -807,6 +807,16 @@ def deck_kicad_net_ml(chain: dict, cell: float, window_s: float, f0: float,
             "stitch_cells": stitch_cells, "stitch_off_m": stitch_off,
             "via_transit_s": via_transit,
             "via_transits_s": via_transits,
+            # via barrels as short stripline-like line sections (job30):
+            # the deep coupon's S11 null sits 3.5 GHz low because the
+            # barrel's electrical length (1.17 mm at er_fr4) interferes —
+            # a series-L does NOT fit (L = 0 optimum), a line section does
+            "via_lines": [{"length_m": round(abs(za - zb) / cell) * cell,
+                           "er_eff": er_fr4,
+                           "z0_ohm": stripline_z0_cohn(er_fr4, b_sl,
+                                                       via_cells * cell,
+                                                       t=cell)}
+                          for za, zb in via_levels],
             "er_ro": er_ro, "tand_ro": tand_ro, "er_fr4": er_fr4, "tand_fr4": tand_fr4,
             "n_diagonal_segments": n_diag, "rasterised_cells": raster_total,
             "probes_near_m": probes["near"], "probes_far_m": probes["far"],
@@ -817,21 +827,35 @@ def deck_kicad_net_ml(chain: dict, cell: float, window_s: float, f0: float,
 
 def expectations_kicad_net_ml(geom: dict, f_hz: float) -> dict:
     """Cascade reference for a multi-layer chain: lossy per-section lines
-    (microstrip Hammerstad / stripline Cohn) in chain order; stitched via
-    loop-L neglected (job25), delay includes each via's vertical transit
-    (per-via list, job30; falls back to n_vias x the F.Cu<->In2 transit)."""
-    sections = [{"z0": s["z0_ohm"], "er_eff": s["er_eff"],
-                 "length_m": s["length_m"], "kind": s["kind"],
-                 "er": s["er"], "tand": s["tand"]}
-                for s in geom["sections_model"]]
-    sp = cascade_sparams([f_hz], sections)[0]
-    delay = sum(s["length_m"] * math.sqrt(s["er_eff"]) / C0 for s in sections)
-    if geom.get("via_transits_s"):
-        delay += sum(geom["via_transits_s"])
+    (microstrip Hammerstad / stripline Cohn) in chain order, with each via
+    barrel inserted as a short line section (job30 — the barrel's
+    electrical length moves the S11 null; a series-L does not fit, L = 0
+    optimum).  Stitched via loop-L neglected (job25).  Legacy fallback for
+    geometry without ``via_lines``: delay adds n_vias x via_transit_s."""
+    line_sections = [{"z0": s["z0_ohm"], "er_eff": s["er_eff"],
+                      "length_m": s["length_m"], "kind": s["kind"],
+                      "er": s["er"], "tand": s["tand"]}
+                     for s in geom["sections_model"]]
+    via_lines = geom.get("via_lines") or []
+    if via_lines:
+        # interleave: section 0, via 0, section 1, via 1, ...
+        secs = []
+        for i, s in enumerate(line_sections):
+            secs.append(s)
+            if i < len(via_lines):
+                secs.append({"z0": via_lines[i]["z0_ohm"],
+                             "er_eff": via_lines[i]["er_eff"],
+                             "length_m": via_lines[i]["length_m"],
+                             "kind": "via_barrel",
+                             "er": geom["er_fr4"], "tand": geom["tand_fr4"]})
     else:
+        secs = line_sections
+    sp = cascade_sparams([f_hz], secs)[0]
+    delay = sum(s["length_m"] * math.sqrt(s["er_eff"]) / C0 for s in secs)
+    if not via_lines:
         delay += geom["n_vias"] * geom.get("via_transit_s", 0.0)
     return {"s11_model": sp["s11"], "s21_model": sp["s21"],
-            "delay_s_model": delay, "sections": sections}
+            "delay_s_model": delay, "sections": secs}
 
 
 # ------------------------------------------------------------------ polyline

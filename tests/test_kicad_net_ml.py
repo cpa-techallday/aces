@@ -81,15 +81,19 @@ def test_ml_probe_order_matches_runner_contract():
 
 
 def test_ml_expectations_match_via_coupon_reference():
-    # same topology and stack as the job25 via_coupon -> same model values;
-    # via_coupon snaps 6.0 mm to 118 cells = 5.9944 mm, so chain to that
+    # same topology and stack as the job25 via_coupon -> close model values;
+    # via_coupon snaps 6.0 mm to 118 cells = 5.9944 mm, so chain to that.
+    # job30: the ml cascade now carries each via barrel as a short line
+    # section (delay AND its small FR4 dielectric loss, ~0.09 dB for the
+    # shallow pair) instead of via_coupon's lossless delay-only transit —
+    # the models agree to 2 % in S21 magnitude / 1 % in delay, not exactly.
     _, geom = ki.deck_kicad_net_ml(_chain(l_ms=5.9944, l_sl=5.9944),
                                    CELL, 4e-9, 10.5e9)
     ex = ki.expectations_kicad_net_ml(geom, 10e9)
     _, geom_ref = ki.deck_via_coupon(CELL, 4e-9, 10.5e9)
     ex_ref = ki.expectations_via_coupon(geom_ref, 10e9)
-    assert abs(ex["s21_model"]) == pytest.approx(abs(ex_ref["s21_model"]), rel=1e-6)
-    assert ex["delay_s_model"] == pytest.approx(ex_ref["delay_s_model"], rel=1e-9)
+    assert abs(ex["s21_model"]) == pytest.approx(abs(ex_ref["s21_model"]), rel=0.02)
+    assert ex["delay_s_model"] == pytest.approx(ex_ref["delay_s_model"], rel=0.01)
 
 
 def test_ml_stitches_clear_traces():
