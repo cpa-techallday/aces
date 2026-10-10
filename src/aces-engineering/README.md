@@ -172,12 +172,19 @@ volume 1 %; von Mises outputs the larger of the spec's tolerance and 15 %; every
 check **agrees** when the objective, every constraint and the compliance are within their bands, and **passes** when
 it also meets every constraint on the tet10 mesh. Limits: 1,500,000 DOF and 900 s here (up to 8 threads), 3,000,000
 DOF and 3000 s on the rig (16 threads); a larger part is recorded as not run (`too-large`), and the mesh is never
-coarsened silently. Without gmsh or ccx the check is recorded as not run, with the reason.
+coarsened silently. ccx solves with SPOOLES only, so a mesh above 800,000 DOF (`SPOOLES_MAX_DOF`) is `too-large` on
+either host as well: above it ccx would switch to its iterative Cholesky solver, which stops with the reactions out of
+balance far beyond the equilibrium tolerance of 1e-6 (1.46e-3 to 2.71e-3 relative on the test parts). Without gmsh or
+ccx the check is recorded as not run, with the reason.
 
 Measured on 2026-10-10 in a Linux test container (Ubuntu 24.04) with the official ccx 2.23 binary and gmsh 4.15.2
-(its libgmsh byte-identical to the locked wheel's), not on ACES OS (see Known gaps): the demo's verified part meshed on
-gmsh's discrete route into 38,618 C3D10 (187,011 DOF) and solved with 16 CPUs in 53.1 s; against the 1 mm voxel check
-it agreed within every band (vm_p99 -4.8 %, umax -4.2 %, compliance -5.0 %).
+(its libgmsh byte-identical to the locked wheel's): the demo's verified part meshed on gmsh's discrete route into
+38,618 C3D10 (187,011 DOF) and solved with 16 CPUs in 53.1 s; against the 1 mm voxel check it agreed within every band
+(vm_p99 -4.8 %, umax -4.2 %, compliance -5.0 %). On the packages (aces-engineering 0.1.0-3 with calculix-ccx-bin
+2.23-1 in a clean `archlinux:base`, `bin/install-test`, the same day) the part again meshed into 38,618 C3D10 (187,011
+DOF); the check took 28.7 s with 8 threads (ccx 20.9 s, SPOOLES, equilibrium 3.6e-08) and its record names the rig
+image's ccx sha256 (`31be21fc...`); against the 2 mm voxel check (no GPU there, so no 1 mm level) it agreed within
+every band and met every constraint (vm_p99 -5.7 %, umax -2.2 %, compliance -2.3 %).
 
 ### Grades
 
@@ -299,16 +306,22 @@ never reported as a rig result.
   GCC 7 Fortran runtime it needs): the 35 conforming tests, OK, none skipped; the selftest's `conforming` check PASS
   (bar patch test: 539 C3D10 on the remesh route, worst relative difference 2.3e-08, equilibrium 5.4e-09); without
   ccx it reports INFO `not run: ccx not found ...`, and with a ccx that cannot start, FAIL.
-- `bash bin/build calculix-ccx-bin`: stops in `check()` at `libgfortran.so.4 => not found` (Known gaps), so this
-  package, whose `checkdepends` is calculix-ccx-bin, has not been built or install-tested at 0.1.0-3.
+- On the packaging branch `bash bin/build calculix-ccx-bin` stopped in `check()` at `libgfortran.so.4 => not
+  found`, so this package was not built there. At the integration (6db440f, where calculix-ccx-bin brings the GCC 7
+  runtime: review finding 4) `bash bin/build calculix-ccx-bin` and `bash bin/build aces-engineering aces-omarchy
+  aces-os` exit 0; this package's `check()`, with calculix-ccx-bin installed, passed the selftest (`92/92 import`,
+  `conforming` PASS: 539 C3D10, worst relative difference 2.3e-08, equilibrium 5.4e-09), the 300 golden tests (2
+  skipped) and the demo; `bin/install-test aces-base aces-engineering aces-voxel calculix-ccx-bin` exit 0, the demo
+  `verified-desktop` with the conforming check `ok` on the packaged ccx (above).
 
 ## Known gaps
 
-- `calculix-ccx-bin` does not build on Arch yet: the official ccx_2.23 binary needs `libgfortran.so.4` (GCC 7's
-  Fortran runtime, symbol version GFORTRAN_7), and no Arch package provides it (Arch's is `.so.5`). With that one
-  library on the loader path the same binary runs on Arch and writes byte-identical results. Until it is provided
-  (or ccx is built from source against Arch's gfortran), the conforming check on ACES OS is not run
-  (`ccx-not-found`), and this package's `checkdepends` cannot be met.
+- `calculix-ccx-bin` brings GCC 7's `libgfortran.so.4` (from Ubuntu 20.04's `libgfortran4` 7.5.0-6ubuntu2, privately
+  under `/usr/lib/calculix-ccx-bin`), because the official ccx_2.23 binary needs it (symbol version GFORTRAN_7) and no
+  Arch package provides it (Arch's is `.so.5`). That second download was the integration fixer's decision (review
+  finding 4); it stands until it is confirmed or ccx is built from source against Arch's gfortran.
+- A mesh above 800,000 DOF (`SPOOLES_MAX_DOF`) is not solved (`too-large`), so the `MAX_DOF` limits are not reached
+  until SPOOLES is measured at those sizes against the time limits (review finding 1).
 - The rig registry's `golden-check` and `ccx-check` rows are `pending` until the operator validates them on the rig
   (cudax-sim-runtime `docs/GOLDEN_RIG.md`): until then `rig-verified` is unreachable by design, and every rebuild of
   the image invalidates the validation.

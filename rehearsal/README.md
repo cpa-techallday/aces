@@ -206,10 +206,10 @@ Afterwards (steps 10 and 11): the rig gate is ok, `rig_capacity` shows the pool 
 container is left, and the `docs/PACKAGES.md` table "Golden path on the rig" and the BENCHMARKS rows are filled from
 these runs' records. If the grade is not `rig-verified` because of a band, the cap or a validation, no band is changed.
 
-`calculix-ccx-bin` 2.23-1 does not build on Arch yet (the official binary needs `libgfortran.so.4`; see
-`docs/PACKAGES.md`). Until it does, the `pacman` line of step 7 stops at `target not found: calculix-ccx-bin` and the
-desktop conforming check of step 8 is recorded as not run (`ccx-not-found`); record that, and do not work around it on
-the VM.
+`calculix-ccx-bin` 2.23-1 builds at the integration: it brings the GCC 7 Fortran runtime the official binary needs
+(see `docs/PACKAGES.md`), and in a clean container it installed, `ccx -v` named 2.23 and the demo's conforming check
+ran. If the `pacman` line of step 7 still stops at `calculix-ccx-bin`, or the desktop conforming check of step 8 says
+`ccx-not-found`, record that as it comes, and do not work around it on the VM.
 
 ## Known problems to expect
 

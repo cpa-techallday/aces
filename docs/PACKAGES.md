@@ -77,6 +77,25 @@ CI's engineering step installs `calculix-ccx-bin` too. The block's logic was exe
 cases (check ran; no ccx; ccx installed but not found by the check; `compute` without `--lane`; a usable lane), all
 as expected; the real block has not run, since aces-engineering 0.1.0-3 was not built.
 
+## Integration build after review (2026-10-10, branch `golden-rig/integration`)
+
+Built and install-tested by the integration fixer in its own worktree (`aces-os-golden-integration`, unsigned: there
+is no key there) on DARKNESS, at 6db440f: the integrated tree (the cudax snapshot `rig-golden-1` and the golden rig
+client, 30bee52) plus the fixes for review findings 1 to 4. The cells hold only what was run there; the rows above
+stay as the packaging branch measured them. The engineering block of `bin/install-test` ran for real here for the
+first time.
+
+| Package | Version | What changed | Build | Test evidence |
+|---|---|---|---|---|
+| `calculix-ccx-bin` | 2.23-1 | Review finding 4: the package brings the GCC 7 Fortran runtime the binary needs. A second pinned source, Ubuntu 20.04's `libgfortran4_7.5.0-6ubuntu2_amd64.deb` (`archive.ubuntu.com`, 492,528 bytes, sha256 `9191a744ea8e1cb877c26bfb1cb6efa06305be49c7053eecfee5f1037a8005d5`), the deb the rig image takes it from; `prepare()` checks its `libgfortran.so.4.0.0` against `3f198ada9cdcda0c6b2fba24d6654c839ea91d0e8246c8ddba5b1b2851dff4b2`, the sha256 the image pins; installed privately as `/usr/lib/calculix-ccx-bin/libgfortran.so.4.0.0` (with the `.so.4` link) behind `/etc/ld.so.conf.d/calculix-ccx-bin.conf`; licence += `GPL-3.0-or-later WITH GCC-exception-3.1`. The ccx binary is unchanged (no wrapper script, no patchelf), so the ccx sha256 a conforming record names is the image's | `bash bin/build calculix-ccx-bin` exit 0: both sources `Passed`, `libgfortran.so.4.0.0: OK`, in `check()` `libgfortran.so.4 => /build/work/src/gf4/libgfortran.so.4` and `This is Version 2.23`, `Finished making: calculix-ccx-bin 2.23-1`. In the package: `usr/bin/ccx_2.23` sha256 `31be21fc2f0902bd9a05acc2651dbac6dc2a2573dabbf235e39a38cb6f458862`, `.PKGINFO` depends glibc, libgcc, libgomp, libquadmath | installed by `makepkg -s` as aces-engineering's checkdepends, and by `bin/install-test aces-base aces-engineering aces-voxel calculix-ccx-bin` in a clean `archlinux:base`: `ccx: /usr/sbin/ccx: This is Version 2.23`; the demo's conforming record names solver sha256 `31be21fc...` (above), `*STATIC, SOLVER=SPOOLES`, rc 0 |
+| `aces-engineering` | 0.1.0-3 | the integrated tree with the fixes for review findings 1 (a mesh above `SPOOLES_MAX_DOF`, 800,000 DOF, is `too-large`, not run), 2 and 3 (a file the rig will not hand over, or an internal error in a rig case, is not delivered and falls back to the desktop) | `bash bin/build aces-engineering aces-omarchy aces-os` exit 0 (07:14:43Z to 07:21:39Z), `Finished making: aces-engineering 0.1.0-3`. `check()` with calculix-ccx-bin installed: selftest `92/92 import`, `conforming` PASS (bar patch test, 539 C3D10 at 1 mm on the remesh route, ccx 2.23, worst rel diff 2.3e-08, equilibrium 5.4e-09), `all hard checks passed`; golden tests `Ran 300 tests in 222.753s`, `OK (skipped=2)`; the demo with `--conforming off`, `aces golden verify 20261010T071953Z-b3ac99: all checks pass`; venv 1.1G (78 distributions) | `bin/install-test aces-base aces-engineering aces-voxel calculix-ccx-bin` exit 0: `import gmsh` 4.15.2; `aces golden compute --lane sim/pool` exit 2 (`it is not in the fabric manifest (sim lanes: none); nothing was submitted`); `aces golden run --demo` exit 0 after 53 s, PASS, verified-desktop, `golden: conforming status ok \| agrees within its bands and meets every constraint` (row in the golden path table below); `aces golden verify` all checks pass (11 PASS, 2 INFO: rig, resolve); `aces ledger verify` 5 entries, chain intact; `aces-evidence verify` ok |
+| `aces-omarchy` | 0.1.0-6 | no change since the packaging branch; rebuilt in the same call | built (any, unsigned) | `bash bin/install-test` (default set) exit 0: `aces-omarchy-setup` linked the skills into `~/.claude/skills` and `~/.agents/skills`, `aces doctor`: `skills ok`, and `--remove` unlinked them |
+| `aces-os` | 0.1.0-5 | no change since the packaging branch; rebuilt with `--nodeps` | built (any, unsigned) | resolves now: `aces-os: resolves, 509 packages in the transaction` (default install test) and 520 (engineering install test), next to `aces-field` 372 and 375 and `aces-survey` 256 and 261 |
+
+Both install tests ran `aces fabric refresh`, a step `bin/install-test` has always had, which probes the configured
+rig endpoints: from the containers every probe timed out (`unreachable: <urlopen error timed out>`) and the manifest
+listed no lanes.
+
 ## Golden path (`aces golden`)
 
 One command from a design space to a computed, verified and evidenced organic part (VISION section 11.1: STEP ->
@@ -113,6 +132,7 @@ GPUs and the conforming check on its CPUs, through simlab-mcp. The loop is descr
 | CI (GitHub Actions run 37946810947 on commit 24e86af, ubuntu-latest: AMD EPYC 9V74, 2 logical CPUs, no GPU) | 2026-10-09 | same (`bin/install-test aces-base aces-engineering aces-voxel`, after the build step's makepkg `check()` had already run the 169 golden tests and the demo; build 7.5 min, default install test 50 s, this step 91 s). The run's only failure was the log upload after the tests: the copied run records were root-owned 0600 and the runner could not read them (fixed in `bin/install-test` with `chmod -R a+rX /logs/golden`) | pass (exit 0, 40 s including interpreter start) | verified-desktop | 40 (command time; result.json not kept) | `20261009T145633Z-b3ac99` | `0dcdf22e36c3` | 1 | 5 |
 | Rehearsal VM (Omarchy 4.0.4, Python 3.14.7, 4 vCPUs, no GPU) | 2026-10-09 | `aces golden run --demo` from a login shell over ssh, after `pacman -Sy` upgraded aces-base, aces-engineering, aces-voxel and aces-omarchy from the signed LAN repo (packaged venv, CPU only; the 2 mm check ran on the CPU, estimate 2.8 s within the 60 s budget); then `aces golden verify latest` (10 PASS, 1 INFO), `aces-evidence verify` ok, `aces doctor` golden row `ok ... PASS`, the linked skills carry the new text | pass (exit 0, 25 s including interpreter start) | verified-desktop | 23.7 | `20261009T144006Z-b3ac99` | `070c439672c8` | 1 | 2 |
 | DARKNESS (workstation) | 2026-10-09 | `python -m aces_engineering.golden_cli run --demo` (workstation dev venv, Python 3.11.9: CPU sweep in 10 workers, check and parity on the RTX PRO 4000 through CuPy and Warp) | pass (exit 0) | verified-desktop | 42.8 | `20261009T143033Z-b3ac99` | `d8977ebb61f8` | 1 | 2 |
+| Clean container (`bin/install-test aces-base aces-engineering aces-voxel calculix-ccx-bin`, integration 6db440f) | 2026-10-10 | `aces golden run --demo --json --progress lines` (packaged venv, Python 3.14.7, CPU only; the conforming check on this host with calculix-ccx-bin 2.23-1: 38,618 C3D10, 187,011 DOF, 8 threads, 28.7 s, SPOOLES, equilibrium 3.6e-08); then `aces golden verify latest` (11 PASS, 2 INFO), `aces ledger verify` and `aces-evidence verify` ok | pass (exit 0, 53 s including interpreter start) | verified-desktop | 51.7 | `20261010T072618Z-b3ac99` | `0b0eedd7f5b2` | 1 | 5 |
 
 ### Golden path on the rig
 
@@ -353,12 +373,17 @@ and the blog posts above.
   yet), and the OCP wheel it installs bundles OpenCASCADE (LGPL), libjbig (GPL) and FreeImage without licence files:
   both are distribution-gate items, not trial-mode blockers.
 - aces-cad-onshape has not run against a live Onshape account; see its section.
-- `calculix-ccx-bin` 2.23-1 does not build: the official binary needs `libgfortran.so.4` (GCC 7's Fortran runtime),
-  which no Arch package provides. Until a sanctioned source for that runtime exists (or ccx is built from source
-  against Arch's gfortran, ARPACK and a SPOOLES build), aces-engineering 0.1.0-3's `checkdepends` cannot be met,
-  `aces-os` 0.1.0-5 does not resolve, CI's engineering install step cannot install it, and the conforming check on
-  ACES OS reports not run (`ccx-not-found`). The same applies to any image that gives the binary only
-  `libgfortran.so.5` (Ubuntu 24.04's `libgfortran5`, for example).
+- `calculix-ccx-bin` 2.23-1 brings GCC 7's `libgfortran.so.4` from Ubuntu 20.04's `libgfortran4` 7.5.0-6ubuntu2: the
+  official binary needs it and no Arch package provides it. That second download was the integration fixer's decision
+  for review finding 4, outside the downloads build spec section 3.2 lists, and it stands until the judge confirms it
+  or ccx is built from source against Arch's gfortran, ARPACK and a SPOOLES build (which would change the ccx sha256
+  every conforming record names). An image that gives the binary only `libgfortran.so.5` (Ubuntu 24.04's
+  `libgfortran5`, for example) still cannot run it.
+- The conforming check solves with SPOOLES only: a mesh above `SPOOLES_MAX_DOF` (800,000 DOF) is `too-large`, not
+  run, on the desktop and on the rig alike, so the `MAX_DOF` limits (1,500,000 here, 3,000,000 on the rig) are not
+  reached (review finding 1: ccx's iterative solver left the reactions out of balance by 1.46e-3 to 2.71e-3 relative
+  on the test parts, where the tolerance is 1e-6). Raising the limit waits for a measurement of SPOOLES at those sizes
+  against the time limits.
 - Validation is pending until it runs: the rig registry's `golden-check` and `ccx-check` rows stay `pending` until the
   operator validates them on the rig, so `rig-verified` is unreachable until then, and every image rebuild
   invalidates the validation.
