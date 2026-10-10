@@ -29,8 +29,8 @@ MAX_POSITION_DIMS = 12
 TABLE_CHUNK = 250       # hole-table rows per list in the result: spec 5.4 caps every list there at 500 items
 MAX_TABLE_ROWS = 10_000  # rows returned for drawing.json (the result file is capped at 4 MiB); the DXF has them all
 MAX_TABLE_COLUMNS = 6
-HOLE_LIMIT = 100        # spec 12.4: hole detection reports at most 100 holes, so 100 found may mean more exist
-HOLE_LIMIT_NOTE = (f"NOTE: HOLE DETECTION STOPS AT {HOLE_LIMIT} HOLES PER PART: HOLE COUNTS AND POSITIONS MAY BE "
+HOLE_LIMIT = 100        # spec 12.4: hole detection reports at most 100 holes per part (one more is asked for)
+HOLE_LIMIT_NOTE = (f"NOTE: HOLE DETECTION STOPS AT {HOLE_LIMIT} HOLES PER PART: HOLE COUNTS AND POSITIONS ARE "
                    "INCOMPLETE")
 CHAR_W = 0.85          # monospace advance per character, as a multiple of the text height (DejaVu Sans Mono)
 HIDDEN_PATTERN = [4.5, 3.0, -1.5]
@@ -721,12 +721,13 @@ def op_drawing(args: dict, ctx) -> dict:
         if not sketch:
             for k, p in enumerate(parts):
                 try:
-                    found = geom.find_holes(p.shape) if p.kind != "sketch" else []
+                    found = geom.find_holes(p.shape, limit=HOLE_LIMIT + 1) if p.kind != "sketch" else []
                 except Exception as e:  # noqa: BLE001 (hole detection is best effort for a drawing)
                     warnings.append(f"hole detection failed on {p.name}: {type(e).__name__}: {str(e)[:200]}")
                     found = []
-                if len(found) >= HOLE_LIMIT:
+                if len(found) > HOLE_LIMIT:
                     capped.append(p.name)
+                    found = found[:HOLE_LIMIT]
                 for hole in found:
                     if not _hole_ok(hole):
                         warnings.append("a hole record without the expected fields was skipped")
@@ -746,9 +747,9 @@ def op_drawing(args: dict, ctx) -> dict:
     x0, x1, y0, y1 = _extents(msp)
     lines = _title_lines(a["title_block"], a["projection"], build123d.__version__)
     if capped:
-        warnings.append(f"hole detection reports at most {HOLE_LIMIT} holes per part (spec 12.4) and found that many "
-                        f"in {', '.join(capped)}: the part may have more holes than this drawing shows, so check the "
-                        f"hole counts, callouts and positions against the model")
+        warnings.append(f"hole detection reports at most {HOLE_LIMIT} holes per part (spec 12.4) and "
+                        f"{', '.join(capped)} has more: this drawing shows {HOLE_LIMIT} of them, so check the hole "
+                        f"counts, callouts and positions against the model")
         lines.append(HOLE_LIMIT_NOTE)
     top = y0 - 2.0 * h
     for i, line in enumerate(lines):

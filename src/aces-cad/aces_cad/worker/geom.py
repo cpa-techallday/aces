@@ -319,11 +319,12 @@ def _inside(solids, point) -> bool:
     return any(s.is_inside(v) for s in solids)
 
 
-def find_holes(shape) -> list[dict]:
+def find_holes(shape, limit: int = HOLE_LIMIT) -> list[dict]:
     """Holes: groups of coaxial concave cylinder (and cone) faces whose drill-radius cylinders span 360 degrees.
 
     Through/blind from Solid.is_inside 0.01 mm beyond each end of the stack; counterbore (a larger coaxial cylinder at
-    the entry) and countersink (a concave cone at the entry) detected. Records of section 12.4, at most 100.
+    the entry) and countersink (a concave cone at the entry) detected. Records of section 12.4, at most `limit` (100
+    by default); callers that report the cap ask for HOLE_LIMIT + 1 to learn whether more holes exist.
     """
     import numpy as np
     import build123d as bd
@@ -413,7 +414,7 @@ def find_holes(shape) -> list[dict]:
                       "entry_point_mm": [float(x) + 0.0 for x in entry], "depth_mm": float(t_hi - t_lo),
                       "through": bool(through), "cbore": cbore, "csk": csk,
                       "faces": [face_ref(m["n"]) for m in sorted(members, key=lambda m: m["n"])]})
-    holes = holes[:HOLE_LIMIT]
+    holes = holes[:max(0, int(limit))]
     for i, h in enumerate(holes, 1):
         h["id"] = f"h{i}"
     _group_holes(holes)

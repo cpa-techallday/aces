@@ -318,7 +318,7 @@ def check_holes(loaded, parts, args, ctx) -> dict:
             continue
         if p.kind != "solid":
             continue
-        for h in geom.find_holes(p.shape):
+        for h in geom.find_holes(p.shape, limit=geom.HOLE_LIMIT + 1):  # one past the cap: holes_truncated is true
             holes.append(dict(h, part=p.name))
     truncated = len(holes) > geom.HOLE_LIMIT
     holes = holes[:geom.HOLE_LIMIT]

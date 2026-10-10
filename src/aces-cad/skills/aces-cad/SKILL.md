@@ -240,8 +240,8 @@ right and iso; third-angle projection unless you ask for first-angle):
 
 Dimension values are measured from the B-rep, never typed. It is not a GD&T drawing: no tolerances, datums or
 surface finish, so check it before manufacture. The DXF is the deliverable. Meshes are refused. Hole detection
-reports at most 100 holes per part: when it finds that many, the drawing and its warnings say the hole counts and
-positions may be incomplete. For laser or plasma cut files use the `dxf` and `sendcutsend` skills.
+reports at most 100 holes per part: when a part has more, the drawing and its warnings say the hole counts and
+positions are incomplete, and the inspect holes check sets holes_truncated. For laser or plasma cut files use the `dxf` and `sendcutsend` skills.
 
 ## 8. Pull and the golden hand-off
 
