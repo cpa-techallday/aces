@@ -192,21 +192,31 @@ def write_table(run, eff: dict, outcomes: list[dict]) -> dict:
             "columns": columns, "n": doc["n"], "n_ok": doc["n_ok"]}
 
 
-def run_sweep(run, eff: dict, domain: dict, experiment, pool, plan: dict, progress) -> dict:
-    """Sample, run every design for real (CPU cases on `pool` when given), tabulate. Returns {"rows", "n", "n_ok",
-    "csv_sha256", "json_sha256", "wall_s", "wall_s_sum", "median_solve_s"}."""
+def run_sweep(run, eff: dict, domain: dict, experiment, pool, plan: dict, progress, *, rig=None) -> dict:
+    """Sample, run every design for real (CPU cases on `pool` when given), tabulate. With a rig session and the
+    sweep planned on the rig (plan.sweep.device "rig", --rig-sweep), every design goes to the rig as the sweep
+    experiment (host "rig", the lane) and no pool is used. Returns {"rows", "n", "n_ok", "csv_sha256", "json_sha256",
+    "wall_s", "wall_s_sum", "median_solve_s"}."""
     from .case import run_cases
 
     d = eff["derived"]
     t0 = time.time()
     points = sample(d["variables"], d["n"], d["seed"])
     device = plan["sweep"]["device"]
-    cases = [{"case_id": f"d{i:03d}", "role": "sweep", **p, "h_gen_mm": float(d["gen_mm"]), "h_fea_mm": float(d["fea_mm"]),
-              "device": device, "backend": "adapter", "source_case": None, "reuse_mask": False, "round": None,
-              "level": None, "seed": int(d["seed"])} for i, p in enumerate(points)]
+    on_rig = rig is not None and device == "rig"
+    cases = []
+    for i, p in enumerate(points):
+        c = {"case_id": f"d{i:03d}", "role": "sweep", **p, "h_gen_mm": float(d["gen_mm"]),
+             "h_fea_mm": float(d["fea_mm"]), "device": device, "backend": "adapter", "source_case": None,
+             "reuse_mask": False, "round": None, "level": None, "seed": int(d["seed"])}
+        if on_rig:
+            c.update(host="rig", lane=rig.lane)
+        c["fea_solver"] = "pcg"
+        cases.append(c)
     bar = progress.designs(len(cases), "sweep")
     try:
-        outcomes = run_cases(run, eff, domain, experiment, cases, pool=pool, progress=progress, kind="design", bar=bar)
+        outcomes = run_cases(run, eff, domain, experiment, cases, pool=None if on_rig else pool, progress=progress,
+                             kind="design", bar=bar, rig=rig if on_rig else None)
     finally:
         bar.close()
     table = write_table(run, eff, outcomes)

@@ -8,13 +8,20 @@ validation record, the compute tables and the solver digest, all inside bundle_s
 simlab ledger under a file lock and verified; a `golden.run` entry pointing at the bundle goes into the aces (OS)
 ledger and is verified; the project's aces.yaml gets the evidence reference and the components used.
 
-`audit()` is `aces golden verify`: eleven independent checks that the run directory, the bundle and both ledgers still
-say the same thing (section 12.3). Any edit to an anchored file, the bundle or its golden section fails it.
+`audit()` is `aces golden verify`: thirteen independent checks that the run directory, the bundle and both ledgers still
+say the same thing (section 12.3 of the golden spec, section 15 of the rig spec), including the rig check (every pulled
+rig record and file re-hashed, the rig's numbers re-derived from the pulled raw files) and the conforming check (the
+tet10 metrics recomputed from the ccx deck and output). It never contacts the rig. Any edit to an anchored file, the
+bundle or its golden section fails it.
+
+`compute_digest()` names the golden code that computes a case (GOLDEN_COMPUTE_MODULES): the aces-golden image records
+it at build time, the rig registry carries it, and the desktop compares it with its own before it sends anything.
 """
 from __future__ import annotations
 
 import contextlib
 import csv
+import json
 import os
 import re
 import shutil
@@ -37,11 +44,32 @@ EXPECTED = "the surrogate's winner meets every constraint on the real solver and
 DIGEST_MODULES = ("simlab.spec", "simlab.evidence", "simlab.evidence_bundle", "simlab.report", "simlab.post",
                   "simlab.registry", "simlab.solvers.step_structures", "simlab.surrogate.tabular", "gendesign.fea3d",
                   "gendesign.evaluators", "gendesign.export", "gendesign.filters", "gendesign.topopt3d",
-                  "gendesign.progress")
+                  "gendesign.progress", "gendesign.mg", "gendesign.connectivity")
+GOLDEN_COMPUTE_MODULES = ("__init__.py", "case.py", "conforming.py", "domain.py", "fea.py", "generator.py", "organic.py",
+                          "rigside.py", "spec.py")
 
 
 def _lf_sha256(path: Path) -> str:
     return sha256_bytes(Path(path).read_bytes().replace(b"\r\n", b"\n"))
+
+
+def compute_digest() -> dict:
+    """{"golden_compute_sha256", "golden_compute_files"}: the sha256 of the sorted lines `golden/<name> <LF sha256>`
+    (`golden/<name> missing` for a module that is not here) over GOLDEN_COMPUTE_MODULES, joined with LF plus a final LF;
+    golden_compute_files lists the modules that are present. Standard library only (the aces-golden image runs it at
+    build time)."""
+    pkg = Path(__file__).resolve().parent
+    lines, present = [], []
+    for name in GOLDEN_COMPUTE_MODULES:
+        p = pkg / name
+        if p.is_file():
+            lines.append(f"golden/{name} {_lf_sha256(p)}")
+            present.append(f"golden/{name}")
+        else:
+            lines.append(f"golden/{name} missing")
+    lines.sort()
+    return {"golden_compute_sha256": sha256_bytes(("\n".join(lines) + "\n").encode("utf-8")),
+            "golden_compute_files": sorted(present)}
 
 
 def _first_problem(res: dict) -> str:
@@ -307,17 +335,55 @@ def _winner_record(run) -> dict | None:
     return None
 
 
+def _rig_text(run, case: dict) -> str | None:
+    """`rig: <GPU name> (<rig solver> <image>)` for a delivered rig voxel case; None when it was not delivered."""
+    rj = run.read_json(f"{case.get('case_id')}/rig.json") or {}
+    if rj.get("state") != "result":
+        return None
+    solver = "golden-case" if case.get("role") == "sweep" else "golden-check"
+    name = rj.get("gpu_name") or (f"rig GPU {rj.get('gpu')}" if rj.get("gpu") is not None else "the rig")
+    forced = f", device forced to {rj['device_forced']}" if rj.get("device_forced") else ""
+    return f"rig: {name} ({solver} {rj.get('image') or 'image not recorded'}{forced})"
+
+
+def _rig_gpu_solved(run) -> bool:
+    """True when a delivered rig voxel case solved on a rig GPU (not forced to another device by a test fake)."""
+    try:
+        cases = run.cases() or []
+    except Exception:
+        cases = run.read_json("cases.json", []) or []
+    for c in cases:
+        if c.get("device") != "rig" or c.get("role") == "conforming":
+            continue
+        rj = run.read_json(f"{c.get('case_id')}/rig.json") or {}
+        if rj.get("state") == "result" and rj.get("gpu") is not None and not rj.get("device_forced"):
+            return True
+    return False
+
+
+def _conforming_ran(run) -> bool:
+    return bool(((run.read_json("validation.json") or {}).get("conforming") or {}).get("ran"))
+
+
 def _compute_used_text(run, plan: dict | None) -> list[str]:
-    """What actually solved: the CPU pool always; a GPU and Warp only when a solve record says so."""
+    """What actually solved: the CPU pool always; a GPU and Warp only when a solve record says so; each rig GPU that
+    solved a delivered rig case (with the rig solver and image); CalculiX ccx when the conforming check ran."""
     jobs = ((plan or {}).get("sweep") or {}).get("jobs") or 1
     used = [f"cpu/numpy x{jobs}"]
-    gpu_names, warp = [], False
+    gpu_names, warp, rig_used = [], False, []
     cases = []
     try:
         cases = run.cases() or []
     except Exception:
         cases = run.read_json("cases.json", []) or []
     for c in cases:
+        if c.get("role") == "conforming":
+            continue
+        if c.get("device") == "rig":
+            txt = _rig_text(run, c)
+            if txt and txt not in rig_used:
+                rig_used.append(txt)
+            continue
         s = run.read_json(f"{c.get('case_id')}/solve.json") or {}
         dev = s.get("device")
         if dev and dev != "cpu/numpy" and not str(dev).startswith("cpu"):
@@ -329,6 +395,12 @@ def _compute_used_text(run, plan: dict | None) -> list[str]:
     if warp:
         comp = run.read_json("compute.json") or {}
         used.append(f"warp {((comp.get('warp') or {}).get('version')) or '?'} apply_K")
+    used += rig_used
+    conf = (run.read_json("validation.json") or {}).get("conforming") or {}
+    sv = conf.get("solver") or {}
+    if conf.get("ran") and sv.get("version"):
+        where = "rig cpu" if conf.get("host") == "rig" else "cpu"
+        used.append(f"ccx {sv['version']} ({where} x{sv.get('threads') or '?'})")
     return used
 
 
@@ -379,6 +451,9 @@ def golden_section(run, eff: dict, files_sha256: str, *, verdict: str, outcome: 
                   "variables": sweep.get("variables"), "csv_sha256": sweep.get("csv_sha256"),
                   "json_sha256": fsha("sweep.json")},
         "surrogate": surr, "optimise": opts, "validation": validation,
+        "rig": ({**validation["rig"], "session_sha256": fsha("rig/session.json")}
+                if isinstance(validation.get("rig"), dict) else None),
+        "conforming": validation.get("conforming"),
         "compute_detected": comp, "compute_used": used, "solver_digest": solver_digest(), "winner": winner,
         "grade": validation.get("grade") or GRADE_PREVIEW, "preview_grade": True,
         "verdict": verdict or validation.get("verdict"), "outcome": outcome or validation.get("outcome"),
@@ -471,6 +546,8 @@ def record(run, eff: dict, project: dict, aces, *, operator: str, note: str | No
     validation = run.read_json("validation.json") or {}
     w = _winner_record(run)
     comp = run.read_json("compute.json") or {}
+    rig_blk = validation.get("rig") if isinstance(validation.get("rig"), dict) else None
+    conf_blk = validation.get("conforming") if isinstance(validation.get("conforming"), dict) else None
     payload = clean({
         "schema": SCHEMA["ledger"], "project": run.project, "run_id": run.run_id, "run_dir": str(run.root),
         "host": socket.gethostname(), "verdict": verdict, "outcome": outcome,
@@ -482,8 +559,13 @@ def record(run, eff: dict, project: dict, aces, *, operator: str, note: str | No
         "golden_code_sha256": golden["solver_digest"].get("golden_code_sha256"),
         "winner": {"params": w.get("params")} if w else None,
         "compute": _compute_used_text(run, comp.get("plan")),
+        "rig": ({"lane": rig_blk.get("lane"), "experiments": [e.get("id") for e in rig_blk.get("experiments") or []]}
+                if rig_blk else None),
+        "conforming": ({k: conf_blk.get(k) for k in ("ran", "passed", "host")} if conf_blk else None),
         "tool": f"aces-golden {VERSION}",
     })
+    if len(canonical_json(payload).encode("utf-8")) > PAYLOAD_MAX:
+        payload.pop("rig", None)  # the first thing dropped (section 14.7); validation.json and the bundle keep it
     if len(canonical_json(payload).encode("utf-8")) > PAYLOAD_MAX:
         payload["run_dir"] = os.path.basename(str(run.root))
     payload_path = run.write_json("evidence/aces-ledger-payload.json", payload)
@@ -513,10 +595,12 @@ def record(run, eff: dict, project: dict, aces, *, operator: str, note: str | No
         messages.append(f"add-evidence failed: {exc}")
     comps = list(COMPONENTS)
     used = payload.get("compute") or []
-    if any(u.endswith("(cupy)") for u in used):
+    if any(u.endswith("(cupy)") for u in used) or _rig_gpu_solved(run):
         comps.append("cupy")
     if any(u.startswith("warp ") for u in used):
         comps.append("warp-lang")
+    if _conforming_ran(run):
+        comps += ["gmsh", "calculix-ccx"]
     added = []
     for c in comps:
         try:
@@ -828,6 +912,296 @@ def _check_compute(run) -> "tuple[bool | None, str]":
     return True, f"{n} compute-used rows re-derive from their sources"
 
 
+def _rel_close(a, b, tol: float) -> bool:
+    if not (isinstance(a, (int, float)) and isinstance(b, (int, float))) or isinstance(a, bool) or isinstance(b, bool):
+        return a == b
+    if a == b:
+        return True
+    return abs(float(a) - float(b)) <= tol * max(abs(float(b)), 1e-300)
+
+
+def _no_artifacts(d) -> dict:
+    return {k: v for k, v in (d or {}).items() if k != "artifacts"}
+
+
+def _rig_cases(run, session: dict) -> list[tuple[dict, str, str]]:
+    """(experiment, rig case id, golden case id) for every case of every rig experiment, in session order."""
+    out = []
+    for e in session.get("experiments") or []:
+        for rc, gid in (e.get("cases") or {}).items():
+            out.append((e, str(rc), str(gid)))
+    return out
+
+
+def _yaml_files(run, e: dict) -> dict:
+    import yaml
+
+    p = Path(run.path(*str(e.get("spec") or "").split("/")))
+    doc = yaml.safe_load(p.read_text(encoding="utf-8")) if p.is_file() else None
+    return ((((doc or {}).get("params") or {}).get("golden") or {}).get("files")) or {}
+
+
+def _rederive_voxel(run, gid: str, case: dict, res: dict) -> list[str]:
+    """R6 for one design or mesh case: the rig's numbers re-derived from the pulled raw files (mask.npy,
+    fields.npz, mesh.json, solve.json, the part STL) with this desktop's numpy and trimesh."""
+    import numpy as np
+
+    from . import fea
+
+    out = []
+    cdir = Path(run.root) / gid
+    vox = res.get("voxel") or {}
+    mask_p = cdir / "mask.npy"
+    if not mask_p.is_file():
+        return [f"{gid}: mask.npy was not pulled"]
+    if sha256_file(mask_p) != vox.get("mask_sha256"):
+        out.append(f"{gid}: mask.npy sha256 differs from results.voxel.mask_sha256")
+    mask = np.load(mask_p).astype(bool)
+    if int(mask.sum()) != vox.get("solid_cells"):
+        out.append(f"{gid}: mask.npy has {int(mask.sum())} solid cells, results.voxel says {vox.get('solid_cells')}")
+    mj = read_json_safe(cdir / "mesh.json")
+    sj = read_json_safe(cdir / "solve.json")
+    dom = run.read_json("domain/domain.json") or {}
+    eff = run.read_json("inputs/spec.effective.json") or {}
+    h = float(mj.get("elem_mm") or res.get("elem_mm") or 0.0)
+    origin = mj.get("origin_mm") or ((eff.get("derived") or {}).get("grid") or {}).get("origin_mm")
+    fz_p = cdir / "fields.npz"
+    if not fz_p.is_file():
+        return out + [f"{gid}: fields.npz was not pulled"]
+    fz = np.load(fz_p)
+    vm = np.asarray(fz["vm_MPa"], dtype=np.float64).reshape(-1)
+    excl = np.zeros(mask.shape, dtype=bool)
+    for b in dom.get("stress_exclude") or []:
+        excl |= fea.box_elems(b, origin, mask.shape, h)
+    vals = vm[(mask & ~excl).reshape(-1)]
+    for q, key in ((99, "vm_p99_MPa"), (95, "vm_p95_MPa")):
+        got = float(np.percentile(vals, q)) if vals.size else None
+        if not _rel_close(got, res.get(key), 1e-12):
+            out.append(f"{gid}: {key} re-derived {got!r}, results say {res.get(key)!r}")
+    u = np.asarray(fz["u_mm"], dtype=np.float32).reshape(-1, 3)
+    norm = np.sqrt((u.astype(np.float64) ** 2).sum(axis=1))
+    if "solver" in sj:  # the patched evaluator: umax over the nodes that touch solid
+        touch = fea.node_touches(mask).reshape(-1, order="F") if norm.size else norm
+        umax = float(norm[touch].max()) if norm.size and touch.any() else None
+    else:  # the evaluator before the patch: umax over every node
+        umax = float(norm.max()) if norm.size else None
+    if not _rel_close(umax, res.get("umax_mm"), 1e-6):
+        out.append(f"{gid}: umax_mm re-derived {umax!r} from the float32 u_mm, results say {res.get('umax_mm')!r}")
+    src = case.get("source_case") if case.get("role") in ("check", "parity") else gid
+    stl = Path(run.root) / str(src) / "part.stl"
+    if stl.is_file():
+        import trimesh
+
+        vol = float(trimesh.load(str(stl), force="mesh").volume)
+        if not _rel_close(vol, res.get("mesh_volume_mm3"), 1e-9):
+            out.append(f"{gid}: mesh_volume_mm3 re-derived {vol!r} from {src}/part.stl, results say "
+                       f"{res.get('mesh_volume_mm3')!r}")
+        rho = float(((eff.get("material") or {}).get("rho_kg_mm3")) or 0.0)
+        if not _rel_close(vol * rho, res.get("mass_kg"), 1e-12):
+            out.append(f"{gid}: mass_kg re-derived {vol * rho!r}, results say {res.get('mass_kg')!r}")
+    else:
+        out.append(f"{gid}: {src}/part.stl is not in the run directory")
+    return out
+
+
+def read_json_safe(p: Path) -> dict:
+    try:
+        d = json.loads(Path(p).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return d if isinstance(d, dict) else {}
+
+
+def _check_rig(run) -> "tuple[bool | None, str]":
+    """Section 15.1: every pulled rig record and file re-hashed (R1-R5), the rig's numbers re-derived from the pulled
+    raw files (R6), the image, GPU and pool (R7), the code identity (R8) and validation.rig (R9). Never contacts
+    the rig."""
+    from .rig import code_identity, experiments_summary
+
+    session = run.read_json("rig/session.json")
+    if not isinstance(session, dict):
+        return None, "not run: no rig work in this run"
+    val = run.read_json("validation.json") or {}
+    vrig = val.get("rig") if isinstance(val.get("rig"), dict) else None
+    problems: list[str] = []
+    uploads = {u.get("name"): u for u in session.get("uploads") or []}
+    # R1: the experiment documents
+    for e in session.get("experiments") or []:
+        p = Path(run.path(*str(e.get("spec") or "").split("/")))
+        if not p.is_file():
+            problems.append(f"R1 {e.get('spec')} is missing")
+            continue
+        if sha256_file(p) != e.get("spec_sha256"):
+            problems.append(f"R1 {e.get('spec')} does not hash to the recorded spec_sha256")
+        for gid in (e.get("cases") or {}).values():
+            ev = run.read_json(f"{gid}/rig/evidence.json")
+            if isinstance(ev, dict) and (ev.get("experiment") or {}).get("spec_sha256") not in (None, e.get("spec_sha256")):
+                problems.append(f"R1 {gid}/rig/evidence.json names spec {str((ev.get('experiment') or {}).get('spec_sha256'))[:12]}, "
+                                f"not {str(e.get('spec_sha256'))[:12]}")
+    # R2: the uploads
+    for name, u in uploads.items():
+        lp = Path(run.path(*str(u.get("local") or "").split("/")))
+        if not lp.is_file() or sha256_file(lp) != u.get("sha256"):
+            problems.append(f"R2 upload {name}: {u.get('local')} does not hash to the recorded sha256")
+    n_files = n_cases = n_rederived = 0
+    forced = set()
+    codes = []
+    pool = set((session.get("capacity") or {}).get("pool") or [])
+    solvers = session.get("solvers") or {}
+    for e, rc, gid in _rig_cases(run, session):
+        rj = run.read_json(f"{gid}/rig.json")
+        if not isinstance(rj, dict):
+            problems.append(f"R3 {gid}/rig.json is missing")
+            continue
+        n_cases += 1
+        # R3: files and records
+        fdoc = run.read_json(f"{gid}/rig/files.json") or {}
+        listed = {f.get("path"): f.get("sha256") for f in fdoc.get("files") or []}
+        for f in rj.get("files") or []:
+            n_files += 1
+            lp = Path(run.root) / str(f.get("local"))
+            if not lp.is_file():
+                problems.append(f"R3 {f.get('local')} is missing")
+                continue
+            got = sha256_file(lp)
+            rig_rel = str(f.get("rig") or "")
+            rig_path = rig_rel.split("/", 1)[1] if "/" in rig_rel else rig_rel
+            if got != f.get("sha256") or listed.get(rig_path) != got:
+                problems.append(f"R3 {f.get('local')} does not hash as {gid}/rig.json and {gid}/rig/files.json say")
+        for name, want in (rj.get("records") or {}).items():
+            lp = Path(run.path(gid, "rig", name))
+            if want is None:
+                if lp.is_file():
+                    problems.append(f"R3 {gid}/rig/{name} exists but {gid}/rig.json records none")
+                continue
+            if not lp.is_file() or sha256_file(lp) != want:
+                problems.append(f"R3 {gid}/rig/{name} does not hash as {gid}/rig.json records")
+        delivered = rj.get("state") == "result"
+        # R4: evidence
+        ev_p, ev_rig = Path(run.path(gid, "evidence.json")), Path(run.path(gid, "rig", "evidence.json"))
+        if ev_rig.is_file():
+            if not ev_p.is_file() or ev_p.read_bytes() != ev_rig.read_bytes():
+                problems.append(f"R4 {gid}/evidence.json is not a byte copy of {gid}/rig/evidence.json")
+            ev = read_json_safe(ev_rig)
+            ins = ev.get("inputs_sha256") or {}
+            for k, f in _yaml_files(run, e).items():
+                base = os.path.basename(str((f or {}).get("path") or ""))
+                if base and ins.get(base) != (f or {}).get("sha256"):
+                    problems.append(f"R4 {gid}: the rig evidence hashes input {base} as {str(ins.get(base))[:12]}, the "
+                                    f"experiment sent {str((f or {}).get('sha256'))[:12]}")
+            if canonical_json((ev.get("case") or {}).get("golden_case")) != canonical_json(run.read_json(f"{gid}/case.json")):
+                problems.append(f"R4 {gid}: the rig evidence's case.golden_case differs from {gid}/case.json")
+        elif delivered:
+            problems.append(f"R4 {gid}: no rig evidence.json for a delivered case")
+        outcome = run.read_json(f"{gid}/rig/outcome.json") or {}
+        res_local = run.read_json(f"{gid}/results.json")
+        # R5: results
+        if delivered and outcome.get("status") == "FINISHED":
+            if not isinstance(res_local, dict):
+                problems.append(f"R5 {gid}: FINISHED on the rig but no {gid}/results.json")
+            elif canonical_json(_no_artifacts(res_local)) != canonical_json(_no_artifacts(outcome.get("results"))):
+                problems.append(f"R5 {gid}/results.json differs from {gid}/rig/outcome.json results")
+            # R6: re-derivation (voxel cases)
+            case = run.read_json(f"{gid}/case.json") or {}
+            if e.get("kind") in ("design", "mesh") and isinstance(res_local, dict):
+                try:
+                    bad = _rederive_voxel(run, gid, case, res_local)
+                except Exception as exc:  # a raw file that cannot be read is a failed re-derivation
+                    bad = [f"{gid}: re-derivation raised {type(exc).__name__}: {exc}"]
+                problems += [f"R6 {b}" for b in bad]
+                n_rederived += 1
+        # R7: image, GPU, pool
+        if delivered:
+            reg = solvers.get(e.get("solver")) or {}
+            if rj.get("image") != reg.get("image"):
+                problems.append(f"R7 {gid} ran on image {rj.get('image')}, the registry recorded {reg.get('image')}")
+            if not rj.get("image_id"):
+                problems.append(f"R7 {gid} has no image_id")
+            if e.get("kind") in ("design", "mesh"):
+                if not rj.get("gpu_uuid"):
+                    problems.append(f"R7 {gid}: the rig evidence lists no GPU with a uuid")
+                if rj.get("gpu") not in pool:
+                    problems.append(f"R7 {gid} ran on GPU {rj.get('gpu')}, outside the recorded pool {sorted(pool)}")
+            if rj.get("device_forced"):
+                forced.add(f"{gid} device forced to {rj['device_forced']}")
+            code = (outcome.get("rig") or {}).get("code")
+            if isinstance(code, dict):
+                codes.append({"golden_compute_sha256": code.get("golden_compute_sha256"),
+                              "modules": code.get("modules") or {}})
+    # R8: code identity
+    if vrig is not None:
+        ci = vrig.get("code_identity") or {}
+        again = code_identity(codes, desktop_compute=(ci.get("golden_compute_sha256") or {}).get("desktop"),
+                              desktop_modules=ci.get("desktop_modules") or {})
+        if bool(again.get("ok")) != bool(ci.get("ok")):
+            problems.append(f"R8 code identity re-derives as ok={again.get('ok')}, validation.json says {ci.get('ok')}")
+    # R9: validation.rig from rig/session.json
+    if vrig is None:
+        if session.get("experiments"):
+            problems.append("R9 rig/session.json has experiments but validation.json has no rig block")
+    else:
+        sess_p = Path(run.path("rig", "session.json"))
+        want = {"lane": session.get("lane"), "url": session.get("url"), "scope": session.get("scope"),
+                "token_source": session.get("token_source"), "principal": session.get("principal"),
+                "policy": session.get("policy"), "server": session.get("server"), "session": "rig/session.json",
+                "session_sha256": sha256_file(sess_p), "solvers": session.get("solvers"),
+                "experiments": experiments_summary(session), "integrity_error": session.get("integrity_error")}
+        for k, v in want.items():
+            if canonical_json(vrig.get(k)) != canonical_json(v):
+                problems.append(f"R9 validation.rig.{k} does not re-derive from rig/session.json")
+    if problems:
+        return False, f"{len(problems)} problem(s): " + "; ".join(problems[:8])
+    detail = (f"{len(session.get('experiments') or [])} experiment(s), {n_cases} rig case(s), {n_files} pulled files "
+              f"re-hashed, {n_rederived} case(s) re-derived from their raw files")
+    if forced:
+        detail += "; " + ", ".join(sorted(forced)) + " (a test fake)"
+    return True, detail
+
+
+def _check_conforming(run) -> "tuple[bool | None, str]":
+    """Section 15.2: the tet10 metrics recomputed from the ccx deck and output, the record's file hashes, and the
+    comparison rows re-derived."""
+    val = run.read_json("validation.json") or {}
+    blk = val.get("conforming") if isinstance(val.get("conforming"), dict) else None
+    if not blk or not blk.get("ran") or not blk.get("case_id"):
+        why = (blk or {}).get("reason") or "no conforming case ran"
+        return None, why if str(why).startswith("not run") else f"not run: {why}"
+    cid = str(blk["case_id"])
+    if not blk.get("record"):  # the case failed before golden.conforming wrote its record: nothing to re-derive
+        return None, f"not re-derived: {cid} wrote no conforming.json ({blk.get('reason') or blk.get('status')})"
+    rec = run.read_json(str(blk["record"]))
+    if not isinstance(rec, dict):
+        return False, f"{blk['record']} is missing"
+    try:
+        from . import conforming
+    except Exception as exc:
+        return False, f"golden.conforming is not importable here ({type(exc).__name__}: {exc}): cannot recompute {cid}"
+    problems = []
+    for name, want in (rec.get("files") or {}).items():
+        p = Path(run.path(cid, name))
+        if not p.is_file() or sha256_file(p) != want:
+            problems.append(f"{cid}/{name} does not hash as conforming.json files says")
+    if rec.get("status") == "ok":
+        again = (conforming.recompute(Path(run.path(cid))) or {}).get("metrics") or {}
+        for k, want in (rec.get("metrics") or {}).items():
+            if not _rel_close(again.get(k), want, 1e-12):
+                problems.append(f"{cid}: {k} recomputes to {again.get(k)!r}, conforming.json says {want!r}")
+        ref = (blk.get("reference") or {}).get("case_id")
+        reference = run.read_json(f"{ref}/results.json") if ref else None
+        eff = run.read_json("inputs/spec.effective.json") or {}
+        rows, _ok, _why = conforming.compare(reference or {}, rec, eff)
+        if canonical_json(rows) != canonical_json(blk.get("rows") or []):
+            problems.append("conforming.compare does not reproduce validation.json conforming.rows")
+    if problems:
+        return False, "; ".join(problems[:8])
+    n_files = len(rec.get("files") or {})
+    if rec.get("status") != "ok":
+        return True, (f"{cid} ({blk.get('host')}): status {rec.get('status')}, no metrics to recompute; {n_files} files "
+                      "hash as recorded")
+    return True, (f"{cid} ({blk.get('host')}): metrics recomputed from the ccx deck and output to 1e-12, "
+                  f"{n_files} files hash as recorded, the comparison rows re-derive")
+
+
 def _check_manifest(run) -> tuple[bool, str]:
     p = Path(run.path("manifest.sha256"))
     if not p.is_file():
@@ -882,13 +1256,15 @@ def _check_resolve(run, resolve: bool) -> "tuple[bool | None, str]":
 
 
 def audit(run, aces, *, use_model: bool = True, resolve: bool = False) -> dict:
-    """The eleven checks of section 12.3 ({"ok", "checks": [{"name", "ok", "detail"}]}); ok iff every check passes.
-    Loading the surrogate models unpickles joblib files: audit only run directories you trust (or use_model=False)."""
+    """The thirteen checks of section 15 ({"ok", "checks": [{"name", "ok", "detail"}]}); ok iff no check fails.
+    Loading the surrogate models unpickles joblib files: audit only run directories you trust (or use_model=False).
+    The audit never contacts the rig."""
     plan = [("files", lambda: _check_files(run)), ("bundle", lambda: _check_bundle(run)),
             ("simlab-ledger", lambda: _check_simlab(run)), ("aces-ledger", lambda: _check_aces(run, aces)),
             ("sweep", lambda: _check_sweep(run)), ("surrogate", lambda: _check_models(run, use_model)),
             ("verdict", lambda: _check_verdict(run)), ("report", lambda: _check_report(run)),
-            ("compute", lambda: _check_compute(run)), ("manifest", lambda: _check_manifest(run)),
+            ("compute", lambda: _check_compute(run)), ("rig", lambda: _check_rig(run)),
+            ("conforming", lambda: _check_conforming(run)), ("manifest", lambda: _check_manifest(run)),
             ("resolve", lambda: _check_resolve(run, resolve))]
     checks = []
     for name, fn in plan:
