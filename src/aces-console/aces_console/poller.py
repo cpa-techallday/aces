@@ -11,12 +11,15 @@ data to the inline shape; notice-only sources publish `payload: null` and the pa
 poller thread runs only while the Broker has at least one client, plus `grace_s` (60 s) after the last leaves; with no
 page open there is no rig traffic. A failing source doubles its interval to at most `max_backoff_s` (60 s; rig-state
 120 s), resets on success and reports `error` and `next_try_s` through /api/health.sources and its stamps. A stamp is
-published on every completed fetch (so `fetched_utc` advances) with `changed` set by comparing etags.
+published on every completed fetch (so `fetched_utc` advances) with `changed` set by comparing etags. Due sources are
+fetched concurrently on a small pool, one fetch in flight per topic, so a slow or unreachable upstream (a 4 s connect
+timeout when the rig is off) never holds up the others or the loop's own idle bookkeeping.
 """
 from __future__ import annotations
 
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, wait as wait_futures
 from typing import Any, Callable, Iterable
 
 from .cache import Cache, Entry
@@ -24,6 +27,7 @@ from .cache import Cache, Entry
 FetchFn = Callable[[], tuple[bool, Any, "str | None"]]
 GRACE_S = 60.0
 TICK_S = 0.25
+FETCH_WORKERS = 8
 
 
 class Source:
@@ -75,6 +79,8 @@ class Hub:
         self._active = False
         self._last_active: float | None = None
         self._open: set[str] = set()
+        self._inflight: set[str] = set()
+        self._pool: ThreadPoolExecutor | None = None
         self.ticks = 0
 
     # --- registration ------------------------------------------------------------------------------------------------
@@ -165,27 +171,52 @@ class Hub:
     def open_plates(self) -> set[str]:
         return set(self._open)
 
-    def poll_once(self, now: float | None = None) -> list[str]:
-        """Poll every due, gated, enabled source once. Returns the topics fetched."""
-        now = time.time() if now is None else now
-        fetched: list[str] = []
-        if not self._active:
-            return fetched  # no client and no grace: no rig traffic
-        with self._lock:
-            sources = list(self._sources.values())
-        for src in sources:
-            if not src.gated_open(self._open) or now < src.next_due or not src.is_enabled():
-                continue
+    def _poll_source(self, src: Source, now: float) -> bool:
+        """One source's fetch (on the pool). True when a fetch happened (and was published)."""
+        try:
             src.polls += 1
             prev = self.cache.peek(src.topic)
             before = prev.fetch_n if prev is not None else 0
             entry = self.cache.get(src.topic, src.ttl_s, src.fetch, source=src.source, max_backoff_s=src.max_backoff_s)
             if entry.fetch_n != before:
                 self._after_fetch(src, entry)
-                fetched.append(src.topic)
-            else:
-                src.next_due = (entry.attempted_ts or now) + entry.interval_s
-        return fetched
+                return True
+            src.next_due = (entry.attempted_ts or now) + entry.interval_s
+            return False
+        except Exception as exc:  # noqa: BLE001
+            self.log(f"poller: {src.topic} failed: {type(exc).__name__}: {exc}")
+            return False
+        finally:
+            with self._lock:
+                self._inflight.discard(src.topic)
+
+    def _executor(self) -> ThreadPoolExecutor:
+        with self._lock:
+            if self._pool is None:
+                self._pool = ThreadPoolExecutor(max_workers=FETCH_WORKERS, thread_name_prefix="aces-console-fetch")
+            return self._pool
+
+    def poll_once(self, now: float | None = None, wait: bool = True) -> list[str]:
+        """Poll every due, gated, enabled source once, concurrently. With `wait` (tests, one-shot callers) it returns
+        the topics fetched once all are done; the loop passes wait=False and returns the topics dispatched."""
+        now = time.time() if now is None else now
+        if not self._active:
+            return []  # no client and no grace: no rig traffic
+        with self._lock:
+            sources = list(self._sources.values())
+        candidates = [src for src in sources
+                      if src.gated_open(self._open) and now >= src.next_due and src.is_enabled()]
+        with self._lock:
+            due = [src for src in candidates if src.topic not in self._inflight]
+            self._inflight.update(src.topic for src in due)
+        if not due:
+            return []
+        pool = self._executor()
+        futures = [(src.topic, pool.submit(self._poll_source, src, now)) for src in due]
+        if not wait:
+            return [topic for topic, _ in futures]
+        wait_futures([f for _, f in futures])
+        return [topic for topic, f in futures if f.result()]
 
     def _update_activity(self, now: float) -> None:
         n = self.broker.count()
@@ -205,7 +236,7 @@ class Hub:
             self._update_activity(now)
             if self._active:
                 try:
-                    self.poll_once(now)
+                    self.poll_once(now, wait=False)
                 except Exception as exc:  # noqa: BLE001
                     self.log(f"poller: tick failed: {type(exc).__name__}: {exc}")
             self.ticks += 1
@@ -223,6 +254,10 @@ class Hub:
         if self._thread is not None:
             self._thread.join(timeout)
         self._active = False
+        with self._lock:
+            pool, self._pool = self._pool, None
+        if pool is not None:
+            pool.shutdown(wait=False, cancel_futures=True)
 
     # --- health ------------------------------------------------------------------------------------------------------
 

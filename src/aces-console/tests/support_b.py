@@ -96,10 +96,6 @@ class ConsoleB(Console):
                      "console": {"bind": bind, "port": 0, "state_dir": str(self.state / "console")}}
         self.settings = console_config.load(static=str(static_dir) if static_dir else None,
                                             fixtures=str(fixtures) if fixtures else None, overrides=overrides)
-        # config.load reads `table.get("port") or 8070`, so a port of 0 in the overrides is taken as unset and the
-        # real 8070 would be bound; an ephemeral port is forced here (make_server rewrites port and origin after bind)
-        self.settings.port = 0
-        self.settings.origin = console_config.origin_for(bind, 0)
         self.httpd, self.app = server.make_server(self.settings)
         self.port = self.settings.port
         self.url = self.settings.origin

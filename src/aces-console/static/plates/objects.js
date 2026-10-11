@@ -198,7 +198,9 @@ function renderDrawings() {
   box.append(el("div.line", [el("span.k", { text: "drawings" }), el("b", { text: String(rows.length) }), R.run ? el("span.k", { text: `of run ${R.run}` }) : null, R.run ? el("b", { text: String(shown.length) }) : null]));
   if (!shown.length) box.append(el("div.prose.dim", { text: `no drawing belongs to run ${R.run}; clear the run selection to see all ${rows.length}` }));
   for (const dr of shown) {
-    const files = dr.files || {};
+    // the backend lists a drawing's files relative to its run directory; served through the CAD file route
+    const files = Object.fromEntries(Object.entries(dr.files || {}).filter(([, v]) => typeof v === "string" && v)
+      .map(([kind, v]) => [kind, v.startsWith("/") ? v : fileURL(dr.run_id || R.run, v)]));
     const views = Array.isArray(dr.views) ? dr.views : [];
     const dims = Array.isArray(dr.dimensions) ? dr.dimensions : [];
     const card = el("div", { style: { display: "grid", gap: "8px" } });

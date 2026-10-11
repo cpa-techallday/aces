@@ -193,7 +193,8 @@ class RigRoutesTest(unittest.TestCase):
         self.assertEqual(self.gc.requests_for("GET", "/api/decisions")[-1]["headers"].get("x-gc-token"), TOKEN)
         with mock.patch.dict(os.environ, {"ACES_GC_TOKEN": ""}):
             status, _, body = self.c.get("/api/rig/decisions")
-            self.assertEqual((status, body["code"]), (503, "not-configured"))
+            self.assertEqual((status, body["data"], body["meta"]["code"]), (200, None, "not-configured"))
+            self.assertTrue(body["meta"]["error"].startswith("not configured: GRID CONTROL token"))
 
     def test_prepare_refusals_are_ledgered_once_per_window(self):
         n0 = len(ledger_entries())

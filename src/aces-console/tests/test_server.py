@@ -269,11 +269,13 @@ class ServerTest(unittest.TestCase):
         status, _, body = self.c.get("/api/config")
         self.assertEqual(body["data"]["tokens"]["grid_control"], {"configured": False, "source": "not set"})
 
-    def test_decisions_without_token_is_503(self):
+    def test_decisions_without_token_is_an_honest_absence(self):
+        # 200 with data null and the reason in meta (a 503 would be a browser console error on every Ops visit)
         status, _, body = self.c.get("/api/rig/decisions")
-        self.assertEqual(status, 503)
-        self.assertEqual(body["code"], "not-configured")
-        self.assertEqual(body["error"], "GRID CONTROL token not configured")
+        self.assertEqual(status, 200)
+        self.assertIsNone(body["data"])
+        self.assertEqual((body["meta"]["ok"], body["meta"]["code"]), (False, "not-configured"))
+        self.assertTrue(body["meta"]["error"].startswith("not configured: GRID CONTROL token"))
 
     def test_server_log_has_method_path_status_only(self):
         self.c.get("/api/health?secret=in-query")

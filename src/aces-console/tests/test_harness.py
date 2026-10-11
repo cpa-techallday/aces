@@ -123,7 +123,7 @@ class TestStaticTree(unittest.TestCase):
         self.assertEqual(len(re.findall(r'role="tab"', html)), 7)
         self.assertEqual(len(re.findall(r'role="tabpanel"', html)), 7)
         scripts = re.findall(r"<script[^>]*>", html)
-        self.assertEqual(sorted(scripts), sorted(['<script type="importmap">', '<script type="module" src="./app.js">']), "only the importmap is inline")
+        self.assertEqual(sorted(scripts), sorted(['<script type="importmap">', '<script type="module" src="/static/app.js">']), "only the importmap is inline")
         self.assertIn('aria-live="polite"', html)
         self.assertIn('role="tablist"', html)
         self.assertIn('class="skip"', html)

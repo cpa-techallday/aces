@@ -7,7 +7,7 @@ Reads (all GET, cached by the Hub, the envelope carries staleness and the error 
     /api/rig/telemetry   GC /api/telemetry + a 240-sample ring (>= 2.5 s apart) seeded once from the console's history
     /api/rig/snapshot    rig-state tools/call rig_snapshot + classification of every service and endpoint against the
                          current mode's stop/keep lists (by-design | reachable | transition | unreachable)
-    /api/rig/decisions   GC /api/decisions (token-protected; 503 when no token is configured)
+    /api/rig/decisions   GC /api/decisions (token-protected; 200 with data null and meta.error when no token)
     /api/rig/switch      GC /api/switch/status with log_tail
     /api/fabric          the fabric manifest (aces.fabric.read / age_s) and the modes table
 
@@ -727,7 +727,12 @@ def h_snapshot(req: Request) -> Response:
 def h_decisions(req: Request) -> Response:
     token, _ = tokens.gc_token(warn=req.app.log)
     if not token:
-        return error(503, "GRID CONTROL token not configured", "not-configured")
+        # an honest absence in the 200 envelope, not a 503: the browser logs every 5xx as a console error and the
+        # Ops plate draws meta.error as the reason either way
+        resp = ok(None, source="GRID CONTROL /api/decisions")
+        resp.meta.update({"ok": False, "error": "not configured: GRID CONTROL token (ACES_GC_TOKEN, SIMLAB_GC_TOKEN or "
+                                                "~/.config/aces/gridcontrol.env)", "code": "not-configured"})
+        return resp
     return envelope(req.app.hub.get("rig.decisions"))
 
 

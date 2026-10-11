@@ -119,11 +119,15 @@ def load(bind: str | None = None, port: int | None = None, static: str | None = 
     bind = str(bind or table.get("bind") or CONSOLE_DEFAULTS["bind"])
     if not is_loopback(bind):
         raise SystemExit(LAN_REFUSAL.format(bind=bind))
+    raw_port = port if port is not None else table.get("port")
     try:
-        port = int(port if port is not None else table.get("port") or CONSOLE_DEFAULTS["port"])
+        port = int(CONSOLE_DEFAULTS["port"] if raw_port is None else raw_port)
     except (TypeError, ValueError):
         raise SystemExit(f"aces-console: port must be an integer, got {table.get('port')!r}") from None
-    if not 1 <= port <= 65535:
+    # port 0 (an ephemeral port; make_server reports the bound one) is for in-process tests, which pass it through
+    # `overrides`; a configured or command-line 0 would leave the launcher polling a port nobody knows, so it is refused
+    ephemeral = port == 0 and (overrides or {}).get("console", {}).get("port") == 0
+    if not (1 <= port <= 65535 or ephemeral):
         raise SystemExit(f"aces-console: port {port} is out of range")
     state_dir = Path(table.get("state_dir") or (aces_config.STATE / "console"))
     if static:

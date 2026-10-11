@@ -191,7 +191,7 @@ sha256 `ETag` and 304 on `If-None-Match`.
 | `GET /api/rig/modes` | core | `{gridcontrol_modes{label, switchable, switchable_reported, pending}, sim_modes, current}` | |
 | `GET /api/rig/telemetry` | core | `{telemetry, history (≤ 240 samples), sources_used}` | |
 | `GET /api/rig/snapshot` | core | rig-state `rig_snapshot` plus `classification[{name, kind, verdict, matched, rule}]` | |
-| `GET /api/rig/decisions` | core | GRID CONTROL decisions, `schema: "not interpreted"` | 503 without a token |
+| `GET /api/rig/decisions` | core | GRID CONTROL decisions, `schema: "not interpreted"` | 200 with `data: null` and the reason in `meta.error` without a token |
 | `GET /api/rig/switch` | core | the switch engine's status with `log_tail` | |
 | `POST /api/rig/switch/prepare` `{mode}` | core | the gates on fresh reads, a single-use 30 s nonce | 403, 409 gate, 503 no token |
 | `POST /api/rig/switch/confirm` `{mode, nonce, confirm}` | core | the switch (ledgered) | 403, 409, 410 nonce, 502 upstream |

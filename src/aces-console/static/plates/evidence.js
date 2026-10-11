@@ -185,7 +185,7 @@ function renderDetail() {
   if (w.json || (w.files && w.files.length)) {
     box.append(kv([["case", wj.case_id || (res.winner && res.winner.case_id)], ["params", wj.params ? Object.entries(wj.params).map(([key, v]) => `${key} ${format.num(v, 6)}`).join(" · ") : (res.winner && res.winner.params ? Object.entries(res.winner.params).map(([key, v]) => `${key} ${format.num(v, 6)}`).join(" · ") : null)],
       ["metrics", wj.metrics ? Object.entries(wj.metrics).map(([key, v]) => `${key} ${format.num(v, 6)}`).join(" · ") : (res.winner && res.winner.metrics ? Object.entries(res.winner.metrics).map(([key, v]) => `${key} ${format.num(v, 6)}`).join(" · ") : null)], ["stl sha256", res.winner ? format.shortHash(res.winner.stl_sha256) : null]]));
-    box.append(el("div.line", [k("files"), ...(w.files || []).map((f) => el("a", { href: fileURL("winner/" + f), target: "_blank", rel: "noopener", text: f }))]));
+    box.append(el("div.line", [k("files"), ...(w.files || []).map((f) => { const nm = typeof f === "string" ? f : f.name; return el("a", { href: fileURL("winner/" + nm), target: "_blank", rel: "noopener", text: nm }); })]));
   } else if (d.candidate) box.append(el("div.prose.dim", { text: `no winner; candidate/ holds ${(d.candidate.files || []).length} files` }));
   else box.append(el("div.prose.dim", { text: "no winner/ and no candidate/ directory" }));
   const figs = Array.isArray(d.figures) ? d.figures : [];
