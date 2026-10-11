@@ -17,6 +17,16 @@ timeout_s = 4
 [fabric]
 max_age_s = 900
 
+# The ACES console (aces-console): a per-user backend on this desktop, loopback only. Any bind other than 127.0.0.1 or
+# ::1 is refused at start (LAN/VPN access waits for the authenticated shared API). static_dir is where the package puts
+# the front-end (ACES_CONSOLE_STATIC overrides it for development); state_dir holds server.pid and server.log
+# (empty = $ACES_STATE/console, default ~/.local/state/aces/console). Tokens never live here: see aces-console's README.
+[console]
+bind = "127.0.0.1"
+port = 8070
+static_dir = "/usr/share/aces/console/static"
+state_dir = ""
+
 # Local lanes on this machine (none by default). Example:
 # [lanes."model/local"]
 # kind = "model"

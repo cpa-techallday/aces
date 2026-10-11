@@ -31,10 +31,15 @@ CAD_RECORDS = REPO / "rehearsal" / "reports" / "2026-10-10-aces-cad-vm"
 
 ROOT = Path(tempfile.mkdtemp(prefix="aces-console-test-"))
 (ROOT / "etc").mkdir(parents=True, exist_ok=True)
+# the shipped aces-base etc files: from the source tree beside this package, else from the installed aces-base
+# (/etc/aces, or $ACES_ETC as the caller set it) when these tests run from makepkg's check() or /usr/share/aces/console
+_ETC_SOURCES = (ACES_BASE / "etc", Path(os.environ.get("ACES_ETC", "/etc/aces")))
 for _name in ("aces.toml", "policy.json", "modes.json"):
-    _src = ACES_BASE / "etc" / _name
-    if _src.is_file():
-        shutil.copyfile(_src, ROOT / "etc" / _name)
+    for _dir in _ETC_SOURCES:
+        _src = _dir / _name
+        if _src.is_file():
+            shutil.copyfile(_src, ROOT / "etc" / _name)
+            break
 for _d in ("cfg", "state", "work", "share"):
     (ROOT / _d).mkdir(parents=True, exist_ok=True)
 

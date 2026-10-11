@@ -34,6 +34,13 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 HERE = os.path.dirname(os.path.abspath(__file__))
 PKG = os.path.abspath(os.path.join(HERE, "..", ".."))            # src/aces-console
 REPO = os.path.abspath(os.path.join(PKG, "..", ".."))             # the aces-os checkout
+if HERE not in sys.path:   # `python -I` (3.11+) does not put the script's directory on sys.path
+    sys.path.insert(0, HERE)
+try:  # Builder D: the records routes of spec 3.6-3.11 (golden, CAD, SIMLAB detail, MLflow run, ledger verify and the
+    import records_routes  # rig-side chain) beside this file, read from the work store and the captures; optional
+except ImportError as _e:
+    records_routes = None
+    sys.stderr.write(f"devserver: records_routes not loaded ({_e}); the records routes answer 'not available'\n")
 FIXTURE = "FIXTURE 2026-10-11"
 VERSION = "0.1.0"
 MAX_BODY = 65536
@@ -112,11 +119,13 @@ def mask(obj):
 def prepare_env(args) -> None:
     os.environ.setdefault("ACES_ETC", os.path.join(REPO, "src", "aces-base", "etc"))
     if args.vm_work:
+        # an explicit --vm-work names the store to read: it beats the environment (the test package points ACES_WORK,
+        # ACES_STATE, ACES_USER_CONFIG and XDG_DATA_HOME at its own scratch tree before any test starts this server)
         root = os.path.abspath(args.vm_work)
-        os.environ.setdefault("ACES_WORK", os.path.join(root, "Work"))
-        os.environ.setdefault("ACES_USER_CONFIG", os.path.join(root, ".config", "aces"))
-        os.environ.setdefault("ACES_STATE", os.path.join(root, ".local", "state", "aces"))
-        os.environ.setdefault("XDG_DATA_HOME", os.path.join(root, ".local", "share"))
+        os.environ["ACES_WORK"] = os.path.join(root, "Work")
+        os.environ["ACES_USER_CONFIG"] = os.path.join(root, ".config", "aces")
+        os.environ["ACES_STATE"] = os.path.join(root, ".local", "state", "aces")
+        os.environ["XDG_DATA_HOME"] = os.path.join(root, ".local", "share")
 
 
 class Aces:
@@ -410,6 +419,8 @@ class Handler(BaseHTTPRequestHandler):
             elif path.startswith("/api/") or path == "/vocab.json":
                 if method == "POST":
                     status = self._post(path, query)
+                elif records_routes is not None and records_routes.is_file_route(path):
+                    status = records_routes.send_file(self, path, query)   # bytes under CSP: sandbox, not JSON
                 else:
                     st, obj = self.server_get(path, query)
                     status = self._send_json(st, obj)
@@ -685,6 +696,10 @@ class Handler(BaseHTTPRequestHandler):
             if srv.get("webodm"):
                 links.append({"id": "webodm", "label": "WebODM (configured, desktop-local)", "url": srv["webodm"], "reach": "desktop-loopback", "openable": True, "note": None})
             return local_envelope({"links": links}, "GRID CONTROL status + SIMLAB summary + aces config", 60)
+        if records_routes is not None:
+            hit = records_routes.handle_get(self, path, query)
+            if hit is not None:
+                return hit
         if path in ("/api/golden/runs", "/api/ledger/simlab") or path.startswith(("/api/golden/", "/api/cad/", "/api/sim/", "/api/mlflow/")):
             return missing(path, 10, "this route belongs to Builder B's backend; the fixture devserver serves only what Builder C's plates call")
         return error(404, "no such route in the fixture devserver", "not-found", source=path)
@@ -705,6 +720,10 @@ class Handler(BaseHTTPRequestHandler):
             s.doctor["running"] = True
             threading.Thread(target=self._run_doctor, daemon=True).start()
             return 202, {"ok": True, "started": True, "note": "aces doctor --offline (the five rig probes are skipped by this devserver)"}
+        if records_routes is not None:
+            hit = records_routes.handle_post(self, path, body)   # golden verify and the bundle check: reads, run for real
+            if hit is not None:
+                return hit
         if path in ("/api/fabric/refresh", "/api/rig/switch/prepare", "/api/rig/switch", "/api/system/open"):
             what = {"/api/fabric/refresh": "fabric refresh", "/api/rig/switch/prepare": "mode switch (prepare)", "/api/rig/switch": "mode switch (confirm)", "/api/system/open": "open"}[path]
             return error(503, f"not performed by the fixture devserver: {what} (no rig is contacted and nothing is ledgered here)", "fixture", source=path)

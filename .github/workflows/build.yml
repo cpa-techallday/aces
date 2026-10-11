@@ -40,11 +40,13 @@ jobs:
         run: bash bin/install-test aces-base aces-engineering aces-voxel calculix-ccx-bin
 
       # aces-engineering is in this set, so the install test runs its golden block again, and that block starts with
-      # rm -rf /logs/golden: move the engineering step's golden records (with the CalculiX conforming check) aside first
-      - name: Install-test the local CAD server (aces-cad)
+      # rm -rf /logs/golden: move the engineering step's golden records (with the CalculiX conforming check) aside first.
+      # aces-console (2026-10-11) is in this set too: its install check runs after the golden and CAD blocks, so the
+      # ledger it reads back holds their entries (--expect-ledger ">=7")
+      - name: Install-test the local CAD server (aces-cad) and the ACES console
         run: |
           if [ -d logs/golden ]; then mv logs/golden logs/golden-engineering; fi
-          bash bin/install-test aces-base aces-engineering aces-cad
+          bash bin/install-test aces-base aces-engineering aces-cad aces-console
 
       - name: Keep the build logs
         if: always()

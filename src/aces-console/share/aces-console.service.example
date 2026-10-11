@@ -1,0 +1,37 @@
+# aces-console.service.example: a systemd USER unit for an operator who wants the console backend always on.
+#
+# The package does not install or enable any unit: the console runs on demand (the "ACES" launcher entry runs
+# `aces-console open`, which starts the server when /api/health does not answer and stops nothing). This file is
+# documentation. To use it:
+#
+#     install -Dm644 /usr/share/doc/aces-console/aces-console.service.example ~/.config/systemd/user/aces-console.service
+#     systemctl --user daemon-reload
+#     systemctl --user enable --now aces-console.service
+#     systemctl --user status aces-console.service
+#
+# The server binds 127.0.0.1:8070 only (a [console] table in ~/.config/aces/aces.toml changes the port; any other bind
+# address is refused at start). The GRID CONTROL token, when the operator has one, is read from the environment
+# (ACES_GC_TOKEN, SIMLAB_GC_TOKEN) or from ~/.config/aces/gridcontrol.env (mode 0600) by the server itself: do not put a
+# token into this unit file. The server log is ~/.local/state/aces/console/server.log (method, path, status, duration;
+# never headers or bodies). Stopping the unit sends SIGTERM: the poller stops, the event streams end with `event: bye`,
+# the process exits.
+
+[Unit]
+Description=ACES console backend (loopback only, on this user's records)
+Documentation=file:///usr/share/doc/aces-console/README.md
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 -I -m aces_console serve
+Restart=on-failure
+RestartSec=5
+# the console reads the desktop's records and the rig's published ports; it writes only under the state directory
+# and the fabric manifest (through aces fabric refresh) and the operator ledger (through aces.ledger.record)
+ProtectSystem=strict
+ReadWritePaths=%h/.local/state/aces %h/.config/aces
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target
