@@ -29,7 +29,7 @@ export async function mount(root, ctx) {
   ctx.events.on("rig.status", () => { renderSwitch(); });
   ctx.events.on("rig.switch", (st) => { R.stamps.switch = st; if (st.payload) R.switch = st.payload; renderTimeline(); renderSwitch(); });
   ctx.events.on("fabric.manifest", () => renderSwitch());
-  ctx.events.on("rig.modes", (st) => { R.stamps.modes = st; if (st.payload) R.modes = st.payload; renderSwitch(); });
+  ctx.events.on("rig.modes", (st) => { R.stamps.modes = st; if (st.ok !== false && st.payload && typeof st.payload === "object") R.modes = "gridcontrol_modes" in st.payload ? { ...(R.modes || {}), ...st.payload } : { ...(R.modes || {}), gridcontrol_modes: st.payload }; renderSwitch(); }); // the stamp inlines GRID CONTROL's mode table only
   ctx.events.on("switch.outcome", (st) => { if (st.payload) { R.outcomes.push({ ...st.payload, received_utc: new Date().toISOString() }); renderTimeline(); } });
   ctx.events.on("doctor", (st) => { if (st.changed) refetch("doctor").then(renderDoctor); });
   ctx.events.on("system.packages", (st) => { if (st.changed) refetch("packages").then(renderPackages); });

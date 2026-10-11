@@ -44,7 +44,8 @@ export async function mount(root, ctx) {
   ctx.events.on("rig.snapshot", (st) => { R.stamps.snapshot = st; if (st.changed || st.ok === false) refetch("snapshot").then(() => { renderSnapshot(); renderFoot(); }); });
   ctx.events.on("fabric.manifest", (st) => { R.stamps.fabric = st; if (st.changed) refetch("fabric").then(renderManifest); else renderManifest(); });
   ctx.events.on("sim.capacity", (st) => { take("capacity", st); renderCards(); renderSky(); renderFoot(); if (R.eye !== null) renderInspector(); });
-  ctx.events.on("rig.modes", (st) => { take("modes", st); renderMode(); });
+  // the server inlines GRID CONTROL's mode table in the rig.modes stamp (the dev harness the composed reply); keep the sim modes
+  ctx.events.on("rig.modes", (st) => { R.stamps.modes = st; if (st.ok !== false && st.payload && typeof st.payload === "object") R.modes = "gridcontrol_modes" in st.payload ? { ...(R.modes || {}), ...st.payload } : { ...(R.modes || {}), gridcontrol_modes: st.payload }; renderMode(); });
 
   await Promise.all(Object.keys(PATHS).map(refetch));
   if (R.dead) return;

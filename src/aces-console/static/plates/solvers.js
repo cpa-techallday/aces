@@ -20,7 +20,7 @@ export async function mount(root, ctx) {
   );
   ctx.events.on("sim.registry", (st) => { if (st.changed) refetch("registry").then(() => { renderRegistry(); renderFoot(); renderInspector(); }); });
   ctx.events.on("sim.capacity", (st) => { R.stamps.capacity = st; if (st.ok !== false && st.payload) R.capacity = st.payload; renderCapacity(); renderModes(); renderFoot(); });
-  ctx.events.on("rig.modes", (st) => { R.stamps.modes = st; if (st.ok !== false && st.payload) R.modes = st.payload; renderModes(); });
+  ctx.events.on("rig.modes", (st) => { R.stamps.modes = st; if (st.ok !== false && st.payload && typeof st.payload === "object") R.modes = "gridcontrol_modes" in st.payload ? { ...(R.modes || {}), ...st.payload } : { ...(R.modes || {}), gridcontrol_modes: st.payload }; renderModes(); }); // the stamp inlines GRID CONTROL's mode table only
   await Promise.all(Object.keys(PATHS).map(refetch));
   if (R.dead) return;
   renderRegistry(); renderCapacity(); renderModes(); renderFoot(); renderInspector();
