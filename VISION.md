@@ -100,7 +100,7 @@ a hardware-validated design exists (FP §2: none yet).
 │   aces-creative  aces-artcraft-{photo,vector,film,light,pdf,effect,design}craft│
 │   aces-studio    video studio client + LoRA registry client                    │
 │   aces-field     device registry, aces-devd, bus/PLC/RF/analysis tool packages │
-│   aces-consoles  web apps: GRID CONTROL, SIMLAB, MLflow, Video Studio, Nabu    │
+│   aces-console   one desktop console, replaces aces-consoles (2026-10-11)      │
 │   aces-shell     aces.fabric widget, aces.approvals overlay, aces.ledger,      │
 │                  aces.devices panels                                           │
 ├──────────────────────────────────────────────────────────────────────────────┤
@@ -493,7 +493,7 @@ on the ACES side before any cut-over.
    submit tiers, ledger records).
 4. **`aces-engineering` and `aces-voxel`:** simlab client, gendesign, build123d, the CAD skills; run the bracket
    validation case from DARKNESS against the rig; verify the evidence record lands in the ledger.
-5. **Consoles as web apps:** GRID CONTROL, SIMLAB, MLflow.
+5. **Consoles as web apps:** GRID CONTROL, SIMLAB, MLflow. *Amended 2026-10-11:* one desktop console, `aces-console` (docs/CONSOLE.md), replaces the three launcher entries; GRID CONTROL stays the rig operator's shell and the switch engine, the SIMLAB console stays the rig's data plane (proxied), MLflow's UI stays a link.
 6. **`aces-creative`:** the seven ArtCraft packages from pinned sources; check that all seven launch with status labels.
 7. **Model lane:** the server agent defines `aces-work`; GPU 6 soaks for 24 hours before its flag is cleared; DeepSeek
    is benchmarked on both stacks; the default agent is pointed at `aces/coder` for a local-only session.

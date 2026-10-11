@@ -303,7 +303,13 @@ class TestDevServer(unittest.TestCase):
             self.assertIn("no project at", nf["error"])
         else:
             self.assertEqual(d["projects"], [])
-            self.assertRegex(d["reason"], r"does not exist$")
+            work = os.environ.get("ACES_WORK", "")
+            if work and os.path.isdir(work):
+                # the tests' scratch work store exists and is empty (makepkg's check(), the installed tests): no projects,
+                # and no reason, since the store is there
+                self.assertIsNone(d["reason"])
+            else:
+                self.assertRegex(d["reason"], r"does not exist$")
 
     def test_post_guards(self):
         st, r = post(self.srv.url + "/api/fabric/refresh", {})

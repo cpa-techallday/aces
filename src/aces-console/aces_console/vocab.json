@@ -56,10 +56,11 @@
   "endpoint": {
    "label": "endpoint",
    "source": "aces_console/rig.py classify() (rig-state services and endpoints against the mode's stop/keep/rest lists; build spec 3.4 and 4.4)",
-   "chalk": ["by-design"],
+   "chalk": ["by-design", "stopped by mode <mode> (by design)"],
    "cyan": ["reachable"],
-   "amber": ["transition"],
-   "fault": ["unreachable"],
+   "amber": ["transition", "switching to <target>"],
+   "fault": ["unreachable", "unreachable (not explained by mode <mode>)", "unreachable (not explained by mode)"],
+   "words_note": "each ink lists the vocabulary word and the sentence the backend prints for it (classification rows carry both as word and verdict); the page renders the sentence, so the sentence patterns (<mode>, <target> match any text) belong to the ink too",
    "sentences": {
     "by-design": "stopped by mode <mode> (by design)",
     "reachable": "reachable",

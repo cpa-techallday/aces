@@ -1,0 +1,69 @@
+# Maintainer: Carbon Project Australia
+# The one ACES desktop console: a per-user, loopback-only standard-library Python backend that imports aces-base in
+# process, proxies the rig's published ports with every token held server-side, and serves one static Parameter Sky
+# front-end (seven plates) under /usr/share/aces/console/static. One launcher entry, "ACES". It replaces aces-consoles
+# (the three launcher entries): GRID CONTROL stays the rig's shell and switch engine, the SIMLAB console stays the rig's
+# data plane (proxied), MLflow's UI stays a link. Nothing is deployed to the rig. Sources are packed from
+# src/aces-console by bin/build.
+pkgname=aces-console
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="ACES console: the one desktop console for the rig, the simulation work, projects, golden and CAD records and the ledger (loopback-only stdlib backend, Parameter Sky front-end, one launcher entry)"
+arch=('any')
+url="file:///usr/share/doc/aces-console"
+# MIT: aces_console, the packaging and the shell's own front-end files; LicenseRef-ACES-undecided: the five files
+# copied from cudax-sim-runtime simlab/console/static (styles.css, sky.js, loaders.js, viewer.js, the structure of
+# index.html; cudax has no LICENSE file, as aces-engineering's vendored snapshot is labelled); MIT: Three.js r170 and
+# OrbitControls; OFL-1.1: the EB Garamond and JetBrains Mono fonts (their OFL texts ship beside them). See LICENSES.md.
+license=('MIT' 'LicenseRef-ACES-undecided' 'OFL-1.1')
+depends=('aces-base>=0.1.0-3' 'python>=3.11' 'xdg-utils')
+makedepends=('python-build' 'python-installer' 'python-wheel' 'python-setuptools')
+optdepends=('aces-engineering: aces golden verify on demand'
+            'aces-cad: check_bundle.py for the bundle check'
+            'omarchy: opens the console as a web-app window'
+            'libnotify: desktop notice when the server cannot start')
+provides=('aces-consoles')
+conflicts=('aces-consoles')
+replaces=('aces-consoles')
+source=("$pkgname-src.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "$srcdir/$pkgname"
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd "$srcdir/$pkgname"
+  # the unit tests of the backend (server, SSE, poller, rig proxies, safefs, CLI), the shell and plates against the
+  # fixture devserver, the records routes and the install check, all against the real captures of 2026-10-11 under
+  # tests/fixtures and tests/harness/fixtures; every fake binds 127.0.0.1 and the tests' network guard refuses any other
+  # host, so nothing here reaches the rig. tests/__init__.py isolates ACES_ETC/ACES_USER_CONFIG/ACES_STATE/ACES_WORK and
+  # XDG_DATA_HOME to a scratch tree and strips every token variable. The browser harness prints SKIP without a browser.
+  # aces-base is installed (depends), so `import aces` comes from site-packages here.
+  mkdir -p "$srcdir/home"
+  HOME="$srcdir/home" PYTHONPATH="$srcdir/$pkgname" PYTHONDONTWRITEBYTECODE=1 NO_COLOR=1 \
+    python -m unittest discover -s tests -t . -v
+}
+
+package() {
+  cd "$srcdir/$pkgname"
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  # the launcher runs the interpreter isolated (no PYTHONPATH, no user site), as the server it starts does
+  printf '%s\n' '#!/usr/bin/python3 -I' 'import sys' 'from aces_console.cli import main' 'sys.exit(main())' > "$pkgdir/usr/bin/aces-console"
+  chmod 755 "$pkgdir/usr/bin/aces-console"
+  # the front-end: the shell, its plates and libraries, the copied Parameter Sky modules, Three.js and the fonts
+  install -dm755 "$pkgdir/usr/share/aces/console"
+  cp -r static "$pkgdir/usr/share/aces/console/static"
+  # the tests, fakes, fixtures (with MANIFEST.json) and install_check.py, so the install test runs them, as aces-cad does
+  install -dm755 "$pkgdir/usr/share/aces/console/tests"
+  cp -r tests/. "$pkgdir/usr/share/aces/console/tests/"
+  find "$pkgdir/usr/share/aces/console" -name __pycache__ -type d -prune -exec rm -rf {} +
+  find "$pkgdir/usr/share/aces/console" -type d -exec chmod 755 {} +
+  find "$pkgdir/usr/share/aces/console" -type f -exec chmod 644 {} +
+  install -Dm644 share/aces.desktop "$pkgdir/usr/share/applications/aces.desktop"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+  install -Dm644 share/aces-console.service.example "$pkgdir/usr/share/doc/$pkgname/aces-console.service.example"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 LICENSES.md "$pkgdir/usr/share/licenses/$pkgname/LICENSES.md"
+}

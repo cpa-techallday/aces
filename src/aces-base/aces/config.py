@@ -30,6 +30,8 @@ DEFAULTS: dict[str, Any] = {
     },
     "fabric": {"manifest": str(USER_CONFIG / "fabric.json"), "max_age_s": 900},
     "lanes": {},
+    # aces-console (0.1.0-4): loopback only; an empty state_dir means $ACES_STATE/console
+    "console": {"bind": "127.0.0.1", "port": 8070, "static_dir": "/usr/share/aces/console/static", "state_dir": ""},
 }
 
 
