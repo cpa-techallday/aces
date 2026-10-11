@@ -10,6 +10,9 @@
   aces cfd-sample --tpms gyroid ...         one periodic CFD calibration sample (lattice Boltzmann, FP64)
   aces cfd-campaign --out EXP.yaml ...      simlab experiment: a sweep of calibration samples for the rig
   aces cfd-collect EXP_DIR --out M.json     measurement rows from a finished simlab campaign
+  aces em-sample --structure tile_coupon    one radar EM sample (aces-tile-em: gprMax / Palace)
+  aces em-campaign --out EXP.yaml ...       simlab experiment: radar EM calibration/validation sweep
+  aces em-collect EXP_DIR --out M.json      radar EM measurement rows from a finished campaign
   aces processes                            manufacturing routes and what ACES checks for each
   aces cost PART.yaml                       route suggestions + per-unit cost at different scales
   aces compliance collect|validate|index    ISO 27001 evidence package (API-first, ledger-chained)
@@ -807,6 +810,172 @@ def cmd_cfd_collect(args) -> int:
     return 0 if rows else 1
 
 
+# ----------------------------------------------------------------------------- calibration EM (radar)
+
+EM_STRUCTURES = ("patch_xband", "tile_coupon", "tile_multiport", "wr90_through",
+                 "via_coupon", "kicad_net", "kicad_net_ml", "kicad_net_nport")
+EM_STACKUPS = ("ro4350b", "tile-l1l2")
+
+
+def _em_stackup(name: str) -> dict:
+    from .domains.radar import em_adapter, kicad_import
+    return {"ro4350b": em_adapter.RO4350B,   # board 2 antenna plate, h = 0.508 mm
+            "tile-l1l2": kicad_import.TILE_L1L2}[name]  # board 1 RF, h = 0.254 mm
+
+
+def cmd_em_sample(args) -> int:
+    """One radar EM sample through the aces-tile-em adapter (gprMax / Palace).
+
+    Runs on the rig image (aces-em:0.1) where gprMax/Palace are installed;
+    without them the adapter's RuntimeError is reported honestly.
+    """
+    from .domains.radar.em_adapter import Adapter
+
+    out = Path(args.out)
+    if out.exists() or out.is_symlink():
+        print(f"{out} exists; choose a new file")
+        return 2
+    case: dict = {"structure": args.structure, "solver": args.solver,
+                  "stackup": _em_stackup(args.stackup),
+                  "f0_hz": args.f0, "freq_lo_hz": args.flo, "freq_hi_hz": args.fhi,
+                  "timeout_seconds": args.timeout}
+    if args.cell_m is not None:
+        case["cell_m"] = args.cell_m
+    if args.window_s is not None:
+        case["time_window_s"] = args.window_s
+    if args.structure == "wr90_through":
+        case["validate"] = "wr90_through"
+    if args.structure in ("kicad_net", "kicad_net_ml", "kicad_net_nport"):
+        if not (args.pcb and args.net):
+            print(f"{args.structure} needs --pcb and --net")
+            return 2
+        case["pcb"], case["net"] = args.pcb, args.net
+        if args.layer:
+            case["layer"] = args.layer
+    if args.case_json:
+        extra = json.loads(Path(args.case_json).read_text(encoding="utf-8"))
+        if not isinstance(extra, dict):
+            print("--case-json must be a JSON object of extra case parameters")
+            return 2
+        case.update(extra)
+    run_dir = Path(args.run_dir) if args.run_dir else out.with_suffix("").parent / (out.stem + "_run")
+    run_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        res = Adapter().run(case, None, str(run_dir))
+    except (RuntimeError, ValueError) as e:
+        print(f"aces-tile-em: {e}")
+        return 1
+    _safe_write(out, json.dumps(res, indent=2, default=str))
+    v = res.get("validation") or {}
+    if v:
+        print(f"validation: pass={v.get('pass')}  " +
+              "  ".join(f"{k}={v[k]}" for k in ("reciprocity_db", "err_pct", "s21_err_db")
+                       if k in v))
+    meas = run_dir / "measurement.json"
+    if meas.exists():
+        row = json.loads(meas.read_text(encoding="utf-8"))
+        print(f"measurement row: {row['kind']} = {row['value']:.4g} dB @ "
+              f"{row['frequency_hz'] / 1e9:.3f} GHz (model {row['model_value']:.4g}) "
+              f"-> {meas}")
+    print(f"Wrote {out} (run dir {run_dir})")
+    return 0 if (not v or v.get("pass")) else 1
+
+
+def cmd_em_campaign(args) -> int:
+    """simlab experiment for a radar EM sweep on the rig (aces-tile-em)."""
+    out = Path(args.out)
+    if out.exists() or out.is_symlink():
+        print(f"{out} exists; choose a new file")
+        return 2
+    for sname in args.structure:
+        if sname not in EM_STRUCTURES:
+            print(f"unknown structure {sname!r}; choose from {sorted(EM_STRUCTURES)}")
+            return 2
+    if args.validation:
+        structures = ["patch_xband", "tile_coupon", "tile_multiport", "wr90_through"]
+        sweep = {"structure": structures}
+        params = {"solver": args.solver, "cell_m": args.cell_m,
+                  "time_window_s": args.window_s, "timeout_seconds": args.timeout}
+        desc = "Registry validation of aces-tile-em against its documented verification suite."
+        hyp = ("patch resonance within 5 % of the cavity model, coupon loss within the "
+               "calibration band, multiport reciprocity < 0.2 dB, WR-90 S21 within 0.1 dB "
+               "of ideal and cutoff within 1 % of theory.")
+        expected = ("docs/RADAR_EM.md §4 bars per case; measurement.json rows for the "
+                    "coupon feed `aces calibrate` (radar row kinds).")
+        outputs = ["resonance_hz", "loss_per_m_db", "s11_db", "s21_db", "reciprocity_db"]
+        kind = "validation"
+    else:
+        sweep = {"structure": list(args.structure), "f0_hz": list(args.f0)}
+        params = {"solver": args.solver, "stackup": _em_stackup(args.stackup),
+                  "cell_m": args.cell_m, "time_window_s": args.window_s,
+                  "timeout_seconds": args.timeout}
+        desc = (f"ACES radar EM calibration samples: {', '.join(args.structure)} at "
+                f"{[f / 1e9 for f in args.f0]} GHz, stackup {args.stackup}, "
+                f"{args.cell_m * 1e3:.3f} mm cells, solver {args.solver}.")
+        hyp = ("The fast-tier cascade (per-length loss / er_eff models) differs from the "
+               "FDTD/FEM measurement by a factor constant enough over the band to "
+               "calibrate with `aces calibrate` (radar row kinds).")
+        expected = "measurement.json rows (tile_insertion_loss_db) per case."
+        outputs = ["loss_per_m_db", "er_eff_model", "resonance_hz"]
+        kind = "calibration"
+    exp = simlab.experiment(
+        exp_id=args.id, project=args.project, owner=args.owner, rd_activity=args.rd_activity,
+        physics="em", solver="aces-tile-em", description=desc, hypothesis=hyp,
+        expected=expected, geometry_ref=None, params=params, outputs=outputs,
+        vram_gb=args.mem_gb,  # gprMax 4.x is CPU/OpenMP: this is host RAM, not VRAM
+        sweep=sweep, system="hx", kind=kind)
+    exp["geometry"] = {"source": "parametric",
+                       "note": "structures generate their own geometry; kicad_* cases take pcb/net"}
+    simlab.write(exp, out)
+    n_cases = 1
+    for vls in sweep.values():
+        n_cases *= len(vls)
+    print(f"Wrote {out}: {n_cases} case(s), {exp['resources']['vram_gb']} GB RAM each. "
+          f"Run `simlab validate` on the rig before submitting.")
+    return 0
+
+
+def cmd_em_collect(args) -> int:
+    """Radar EM measurement rows from a finished simlab campaign."""
+    from .domains.radar import calibrate as radarcal
+
+    root = Path(args.exp_dir)
+    if not root.is_dir():
+        print(f"{root} is not a simlab experiment folder")
+        return 2
+    out = Path(args.out)
+    if out.exists() or out.is_symlink():
+        print(f"{out} exists; choose a new file")
+        return 2
+    rows, skipped = [], []
+    for case in sorted(p for p in root.iterdir() if p.is_dir()):
+        status_p, meas_p = case / "status.json", case / "measurement.json"
+        status = json.loads(status_p.read_text()).get("status") if status_p.exists() else None
+        if status != "FINISHED":
+            skipped.append(f"{case.name}: status {status}")
+            continue
+        if not meas_p.exists():
+            skipped.append(f"{case.name}: no measurement.json (not every EM case "
+                           "writes a calibration row — e.g. patch/wr90 are pass-gated)")
+            continue
+        if not (case / "evidence.json").exists():
+            skipped.append(f"{case.name}: no evidence.json; not citable")
+            continue
+        m = json.loads(meas_p.read_text())
+        m["source"] = f"simlab:{root.name}:{case.name}"  # the run folder is the provenance
+        missing = radarcal.REQUIRED_FIELDS - set(m)
+        if missing or m.get("kind") not in radarcal.ROW_KIND_TO_KEY:
+            skipped.append(f"{case.name}: invalid measurement row "
+                           f"(missing {sorted(missing)} or unknown kind {m.get('kind')!r})")
+            continue
+        rows.append(m)
+    _safe_write(out, json.dumps(rows, indent=2))
+    print(f"{len(rows)} measurement(s) -> {out}")
+    for s in skipped:
+        print(f"SKIPPED {s}")
+    return 0 if rows else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="aces", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -909,6 +1078,54 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("exp_dir", help="simlab experiment output folder (one subfolder per case)")
     s.add_argument("--out", required=True)
     s.set_defaults(fn=cmd_cfd_collect)
+
+    s = sub.add_parser("em-sample", help="one radar EM sample (aces-tile-em: gprMax FDTD / Palace FEM)")
+    s.add_argument("--structure", choices=EM_STRUCTURES, required=True)
+    s.add_argument("--solver", choices=("gprmax", "palace"), default="gprmax")
+    s.add_argument("--stackup", choices=EM_STACKUPS, default="tile-l1l2",
+                   help="ro4350b = board 2 antenna plate (h 0.508 mm); tile-l1l2 = board 1 RF (h 0.254 mm)")
+    s.add_argument("--f0", type=float, default=10.5e9, help="band centre, Hz")
+    s.add_argument("--flo", type=float, default=8e9, help="band low, Hz")
+    s.add_argument("--fhi", type=float, default=13e9, help="band high, Hz")
+    s.add_argument("--cell-m", type=float, default=None,
+                   help="mesh cell, m (default: adapter per-structure choice)")
+    s.add_argument("--window-s", type=float, default=None,
+                   help="time window, s (default: adapter per-structure choice)")
+    s.add_argument("--timeout", type=int, default=2400, help="per-run wall clock, seconds")
+    s.add_argument("--pcb", help=".kicad_pcb path (kicad_net / kicad_net_ml / kicad_net_nport)")
+    s.add_argument("--net", help="net name (kicad_net / kicad_net_ml / kicad_net_nport)")
+    s.add_argument("--layer", help="copper layer for nport extraction (default F.Cu)")
+    s.add_argument("--case-json", help="JSON file of extra case parameters (merged last)")
+    s.add_argument("--run-dir", help="case run directory (default: <out stem>_run)")
+    s.add_argument("--out", required=True)
+    s.set_defaults(fn=cmd_em_sample)
+
+    s = sub.add_parser("em-campaign", help="simlab experiment for a radar EM calibration/validation sweep")
+    s.add_argument("--id", required=True, help="simlab experiment id (filename-safe)")
+    s.add_argument("--structure", nargs="+", default=["tile_coupon"],
+                   help=f"structures to sweep; choose from {sorted(EM_STRUCTURES)}")
+    s.add_argument("--f0", nargs="+", type=float, default=[9.5e9, 10.5e9, 11.5e9],
+                   help="band centres, Hz (calibration sweep)")
+    s.add_argument("--solver", choices=("gprmax", "palace"), default="gprmax")
+    s.add_argument("--stackup", choices=EM_STACKUPS, default="tile-l1l2")
+    s.add_argument("--cell-m", type=float, default=6.35e-5, help="mesh cell, m (h/4 on tile-l1l2)")
+    s.add_argument("--window-s", type=float, default=75e-9,
+                   help="time window, s (tile_coupon ring-down needs ~75 ns at these Qs)")
+    s.add_argument("--timeout", type=int, default=2400, help="per-run wall clock, seconds")
+    s.add_argument("--mem-gb", type=float, default=4.0,
+                   help="host RAM per case, GB (gprMax 4.x is CPU/OpenMP; recorded as the resource)")
+    s.add_argument("--validation", action="store_true",
+                   help="the documented verification suite (patch/coupon/multiport/wr90) instead")
+    s.add_argument("--project", default="ACES-radar-calibration")
+    s.add_argument("--owner", default="aaron")
+    s.add_argument("--rd-activity", default="ACES fast-tier calibration of the AERIS radar cascade")
+    s.add_argument("--out", required=True)
+    s.set_defaults(fn=cmd_em_campaign)
+
+    s = sub.add_parser("em-collect", help="radar EM measurement rows from a finished simlab campaign")
+    s.add_argument("exp_dir", help="simlab experiment output folder (one subfolder per case)")
+    s.add_argument("--out", required=True)
+    s.set_defaults(fn=cmd_em_collect)
 
     s = sub.add_parser("processes", help="list manufacturing routes")
     s.set_defaults(fn=cmd_processes)
