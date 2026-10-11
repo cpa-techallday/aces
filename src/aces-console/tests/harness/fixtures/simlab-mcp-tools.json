@@ -1,0 +1,753 @@
+{
+ "jsonrpc": "2.0",
+ "id": 1,
+ "result": {
+  "tools": [
+   {
+    "description": "GPU truth table: rig-state idle/memory/processes joined with GRID CONTROL mode and derated flags and the redis leases; 'available' lists the GPUs a new case could take now. mode/pool preview what another mode (sim-lab-4, sim-lab-8) or an explicit GPU list would release, without changing anything.",
+    "inputSchema": {
+     "properties": {
+      "mode": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Mode"
+      },
+      "pool": {
+       "anyOf": [
+        {
+         "items": {
+          "type": "integer"
+         },
+         "type": "array"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Pool"
+      }
+     },
+     "type": "object",
+     "title": "rig_capacityArguments"
+    },
+    "name": "rig_capacity",
+    "outputSchema": {
+     "properties": {
+      "result": {
+       "additionalProperties": true,
+       "title": "Result",
+       "type": "object"
+      }
+     },
+     "required": [
+      "result"
+     ],
+     "type": "object",
+     "title": "rig_capacityOutput"
+    }
+   },
+   {
+    "description": "Solver registry: physics covered, image, precision and the validation record that makes results citable.",
+    "inputSchema": {
+     "properties": {},
+     "type": "object",
+     "title": "sim_list_solversArguments"
+    },
+    "name": "sim_list_solvers",
+    "outputSchema": {
+     "properties": {
+      "result": {
+       "additionalProperties": true,
+       "title": "Result",
+       "type": "object"
+      }
+     },
+     "required": [
+      "result"
+     ],
+     "type": "object",
+     "title": "sim_list_solversOutput"
+    }
+   },
+   {
+    "description": "Validate an experiment.yaml (path relative to the repo) and list the cases its sweep expands to, without running anything.",
+    "inputSchema": {
+     "properties": {
+      "spec_path": {
+       "title": "Spec Path",
+       "type": "string"
+      }
+     },
+     "required": [
+      "spec_path"
+     ],
+     "type": "object",
+     "title": "sim_validateArguments"
+    },
+    "name": "sim_validate",
+    "outputSchema": {
+     "properties": {
+      "result": {
+       "additionalProperties": true,
+       "title": "Result",
+       "type": "object"
+      }
+     },
+     "required": [
+      "result"
+     ],
+     "type": "object",
+     "title": "sim_validateOutput"
+    }
+   },
+   {
+    "description": "Store an experiment.yaml sent as text so it can be validated and queued from anywhere: the content is parsed and checked like sim_validate (a YAML mapping that is a valid experiment whose solver covers its physics), written atomically under the spec store (SIMLAB_SPEC_ROOT, default <repo>/cases/uploaded/<principal>/<name>), and the returned spec_path is what sim_validate, sim_submit and sim_sweep take. name defaults to <id>.yaml and must be a bare file name; an existing file is kept unless overwrite=true. A geometry.ref that is not present next to the stored spec is reported as a warning (upload it first with sim_put_file). Nothing is queued.",
+    "inputSchema": {
+     "properties": {
+      "content": {
+       "title": "Content",
+       "type": "string"
+      },
+      "name": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Name"
+      },
+      "overwrite": {
+       "default": false,
+       "title": "Overwrite",
+       "type": "boolean"
+      }
+     },
+     "required": [
+      "content"
+     ],
+     "type": "object",
+     "title": "sim_put_specArguments"
+    },
+    "name": "sim_put_spec",
+    "outputSchema": {
+     "properties": {
+      "result": {
+       "additionalProperties": true,
+       "title": "Result",
+       "type": "object"
+      }
+     },
+     "required": [
+      "result"
+     ],
+     "type": "object",
+     "title": "sim_put_specOutput"
+    }
+   },
+   {
+    "description": "Specs stored by sim_put_spec (newest first): spec_path, principal, id, solver, physics, case count, sha256. principal limits the list to one caller's folder.",
+    "inputSchema": {
+     "properties": {
+      "principal": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Principal"
+      }
+     },
+     "type": "object",
+     "title": "sim_list_specsArguments"
+    },
+    "name": "sim_list_specs",
+    "outputSchema": {
+     "properties": {
+      "result": {
+       "items": {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       "title": "Result",
+       "type": "array"
+      }
+     },
+     "required": [
+      "result"
+     ],
+     "type": "object",
+     "title": "sim_list_specsOutput"
+    }
+   },
+   {
+    "description": "Upload one file next to your specs (<spec store>/<principal>/<name>, e.g. name golden/<run>/part.stl) so an experiment.yaml can refer to it by a path relative to the spec. Send standard base64 in chunks of at most 2 MiB decoded (2097152 bytes): every call carries total_bytes and the sha256 of the whole file; offset 0 starts or restarts, each later call continues exactly where the last ended. The call that completes the file checks the hash (a mismatch discards the partial); an existing file with the same sha256 is kept (existed=true), a different one is refused unless overwrite=true. name: 1 to 4 components of letters, digits, dot, dash, underscore; never .yaml/.yml (use sim_put_spec). Files up to 256 MiB.",
+    "inputSchema": {
+     "properties": {
+      "name": {
+       "title": "Name",
+       "type": "string"
+      },
+      "content_b64": {
+       "title": "Content B64",
+       "type": "string"
+      },
+      "total_bytes": {
+       "title": "Total Bytes",
+       "type": "integer"
+      },
+      "sha256": {
+       "title": "Sha256",
+       "type": "string"
+      },
+      "offset": {
+       "default": 0,
+       "title": "Offset",
+       "type": "integer"
+      },
+      "overwrite": {
+       "default": false,
+       "title": "Overwrite",
+       "type": "boolean"
+      }
+     },
+     "required": [
+      "name",
+      "content_b64",
+      "total_bytes",
+      "sha256"
+     ],
+     "type": "object",
+     "title": "sim_put_fileArguments"
+    },
+    "name": "sim_put_file",
+    "outputSchema": {
+     "properties": {
+      "result": {
+       "additionalProperties": true,
+       "title": "Result",
+       "type": "object"
+      }
+     },
+     "required": [
+      "result"
+     ],
+     "type": "object",
+     "title": "sim_put_fileOutput"
+    }
+   },
+   {
+    "description": "Read one file of an experiment's run directory (path relative to it, e.g. c000/results.json or c000/golden/x001/fields.npz) in chunks: returns size, the sha256 of the whole file (recomputed on every call), offset, length, eof, mtime_utc and the chunk as base64 (max_bytes at most 2 MiB). Paths that resolve outside the run directory, or to anything but a regular file, are refused.",
+    "inputSchema": {
+     "properties": {
+      "experiment_id": {
+       "title": "Experiment Id",
+       "type": "string"
+      },
+      "path": {
+       "title": "Path",
+       "type": "string"
+      },
+      "offset": {
+       "default": 0,
+       "title": "Offset",
+       "type": "integer"
+      },
+      "max_bytes": {
+       "default": 2097152,
+       "title": "Max Bytes",
+       "type": "integer"
+      }
+     },
+     "required": [
+      "experiment_id",
+      "path"
+     ],
+     "type": "object",
+     "title": "sim_get_fileArguments"
+    },
+    "name": "sim_get_file",
+    "outputSchema": {
+     "properties": {
+      "result": {
+       "additionalProperties": true,
+       "title": "Result",
+       "type": "object"
+      }
+     },
+     "required": [
+      "result"
+     ],
+     "type": "object",
+     "title": "sim_get_fileOutput"
+    }
+   },
+   {
+    "description": "Queue every case of an experiment.yaml. Each GPU case waits for a lease on a released, idle, non-derated GPU. docker=true runs cases inside the solver's registered image (required on the rig). lease_wait_s bounds that wait per case (clamped to 60..21600 s; default 6 h); a job still waiting when sim_cancel is called stops waiting.",
+    "inputSchema": {
+     "properties": {
+      "spec_path": {
+       "title": "Spec Path",
+       "type": "string"
+      },
+      "docker": {
+       "default": true,
+       "title": "Docker",
+       "type": "boolean"
+      },
+      "out_root": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Out Root"
+      },
+      "mlflow_uri": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Mlflow Uri"
+      },
+      "lease_wait_s": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Lease Wait S"
+      }
+     },
+     "required": [
+      "spec_path"
+     ],
+     "type": "object",
+     "title": "sim_submitArguments"
+    },
+    "name": "sim_submit",
+    "outputSchema": {
+     "properties": {
+      "result": {
+       "additionalProperties": true,
+       "title": "Result",
+       "type": "object"
+      }
+     },
+     "required": [
+      "result"
+     ],
+     "type": "object",
+     "title": "sim_submitOutput"
+    }
+   },
+   {
+    "description": "Fan-out helper: take an experiment.yaml, replace its sweep with the given grid (parameter -> list of values), write the derived spec next to the original with a new id, and queue it.",
+    "inputSchema": {
+     "properties": {
+      "spec_path": {
+       "title": "Spec Path",
+       "type": "string"
+      },
+      "grid": {
+       "additionalProperties": {
+        "items": {},
+        "type": "array"
+       },
+       "title": "Grid",
+       "type": "object"
+      },
+      "new_id": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "New Id"
+      },
+      "docker": {
+       "default": true,
+       "title": "Docker",
+       "type": "boolean"
+      },
+      "out_root": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Out Root"
+      }
+     },
+     "required": [
+      "spec_path",
+      "grid"
+     ],
+     "type": "object",
+     "title": "sim_sweepArguments"
+    },
+    "name": "sim_sweep",
+    "outputSchema": {
+     "properties": {
+      "result": {
+       "additionalProperties": true,
+       "title": "Result",
+       "type": "object"
+      }
+     },
+     "required": [
+      "result"
+     ],
+     "type": "object",
+     "title": "sim_sweepOutput"
+    }
+   },
+   {
+    "description": "Queue position, lease state, progress and outcome of every case of an experiment.",
+    "inputSchema": {
+     "properties": {
+      "experiment_id": {
+       "title": "Experiment Id",
+       "type": "string"
+      }
+     },
+     "required": [
+      "experiment_id"
+     ],
+     "type": "object",
+     "title": "sim_statusArguments"
+    },
+    "name": "sim_status",
+    "outputSchema": {
+     "properties": {
+      "result": {
+       "additionalProperties": true,
+       "title": "Result",
+       "type": "object"
+      }
+     },
+     "required": [
+      "result"
+     ],
+     "type": "object",
+     "title": "sim_statusOutput"
+    }
+   },
+   {
+    "description": "results.json of each finished case plus artifact paths; writes summary.csv/json when the experiment is done.",
+    "inputSchema": {
+     "properties": {
+      "experiment_id": {
+       "title": "Experiment Id",
+       "type": "string"
+      },
+      "case_id": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Case Id"
+      }
+     },
+     "required": [
+      "experiment_id"
+     ],
+     "type": "object",
+     "title": "sim_resultsArguments"
+    },
+    "name": "sim_results",
+    "outputSchema": {
+     "properties": {
+      "result": {
+       "additionalProperties": true,
+       "title": "Result",
+       "type": "object"
+      }
+     },
+     "required": [
+      "result"
+     ],
+     "type": "object",
+     "title": "sim_resultsOutput"
+    }
+   },
+   {
+    "description": "Markdown report of an experiment: cases, key outputs, failures, run directories.",
+    "inputSchema": {
+     "properties": {
+      "experiment_id": {
+       "title": "Experiment Id",
+       "type": "string"
+      }
+     },
+     "required": [
+      "experiment_id"
+     ],
+     "type": "object",
+     "title": "sim_reportArguments"
+    },
+    "name": "sim_report",
+    "outputSchema": {
+     "properties": {
+      "result": {
+       "title": "Result",
+       "type": "string"
+      }
+     },
+     "required": [
+      "result"
+     ],
+     "type": "object",
+     "title": "sim_reportOutput"
+    }
+   },
+   {
+    "description": "Build the experiment report files (report.md/.html/.docx/.pdf in <exp_dir>/report): experiment definition, geometry provenance incl. the Fusion snapshot, results table, figures, solver validation record, evidence appendix. formats: comma list of md,html,docx,pdf.",
+    "inputSchema": {
+     "properties": {
+      "experiment_id": {
+       "title": "Experiment Id",
+       "type": "string"
+      },
+      "formats": {
+       "default": "md,html,docx,pdf",
+       "title": "Formats",
+       "type": "string"
+      },
+      "title": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Title"
+      },
+      "doc_id": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Doc Id"
+      }
+     },
+     "required": [
+      "experiment_id"
+     ],
+     "type": "object",
+     "title": "sim_report_filesArguments"
+    },
+    "name": "sim_report_files",
+    "outputSchema": {
+     "properties": {
+      "result": {
+       "additionalProperties": true,
+       "title": "Result",
+       "type": "object"
+      }
+     },
+     "required": [
+      "result"
+     ],
+     "type": "object",
+     "title": "sim_report_filesOutput"
+    }
+   },
+   {
+    "description": "Build the R&D evidence bundle of a finished experiment (hypothesis, method with solver validation, geometry provenance, environment with image digests and GPU ids, per-case manifests), write the contemporaneous record, append it to the hash-chained ledger; optionally deliver a record to the evidence engine (push: drop | nabu:<evidence.json> | http endpoint).",
+    "inputSchema": {
+     "properties": {
+      "experiment_id": {
+       "title": "Experiment Id",
+       "type": "string"
+      },
+      "company": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Company"
+      },
+      "note": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Note"
+      },
+      "push": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Push"
+      }
+     },
+     "required": [
+      "experiment_id"
+     ],
+     "type": "object",
+     "title": "sim_evidenceArguments"
+    },
+    "name": "sim_evidence",
+    "outputSchema": {
+     "properties": {
+      "result": {
+       "additionalProperties": true,
+       "title": "Result",
+       "type": "object"
+      }
+     },
+     "required": [
+      "result"
+     ],
+     "type": "object",
+     "title": "sim_evidenceOutput"
+    }
+   },
+   {
+    "description": "The principal this call is attributed to, the server's tool policy and the tools it exposes.",
+    "inputSchema": {
+     "properties": {},
+     "type": "object",
+     "title": "sim_whoamiArguments"
+    },
+    "name": "sim_whoami",
+    "outputSchema": {
+     "properties": {
+      "result": {
+       "additionalProperties": true,
+       "title": "Result",
+       "type": "object"
+      }
+     },
+     "required": [
+      "result"
+     ],
+     "type": "object",
+     "title": "sim_whoamiOutput"
+    }
+   },
+   {
+    "description": "Cancel queued cases and request stop of running ones for an experiment.",
+    "inputSchema": {
+     "properties": {
+      "experiment_id": {
+       "title": "Experiment Id",
+       "type": "string"
+      }
+     },
+     "required": [
+      "experiment_id"
+     ],
+     "type": "object",
+     "title": "sim_cancelArguments"
+    },
+    "name": "sim_cancel",
+    "outputSchema": {
+     "properties": {
+      "result": {
+       "additionalProperties": true,
+       "title": "Result",
+       "type": "object"
+      }
+     },
+     "required": [
+      "result"
+     ],
+     "type": "object",
+     "title": "sim_cancelOutput"
+    }
+   },
+   {
+    "description": "Experiments known to the queue.",
+    "inputSchema": {
+     "properties": {},
+     "type": "object",
+     "title": "sim_list_experimentsArguments"
+    },
+    "name": "sim_list_experiments",
+    "outputSchema": {
+     "properties": {
+      "result": {
+       "items": {
+        "type": "string"
+       },
+       "title": "Result",
+       "type": "array"
+      }
+     },
+     "required": [
+      "result"
+     ],
+     "type": "object",
+     "title": "sim_list_experimentsOutput"
+    }
+   }
+  ]
+ }
+}

@@ -1,0 +1,187 @@
+{
+ "telemetry": {
+  "gpus": [
+   {
+    "index": 0,
+    "name": "NVIDIA CMP 170HX",
+    "util": 0,
+    "mem_used_mb": 14,
+    "mem_total_mb": 65536,
+    "temp_c": 27,
+    "power_w": 34,
+    "clock_mhz": 210,
+    "derated": false
+   },
+   {
+    "index": 1,
+    "name": "NVIDIA CMP 170HX",
+    "util": 0,
+    "mem_used_mb": 14,
+    "mem_total_mb": 65536,
+    "temp_c": 27,
+    "power_w": 33,
+    "clock_mhz": 210,
+    "derated": false
+   },
+   {
+    "index": 2,
+    "name": "NVIDIA CMP 170HX",
+    "util": 100,
+    "mem_used_mb": 2654,
+    "mem_total_mb": 65536,
+    "temp_c": 57,
+    "power_w": 232,
+    "clock_mhz": 1455,
+    "derated": false
+   },
+   {
+    "index": 3,
+    "name": "NVIDIA CMP 170HX",
+    "util": 0,
+    "mem_used_mb": 14,
+    "mem_total_mb": 65536,
+    "temp_c": 29,
+    "power_w": 35,
+    "clock_mhz": 210,
+    "derated": false
+   },
+   {
+    "index": 4,
+    "name": "NVIDIA CMP 170HX",
+    "util": 100,
+    "mem_used_mb": 58642,
+    "mem_total_mb": 65536,
+    "temp_c": 54,
+    "power_w": 177,
+    "clock_mhz": 1470,
+    "derated": false
+   },
+   {
+    "index": 5,
+    "name": "NVIDIA CMP 170HX",
+    "util": 0,
+    "mem_used_mb": 57842,
+    "mem_total_mb": 65536,
+    "temp_c": 28,
+    "power_w": 40,
+    "clock_mhz": 1140,
+    "derated": false
+   },
+   {
+    "index": 6,
+    "name": "NVIDIA CMP 170HX",
+    "util": 0,
+    "mem_used_mb": 14,
+    "mem_total_mb": 65536,
+    "temp_c": 30,
+    "power_w": 35,
+    "clock_mhz": 210,
+    "derated": false
+   },
+   {
+    "index": 7,
+    "name": "NVIDIA CMP 170HX",
+    "util": 0,
+    "mem_used_mb": 55494,
+    "mem_total_mb": 65536,
+    "temp_c": 30,
+    "power_w": 41,
+    "clock_mhz": 1140,
+    "derated": false
+   }
+  ],
+  "cpu": {
+   "load1": 5.3,
+   "load5": 5.02,
+   "load15": 4.64,
+   "cores": 192
+  },
+  "mem": {
+   "total_mb": 1031864,
+   "used_mb": 50289,
+   "avail_mb": 981575
+  },
+  "disk": [
+   {
+    "mount": "/",
+    "total_mb": 3754441,
+    "used_mb": 2479717,
+    "avail_mb": 1083936
+   },
+   {
+    "mount": "/mnt/nvme2",
+    "total_mb": 3754445,
+    "used_mb": 3280579,
+    "avail_mb": 283079
+   }
+  ],
+  "ts": 1791672916308
+ },
+ "history": [
+  {
+   "t": 1791672916.3094509,
+   "gpus": [
+    {
+     "i": 0,
+     "u": 0,
+     "m": 14,
+     "p": 34,
+     "c": 27
+    },
+    {
+     "i": 1,
+     "u": 0,
+     "m": 14,
+     "p": 33,
+     "c": 27
+    },
+    {
+     "i": 2,
+     "u": 100,
+     "m": 2654,
+     "p": 232,
+     "c": 57
+    },
+    {
+     "i": 3,
+     "u": 0,
+     "m": 14,
+     "p": 35,
+     "c": 29
+    },
+    {
+     "i": 4,
+     "u": 100,
+     "m": 58642,
+     "p": 177,
+     "c": 54
+    },
+    {
+     "i": 5,
+     "u": 0,
+     "m": 57842,
+     "p": 40,
+     "c": 28
+    },
+    {
+     "i": 6,
+     "u": 0,
+     "m": 14,
+     "p": 35,
+     "c": 30
+    },
+    {
+     "i": 7,
+     "u": 0,
+     "m": 55494,
+     "p": 41,
+     "c": 30
+    }
+   ],
+   "cpu": 5.3,
+   "mem": 50289
+  }
+ ],
+ "error": null,
+ "source": "http://host.docker.internal:3200"
+}
