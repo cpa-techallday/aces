@@ -1,0 +1,118 @@
+{
+ "gpus": [
+  {
+   "index": 0,
+   "name": "NVIDIA CMP 170HX",
+   "util": 0,
+   "mem_used_mb": 14,
+   "mem_total_mb": 65536,
+   "temp_c": 27,
+   "power_w": 34,
+   "clock_mhz": 210,
+   "derated": false
+  },
+  {
+   "index": 1,
+   "name": "NVIDIA CMP 170HX",
+   "util": 0,
+   "mem_used_mb": 14,
+   "mem_total_mb": 65536,
+   "temp_c": 27,
+   "power_w": 33,
+   "clock_mhz": 210,
+   "derated": false
+  },
+  {
+   "index": 2,
+   "name": "NVIDIA CMP 170HX",
+   "util": 100,
+   "mem_used_mb": 2654,
+   "mem_total_mb": 65536,
+   "temp_c": 57,
+   "power_w": 238,
+   "clock_mhz": 1455,
+   "derated": false
+  },
+  {
+   "index": 3,
+   "name": "NVIDIA CMP 170HX",
+   "util": 0,
+   "mem_used_mb": 14,
+   "mem_total_mb": 65536,
+   "temp_c": 29,
+   "power_w": 35,
+   "clock_mhz": 210,
+   "derated": false
+  },
+  {
+   "index": 4,
+   "name": "NVIDIA CMP 170HX",
+   "util": 100,
+   "mem_used_mb": 58642,
+   "mem_total_mb": 65536,
+   "temp_c": 54,
+   "power_w": 179,
+   "clock_mhz": 1470,
+   "derated": false
+  },
+  {
+   "index": 5,
+   "name": "NVIDIA CMP 170HX",
+   "util": 0,
+   "mem_used_mb": 57842,
+   "mem_total_mb": 65536,
+   "temp_c": 28,
+   "power_w": 40,
+   "clock_mhz": 1140,
+   "derated": false
+  },
+  {
+   "index": 6,
+   "name": "NVIDIA CMP 170HX",
+   "util": 0,
+   "mem_used_mb": 14,
+   "mem_total_mb": 65536,
+   "temp_c": 30,
+   "power_w": 35,
+   "clock_mhz": 210,
+   "derated": false
+  },
+  {
+   "index": 7,
+   "name": "NVIDIA CMP 170HX",
+   "util": 0,
+   "mem_used_mb": 55494,
+   "mem_total_mb": 65536,
+   "temp_c": 30,
+   "power_w": 41,
+   "clock_mhz": 1140,
+   "derated": false
+  }
+ ],
+ "cpu": {
+  "load1": 5.3,
+  "load5": 5.02,
+  "load15": 4.64,
+  "cores": 192
+ },
+ "mem": {
+  "total_mb": 1031864,
+  "used_mb": 50305,
+  "avail_mb": 981559
+ },
+ "disk": [
+  {
+   "mount": "/",
+   "total_mb": 3754441,
+   "used_mb": 2479717,
+   "avail_mb": 1083937
+  },
+  {
+   "mount": "/mnt/nvme2",
+   "total_mb": 3754445,
+   "used_mb": 3280578,
+   "avail_mb": 283080
+  }
+ ],
+ "ts": 1791672914280
+}

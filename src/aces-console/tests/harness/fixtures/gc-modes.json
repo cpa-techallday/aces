@@ -1,0 +1,57 @@
+{
+ "cad-engineering": {
+  "label": "CAD Engineering",
+  "switchable": true,
+  "pending": null
+ },
+ "general-fleet": {
+  "label": "General Fleet (3x Apodex workers)",
+  "switchable": true,
+  "pending": null
+ },
+ "general-flagship": {
+  "label": "General Flagship (GLM-5.2 ik GPU-offload, cards 0-5+7)",
+  "switchable": true,
+  "pending": null
+ },
+ "rag-training": {
+  "label": "RAG & Training",
+  "switchable": true,
+  "pending": "embed/reranker/vl-embed services installed; QLoRA training env (unsloth) still not installed - training jobs remain manual"
+ },
+ "batch-overnight": {
+  "label": "Batch Overnight",
+  "switchable": true,
+  "pending": "8 throughput workers installed (8040-8047); redis-rq queue provisioning still pending"
+ },
+ "hybrid-big-model": {
+  "label": "Hybrid Big-Model (CPU flagship)",
+  "switchable": true,
+  "pending": null
+ },
+ "video-studio": {
+  "label": "Video Studio (LTX-2.5 x6 + editor + director)",
+  "switchable": true,
+  "pending": null
+ },
+ "general-fleet-v2": {
+  "label": "General Fleet v2 (2x 122B PP2 + 2x GLM-4.7-Flash + GPT-OSS-20B)",
+  "switchable": true,
+  "pending": null
+ },
+ "redteam-mission": {
+  "label": "Redteam Mission (redteam-v5 + ephemeral BlackArch VM via Tor)",
+  "switchable": true,
+  "pending": null
+ },
+ "sim-lab-4": {
+  "label": "Sim Lab 4 (GPUs 0-3 simulation; GLM-Flash on 4,5 + GPT-OSS on 7; 6 rests)",
+  "switchable": true,
+  "pending": null
+ },
+ "sim-lab-8": {
+  "label": "Sim Lab 8 (ALL GPUs simulation; overnight sweeps + surrogate training; no local LLM)",
+  "switchable": true,
+  "pending": null
+ }
+}
