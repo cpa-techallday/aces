@@ -1,0 +1,658 @@
+{
+ "runs": [
+  {
+   "info": {
+    "run_uuid": "97cfbb614b98494b8d3aaa63e46cfd9e",
+    "experiment_id": "11",
+    "run_name": "golden-20261010T084920Z-b3ac99-conf/c000",
+    "user_id": "root",
+    "status": "FINISHED",
+    "start_time": 1791622230657,
+    "end_time": 1791622234078,
+    "artifact_uri": "mlflow-artifacts:/11/97cfbb614b98494b8d3aaa63e46cfd9e/artifacts",
+    "lifecycle_stage": "active",
+    "run_id": "97cfbb614b98494b8d3aaa63e46cfd9e"
+   },
+   "data": {
+    "metrics": [
+     {
+      "key": "h_mm",
+      "value": 2.0,
+      "timestamp": 1791622230825,
+      "step": 0
+     },
+     {
+      "key": "mass_kg",
+      "value": 0.1769858143889947,
+      "timestamp": 1791622230825,
+      "step": 0
+     },
+     {
+      "key": "mesh_volume_mm3",
+      "value": 66286.82186853734,
+      "timestamp": 1791622230825,
+      "step": 0
+     },
+     {
+      "key": "compliance_Nmm",
+      "value": 844.9543317078405,
+      "timestamp": 1791622230825,
+      "step": 0
+     },
+     {
+      "key": "umax_mm",
+      "value": 0.031756483004286275,
+      "timestamp": 1791622230825,
+      "step": 0
+     },
+     {
+      "key": "vm_max_MPa",
+      "value": 144.52246998675278,
+      "timestamp": 1791622230825,
+      "step": 0
+     },
+     {
+      "key": "vm_p99_MPa",
+      "value": 53.63380623106495,
+      "timestamp": 1791622230825,
+      "step": 0
+     },
+     {
+      "key": "vm_p95_MPa",
+      "value": 41.16215030966936,
+      "timestamp": 1791622230825,
+      "step": 0
+     },
+     {
+      "key": "vm_max_ip_MPa",
+      "value": 212.50385584118138,
+      "timestamp": 1791622230825,
+      "step": 0
+     },
+     {
+      "key": "elements",
+      "value": 38618.0,
+      "timestamp": 1791622230825,
+      "step": 0
+     },
+     {
+      "key": "nodes",
+      "value": 62337.0,
+      "timestamp": 1791622230825,
+      "step": 0
+     },
+     {
+      "key": "dof",
+      "value": 187011.0,
+      "timestamp": 1791622230825,
+      "step": 0
+     },
+     {
+      "key": "threads",
+      "value": 16.0,
+      "timestamp": 1791622230825,
+      "step": 0
+     },
+     {
+      "key": "wall_s_mesh",
+      "value": 10.03571343421936,
+      "timestamp": 1791622230825,
+      "step": 0
+     },
+     {
+      "key": "wall_s_solve",
+      "value": 39.850008487701416,
+      "timestamp": 1791622230825,
+      "step": 0
+     },
+     {
+      "key": "wall_s_post",
+      "value": 3.4336390495300293,
+      "timestamp": 1791622230825,
+      "step": 0
+     },
+     {
+      "key": "wall_s_total",
+      "value": 54.30682992935181,
+      "timestamp": 1791622230825,
+      "step": 0
+     }
+    ],
+    "params": [
+     {
+      "key": "golden",
+      "value": "{'schema': 'aces-golden-rig/1', 'kind': 'conforming', 'stage': 'conf', 'run_id': '20261010T084920Z-b3ac99', 'project': 'golden-demo', 'golden_version': '0.2.0', 'golden_compute_sha256': '1f1a56410bf48ebee4d22ab92920b2b6af2f81e491487dfbd1c68fddf0269714', 'desktop_host': 'aces-rehearsal', 'lane': 'sim/pool', 'files': {'eff': {'path': 'golden/20261010T084920Z-b3ac99/spec.effective.json', 'sha256': 'acc99c6a2671265e41521b81d1ce216ba0c61d4f3759665286e456c317045b52', 'bytes': 6374}, 'domain': {'path':"
+     },
+     {
+      "key": "golden_case",
+      "value": "{'case_id': 'm001', 'role': 'conforming', 'source_case': 'v001', 'level': 1, 'h_mm': 2.0, 'device': 'rig', 'host': 'rig', 'lane': 'sim/pool', 'threads': 16, 'max_dof': 3000000, 'timeout_s': 3000.0, 'seed': 7}"
+     }
+    ],
+    "tags": [
+     {
+      "key": "mlflow.user",
+      "value": "root"
+     },
+     {
+      "key": "mlflow.source.name",
+      "value": "/work/simlab/worker.py"
+     },
+     {
+      "key": "mlflow.source.type",
+      "value": "LOCAL"
+     },
+     {
+      "key": "experiment_id",
+      "value": "golden-20261010T084920Z-b3ac99-conf"
+     },
+     {
+      "key": "project",
+      "value": "golden-demo"
+     },
+     {
+      "key": "owner",
+      "value": "aces"
+     },
+     {
+      "key": "physics",
+      "value": "structures"
+     },
+     {
+      "key": "solver",
+      "value": "ccx-check"
+     },
+     {
+      "key": "case_id",
+      "value": "c000"
+     },
+     {
+      "key": "golden",
+      "value": "0.2.0"
+     },
+     {
+      "key": "golden_run",
+      "value": "20261010T084920Z-b3ac99"
+     },
+     {
+      "key": "golden_project",
+      "value": "golden-demo"
+     },
+     {
+      "key": "golden_stage",
+      "value": "conf"
+     },
+     {
+      "key": "golden_lane",
+      "value": "sim/pool"
+     },
+     {
+      "key": "desktop_host",
+      "value": "aces-rehearsal"
+     },
+     {
+      "key": "mlflow.runName",
+      "value": "golden-20261010T084920Z-b3ac99-conf/c000"
+     },
+     {
+      "key": "gpu",
+      "value": "NVIDIA CMP 170HX"
+     }
+    ]
+   },
+   "inputs": {},
+   "outputs": {}
+  },
+  {
+   "info": {
+    "run_uuid": "7531f2e9a90e4013a41f9965c404e3ba",
+    "experiment_id": "11",
+    "run_name": "golden-20261010T084920Z-b3ac99-check/c001",
+    "user_id": "root",
+    "status": "FINISHED",
+    "start_time": 1791622183854,
+    "end_time": 1791622186567,
+    "artifact_uri": "mlflow-artifacts:/11/7531f2e9a90e4013a41f9965c404e3ba/artifacts",
+    "lifecycle_stage": "active",
+    "run_id": "7531f2e9a90e4013a41f9965c404e3ba"
+   },
+   "data": {
+    "metrics": [
+     {
+      "key": "level",
+      "value": 2.0,
+      "timestamp": 1791622184028,
+      "step": 0
+     },
+     {
+      "key": "mass_kg",
+      "value": 0.17698581438899466,
+      "timestamp": 1791622184028,
+      "step": 0
+     },
+     {
+      "key": "mass_voxel_kg",
+      "value": 0.17744553,
+      "timestamp": 1791622184028,
+      "step": 0
+     },
+     {
+      "key": "mesh_volume_mm3",
+      "value": 66286.82186853733,
+      "timestamp": 1791622184028,
+      "step": 0
+     },
+     {
+      "key": "voxel_volume_mm3",
+      "value": 66459.0,
+      "timestamp": 1791622184028,
+      "step": 0
+     },
+     {
+      "key": "solid_fraction",
+      "value": 0.1661475,
+      "timestamp": 1791622184028,
+      "step": 0
+     },
+     {
+      "key": "compliance_Nmm",
+      "value": 888.9595369183585,
+      "timestamp": 1791622184028,
+      "step": 0
+     },
+     {
+      "key": "umax_mm",
+      "value": 0.03314561571095866,
+      "timestamp": 1791622184028,
+      "step": 0
+     },
+     {
+      "key": "vm_max_MPa",
+      "value": 178.3709330109838,
+      "timestamp": 1791622184028,
+      "step": 0
+     },
+     {
+      "key": "vm_p99_MPa",
+      "value": 56.28723220825191,
+      "timestamp": 1791622184028,
+      "step": 0
+     },
+     {
+      "key": "vm_p95_MPa",
+      "value": 41.99501266479492,
+      "timestamp": 1791622184028,
+      "step": 0
+     },
+     {
+      "key": "pcg_iters",
+      "value": 20.0,
+      "timestamp": 1791622184028,
+      "step": 0
+     },
+     {
+      "key": "pcg_relres",
+      "value": 3.819943926356135e-09,
+      "timestamp": 1791622184028,
+      "step": 0
+     },
+     {
+      "key": "elements",
+      "value": 400000.0,
+      "timestamp": 1791622184028,
+      "step": 0
+     },
+     {
+      "key": "dof",
+      "value": 1254723.0,
+      "timestamp": 1791622184028,
+      "step": 0
+     },
+     {
+      "key": "elem_mm",
+      "value": 1.0,
+      "timestamp": 1791622184028,
+      "step": 0
+     },
+     {
+      "key": "n_fixed_dofs",
+      "value": 3042.0,
+      "timestamp": 1791622184028,
+      "step": 0
+     },
+     {
+      "key": "mg_levels",
+      "value": 4.0,
+      "timestamp": 1791622184028,
+      "step": 0
+     },
+     {
+      "key": "wall_s_voxel",
+      "value": 1.42691969871521,
+      "timestamp": 1791622184028,
+      "step": 0
+     },
+     {
+      "key": "wall_s_solve",
+      "value": 6.3372108936309814,
+      "timestamp": 1791622184028,
+      "step": 0
+     },
+     {
+      "key": "wall_s_total",
+      "value": 7.8472442626953125,
+      "timestamp": 1791622184028,
+      "step": 0
+     }
+    ],
+    "params": [
+     {
+      "key": "golden",
+      "value": "{'schema': 'aces-golden-rig/1', 'kind': 'mesh', 'stage': 'check', 'run_id': '20261010T084920Z-b3ac99', 'project': 'golden-demo', 'golden_version': '0.2.0', 'golden_compute_sha256': '1f1a56410bf48ebee4d22ab92920b2b6af2f81e491487dfbd1c68fddf0269714', 'desktop_host': 'aces-rehearsal', 'lane': 'sim/pool', 'files': {'eff': {'path': 'golden/20261010T084920Z-b3ac99/spec.effective.json', 'sha256': 'acc99c6a2671265e41521b81d1ce216ba0c61d4f3759665286e456c317045b52', 'bytes': 6374}, 'domain': {'path': 'gol"
+     },
+     {
+      "key": "golden_case",
+      "value": "{'case_id': 'x002', 'role': 'check', 'h_gen_mm': None, 'h_fea_mm': 1.0, 'device': 'rig', 'backend': 'adapter', 'source_case': 'v001', 'reuse_mask': False, 'round': None, 'level': 2, 'seed': 7, 'host': 'rig', 'lane': 'sim/pool', 'fea_solver': 'auto'}"
+     }
+    ],
+    "tags": [
+     {
+      "key": "mlflow.user",
+      "value": "root"
+     },
+     {
+      "key": "mlflow.source.name",
+      "value": "/work/simlab/worker.py"
+     },
+     {
+      "key": "mlflow.source.type",
+      "value": "LOCAL"
+     },
+     {
+      "key": "experiment_id",
+      "value": "golden-20261010T084920Z-b3ac99-check"
+     },
+     {
+      "key": "project",
+      "value": "golden-demo"
+     },
+     {
+      "key": "owner",
+      "value": "aces"
+     },
+     {
+      "key": "physics",
+      "value": "structures"
+     },
+     {
+      "key": "solver",
+      "value": "golden-check"
+     },
+     {
+      "key": "case_id",
+      "value": "c001"
+     },
+     {
+      "key": "golden",
+      "value": "0.2.0"
+     },
+     {
+      "key": "golden_run",
+      "value": "20261010T084920Z-b3ac99"
+     },
+     {
+      "key": "golden_project",
+      "value": "golden-demo"
+     },
+     {
+      "key": "golden_stage",
+      "value": "check"
+     },
+     {
+      "key": "golden_lane",
+      "value": "sim/pool"
+     },
+     {
+      "key": "desktop_host",
+      "value": "aces-rehearsal"
+     },
+     {
+      "key": "mlflow.runName",
+      "value": "golden-20261010T084920Z-b3ac99-check/c001"
+     },
+     {
+      "key": "gpu",
+      "value": "NVIDIA CMP 170HX"
+     }
+    ]
+   },
+   "inputs": {},
+   "outputs": {}
+  },
+  {
+   "info": {
+    "run_uuid": "f7ebba668de048dba35b9d4153a77cab",
+    "experiment_id": "11",
+    "run_name": "golden-20261010T084920Z-b3ac99-check/c000",
+    "user_id": "root",
+    "status": "FINISHED",
+    "start_time": 1791622179018,
+    "end_time": 1791622181476,
+    "artifact_uri": "mlflow-artifacts:/11/f7ebba668de048dba35b9d4153a77cab/artifacts",
+    "lifecycle_stage": "active",
+    "run_id": "f7ebba668de048dba35b9d4153a77cab"
+   },
+   "data": {
+    "metrics": [
+     {
+      "key": "level",
+      "value": 1.0,
+      "timestamp": 1791622179185,
+      "step": 0
+     },
+     {
+      "key": "mass_kg",
+      "value": 0.17698581438899466,
+      "timestamp": 1791622179185,
+      "step": 0
+     },
+     {
+      "key": "mass_voxel_kg",
+      "value": 0.17929583999999998,
+      "timestamp": 1791622179185,
+      "step": 0
+     },
+     {
+      "key": "mesh_volume_mm3",
+      "value": 66286.82186853733,
+      "timestamp": 1791622179185,
+      "step": 0
+     },
+     {
+      "key": "voxel_volume_mm3",
+      "value": 67152.0,
+      "timestamp": 1791622179185,
+      "step": 0
+     },
+     {
+      "key": "solid_fraction",
+      "value": 0.16788,
+      "timestamp": 1791622179185,
+      "step": 0
+     },
+     {
+      "key": "compliance_Nmm",
+      "value": 864.846052012898,
+      "timestamp": 1791622179185,
+      "step": 0
+     },
+     {
+      "key": "umax_mm",
+      "value": 0.03248296743194983,
+      "timestamp": 1791622179185,
+      "step": 0
+     },
+     {
+      "key": "vm_max_MPa",
+      "value": 105.39191827732034,
+      "timestamp": 1791622179185,
+      "step": 0
+     },
+     {
+      "key": "vm_p99_MPa",
+      "value": 56.87937175750742,
+      "timestamp": 1791622179185,
+      "step": 0
+     },
+     {
+      "key": "vm_p95_MPa",
+      "value": 40.97390766143798,
+      "timestamp": 1791622179185,
+      "step": 0
+     },
+     {
+      "key": "pcg_iters",
+      "value": 443.0,
+      "timestamp": 1791622179185,
+      "step": 0
+     },
+     {
+      "key": "pcg_relres",
+      "value": 9.802443554641544e-09,
+      "timestamp": 1791622179185,
+      "step": 0
+     },
+     {
+      "key": "elements",
+      "value": 50000.0,
+      "timestamp": 1791622179185,
+      "step": 0
+     },
+     {
+      "key": "dof",
+      "value": 163863.0,
+      "timestamp": 1791622179185,
+      "step": 0
+     },
+     {
+      "key": "elem_mm",
+      "value": 2.0,
+      "timestamp": 1791622179185,
+      "step": 0
+     },
+     {
+      "key": "n_fixed_dofs",
+      "value": 882.0,
+      "timestamp": 1791622179185,
+      "step": 0
+     },
+     {
+      "key": "wall_s_voxel",
+      "value": 1.0776817798614502,
+      "timestamp": 1791622179185,
+      "step": 0
+     },
+     {
+      "key": "wall_s_solve",
+      "value": 1.0291171073913574,
+      "timestamp": 1791622179185,
+      "step": 0
+     },
+     {
+      "key": "wall_s_post",
+      "value": 0.9880471229553223,
+      "timestamp": 1791622179185,
+      "step": 0
+     },
+     {
+      "key": "wall_s_total",
+      "value": 3.1592602729797363,
+      "timestamp": 1791622179185,
+      "step": 0
+     }
+    ],
+    "params": [
+     {
+      "key": "golden",
+      "value": "{'schema': 'aces-golden-rig/1', 'kind': 'mesh', 'stage': 'check', 'run_id': '20261010T084920Z-b3ac99', 'project': 'golden-demo', 'golden_version': '0.2.0', 'golden_compute_sha256': '1f1a56410bf48ebee4d22ab92920b2b6af2f81e491487dfbd1c68fddf0269714', 'desktop_host': 'aces-rehearsal', 'lane': 'sim/pool', 'files': {'eff': {'path': 'golden/20261010T084920Z-b3ac99/spec.effective.json', 'sha256': 'acc99c6a2671265e41521b81d1ce216ba0c61d4f3759665286e456c317045b52', 'bytes': 6374}, 'domain': {'path': 'gol"
+     },
+     {
+      "key": "golden_case",
+      "value": "{'case_id': 'x001', 'role': 'check', 'h_gen_mm': None, 'h_fea_mm': 2.0, 'device': 'rig', 'backend': 'adapter', 'source_case': 'v001', 'reuse_mask': False, 'round': None, 'level': 1, 'seed': 7, 'host': 'rig', 'lane': 'sim/pool', 'fea_solver': 'auto'}"
+     }
+    ],
+    "tags": [
+     {
+      "key": "mlflow.user",
+      "value": "root"
+     },
+     {
+      "key": "mlflow.source.name",
+      "value": "/work/simlab/worker.py"
+     },
+     {
+      "key": "mlflow.source.type",
+      "value": "LOCAL"
+     },
+     {
+      "key": "experiment_id",
+      "value": "golden-20261010T084920Z-b3ac99-check"
+     },
+     {
+      "key": "project",
+      "value": "golden-demo"
+     },
+     {
+      "key": "owner",
+      "value": "aces"
+     },
+     {
+      "key": "physics",
+      "value": "structures"
+     },
+     {
+      "key": "solver",
+      "value": "golden-check"
+     },
+     {
+      "key": "case_id",
+      "value": "c000"
+     },
+     {
+      "key": "golden",
+      "value": "0.2.0"
+     },
+     {
+      "key": "golden_run",
+      "value": "20261010T084920Z-b3ac99"
+     },
+     {
+      "key": "golden_project",
+      "value": "golden-demo"
+     },
+     {
+      "key": "golden_stage",
+      "value": "check"
+     },
+     {
+      "key": "golden_lane",
+      "value": "sim/pool"
+     },
+     {
+      "key": "desktop_host",
+      "value": "aces-rehearsal"
+     },
+     {
+      "key": "mlflow.runName",
+      "value": "golden-20261010T084920Z-b3ac99-check/c000"
+     },
+     {
+      "key": "gpu",
+      "value": "NVIDIA CMP 170HX"
+     }
+    ]
+   },
+   "inputs": {},
+   "outputs": {}
+  }
+ ],
+}

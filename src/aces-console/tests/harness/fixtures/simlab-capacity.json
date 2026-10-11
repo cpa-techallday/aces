@@ -1,0 +1,259 @@
+{
+ "source": "rig-state http://host.docker.internal:8010/mcp",
+ "mode": "sim-lab-4",
+ "pool": [
+  0,
+  1,
+  2,
+  3
+ ],
+ "derated": [],
+ "gridcontrol_queue": {
+  "queued": -1,
+  "running": -1
+ },
+ "gpus": [
+  {
+   "index": 0,
+   "name": "NVIDIA CMP 170HX",
+   "memUsedMiB": 14,
+   "memTotalMiB": 65536,
+   "memUsedPct": 0.02,
+   "utilPct": 0,
+   "tempC": 27,
+   "powerW": 34.07,
+   "powerCapW": 250,
+   "processes": [],
+   "idle": true,
+   "derated": false,
+   "in_pool": true,
+   "lease": null,
+   "available": true,
+   "job": null
+  },
+  {
+   "index": 1,
+   "name": "NVIDIA CMP 170HX",
+   "memUsedMiB": 14,
+   "memTotalMiB": 65536,
+   "memUsedPct": 0.02,
+   "utilPct": 0,
+   "tempC": 27,
+   "powerW": 33.07,
+   "powerCapW": 250,
+   "processes": [],
+   "idle": true,
+   "derated": false,
+   "in_pool": true,
+   "lease": null,
+   "available": true,
+   "job": null
+  },
+  {
+   "index": 2,
+   "name": "NVIDIA CMP 170HX",
+   "memUsedMiB": 2654,
+   "memTotalMiB": 65536,
+   "memUsedPct": 4.05,
+   "utilPct": 0,
+   "tempC": 55,
+   "powerW": 238.62,
+   "powerCapW": 250,
+   "processes": [
+    {
+     "pid": 279309,
+     "usedMemMiB": 2628,
+     "processName": "/opt/venv/bin/python3"
+    }
+   ],
+   "idle": false,
+   "derated": false,
+   "in_pool": true,
+   "lease": null,
+   "available": false,
+   "job": null
+  },
+  {
+   "index": 3,
+   "name": "NVIDIA CMP 170HX",
+   "memUsedMiB": 14,
+   "memTotalMiB": 65536,
+   "memUsedPct": 0.02,
+   "utilPct": 0,
+   "tempC": 29,
+   "powerW": 35.06,
+   "powerCapW": 250,
+   "processes": [],
+   "idle": true,
+   "derated": false,
+   "in_pool": true,
+   "lease": null,
+   "available": true,
+   "job": null
+  },
+  {
+   "index": 4,
+   "name": "NVIDIA CMP 170HX",
+   "memUsedMiB": 58642,
+   "memTotalMiB": 65536,
+   "memUsedPct": 89.48,
+   "utilPct": 100,
+   "tempC": 54,
+   "powerW": 176.38,
+   "powerCapW": 250,
+   "processes": [
+    {
+     "pid": 1752952,
+     "usedMemMiB": 58616,
+     "processName": "VLLM::EngineCore"
+    }
+   ],
+   "idle": false,
+   "derated": false,
+   "in_pool": false,
+   "lease": null,
+   "available": false,
+   "job": null
+  },
+  {
+   "index": 5,
+   "name": "NVIDIA CMP 170HX",
+   "memUsedMiB": 57842,
+   "memTotalMiB": 65536,
+   "memUsedPct": 88.26,
+   "utilPct": 0,
+   "tempC": 28,
+   "powerW": 40.15,
+   "powerCapW": 250,
+   "processes": [
+    {
+     "pid": 1752675,
+     "usedMemMiB": 57816,
+     "processName": "VLLM::EngineCore"
+    }
+   ],
+   "idle": false,
+   "derated": false,
+   "in_pool": false,
+   "lease": null,
+   "available": false,
+   "job": null
+  },
+  {
+   "index": 6,
+   "name": "NVIDIA CMP 170HX",
+   "memUsedMiB": 14,
+   "memTotalMiB": 65536,
+   "memUsedPct": 0.02,
+   "utilPct": 0,
+   "tempC": 30,
+   "powerW": 35.06,
+   "powerCapW": 250,
+   "processes": [],
+   "idle": true,
+   "derated": false,
+   "in_pool": false,
+   "lease": null,
+   "available": false,
+   "job": null
+  },
+  {
+   "index": 7,
+   "name": "NVIDIA CMP 170HX",
+   "memUsedMiB": 55494,
+   "memTotalMiB": 65536,
+   "memUsedPct": 84.68,
+   "utilPct": 0,
+   "tempC": 30,
+   "powerW": 40.72,
+   "powerCapW": 250,
+   "processes": [
+    {
+     "pid": 1751360,
+     "usedMemMiB": 55468,
+     "processName": "VLLM::EngineCore"
+    }
+   ],
+   "idle": false,
+   "derated": false,
+   "in_pool": false,
+   "lease": null,
+   "available": false,
+   "job": null
+  }
+ ],
+ "available": [
+  0,
+  1,
+  3
+ ],
+ "errors": [],
+ "modes": {
+  "sim-lab-4": {
+   "label": "Sim Lab 4 (GPUs 0-3 simulation; CAD + tools LLM lanes on 4,5,7; 6 rests)",
+   "sim_gpus": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "llm_gpus": [
+    4,
+    5,
+    7
+   ],
+   "rest": [
+    6
+   ],
+   "keep_services": [
+    "cad",
+    "tools"
+   ],
+   "stop_services": [
+    "apodex-1",
+    "apodex-2",
+    "apodex-3",
+    "strategist"
+   ]
+  },
+  "sim-lab-8": {
+   "label": "Sim Lab 8 (all GPUs simulation; overnight sweeps and surrogate training)",
+   "sim_gpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "llm_gpus": [],
+   "rest": [],
+   "keep_services": [],
+   "stop_services": [
+    "apodex-1",
+    "apodex-2",
+    "apodex-3",
+    "strategist",
+    "tools",
+    "cad"
+   ]
+  },
+  "batch-overnight": {
+   "label": "existing GRID CONTROL mode; no simulation GPUs unless Aaron assigns some",
+   "sim_gpus": []
+  },
+  "general-fleet-v2": {
+   "label": "existing GRID CONTROL mode (current); all cards hold vLLM weights",
+   "sim_gpus": []
+  },
+  "workstation": {
+   "label": "darkness, single RTX PRO 4000 (used when no GRID CONTROL endpoint is configured)",
+   "sim_gpus": [
+    0
+   ]
+  }
+ },
+ "ts": 1791672915.8783777
+}

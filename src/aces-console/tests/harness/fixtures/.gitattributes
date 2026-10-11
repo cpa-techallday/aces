@@ -1,0 +1,3 @@
+# the captures are byte-exact copies of what the rig endpoints answered (sha256 in MANIFEST.json);
+# the repo root normalises text to LF, which would change their bytes on checkout, so git must not touch them
+*.json -text

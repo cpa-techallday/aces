@@ -1,0 +1,171 @@
+/* aces-console: the shell's own rules on top of the untouched Parameter Sky token sheet (styles.css).
+   Nothing here introduces a colour: every ink is a token of styles.css:13-53. Chalk exists, cyan is live,
+   amber acts, red-orange marks the faulted thing only; there is no green. One 2 px radius; no shadows. */
+
+/* ---------- layout tokens of this shell: a 56 px icon rail and a 360 px inspector (spec 4.6) ---------- */
+:root { --index-w: 56px; --column-w: 360px; }
+
+/* ---------- rail: seven icons, names under them in small mono caps, full names in title/aria-label.
+   Scoped above the phone width so the token sheet's 420 px block (a 56 px bottom bar) keeps the last word there ---------- */
+@media (min-width: 421px) {
+  .index.rail { padding: var(--s2) var(--s1); overflow: visible; }
+  .plates { display: grid; gap: 2px; }
+  .plates button { flex-direction: column; justify-content: center; gap: 3px; padding: 7px 0; min-height: 50px; text-align: center; }
+}
+.plates button { color: var(--chalk-2); }
+.plates button[aria-selected="true"] { color: var(--chalk); }
+.plates .nm { flex: none; font-family: var(--f-mono); font-size: 0.5625rem; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1; }
+
+/* ---------- plate body: two equal columns at the primary width, one below 1100 ---------- */
+.plate-body { padding: var(--s4) var(--s5) var(--s5); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s4) var(--s5); align-content: start; min-width: 0; }
+.plate-body > * { min-width: 0; }
+.plate-body > .span2 { grid-column: 1 / -1; }
+/* an explicit column keeps a block's track at the width of the block: an auto track would take the min-content of a
+   table (a nowrap chip) and overflow the plate */
+.blk { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s2); align-content: start; }
+.blk > * { min-width: 0; }
+.blk > .cap { display: flex; align-items: baseline; gap: var(--s2); flex-wrap: wrap; }
+.blk > .cap .coord { font-family: var(--f-mono); font-size: var(--t-label); letter-spacing: 0; text-transform: none; color: var(--chalk-3); font-weight: 400; }
+.blk .table-wrap { padding: 0; }
+.line { font-family: var(--f-mono); font-size: var(--t-data); color: var(--chalk-2); display: flex; flex-wrap: wrap; gap: var(--s2) var(--s4); align-items: baseline; }
+.line b { font-weight: 500; color: var(--chalk); }
+.line .k { color: var(--chalk-3); }
+.prose.tight { max-width: none; }
+.plate-body .plate-foot { grid-column: 1 / -1; padding: var(--s2) 0 0; border-top: 1px solid var(--line); }
+
+/* ---------- inks (the four, as text colour; the chip glyph carries the same ink) ---------- */
+.ink-chalk { color: var(--chalk-2); }
+.ink-cyan { color: var(--live); }
+.ink-amber { color: var(--act); }
+.ink-fault { color: var(--fault); }
+
+/* ---------- status chips: the word, its glyph and the vocabulary it belongs to ---------- */
+.state .voc { font-family: var(--f-mono); font-size: 0.5625rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--chalk-3); border: 1px solid var(--line-2); border-radius: var(--r); padding: 0 3px; margin-left: 2px; line-height: 1.4; }
+.state .ic.check { width: 11px; height: 11px; color: var(--chalk-2); }
+.state.ink-cyan { color: var(--live); }
+.state.ink-amber { color: var(--act); }
+.state.ink-fault { color: var(--fault); }
+.state.ink-chalk { color: var(--chalk-2); }
+.state.by-design .voc, .state.notrun .voc { border-color: var(--line); }
+
+/* ---------- honest notes inside a plate body (the absence of a thing, with its reason) ---------- */
+.note-inline { color: var(--chalk-2); padding: var(--s3) var(--s4); border: 1px solid var(--line-2); border-radius: var(--r); background: var(--plate-2); max-width: 70ch; }
+.note-inline .cap { display: block; margin-bottom: var(--s1); }
+.note-inline.fault .cap { color: var(--fault); }
+.note-inline.act .cap { color: var(--act); }
+.note-inline p { font-size: var(--t-body); }
+.note-inline .mono { font-size: var(--t-label); color: var(--chalk-3); margin-top: var(--s1); display: block; overflow-wrap: anywhere; }
+
+/* ---------- cards (GPUs, projects): hairline plates, 2 px radius, the eye is an amber border ---------- */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(186px, 1fr)); gap: var(--s2); }
+.card { background: var(--plate-2); border: 1px solid var(--line-2); border-radius: var(--r); padding: var(--s3) var(--s3) var(--s2); display: grid; gap: 4px; text-align: left; color: var(--chalk-2); cursor: pointer; min-width: 0; font: inherit; overflow-wrap: normal; transition: border-color var(--fast) var(--ease), background var(--fast) var(--ease); }
+.card .val > span { white-space: nowrap; }   /* a key never breaks inside itself; the value wraps */
+.card:hover { background: var(--plate-3); }
+.card.eye { border-color: var(--act); }
+.card.fault { border-color: var(--fault); }
+.card .nm { font-family: var(--f-mono); font-size: var(--t-data); font-weight: 500; color: var(--chalk); display: flex; justify-content: space-between; gap: var(--s2); }
+.card .nm.name { font-family: var(--f-name); font-style: italic; font-weight: 400; font-size: var(--t-entry); }
+.card .val { font-family: var(--f-mono); font-size: var(--t-label); color: var(--chalk-3); display: flex; justify-content: space-between; gap: var(--s2); }
+.card .val b { font-weight: 500; color: var(--chalk-2); text-align: right; overflow-wrap: anywhere; }
+.card .val b.live { color: var(--live); }
+.card .val b.fault { color: var(--fault); }
+.card .val b.act { color: var(--act); }
+.card .meter { height: 3px; background: var(--line-2); border-radius: 2px; overflow: hidden; margin: 2px 0; }
+.card .meter > i { display: block; height: 100%; width: var(--w, 0%); background: var(--chalk); }
+.card .meter.live > i { background: var(--live); }
+.card .tag { font-family: var(--f-mono); font-size: var(--t-label); color: var(--chalk-3); overflow-wrap: anywhere; }
+.card .tag.live { color: var(--live); }
+.card .tag.fault { color: var(--fault); }
+
+/* ---------- gates: each rule printed with its state; a holding gate is amber (it acts on the operator) ---------- */
+.gates { display: grid; gap: 4px; font-family: var(--f-mono); font-size: var(--t-data); }
+.gate { display: grid; grid-template-columns: 14px 1fr; gap: var(--s2); align-items: start; color: var(--chalk-2); }
+.gate .ring-ic { margin: 4px 0 0; }
+.gate.hold { color: var(--act); }
+.gate.hold .ring-ic { background: var(--act); }
+.gate .why { color: var(--chalk-3); display: block; font-size: var(--t-label); }
+.gate.hold .why { color: var(--act); }
+.actrow { display: flex; gap: var(--s3); align-items: center; flex-wrap: wrap; }
+.actrow .why { font-family: var(--f-mono); font-size: var(--t-label); color: var(--act); overflow-wrap: anywhere; }
+.result { font-family: var(--f-mono); font-size: var(--t-data); color: var(--chalk-2); padding: var(--s2) var(--s3); border: 1px solid var(--line-2); border-radius: var(--r); overflow-wrap: anywhere; }
+.result.act { color: var(--act); border-color: var(--act-2); }
+.result.fault { color: var(--fault); border-color: var(--fault-2); }
+.result.live { color: var(--live); }
+
+/* ---------- the confirm panel: a modal dialog, hairline, no shadow ---------- */
+dialog.confirm { background: var(--plate-2); color: var(--chalk); border: 1px solid var(--act); border-radius: var(--r); padding: var(--s5); max-width: min(92vw, 560px); width: 100%; font: 400 var(--t-body) / 1.5 var(--f-body); }
+dialog.confirm::backdrop { background: rgba(6, 18, 37, 0.78); }
+dialog.confirm h3 { font-family: var(--f-name); font-style: italic; font-weight: 400; font-size: var(--t-sub); margin-bottom: var(--s3); }
+dialog.confirm .kv b { text-align: left; }
+dialog.confirm .consequences { display: grid; gap: var(--s2); margin: var(--s3) 0; }
+dialog.confirm .warn { color: var(--act); font-family: var(--f-mono); font-size: var(--t-label); letter-spacing: 0.04em; }
+dialog.confirm .countdown { font-family: var(--f-mono); font-size: var(--t-data); color: var(--chalk-2); }
+dialog.confirm .countdown b { color: var(--act); font-weight: 500; }
+dialog.confirm input.type { width: 100%; background: var(--sky); border: 1px solid var(--line-3); border-radius: var(--r); color: var(--chalk); font-family: var(--f-mono); font-size: var(--t-data); padding: 8px 10px; margin: var(--s2) 0 var(--s3); }
+dialog.confirm input.type:focus-visible { border-color: var(--act); }
+input.type.short { width: 12ch; background: var(--sky); border: 1px solid var(--line-3); border-radius: var(--r); color: var(--chalk); font-family: var(--f-mono); font-size: var(--t-data); padding: 6px 8px; min-height: 32px; }
+
+/* ---------- logs and verbatim tool output: a pre that wraps and never overflows the plate ---------- */
+pre.log { font-family: var(--f-mono); font-size: var(--t-label); line-height: 1.5; color: var(--chalk-2); background: var(--sky); border: 1px solid var(--line); border-radius: var(--r); padding: var(--s3); max-height: 320px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+pre.log .tail { color: var(--chalk); }
+pre.log.verbatim { max-height: none; }
+
+/* ---------- freshness readout in the strip: amber when it acts (retrying, polling), never red ---------- */
+.fresh.act { color: var(--act); }
+.stamp .part { white-space: nowrap; }
+
+/* ---------- timelines ---------- */
+.timeline { display: grid; gap: var(--s2); font-family: var(--f-mono); font-size: var(--t-data); }
+.timeline .row { display: grid; grid-template-columns: 17ch 1fr; gap: var(--s3); color: var(--chalk-2); border-bottom: 1px solid var(--line); padding: 3px 0; }
+.timeline .row .t { color: var(--chalk-3); white-space: nowrap; }
+.timeline .row b { color: var(--chalk); font-weight: 500; }
+
+/* ---------- select: a long option label must never widen the page ---------- */
+select.sel { max-width: 100%; min-width: 0; }
+.actrow select.sel { flex: 1 1 200px; width: 100%; }
+.sel option { background: var(--plate-2); }
+code.mono { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ---------- long unbreakable tokens (paths, hashes, URLs, raw JSON) wrap inside their box instead of widening the page.
+   Table cells keep whole words at the desktop widths (a too-wide table scrolls inside its wrap); they break anywhere only
+   in the stacked 390 px layout, where a cell has the whole row's width ---------- */
+.plate-body, .column-body, .strip, .plate-head { overflow-wrap: anywhere; }
+.line b, .line .k { min-width: 0; }
+.table td { overflow-wrap: break-word; }
+.table td.nm, .table td.t, .table th { overflow-wrap: normal; }
+.table td .state { white-space: normal; }           /* a status chip in a cell wraps its words rather than widening the table */
+.table.wrapnames td.nm { white-space: normal; }       /* a table whose names are phrases lets them wrap */
+.table td .sub { display: block; font-size: var(--t-label); color: var(--chalk-3); margin-top: 2px; }
+
+/* ---------- accessibility ---------- */
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
+.plate-body .sky-wrap { min-height: 360px; }
+.plate-body .sky-wrap canvas { outline: none; }
+.plate-body .sky-wrap canvas:focus-visible { outline: 2px solid var(--act); outline-offset: -2px; }
+
+/* ---------- between the phone width and the drawer breakpoint of the token sheet (421-760 px) the rail stays a
+   visible left column: this shell has no drawer toggle, so the token sheet's hidden drawer is undone here ---------- */
+@media (min-width: 421px) and (max-width: 760px) {
+  .atlas { grid-template-columns: var(--index-w) minmax(0, 1fr); }
+  .index { position: sticky; inset: auto; top: var(--strip-h); height: calc(100vh - var(--strip-h)); width: var(--index-w); transform: none; box-shadow: none; border-right: 1px solid var(--line-2); z-index: 1; }
+  .plate-body { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 1100px) {
+  .plate-body { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 420px) {
+  .plate-body { padding: var(--s3) 0 var(--s4); gap: var(--s3); }
+  .table td { overflow-wrap: anywhere; }
+  .table td .state { white-space: normal; text-align: right; }   /* a stacked cell lets its status chip wrap instead of scrolling */
+  /* the 48 px strip holds three stacked stamp parts: the mode, the stream state and FIXTURE; detected_mode and the
+     manifest age stay in the stamp's title and on the Fabric plate */
+  .stamp .part.p-detected, .stamp .part.p-manifest { display: none; }
+  .stamp { padding: 2px 7px; line-height: 1.2; }
+  .plate-body .sky-wrap { min-height: 200px; }
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .timeline .row { grid-template-columns: 1fr; }
+  .gate { grid-template-columns: 14px 1fr; }
+  .plate-head { padding: var(--s3) 0 var(--s2); }
+  .plate { background-image: none; border-left: 0; border-right: 0; border-radius: 0; }
+  dialog.confirm { padding: var(--s4); }
+}
