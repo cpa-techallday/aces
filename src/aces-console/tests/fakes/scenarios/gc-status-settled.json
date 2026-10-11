@@ -1,0 +1,8 @@
+{
+ "derived": true,
+ "derived_from": "gc-status.json",
+ "note": "The 2026-10-11 capture reports detected_mode \"transition\" (which refuses every switch with 409). This scenario keeps every other field of the capture and settles detected_mode to the reported mode so the prepare/confirm path can be exercised against the fake GRID CONTROL. Nothing else is changed.",
+ "changes": {
+  "detected_mode": "sim-lab-4"
+ }
+}

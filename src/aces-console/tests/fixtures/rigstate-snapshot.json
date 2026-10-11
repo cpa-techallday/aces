@@ -1,0 +1,271 @@
+{
+ "result": {
+  "content": [
+   {
+    "type": "text",
+    "text": "{\n  \"capturedAtIso\": \"2026-10-10T22:55:16.788Z\",\n  \"endpoints\": [\n    {\n      \"name\": \"apodex-1\",\n      \"url\": \"http://localhost:8006\",\n      \"reachable\": false,\n      \"latencyMs\": 49,\n      \"models\": [],\n      \"expectedModel\": \"apodex-1.1-mini\",\n      \"matchesExpected\": false,\n      \"error\": \"fetch failed\"\n    },\n    {\n      \"name\": \"apodex-2-primary\",\n      \"url\": \"http://localhost:8007\",\n      \"reachable\": false,\n      \"latencyMs\": 48,\n      \"models\": [],\n      \"expectedModel\": \"apodex-1.1-mini\",\n      \"matchesExpected\": false,\n      \"error\": \"fetch failed\"\n    },\n    {\n      \"name\": \"apodex-3\",\n      \"url\": \"http://localhost:8008\",\n      \"reachable\": false,\n      \"latencyMs\": 48,\n      \"models\": [],\n      \"expectedModel\": \"apodex-1.1-mini\",\n      \"matchesExpected\": false,\n      \"error\": \"fetch failed\"\n    },\n    {\n      \"name\": \"tools-8b\",\n      \"url\": \"http://localhost:8001\",\n      \"reachable\": false,\n      \"latencyMs\": 49,\n      \"models\": [],\n      \"expectedModel\": \"huihui-ai/Huihui-Qwen3-8B-abliterated-v2\",\n      \"matchesExpected\": false,\n      \"error\": \"fetch failed\"\n    },\n    {\n      \"name\": \"strategist\",\n      \"url\": \"http://localhost:8004\",\n      \"reachable\": false,\n      \"latencyMs\": 48,\n      \"models\": [],\n      \"expectedModel\": \"QuantTrio/Qwen3-235B-A22B-Instruct-2507-AWQ\",\n      \"matchesExpected\": false,\n      \"error\": \"fetch failed\"\n    },\n    {\n      \"name\": \"embeddings\",\n      \"url\": \"http://localhost:8005\",\n      \"reachable\": true,\n      \"latencyMs\": 53,\n      \"models\": [\n        {\n          \"id\": \"Qwen/Qwen3-Embedding-0.6B\",\n          \"maxModelLen\": 4096,\n          \"ownedBy\": \"embed-cpu\"\n        }\n      ],\n      \"expectedModel\": \"Qwen/Qwen3-Embedding-0.6B\",\n      \"matchesExpected\": true,\n      \"error\": null\n    }\n  ],\n  \"gpus\": [\n    {\n      \"index\": 0,\n      \"name\": \"NVIDIA CMP 170HX\",\n      \"memUsedMiB\": 14,\n      \"memTotalMiB\": 65536,\n      \"memUsedPct\": 0.02,\n      \"utilPct\": 0,\n      \"tempC\": 27,\n      \"powerW\": 34.06,\n      \"powerCapW\": 250,\n      \"processes\": [],\n      \"idle\": true\n    },\n    {\n      \"index\": 1,\n      \"name\": \"NVIDIA CMP 170HX\",\n      \"memUsedMiB\": 14,\n      \"memTotalMiB\": 65536,\n      \"memUsedPct\": 0.02,\n      \"utilPct\": 0,\n      \"tempC\": 27,\n      \"powerW\": 33.06,\n      \"powerCapW\": 250,\n      \"processes\": [],\n      \"idle\": true\n    },\n    {\n      \"index\": 2,\n      \"name\": \"NVIDIA CMP 170HX\",\n      \"memUsedMiB\": 2654,\n      \"memTotalMiB\": 65536,\n      \"memUsedPct\": 4.05,\n      \"utilPct\": 100,\n      \"tempC\": 57,\n      \"powerW\": 231.88,\n      \"powerCapW\": 250,\n      \"processes\": [\n        {\n          \"pid\": 279309,\n          \"usedMemMiB\": 2628,\n          \"processName\": \"/opt/venv/bin/python3\"\n        }\n      ],\n      \"idle\": false\n    },\n    {\n      \"index\": 3,\n      \"name\": \"NVIDIA CMP 170HX\",\n      \"memUsedMiB\": 14,\n      \"memTotalMiB\": 65536,\n      \"memUsedPct\": 0.02,\n      \"utilPct\": 0,\n      \"tempC\": 29,\n      \"powerW\": 34.96,\n      \"powerCapW\": 250,\n      \"processes\": [],\n      \"idle\": true\n    },\n    {\n      \"index\": 4,\n      \"name\": \"NVIDIA CMP 170HX\",\n      \"memUsedMiB\": 58642,\n      \"memTotalMiB\": 65536,\n      \"memUsedPct\": 89.48,\n      \"utilPct\": 100,\n      \"tempC\": 54,\n      \"powerW\": 175.94,\n      \"powerCapW\": 250,\n      \"processes\": [\n        {\n          \"pid\": 1752952,\n          \"usedMemMiB\": 58616,\n          \"processName\": \"VLLM::EngineCore\"\n        }\n      ],\n      \"idle\": false\n    },\n    {\n      \"index\": 5,\n      \"name\": \"NVIDIA CMP 170HX\",\n      \"memUsedMiB\": 57842,\n      \"memTotalMiB\": 65536,\n      \"memUsedPct\": 88.26,\n      \"utilPct\": 0,\n      \"tempC\": 28,\n      \"powerW\": 40.04,\n      \"powerCapW\": 250,\n      \"processes\": [\n        {\n          \"pid\": 1752675,\n          \"usedMemMiB\": 57816,\n          \"processName\": \"VLLM::EngineCore\"\n        }\n      ],\n      \"idle\": false\n    },\n    {\n      \"index\": 6,\n      \"name\": \"NVIDIA CMP 170HX\",\n      \"memUsedMiB\": 14,\n      \"memTotalMiB\": 65536,\n      \"memUsedPct\": 0.02,\n      \"utilPct\": 0,\n      \"tempC\": 30,\n      \"powerW\": 35.06,\n      \"powerCapW\": 250,\n      \"processes\": [],\n      \"idle\": true\n    },\n    {\n      \"index\": 7,\n      \"name\": \"NVIDIA CMP 170HX\",\n      \"memUsedMiB\": 55494,\n      \"memTotalMiB\": 65536,\n      \"memUsedPct\": 84.68,\n      \"utilPct\": 0,\n      \"tempC\": 30,\n      \"powerW\": 40.32,\n      \"powerCapW\": 250,\n      \"processes\": [\n        {\n          \"pid\": 1751360,\n          \"usedMemMiB\": 55468,\n          \"processName\": \"VLLM::EngineCore\"\n        }\n      ],\n      \"idle\": false\n    }\n  ],\n  \"services\": [\n    {\n      \"name\": \"apodex-1\",\n      \"unit\": \"vllm-apodex.service\",\n      \"activeState\": \"inactive\",\n      \"subState\": \"dead\",\n      \"mainPid\": 0,\n      \"activeEnterIso\": \"Thu 2026-10-01 14:39:13 CST\"\n    },\n    {\n      \"name\": \"apodex-2\",\n      \"unit\": \"vllm-apodex2.service\",\n      \"activeState\": \"inactive\",\n      \"subState\": \"dead\",\n      \"mainPid\": 0,\n      \"activeEnterIso\": \"Thu 2026-10-01 14:39:13 CST\"\n    },\n    {\n      \"name\": \"apodex-3\",\n      \"unit\": \"vllm-apodex3.service\",\n      \"activeState\": \"inactive\",\n      \"subState\": \"dead\",\n      \"mainPid\": 0,\n      \"activeEnterIso\": \"\"\n    },\n    {\n      \"name\": \"tools\",\n      \"unit\": \"vllm-tools.service\",\n      \"activeState\": \"inactive\",\n      \"subState\": \"dead\",\n      \"mainPid\": 0,\n      \"activeEnterIso\": \"Wed 2026-10-07 06:06:50 CST\"\n    },\n    {\n      \"name\": \"strategist\",\n      \"unit\": \"vllm-strategist.service\",\n      \"activeState\": \"failed\",\n      \"subState\": \"failed\",\n      \"mainPid\": 0,\n      \"activeEnterIso\": \"Thu 2026-10-01 15:57:07 CST\"\n    },\n    {\n      \"name\": \"embeddings\",\n      \"unit\": \"embed-cpu.service\",\n      \"activeState\": \"active\",\n      \"subState\": \"running\",\n      \"mainPid\": 763005,\n      \"activeEnterIso\": \"Mon 2026-10-05 15:39:35 CST\"\n    }\n  ],\n  \"degraded\": [\n    \"endpoint:apodex-1 unreachable\",\n    \"endpoint:apodex-2-primary unreachable\",\n    \"endpoint:apodex-3 unreachable\",\n    \"endpoint:tools-8b unreachable\",\n    \"endpoint:strategist unreachable\"\n  ],\n  \"allHealthy\": false\n}"
+   }
+  ],
+  "structuredContent": {
+   "capturedAtIso": "2026-10-10T22:55:16.788Z",
+   "endpoints": [
+    {
+     "name": "apodex-1",
+     "url": "http://localhost:8006",
+     "reachable": false,
+     "latencyMs": 49,
+     "models": [],
+     "expectedModel": "apodex-1.1-mini",
+     "matchesExpected": false,
+     "error": "fetch failed"
+    },
+    {
+     "name": "apodex-2-primary",
+     "url": "http://localhost:8007",
+     "reachable": false,
+     "latencyMs": 48,
+     "models": [],
+     "expectedModel": "apodex-1.1-mini",
+     "matchesExpected": false,
+     "error": "fetch failed"
+    },
+    {
+     "name": "apodex-3",
+     "url": "http://localhost:8008",
+     "reachable": false,
+     "latencyMs": 48,
+     "models": [],
+     "expectedModel": "apodex-1.1-mini",
+     "matchesExpected": false,
+     "error": "fetch failed"
+    },
+    {
+     "name": "tools-8b",
+     "url": "http://localhost:8001",
+     "reachable": false,
+     "latencyMs": 49,
+     "models": [],
+     "expectedModel": "huihui-ai/Huihui-Qwen3-8B-abliterated-v2",
+     "matchesExpected": false,
+     "error": "fetch failed"
+    },
+    {
+     "name": "strategist",
+     "url": "http://localhost:8004",
+     "reachable": false,
+     "latencyMs": 48,
+     "models": [],
+     "expectedModel": "QuantTrio/Qwen3-235B-A22B-Instruct-2507-AWQ",
+     "matchesExpected": false,
+     "error": "fetch failed"
+    },
+    {
+     "name": "embeddings",
+     "url": "http://localhost:8005",
+     "reachable": true,
+     "latencyMs": 53,
+     "models": [
+      {
+       "id": "Qwen/Qwen3-Embedding-0.6B",
+       "maxModelLen": 4096,
+       "ownedBy": "embed-cpu"
+      }
+     ],
+     "expectedModel": "Qwen/Qwen3-Embedding-0.6B",
+     "matchesExpected": true,
+     "error": null
+    }
+   ],
+   "gpus": [
+    {
+     "index": 0,
+     "name": "NVIDIA CMP 170HX",
+     "memUsedMiB": 14,
+     "memTotalMiB": 65536,
+     "memUsedPct": 0.02,
+     "utilPct": 0,
+     "tempC": 27,
+     "powerW": 34.06,
+     "powerCapW": 250,
+     "processes": [],
+     "idle": true
+    },
+    {
+     "index": 1,
+     "name": "NVIDIA CMP 170HX",
+     "memUsedMiB": 14,
+     "memTotalMiB": 65536,
+     "memUsedPct": 0.02,
+     "utilPct": 0,
+     "tempC": 27,
+     "powerW": 33.06,
+     "powerCapW": 250,
+     "processes": [],
+     "idle": true
+    },
+    {
+     "index": 2,
+     "name": "NVIDIA CMP 170HX",
+     "memUsedMiB": 2654,
+     "memTotalMiB": 65536,
+     "memUsedPct": 4.05,
+     "utilPct": 100,
+     "tempC": 57,
+     "powerW": 231.88,
+     "powerCapW": 250,
+     "processes": [
+      {
+       "pid": 279309,
+       "usedMemMiB": 2628,
+       "processName": "/opt/venv/bin/python3"
+      }
+     ],
+     "idle": false
+    },
+    {
+     "index": 3,
+     "name": "NVIDIA CMP 170HX",
+     "memUsedMiB": 14,
+     "memTotalMiB": 65536,
+     "memUsedPct": 0.02,
+     "utilPct": 0,
+     "tempC": 29,
+     "powerW": 34.96,
+     "powerCapW": 250,
+     "processes": [],
+     "idle": true
+    },
+    {
+     "index": 4,
+     "name": "NVIDIA CMP 170HX",
+     "memUsedMiB": 58642,
+     "memTotalMiB": 65536,
+     "memUsedPct": 89.48,
+     "utilPct": 100,
+     "tempC": 54,
+     "powerW": 175.94,
+     "powerCapW": 250,
+     "processes": [
+      {
+       "pid": 1752952,
+       "usedMemMiB": 58616,
+       "processName": "VLLM::EngineCore"
+      }
+     ],
+     "idle": false
+    },
+    {
+     "index": 5,
+     "name": "NVIDIA CMP 170HX",
+     "memUsedMiB": 57842,
+     "memTotalMiB": 65536,
+     "memUsedPct": 88.26,
+     "utilPct": 0,
+     "tempC": 28,
+     "powerW": 40.04,
+     "powerCapW": 250,
+     "processes": [
+      {
+       "pid": 1752675,
+       "usedMemMiB": 57816,
+       "processName": "VLLM::EngineCore"
+      }
+     ],
+     "idle": false
+    },
+    {
+     "index": 6,
+     "name": "NVIDIA CMP 170HX",
+     "memUsedMiB": 14,
+     "memTotalMiB": 65536,
+     "memUsedPct": 0.02,
+     "utilPct": 0,
+     "tempC": 30,
+     "powerW": 35.06,
+     "powerCapW": 250,
+     "processes": [],
+     "idle": true
+    },
+    {
+     "index": 7,
+     "name": "NVIDIA CMP 170HX",
+     "memUsedMiB": 55494,
+     "memTotalMiB": 65536,
+     "memUsedPct": 84.68,
+     "utilPct": 0,
+     "tempC": 30,
+     "powerW": 40.32,
+     "powerCapW": 250,
+     "processes": [
+      {
+       "pid": 1751360,
+       "usedMemMiB": 55468,
+       "processName": "VLLM::EngineCore"
+      }
+     ],
+     "idle": false
+    }
+   ],
+   "services": [
+    {
+     "name": "apodex-1",
+     "unit": "vllm-apodex.service",
+     "activeState": "inactive",
+     "subState": "dead",
+     "mainPid": 0,
+     "activeEnterIso": "Thu 2026-10-01 14:39:13 CST"
+    },
+    {
+     "name": "apodex-2",
+     "unit": "vllm-apodex2.service",
+     "activeState": "inactive",
+     "subState": "dead",
+     "mainPid": 0,
+     "activeEnterIso": "Thu 2026-10-01 14:39:13 CST"
+    },
+    {
+     "name": "apodex-3",
+     "unit": "vllm-apodex3.service",
+     "activeState": "inactive",
+     "subState": "dead",
+     "mainPid": 0,
+     "activeEnterIso": ""
+    },
+    {
+     "name": "tools",
+     "unit": "vllm-tools.service",
+     "activeState": "inactive",
+     "subState": "dead",
+     "mainPid": 0,
+     "activeEnterIso": "Wed 2026-10-07 06:06:50 CST"
+    },
+    {
+     "name": "strategist",
+     "unit": "vllm-strategist.service",
+     "activeState": "failed",
+     "subState": "failed",
+     "mainPid": 0,
+     "activeEnterIso": "Thu 2026-10-01 15:57:07 CST"
+    },
+    {
+     "name": "embeddings",
+     "unit": "embed-cpu.service",
+     "activeState": "active",
+     "subState": "running",
+     "mainPid": 763005,
+     "activeEnterIso": "Mon 2026-10-05 15:39:35 CST"
+    }
+   ],
+   "degraded": [
+    "endpoint:apodex-1 unreachable",
+    "endpoint:apodex-2-primary unreachable",
+    "endpoint:apodex-3 unreachable",
+    "endpoint:tools-8b unreachable",
+    "endpoint:strategist unreachable"
+   ],
+   "allHealthy": false
+  }
+ },
+ "jsonrpc": "2.0",
+ "id": 2
+}

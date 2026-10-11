@@ -1,0 +1,66 @@
+[
+ {
+  "file": "gc-status.json",
+  "origin_host": "192.168.1.65",
+  "origin_route": "GRID CONTROL GET http://192.168.1.65:3200/api/status",
+  "captured_utc": "2026-10-10T22:55:13Z",
+  "sha256": "17bdca1358a349232bf58c18e40229629813f0949d34ba58db376c6a51a5077f",
+  "note": "live read-only capture; credential-looking lines stripped; nothing synthesised"
+ },
+ {
+  "file": "gc-modes.json",
+  "origin_host": "192.168.1.65",
+  "origin_route": "GRID CONTROL GET http://192.168.1.65:3200/api/modes",
+  "captured_utc": "2026-10-10T22:55:13Z",
+  "sha256": "03f6bee1fe2c352559e6a7c676c08f6d23b49b667c213eb22ac7c250a87d50bc",
+  "note": "live read-only capture; credential-looking lines stripped; nothing synthesised"
+ },
+ {
+  "file": "gc-telemetry.json",
+  "origin_host": "192.168.1.65",
+  "origin_route": "GRID CONTROL GET http://192.168.1.65:3200/api/telemetry",
+  "captured_utc": "2026-10-10T22:55:13Z",
+  "sha256": "441cbbb9ef43cd667e3266b47287c8c35de24daef995103e538045d12f485cac",
+  "note": "live read-only capture; credential-looking lines stripped; nothing synthesised"
+ },
+ {
+  "file": "gc-switch-status.json",
+  "origin_host": "192.168.1.65",
+  "origin_route": "GRID CONTROL GET http://192.168.1.65:3200/api/switch/status",
+  "captured_utc": "2026-10-11T00:34:41Z",
+  "sha256": "8f6012ed6168c547611a2e014b69e1a7a43e77aebad0cc104d8b765ca04b6ca8",
+  "note": "live read-only capture; credential-looking lines stripped; nothing synthesised"
+ },
+ {
+  "file": "rigstate-snapshot.json",
+  "origin_host": "192.168.1.65",
+  "origin_route": "rig-state MCP POST http://192.168.1.65:8010/mcp tools/call rig_snapshot (JSON-RPC envelope as received)",
+  "captured_utc": "2026-10-10T22:55:16Z",
+  "sha256": "1ce767915b2327f57c5901fb176999d53172cdc14e30a81605092780551a9078",
+  "note": "live read-only capture; credential-looking lines stripped; nothing synthesised"
+ },
+ {
+  "file": "rigstate-tools.json",
+  "origin_host": "192.168.1.65",
+  "origin_route": "rig-state MCP POST http://192.168.1.65:8010/mcp tools/list (JSON-RPC envelope as received)",
+  "captured_utc": "2026-10-10T22:55:16Z",
+  "sha256": "10b3cb8406db62db564c9a39818f94cd9ff9b3c4d5c87cb3215a3a6c1d1a774b",
+  "note": "live read-only capture; credential-looking lines stripped; nothing synthesised"
+ },
+ {
+  "file": "simlab-capacity.json",
+  "origin_host": "192.168.1.65",
+  "origin_route": "SIMLAB console GET http://192.168.1.65:8032/api/capacity",
+  "captured_utc": "2026-10-10T22:55:15Z",
+  "sha256": "235b875d21d91482395c41dd6a81db2855d83f25c3df50eec9ba1c61451a813c",
+  "note": "live read-only capture; credential-looking lines stripped; nothing synthesised"
+ },
+ {
+  "file": "simlab-telemetry.json",
+  "origin_host": "192.168.1.65",
+  "origin_route": "SIMLAB console GET http://192.168.1.65:8032/api/telemetry",
+  "captured_utc": "2026-10-10T22:55:15Z",
+  "sha256": "83f97eb779f46df27df728450889a1d0d9ddcf1eedb59683e4d73ae2663ec464",
+  "note": "live read-only capture; credential-looking lines stripped; nothing synthesised"
+ }
+]
