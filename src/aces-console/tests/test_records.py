@@ -30,6 +30,10 @@ FAKE_GOLDEN = Path(__file__).resolve().parent / "fakes" / "fake_golden.py"
 class RecordsTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        # skip before anything is started or re-pointed: a half-built store would leak into the later modules
+        if not (CAD_RECORDS / "bundle-plate").is_dir():
+            raise unittest.SkipTest(f"the aces-cad VM acceptance records are not in this tree ({CAD_RECORDS}); the "
+                                    "package check() runs from src/aces-console alone, the repository run covers this")
         cls.c = ConsoleB(tag="records")
         cls.work = build_store("records")
 
