@@ -1,0 +1,83 @@
+{
+ "status": "FINISHED",
+ "design_status": "ok",
+ "mlflow_run_id": null,
+ "wall_s": 1.9309849739074707,
+ "error": null,
+ "stages": [
+  "generate",
+  "skin",
+  "voxel",
+  "solve",
+  "thumb"
+ ],
+ "diagnostics": {
+  "generator": {
+   "kind": "simp",
+   "h_mm": 4.0,
+   "elements": 6250,
+   "volfrac_design": 0.312479,
+   "volfrac_box": 0.2444835696,
+   "rmin_mm": 8.814415,
+   "penal": 3.0,
+   "iterations_run": 25,
+   "converged": false,
+   "stopped_at_cap": true,
+   "final_change": 0.05563310377567526,
+   "compliance_Nmm": 729.4391865827682,
+   "solves_unconverged": 0,
+   "mnd_pct": 26.51043180825839,
+   "device": "cpu/numpy",
+   "wall_s": 1.471616506576538
+  },
+  "skin": {
+   "status": "ok",
+   "message": "",
+   "field_h_mm": 2.0,
+   "upsample": 2,
+   "sigma_vox": 1.0,
+   "blend_mm": 5.0,
+   "clip_blend_mm": 2.0,
+   "taubin_iters": 5,
+   "iso": 0.5,
+   "clipped_to_domain": true,
+   "infill": null,
+   "faces": 11100,
+   "vertices": 5552,
+   "watertight": true,
+   "solids": 1,
+   "cavities": 0,
+   "cavity_volume_mm3": 0.0,
+   "islands_removed": 0,
+   "removed_volume_mm3": 0.0,
+   "euler": 2,
+   "genus": 0,
+   "mesh_volume_mm3": 96518.64719479428,
+   "area_mm2": 15546.67407422982,
+   "bbox_mm": [
+    7.978402464669982,
+    3.831130840988017,
+    -0.023417487594918743,
+    92.01907886400738,
+    96.17194149992451,
+    40.017773151617114
+   ],
+   "wall_s": 0.03327584266662598
+  },
+  "checks": {
+   "load_coverage": {
+    "cup-down": 1.0
+   },
+   "support_coverage": {
+    "foot-1": 1.0,
+    "foot-2": 1.0,
+    "foot-3": 1.0,
+    "foot-4": 1.0,
+    "foot-5": 1.0,
+    "foot-6": 1.0
+   },
+   "load_path_connected": true,
+   "solid_components": 1
+  }
+ }
+}

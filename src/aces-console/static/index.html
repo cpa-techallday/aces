@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>ACES</title>
+<link rel="stylesheet" href="/static/styles.css">
+<link rel="stylesheet" href="/static/console.css">
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/controls/OrbitControls.js":"./vendor/OrbitControls.js"}}</script>
+</head>
+<body>
+<svg hidden aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-fleet" viewBox="0 0 16 16"><circle cx="12" cy="8" r="2.4"/><circle cx="7.2" cy="8" r="1.5"/><circle cx="3.4" cy="8" r=".9"/><path d="M1 13.5h14M1 2.5h14"/></symbol>
+  <symbol id="i-projects" viewBox="0 0 16 16"><path d="M2.5 3h11M2.5 8h7M2.5 13h11"/><path d="m11 6.5 3 1.5-3 1.5z"/></symbol>
+  <symbol id="i-pipeline" viewBox="0 0 16 16"><circle cx="3" cy="12" r="1.6"/><circle cx="8" cy="5" r="2"/><circle cx="13.2" cy="9.5" r="1.3"/><path d="M4.3 10.9 6.9 6.6M9.8 6l2.3 2.5"/></symbol>
+  <symbol id="i-solvers" viewBox="0 0 16 16"><path d="M2 13.5c2-6 5-8 12-11"/><path d="M2 2.5v11h11"/><circle cx="9.5" cy="6.3" r="1.2"/></symbol>
+  <symbol id="i-objects" viewBox="0 0 16 16"><path d="M8 1.8 14 5v6l-6 3.2L2 11V5z"/><path d="M8 8.2 14 5M8 8.2 2 5M8 8.2v6"/></symbol>
+  <symbol id="i-evidence" viewBox="0 0 16 16"><circle cx="5" cy="8" r="2.2"/><circle cx="11" cy="8" r="2.2"/><path d="M7.2 8h1.6"/><path d="M5 2.5v3.3M5 10.2v3.3M11 2.5v3.3M11 10.2v3.3"/></symbol>
+  <symbol id="i-ops" viewBox="0 0 16 16"><circle cx="4" cy="3.5" r="1.6"/><circle cx="4" cy="12.5" r="1.6"/><circle cx="12" cy="5.5" r="1.6"/><path d="M4 5.1v5.8M12 7.1c0 3-3.5 2.5-6.3 4"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 16 16"><path d="M6.5 3H3v10h10V9.5"/><path d="M9 3h4v4M13 3 7.5 8.5"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 16 16"><path d="m8 2.5 6 3-6 3-6-3z"/><path d="m2 9 6 3 6-3"/></symbol>
+  <symbol id="i-fit" viewBox="0 0 16 16"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></symbol>
+  <symbol id="i-orbit" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.4"/><path d="M13.6 4.6c1.2 2.3-1.6 6-6.2 8.3S-.4 15 1.1 12.7 4.5 6.1 9 3.8s4.2-1.6 4.6.8"/></symbol>
+  <symbol id="i-fault" viewBox="0 0 16 16"><path d="M8 2.2 14.5 13.5h-13z"/><path d="M8 6.5v3.4M8 12.1v.2"/></symbol>
+  <symbol id="i-check" viewBox="0 0 16 16"><path d="m3 8.5 3.2 3L13 4.5"/></symbol>
+  <symbol id="i-dot" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.6"/></symbol>
+  <symbol id="i-ring" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.2"/><circle cx="8" cy="8" r="1.6"/></symbol>
+  <symbol id="i-prev" viewBox="0 0 16 16"><path d="m10 3-5 5 5 5"/></symbol>
+  <symbol id="i-next" viewBox="0 0 16 16"><path d="m6 3 5 5-5 5"/></symbol>
+  <symbol id="i-file" viewBox="0 0 16 16"><path d="M4 1.8h5.5L13 5.3v8.9H4z"/><path d="M9.5 1.8v3.5H13"/></symbol>
+  <symbol id="i-gpu" viewBox="0 0 16 16"><rect x="1.8" y="4" width="12.4" height="8" rx=".6"/><path d="M4.5 12v2.2M8 12v2.2M11.5 12v2.2M4.5 7.2h3M4.5 9.5h5"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 16 16"><path d="M2 4.5h12M2 8h12M2 11.5h12"/></symbol>
+</svg>
+
+<a class="skip" href="#plate-area">Skip to the plate</a>
+
+<header class="strip" id="strip">
+  <div class="wordmark" title="aces console">ACES</div>
+  <h1 class="plate-name" id="plateName">Fabric</h1>
+  <output class="stamp unknown" id="stamp" aria-live="polite" title="rig mode as GRID CONTROL reports it · fabric manifest age · event stream state">connecting…</output>
+  <output class="fresh" id="freshness" aria-live="polite"></output>
+  <span class="spacer"></span>
+  <time class="clock mono" id="clock" aria-label="local time"></time>
+</header>
+
+<div class="atlas" id="atlas">
+  <nav class="index rail" id="rail" aria-label="Plates">
+    <ul class="plates" id="plateList" role="tablist" aria-orientation="vertical">
+      <li><button role="tab" id="tab-fabric" data-plate="fabric" aria-selected="true" aria-controls="plate-fabric" tabindex="0" title="Fabric" aria-label="Fabric"><svg class="ic"><use href="#i-fleet"/></svg><span class="nm">Fabric</span></button></li>
+      <li><button role="tab" id="tab-projects" data-plate="projects" aria-selected="false" aria-controls="plate-projects" tabindex="-1" title="Projects" aria-label="Projects"><svg class="ic"><use href="#i-projects"/></svg><span class="nm">Projects</span></button></li>
+      <li><button role="tab" id="tab-pipeline" data-plate="pipeline" aria-selected="false" aria-controls="plate-pipeline" tabindex="-1" title="Pipeline" aria-label="Pipeline"><svg class="ic"><use href="#i-pipeline"/></svg><span class="nm">Pipeline</span></button></li>
+      <li><button role="tab" id="tab-solvers" data-plate="solvers" aria-selected="false" aria-controls="plate-solvers" tabindex="-1" title="Solvers" aria-label="Solvers"><svg class="ic"><use href="#i-solvers"/></svg><span class="nm">Solvers</span></button></li>
+      <li><button role="tab" id="tab-objects" data-plate="objects" aria-selected="false" aria-controls="plate-objects" tabindex="-1" title="Objects" aria-label="Objects"><svg class="ic"><use href="#i-objects"/></svg><span class="nm">Objects</span></button></li>
+      <li><button role="tab" id="tab-evidence" data-plate="evidence" aria-selected="false" aria-controls="plate-evidence" tabindex="-1" title="Evidence" aria-label="Evidence"><svg class="ic"><use href="#i-evidence"/></svg><span class="nm">Evidence</span></button></li>
+      <li><button role="tab" id="tab-ops" data-plate="ops" aria-selected="false" aria-controls="plate-ops" tabindex="-1" title="Ops" aria-label="Ops"><svg class="ic"><use href="#i-ops"/></svg><span class="nm">Ops</span></button></li>
+    </ul>
+  </nav>
+
+  <main class="plate-area" id="plate-area" tabindex="-1">
+    <section class="plate" id="plate-fabric" data-plate="fabric" role="tabpanel" aria-labelledby="fabricTitle">
+      <div class="plate-head"><h2 class="plate-title" id="fabricTitle">Fabric <span class="coord mono" id="coord-fabric"></span></h2></div>
+      <div class="plate-body" id="body-fabric"></div>
+    </section>
+    <section class="plate" id="plate-projects" data-plate="projects" role="tabpanel" aria-labelledby="projectsTitle" hidden>
+      <div class="plate-head"><h2 class="plate-title" id="projectsTitle">Projects <span class="coord mono" id="coord-projects"></span></h2></div>
+      <div class="plate-body" id="body-projects"></div>
+    </section>
+    <section class="plate" id="plate-pipeline" data-plate="pipeline" role="tabpanel" aria-labelledby="pipelineTitle" hidden>
+      <div class="plate-head"><h2 class="plate-title" id="pipelineTitle">Pipeline <span class="coord mono" id="coord-pipeline"></span></h2></div>
+      <div class="plate-body" id="body-pipeline"></div>
+    </section>
+    <section class="plate" id="plate-solvers" data-plate="solvers" role="tabpanel" aria-labelledby="solversTitle" hidden>
+      <div class="plate-head"><h2 class="plate-title" id="solversTitle">Solvers <span class="coord mono" id="coord-solvers"></span></h2></div>
+      <div class="plate-body" id="body-solvers"></div>
+    </section>
+    <section class="plate" id="plate-objects" data-plate="objects" role="tabpanel" aria-labelledby="objectsTitle" hidden>
+      <div class="plate-head"><h2 class="plate-title" id="objectsTitle">Objects <span class="coord mono" id="coord-objects"></span></h2></div>
+      <div class="plate-body" id="body-objects"></div>
+    </section>
+    <section class="plate" id="plate-evidence" data-plate="evidence" role="tabpanel" aria-labelledby="evidenceTitle" hidden>
+      <div class="plate-head"><h2 class="plate-title" id="evidenceTitle">Evidence <span class="coord mono" id="coord-evidence"></span></h2></div>
+      <div class="plate-body" id="body-evidence"></div>
+    </section>
+    <section class="plate" id="plate-ops" data-plate="ops" role="tabpanel" aria-labelledby="opsTitle" hidden>
+      <div class="plate-head"><h2 class="plate-title" id="opsTitle">Ops <span class="coord mono" id="coord-ops"></span></h2></div>
+      <div class="plate-body" id="body-ops"></div>
+    </section>
+  </main>
+
+  <aside class="column" id="column" aria-label="Inspector">
+    <div class="eye" id="eye"><div class="eye-name">nothing selected</div><div class="eye-coord mono">select a GPU, a project, a mode or a record</div></div>
+    <div class="column-body" id="columnBody"></div>
+  </aside>
+</div>
+
+<footer class="strip foot" id="foot">
+  <div class="mono foot-facts" id="footFacts">aces-console —</div>
+  <span class="spacer"></span>
+  <span class="mono dim">aces console</span>
+</footer>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>

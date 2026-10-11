@@ -1,0 +1,431 @@
+{
+ "schema": "aces-golden-spec/1",
+ "name": "root-mount",
+ "description": "Six-foot root mount computed inside a disc design space 100 mm across and 40 mm tall: six bolted feet on a 36 mm ring and a 30 kN load on a top cup. The disc is only the input domain; the part is computed (SIMP topology optimisation, organic implicit skin) and solved on the real voxel FEA. Demo inputs.",
+ "units": "mm-N-MPa-kg",
+ "hypothesis": "A SIMP-generated organic root mount meets vm_p99 <= 60 MPa and umax <= 0.035 mm at minimum mass, and a GP surrogate fitted to a 10-design sweep predicts the verified winner within 10 %.",
+ "domain": {
+  "source": "step",
+  "step_file": "/home/aces/Work/cad-vm/cad/local/20261010T102209Z-disc/part.step",
+  "build123d": null,
+  "origin_mm": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "envelope_mm": [
+   100.0,
+   100.0,
+   40.0
+  ],
+  "margin_mm": 0.0,
+  "keep_in": [
+   {
+    "name": "foot-1",
+    "box": null,
+    "cyl": {
+     "axis": "z",
+     "center": [
+      82.0,
+      70.0
+     ],
+     "r": 9.0,
+     "span": [
+      0.0,
+      6.0
+     ]
+    },
+    "round_mm": 1.0
+   },
+   {
+    "name": "foot-2",
+    "box": null,
+    "cyl": {
+     "axis": "z",
+     "center": [
+      50.0,
+      86.0
+     ],
+     "r": 9.0,
+     "span": [
+      0.0,
+      6.0
+     ]
+    },
+    "round_mm": 1.0
+   },
+   {
+    "name": "foot-3",
+    "box": null,
+    "cyl": {
+     "axis": "z",
+     "center": [
+      18.0,
+      70.0
+     ],
+     "r": 9.0,
+     "span": [
+      0.0,
+      6.0
+     ]
+    },
+    "round_mm": 1.0
+   },
+   {
+    "name": "foot-4",
+    "box": null,
+    "cyl": {
+     "axis": "z",
+     "center": [
+      18.0,
+      34.0
+     ],
+     "r": 9.0,
+     "span": [
+      0.0,
+      6.0
+     ]
+    },
+    "round_mm": 1.0
+   },
+   {
+    "name": "foot-5",
+    "box": null,
+    "cyl": {
+     "axis": "z",
+     "center": [
+      50.0,
+      14.0
+     ],
+     "r": 9.0,
+     "span": [
+      0.0,
+      6.0
+     ]
+    },
+    "round_mm": 1.0
+   },
+   {
+    "name": "foot-6",
+    "box": null,
+    "cyl": {
+     "axis": "z",
+     "center": [
+      82.0,
+      34.0
+     ],
+     "r": 9.0,
+     "span": [
+      0.0,
+      6.0
+     ]
+    },
+    "round_mm": 1.0
+   },
+   {
+    "name": "cup",
+    "box": null,
+    "cyl": {
+     "axis": "z",
+     "center": [
+      50.0,
+      50.0
+     ],
+     "r": 15.0,
+     "span": [
+      34.0,
+      40.0
+     ]
+    },
+    "round_mm": 1.0
+   }
+  ],
+  "keep_out": [],
+  "patch_keep_in_mm": 0.0,
+  "clip_to_domain": true
+ },
+ "supports": [
+  {
+   "name": "foot-1",
+   "box": [
+    76.0,
+    64.0,
+    0.0,
+    88.0,
+    76.0,
+    0.0
+   ],
+   "dofs": [
+    0,
+    1,
+    2
+   ]
+  },
+  {
+   "name": "foot-2",
+   "box": [
+    44.0,
+    80.0,
+    0.0,
+    56.0,
+    92.0,
+    0.0
+   ],
+   "dofs": [
+    0,
+    1,
+    2
+   ]
+  },
+  {
+   "name": "foot-3",
+   "box": [
+    12.0,
+    64.0,
+    0.0,
+    24.0,
+    76.0,
+    0.0
+   ],
+   "dofs": [
+    0,
+    1,
+    2
+   ]
+  },
+  {
+   "name": "foot-4",
+   "box": [
+    12.0,
+    28.0,
+    0.0,
+    24.0,
+    40.0,
+    0.0
+   ],
+   "dofs": [
+    0,
+    1,
+    2
+   ]
+  },
+  {
+   "name": "foot-5",
+   "box": [
+    44.0,
+    8.0,
+    0.0,
+    56.0,
+    20.0,
+    0.0
+   ],
+   "dofs": [
+    0,
+    1,
+    2
+   ]
+  },
+  {
+   "name": "foot-6",
+   "box": [
+    76.0,
+    28.0,
+    0.0,
+    88.0,
+    40.0,
+    0.0
+   ],
+   "dofs": [
+    0,
+    1,
+    2
+   ]
+  }
+ ],
+ "loads": [
+  {
+   "name": "cup-down",
+   "box": [
+    40.0,
+    40.0,
+    40.0,
+    60.0,
+    60.0,
+    40.0
+   ],
+   "force": [
+    0.0,
+    0.0,
+    -30000.0
+   ],
+   "axis": "z",
+   "case": "down"
+  }
+ ],
+ "material": {
+  "name": "AlSi10Mg (LPBF), nominal",
+  "E_MPa": 70000.0,
+  "nu": 0.33,
+  "rho_kg_mm3": 2.67e-06,
+  "allowable_vm_MPa": 60.0,
+  "source": "Nominal handbook values for AlSi10Mg: E 70 GPa, Poisson 0.33, density 2.67 g/cm3. The 60 MPa allowable is a demo design limit chosen so the stress constraint is active; it is not a material strength. Demo inputs, not a qualified material card."
+ },
+ "objective": {
+  "output": "mass_kg",
+  "sense": "min"
+ },
+ "constraints": [
+  {
+   "output": "vm_p99_MPa",
+   "op": "<=",
+   "limit": "allowable"
+  },
+  {
+   "output": "umax_mm",
+   "op": "<=",
+   "limit": 0.035
+  }
+ ],
+ "generator": {
+  "kind": "simp-organic",
+  "variables": {
+   "volfrac": {
+    "lo": 0.13,
+    "hi": 0.38
+   },
+   "rmin_mm": {
+    "lo": 6.0,
+    "hi": 12.0
+   }
+  },
+  "fixed": {
+   "penal": 3.0
+  },
+  "iterations": 25,
+  "change_tol": 0.01,
+  "move": 0.2,
+  "solver_tol": 0.0001,
+  "skin": {
+   "upsample": 2,
+   "sigma_vox": 1.0,
+   "blend_mm": 5.0,
+   "clip_blend_mm": 2.0,
+   "taubin_iters": 5,
+   "iso": 0.5
+  },
+  "infill": null
+ },
+ "resolution": {
+  "gen_mm": 4.0,
+  "fea_mm": 4.0,
+  "check_factor": 0.5,
+  "stress_exclude_mm": 6.0
+ },
+ "sweep": {
+  "n": 10,
+  "seed": 7
+ },
+ "surrogate": {
+  "kind": "gp",
+  "folds": 5,
+  "min_points": 8,
+  "r2_flag": 0.9,
+  "log_outputs": "auto-positive"
+ },
+ "optimise": {
+  "method": "auto",
+  "candidates": 4096,
+  "trials": 400,
+  "kappa": 1.0,
+  "cv_margin": true,
+  "rounds": 3
+ },
+ "verify": {
+  "tol": 0.1,
+  "check_objective": true,
+  "check": "auto",
+  "check_budget_s": 60.0
+ },
+ "solver": {
+  "dtype": "float64",
+  "tol": 1e-08,
+  "maxiter": 20000
+ },
+ "derived": {
+  "gen_mm": 4.0,
+  "fea_mm": 4.0,
+  "field_h_mm": 2.0,
+  "check_factor": 0.5,
+  "check_levels": [
+   {
+    "level": 1,
+    "h_mm": 2.0,
+    "gpu_only": false
+   }
+  ],
+  "stress_exclude_mm": 6.0,
+  "patch_keep_in_mm": 0.0,
+  "variables": {
+   "volfrac": [
+    0.13,
+    0.38
+   ],
+   "rmin_mm": [
+    6.0,
+    12.0
+   ]
+  },
+  "fixed": {
+   "penal": 3.0
+  },
+  "outputs": [
+   "mass_kg",
+   "vm_p99_MPa",
+   "umax_mm",
+   "compliance_Nmm",
+   "vm_max_MPa"
+  ],
+  "constraints": [
+   {
+    "output": "vm_p99_MPa",
+    "op": "<=",
+    "limit": 60.0
+   },
+   {
+    "output": "umax_mm",
+    "op": "<=",
+    "limit": 0.035
+   }
+  ],
+  "objective": {
+   "output": "mass_kg",
+   "sense": "min"
+  },
+  "seed": 7,
+  "n": 10,
+  "tol": 0.1,
+  "rounds": 3,
+  "kappa": 1.0,
+  "check_mode": "auto",
+  "check_budget_s": 60.0,
+  "grid": {
+   "origin_mm": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "envelope_mm": [
+    100.0,
+    100.0,
+    40.0
+   ],
+   "derived_from": "spec"
+  },
+  "domain_ref": "/home/aces/Work/cad-vm/cad/local/20261010T102209Z-disc/part.step",
+  "base_dir": "/tmp",
+  "overrides": {
+   "domain.source": "step",
+   "domain.step_file": "/home/aces/Work/cad-vm/cad/local/20261010T102209Z-disc/part.step"
+  }
+ }
+}

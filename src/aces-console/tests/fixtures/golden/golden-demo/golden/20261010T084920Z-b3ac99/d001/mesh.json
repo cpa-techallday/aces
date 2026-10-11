@@ -1,0 +1,27 @@
+{
+ "elem_mm": 4.0,
+ "origin_mm": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "envelope_mm": [
+  100.0,
+  100.0,
+  40.0
+ ],
+ "shape": [
+  25,
+  25,
+  10
+ ],
+ "cells": 6250,
+ "solid_cells": 1106,
+ "solid_fraction": 0.17696,
+ "mesh_volume_mm3": 69133.52250322179,
+ "voxel_volume_mm3": 70784.0,
+ "volume_ratio_voxel_over_mesh": 1.023873765389306,
+ "watertight": true,
+ "source": "mesh",
+ "mesh_path": "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d001/part.stl"
+}

@@ -1,0 +1,23 @@
+{
+ "schema": "aces-golden-inputs/1",
+ "source": "step",
+ "ref": "/home/aces/Work/cad-vm/cad/local/20261010T102209Z-disc/part.step",
+ "kwargs": {},
+ "ref_file": "/home/aces/Work/cad-vm/cad/local/20261010T102209Z-disc/part.step",
+ "ref_file_sha256": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+ "build123d_version": "0.11.1",
+ "step": "inputs/domain.step",
+ "step_sha256": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+ "step_bytes": 7102,
+ "brep_volume_mm3": 314159.26535897935,
+ "bbox_mm": [
+  0.0,
+  0.0,
+  0.0,
+  100.0,
+  100.0,
+  40.0
+ ],
+ "solids": 1,
+ "note": "the STEP header carries an export timestamp, so step_sha256 changes per export; the stable geometry digest is domain.json mask_sha256"
+}

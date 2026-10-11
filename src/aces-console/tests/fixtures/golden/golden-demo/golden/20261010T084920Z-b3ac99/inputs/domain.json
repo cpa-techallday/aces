@@ -1,0 +1,26 @@
+{
+ "schema": "aces-golden-inputs/1",
+ "source": "build123d",
+ "ref": "aces_engineering.golden.demo:root_mount_domain",
+ "kwargs": {
+  "radius_mm": 50.0,
+  "height_mm": 40.0
+ },
+ "ref_file": "/opt/aces/engineering/lib/aces_engineering/golden/demo.py",
+ "ref_file_sha256": "2646ebae63335957eb0d39e9a54d6134b560e070394d40fe75d643b604c055b3",
+ "build123d_version": "0.11.1",
+ "step": "inputs/domain.step",
+ "step_sha256": "2494aed7db9a36629d6d498482afe4eb3569b47876c718eb97d8b3d45899bcef",
+ "step_bytes": 7162,
+ "brep_volume_mm3": 314159.26535897935,
+ "bbox_mm": [
+  0.0,
+  0.0,
+  0.0,
+  100.0,
+  100.0,
+  40.0
+ ],
+ "solids": 1,
+ "note": "the STEP header carries an export timestamp, so step_sha256 changes per export; the stable geometry digest is domain.json mask_sha256"
+}

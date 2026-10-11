@@ -1,0 +1,116 @@
+{
+ "schema": "aces-golden-rig-case/1",
+ "case_id": "m001",
+ "lane": "sim/pool",
+ "url": "http://192.168.1.65:8022/mcp",
+ "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+ "rig_case_id": "c000",
+ "job_id": "golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c",
+ "job_status": "finished",
+ "state": "result",
+ "design_status": "ok",
+ "reason": null,
+ "queue": "cpu",
+ "gpu": null,
+ "owner": "daaeb15fe6ec:2571:golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c",
+ "gpu_name": "NVIDIA CMP 170HX",
+ "gpu_uuid": "GPU-787b2119-ba37-7d54-a632-543b3a9a6e36",
+ "image": "aces-golden:0.1",
+ "image_id": "sha256:d45698807541b49195d75de749d193ef33c5dc2803f0ccb0980d0e489e5f1201",
+ "image_digest": "sha256:d45698807541b49195d75de749d193ef33c5dc2803f0ccb0980d0e489e5f1201 aces-golden@sha256:d45698807541b49195d75de749d193ef33c5dc2803f0ccb0980d0e489e5f1201",
+ "submitted_utc": "2026-10-10T08:49:33.394517+00:00",
+ "started_utc": "2026-10-10T08:49:35.374908+00:00",
+ "finished_utc": "2026-10-10T08:50:29.790419+00:00",
+ "wait_s": 1.980391,
+ "run_s": 54.415511,
+ "pulled_utc": "2026-10-10T08:50:39.124+00:00",
+ "files": [
+  {
+   "rig": "c000/golden/m001/ccx.cvg",
+   "local": "m001/ccx.cvg",
+   "bytes": 274,
+   "sha256": "65086dedb4572132b815ace04b294909c7f6f337111f9704fc310b02320f67f7",
+   "chunks": 1
+  },
+  {
+   "rig": "c000/golden/m001/ccx.dat.gz",
+   "local": "m001/ccx.dat.gz",
+   "bytes": 6253840,
+   "sha256": "62d53a376c8014f813fa4a52ccb210a94d61b5256b410911ef607a9eb16387f3",
+   "chunks": 3
+  },
+  {
+   "rig": "c000/golden/m001/ccx.inp.gz",
+   "local": "m001/ccx.inp.gz",
+   "bytes": 2877143,
+   "sha256": "ca35cae20b2ec88aaae6039e9572e2ea1ecc0ad953b90ab0553b752ee871ec0f",
+   "chunks": 2
+  },
+  {
+   "rig": "c000/golden/m001/ccx.log",
+   "local": "m001/ccx.log",
+   "bytes": 2265,
+   "sha256": "40c2b49ce149e73c6ccfdc8e5c6cadafd4a4ae5e2656c6cb64a59231dfc95208",
+   "chunks": 1
+  },
+  {
+   "rig": "c000/golden/m001/ccx.sta",
+   "local": "m001/ccx.sta",
+   "bytes": 170,
+   "sha256": "01e324ec0ea28f4d1fd7f5e2da1277af53812b873e218be1604c17a4c8e4990d",
+   "chunks": 1
+  },
+  {
+   "rig": "c000/golden/m001/conforming.json",
+   "local": "m001/conforming.json",
+   "bytes": 9168,
+   "sha256": "da8fff3ab4a51efa7608696c36ea77acd238ff261d461f1488b358da5cc4f5c9",
+   "chunks": 1
+  },
+  {
+   "rig": "c000/golden/m001/mesh.log",
+   "local": "m001/mesh.log",
+   "bytes": 20366,
+   "sha256": "83c1a9f209636bcdaf77a7d6218c37efd7c7c70b6c1efb3f5f93b6e776c5a9f3",
+   "chunks": 1
+  },
+  {
+   "rig": "c000/golden/m001/mesh.npz",
+   "local": "m001/mesh.npz",
+   "bytes": 4586032,
+   "sha256": "0d40bef4eb18b001fbb4043190227655192be0a2553f132c222b5b99dfc76e17",
+   "chunks": 3
+  },
+  {
+   "rig": "c000/golden/m001/tetmesh.json",
+   "local": "m001/tetmesh.json",
+   "bytes": 1644,
+   "sha256": "28ad5b8daf02464c8f45afd5ca986b457e048a2ba2ba44dcfea126c37207c2d8",
+   "chunks": 1
+  }
+ ],
+ "records": {
+  "outcome.json": "25efc743b2ab108b7599bfce321bcf0bb9b80f6793378d24706ddce1f024c9db",
+  "files.json": "805f6237ec40c366c18b04b84e7177b6c58ddc36a4c9d69f020498c76e0227f9",
+  "results.json": "2d7cebde89e957074e484cc011a874d4081f15c4402aa814dbb6b7d670101140",
+  "evidence.json": "95db6726d376ca8545086699128538efc6ac7288cb113627a06f7a04765ce3cb",
+  "status.json": "a64d81e985e2559f78f9d92a59a68c18b7a0a28ae1c7e7b246d04973949acee0",
+  "case.json": "0878814b4b4724bebb76db0200390b73fe1daa697ac7cc96d2f43bbea1e111ce",
+  "worker.log": "adddb52b6df24167d590d6e574e6e6b43f1233770bbbac145f3238435eb22d13"
+ },
+ "code": {
+  "golden_compute_sha256": "1f1a56410bf48ebee4d22ab92920b2b6af2f81e491487dfbd1c68fddf0269714",
+  "modules": {
+   "gendesign/__init__.py": "1881e8c86cba8e50886ff40ee49387f5062a079bb416d1efa3d5ce2e2874f3b1",
+   "gendesign/progress.py": "24a80751fe6e6a20553018520349875b2f4a5c31f2303168a48ac043b1586956",
+   "simlab/__init__.py": "eba89800110ae56fcda4aa4b7e03b2214fbe2776554f92904827e4c307939443",
+   "simlab/evidence.py": "e0757360d60a609ca1528ad8a6348b2798a3fa87c817c32aa682db70b27ef7f5",
+   "simlab/registry.py": "c3bfd0826428e7f4570819d036f6c5839d150aecfbae8da6211b7bd3f1c84cce",
+   "simlab/solvers/__init__.py": "b6600c7d7c5061cfb7aeffa9d0ba8ae95f5f14314438b232f006d633e0f08c25",
+   "simlab/solvers/ccx_check.py": "b39d88c415c00a7354f7f86806eb4b1cf7ef6237026e6e3039046287991d8a92",
+   "simlab/spec.py": "b2e335e305ef66ec9327158d28f16e4b1e92366ba12e3814689704939dea0aa2",
+   "simlab/tracking.py": "8e9b0b156fd1f6942b06536c4e9a3c700f7f00304a64337cc7b9474810b2862a"
+  }
+ },
+ "device_forced": null
+}

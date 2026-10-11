@@ -1,0 +1,19 @@
+{
+ "status": "FINISHED",
+ "design_status": "ok",
+ "mlflow_run_id": "97cfbb614b98494b8d3aaa63e46cfd9e",
+ "wall_s": 54.30682992935181,
+ "error": null,
+ "stages": [],
+ "diagnostics": {
+  "generator": null,
+  "skin": null,
+  "checks": null
+ },
+ "rig": {
+  "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+  "rig_case_id": "c000",
+  "job_id": "golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c",
+  "lane": "sim/pool"
+ }
+}

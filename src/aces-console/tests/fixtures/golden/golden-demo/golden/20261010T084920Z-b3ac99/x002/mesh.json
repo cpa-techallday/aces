@@ -1,0 +1,27 @@
+{
+ "elem_mm": 1.0,
+ "origin_mm": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "envelope_mm": [
+  100.0,
+  100.0,
+  40.0
+ ],
+ "shape": [
+  100,
+  100,
+  40
+ ],
+ "cells": 400000,
+ "solid_cells": 66459,
+ "solid_fraction": 0.1661475,
+ "mesh_volume_mm3": 66286.82186853733,
+ "voxel_volume_mm3": 66459.0,
+ "volume_ratio_voxel_over_mesh": 1.0025974715125752,
+ "watertight": true,
+ "source": "mesh",
+ "mesh_path": "/work/out/golden-20261010T084920Z-b3ac99-check/c001/golden/v001/part.stl"
+}

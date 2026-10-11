@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aces_console"
+version = "0.1.0"
+description = "ACES console: the one desktop console for the rig, the simulation work, projects, golden and CAD records and the ledger (loopback-only stdlib backend)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Carbon Project Australia" }]
+dependencies = []
+
+[project.scripts]
+aces-console = "aces_console.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aces_console*"]
+
+[tool.setuptools.package-data]
+aces_console = ["vocab.json"]

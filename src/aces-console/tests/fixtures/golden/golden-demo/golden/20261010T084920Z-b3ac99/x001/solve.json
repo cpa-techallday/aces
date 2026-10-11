@@ -1,0 +1,18 @@
+{
+  "compliance_Nmm": 864.846052012898,
+  "umax_mm": 0.03248296743194983,
+  "vm_max_MPa": 105.39191827732034,
+  "volume_mm3": 67152.0,
+  "mass_kg": 0.17929583999999998,
+  "solid_fraction": 0.16788,
+  "pcg_iters": 443.0,
+  "pcg_relres": 9.802443554641544e-09,
+  "converged": 1.0,
+  "solver": "pcg",
+  "device": "NVIDIA CMP 170HX",
+  "dtype": "float64",
+  "elements": 50000,
+  "dof": 163863,
+  "n_fixed_dofs": 882,
+  "wall_s": 1.0282773971557617
+}

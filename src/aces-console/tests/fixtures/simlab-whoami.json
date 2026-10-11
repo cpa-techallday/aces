@@ -1,0 +1,39 @@
+{
+ "jsonrpc": "2.0",
+ "id": 3,
+ "result": {
+  "content": [
+   {
+    "text": "{\n  \"principal\": \"anonymous\",\n  \"policy\": \"full\",\n  \"tools\": [\n    \"rig_capacity\",\n    \"sim_cancel\",\n    \"sim_evidence\",\n    \"sim_get_file\",\n    \"sim_list_experiments\",\n    \"sim_list_solvers\",\n    \"sim_list_specs\",\n    \"sim_put_file\",\n    \"sim_put_spec\",\n    \"sim_report\",\n    \"sim_report_files\",\n    \"sim_results\",\n    \"sim_status\",\n    \"sim_submit\",\n    \"sim_sweep\",\n    \"sim_validate\",\n    \"sim_whoami\"\n  ],\n  \"audit_log\": \"/work/out/mcp_audit.jsonl\"\n}",
+    "type": "text"
+   }
+  ],
+  "isError": false,
+  "structuredContent": {
+   "result": {
+    "principal": "anonymous",
+    "policy": "full",
+    "tools": [
+     "rig_capacity",
+     "sim_cancel",
+     "sim_evidence",
+     "sim_get_file",
+     "sim_list_experiments",
+     "sim_list_solvers",
+     "sim_list_specs",
+     "sim_put_file",
+     "sim_put_spec",
+     "sim_report",
+     "sim_report_files",
+     "sim_results",
+     "sim_status",
+     "sim_submit",
+     "sim_sweep",
+     "sim_validate",
+     "sim_whoami"
+    ],
+    "audit_log": "/work/out/mcp_audit.jsonl"
+   }
+  }
+ }
+}

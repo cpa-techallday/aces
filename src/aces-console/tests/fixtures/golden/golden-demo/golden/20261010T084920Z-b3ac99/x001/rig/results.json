@@ -1,0 +1,170 @@
+{
+  "schema": "aces-golden-case/1",
+  "case_id": "x001",
+  "role": "check",
+  "round": null,
+  "level": 1,
+  "source_case": "v001",
+  "design": null,
+  "mass_kg": 0.17698581438899466,
+  "mass_voxel_kg": 0.17929583999999998,
+  "mesh_volume_mm3": 66286.82186853733,
+  "voxel_volume_mm3": 67152.0,
+  "solid_fraction": 0.16788,
+  "compliance_Nmm": 864.846052012898,
+  "umax_mm": 0.03248296743194983,
+  "vm_max_MPa": 105.39191827732034,
+  "vm_p99_MPa": 56.87937175750742,
+  "vm_p95_MPa": 40.97390766143798,
+  "pcg_iters": 443,
+  "pcg_relres": 9.802443554641544e-09,
+  "converged": true,
+  "elements": 50000,
+  "dof": 163863,
+  "elem_mm": 2.0,
+  "n_fixed_dofs": 882,
+  "device": "NVIDIA CMP 170HX",
+  "dtype": "float64",
+  "backend": "step-structures.stage_solve",
+  "lane": "rig-gpu",
+  "grade": "preview-grade",
+  "fea_solver": "pcg",
+  "fea_solver_reason": "auto: Jacobi-PCG (50,000 cells < 200,000)",
+  "generator": null,
+  "skin": null,
+  "voxel": {
+    "h_mm": 2.0,
+    "cells": 50000,
+    "solid_cells": 8394,
+    "voxel_volume_mm3": 67152.0,
+    "mesh_volume_mm3": 66286.82186853733,
+    "volume_ratio_voxel_over_mesh": 1.0130520382041928,
+    "mask_sha256": "85a14d58f387eeb092bcd139d6e9b823f4be9dc8889ce9763644393747fe8cc5"
+  },
+  "checks": {
+    "load_coverage": {
+      "cup-down": 1.0
+    },
+    "support_coverage": {
+      "foot-1": 1.0,
+      "foot-2": 1.0,
+      "foot-3": 1.0,
+      "foot-4": 1.0,
+      "foot-5": 1.0,
+      "foot-6": 1.0
+    },
+    "load_path_connected": true,
+    "solid_components": 1
+  },
+  "stress": {
+    "measure": "vm_p99",
+    "exclude_mm": 8.0,
+    "exclude_boxes": [
+      [
+        76.0,
+        64.0,
+        0.0,
+        88.0,
+        76.0,
+        8.0
+      ],
+      [
+        44.0,
+        80.0,
+        0.0,
+        56.0,
+        92.0,
+        8.0
+      ],
+      [
+        12.0,
+        64.0,
+        0.0,
+        24.0,
+        76.0,
+        8.0
+      ],
+      [
+        12.0,
+        28.0,
+        0.0,
+        24.0,
+        40.0,
+        8.0
+      ],
+      [
+        44.0,
+        8.0,
+        0.0,
+        56.0,
+        20.0,
+        8.0
+      ],
+      [
+        76.0,
+        28.0,
+        0.0,
+        88.0,
+        40.0,
+        8.0
+      ],
+      [
+        40.0,
+        40.0,
+        32.0,
+        60.0,
+        60.0,
+        40.0
+      ]
+    ],
+    "n_elements": 7158
+  },
+  "wall_s_generate": null,
+  "wall_s_skin": null,
+  "wall_s_voxel": 1.0776817798614502,
+  "wall_s_solve": 1.0291171073913574,
+  "wall_s_post": 0.9880471229553223,
+  "wall_s_total": 3.1592602729797363,
+  "artifacts": [
+    "/work/out/golden-20261010T084920Z-b3ac99-check/c000/golden/x001/case.md",
+    "/work/out/golden-20261010T084920Z-b3ac99-check/c000/golden/x001/disp_slices.png",
+    "/work/out/golden-20261010T084920Z-b3ac99-check/c000/golden/x001/fields.npz",
+    "/work/out/golden-20261010T084920Z-b3ac99-check/c000/golden/x001/fields.vtk",
+    "/work/out/golden-20261010T084920Z-b3ac99-check/c000/golden/x001/mask.npy",
+    "/work/out/golden-20261010T084920Z-b3ac99-check/c000/golden/x001/mesh.json",
+    "/work/out/golden-20261010T084920Z-b3ac99-check/c000/golden/x001/solve.json",
+    "/work/out/golden-20261010T084920Z-b3ac99-check/c000/golden/x001/vm_slices.png"
+  ],
+  "rig": {
+    "experiment": "golden-20261010T084920Z-b3ac99-check",
+    "rig_case": "c000",
+    "golden_case": "x001",
+    "solver": "golden-check",
+    "image": "aces-golden:0.1",
+    "image_digest": "sha256:d45698807541b49195d75de749d193ef33c5dc2803f0ccb0980d0e489e5f1201 aces-golden@sha256:d45698807541b49195d75de749d193ef33c5dc2803f0ccb0980d0e489e5f1201",
+    "device_forced": null,
+    "code": {
+      "golden_compute_sha256": "1f1a56410bf48ebee4d22ab92920b2b6af2f81e491487dfbd1c68fddf0269714",
+      "modules": {
+        "gendesign/__init__.py": "1881e8c86cba8e50886ff40ee49387f5062a079bb416d1efa3d5ce2e2874f3b1",
+        "gendesign/evaluators.py": "9853e92028a6fcc4724ce7743a45b90297f0932db2d21e2432c9edbd31c44d13",
+        "gendesign/fea3d.py": "e80c35bfb56bd794ec9d36894bbd8d4e55eba78c7290757a6dc695474108a26c",
+        "gendesign/progress.py": "24a80751fe6e6a20553018520349875b2f4a5c31f2303168a48ac043b1586956",
+        "simlab/__init__.py": "eba89800110ae56fcda4aa4b7e03b2214fbe2776554f92904827e4c307939443",
+        "simlab/evidence.py": "e0757360d60a609ca1528ad8a6348b2798a3fa87c817c32aa682db70b27ef7f5",
+        "simlab/post.py": "80ade4c3bd96d0f8b48b4264ab9a56b046e37947ce14c4f7a48d3da39ecdfa8e",
+        "simlab/registry.py": "c3bfd0826428e7f4570819d036f6c5839d150aecfbae8da6211b7bd3f1c84cce",
+        "simlab/solvers/__init__.py": "b6600c7d7c5061cfb7aeffa9d0ba8ae95f5f14314438b232f006d633e0f08c25",
+        "simlab/solvers/golden_check.py": "384487c3e41eb98e5e5f03bfcb78d6122ef61d2e4ec5908cc7f398427b4c74bb",
+        "simlab/solvers/step_structures.py": "103497387087a2d1ab406911d9ab12e5d416cb1471191b43737e5923f715dd3d",
+        "simlab/spec.py": "b2e335e305ef66ec9327158d28f16e4b1e92366ba12e3814689704939dea0aa2",
+        "simlab/tracking.py": "8e9b0b156fd1f6942b06536c4e9a3c700f7f00304a64337cc7b9474810b2862a"
+      },
+      "simlab_from": "/work/simlab",
+      "gendesign_from": "/work/gendesign",
+      "aces_engineering_from": "/opt/aces-golden/lib/aces_engineering",
+      "python": "3.12.3"
+    },
+    "desktop_golden_compute_sha256": "1f1a56410bf48ebee4d22ab92920b2b6af2f81e491487dfbd1c68fddf0269714"
+  }
+}

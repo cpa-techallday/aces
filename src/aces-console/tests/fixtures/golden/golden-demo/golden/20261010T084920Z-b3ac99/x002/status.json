@@ -1,0 +1,36 @@
+{
+ "status": "FINISHED",
+ "design_status": "ok",
+ "mlflow_run_id": "7531f2e9a90e4013a41f9965c404e3ba",
+ "wall_s": 7.8472442626953125,
+ "error": null,
+ "stages": [
+  "voxel",
+  "solve"
+ ],
+ "diagnostics": {
+  "generator": null,
+  "skin": null,
+  "checks": {
+   "load_coverage": {
+    "cup-down": 1.0
+   },
+   "support_coverage": {
+    "foot-1": 1.0,
+    "foot-2": 1.0,
+    "foot-3": 1.0,
+    "foot-4": 1.0,
+    "foot-5": 1.0,
+    "foot-6": 1.0
+   },
+   "load_path_connected": true,
+   "solid_components": 1
+  }
+ },
+ "rig": {
+  "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+  "rig_case_id": "c001",
+  "job_id": "golden-20261010T084920Z-b3ac99-check--c001--run--a53d84",
+  "lane": "sim/pool"
+ }
+}

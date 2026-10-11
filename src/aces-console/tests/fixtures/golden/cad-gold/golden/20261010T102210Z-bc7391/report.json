@@ -1,0 +1,3619 @@
+{
+ "schema": "aces-golden-report/1",
+ "run_id": "20261010T102210Z-bc7391",
+ "verdict_line": "PASS · verified-desktop · root-mount: volfrac 0.23 rmin_mm 11.55 · mass 0.177 kg · vm_p99_MPa 54.47 <= 60 · umax_mm 0.0312 <= 0.035 · predicted within 10 % (max 1.527 % on vm_p99_MPa) · check 2 mm: max gap +4.414 % on vm_p99_MPa, constraints met · conforming tet10 2 mm (ccx 2.23, desktop): max gap -5.706 % on vm_p99_MPa, constraints met · bundle a134a66fddc5 simlab #4 · aces #10 · stages 49 s",
+ "verdict": "PASS",
+ "outcome": "pass",
+ "grade": "verified-desktop",
+ "sections": {
+  "title": {
+   "name": "root-mount",
+   "description": "Six-foot root mount computed inside a disc design space 100 mm across and 40 mm tall: six bolted feet on a 36 mm ring and a 30 kN load on a top cup. The disc is only the input domain; the part is computed (SIMP topology optimisation, organic implicit skin) and solved on the real voxel FEA. Demo inputs.",
+   "project": "cad-gold",
+   "run_id": "20261010T102210Z-bc7391",
+   "exp_id": "golden-cad-gold-20261010T102210Z-bc7391",
+   "run_dir": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391",
+   "created_utc": "2026-10-10T10:22:10.518+00:00",
+   "demo": null,
+   "renders": {
+    "iso": "winner/winner_iso.png",
+    "stress": "winner/winner_stress.png"
+   }
+  },
+  "summary": {
+   "name": "root-mount",
+   "verdict": "PASS",
+   "outcome": "pass",
+   "grade": "verified-desktop",
+   "message": null,
+   "reasons": [],
+   "rounds": 1,
+   "tol": 0.1,
+   "params": {
+    "volfrac": 0.23,
+    "rmin_mm": 11.55
+   },
+   "case_id": "v001",
+   "mass_kg": 0.17698581438899466,
+   "constraints": [
+    {
+     "output": "vm_p99_MPa",
+     "op": "<=",
+     "limit": 60.0,
+     "value": 54.47464675903315
+    },
+    {
+     "output": "umax_mm",
+     "op": "<=",
+     "limit": 0.035,
+     "value": 0.031198331261040144
+    }
+   ],
+   "max_rel_err": {
+    "value": 0.015272535579046098,
+    "output": "vm_p99_MPa"
+   },
+   "check": {
+    "h_mm": 2.0,
+    "ran": true,
+    "passed": true,
+    "reason": "CPU estimate 2.7 s is within the 60 s budget",
+    "max_gap": {
+     "value": 0.044143930094884244,
+     "output": "vm_p99_MPa"
+    },
+    "constraints_met": true,
+    "host": "desktop"
+   },
+   "conforming": {
+    "ran": true,
+    "passed": true,
+    "status": "ok",
+    "case_id": "m001",
+    "host": "desktop",
+    "h_mm": 2.0,
+    "reason": "agrees within its bands and meets every constraint",
+    "solver_version": "2.23",
+    "constraints_met": true,
+    "max_gap": {
+     "value": -0.057060502360666315,
+     "output": "vm_p99_MPa"
+    }
+   },
+   "bundle_sha256": "a134a66fddc5ba3c31c5ea0870b57d42b4117328594005702001bd15aaa60f82",
+   "simlab_entry": 4,
+   "aces_entry": 10,
+   "wall_s": 49.0,
+   "wall_basis": "stages"
+  },
+  "key_numbers": {
+   "mass_kg": 0.17698581438899466,
+   "mesh_volume_mm3": 66286.82186853733,
+   "voxel_volume_mm3": 68224.0,
+   "mass_voxel_kg": 0.18215808,
+   "compliance_Nmm": 828.0079936559462,
+   "umax_mm": 0.031198331261040144,
+   "vm_p99_MPa": 54.47464675903315,
+   "vm_p95_MPa": 40.70475196838378,
+   "vm_max_MPa": 64.49043111436654,
+   "pcg_iters": 221,
+   "case_id": "v001",
+   "designs": {
+    "n": 10,
+    "n_ok": 9
+   }
+  },
+  "inputs": {
+   "spec": {
+    "path": "inputs/spec.json",
+    "sha256": "b6c8bbefb1e9df1305ca900f598903a007b07b387751c93b4f90c30ba936ef94",
+    "effective_sha256": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+    "source": "spec file"
+   },
+   "overrides": {
+    "domain.source": "step",
+    "domain.step_file": "/home/aces/Work/cad-vm/cad/local/20261010T102209Z-disc/part.step"
+   },
+   "domain": {
+    "source": "step",
+    "ref": "/home/aces/Work/cad-vm/cad/local/20261010T102209Z-disc/part.step",
+    "step": "inputs/domain.step",
+    "step_sha256": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+    "step_note": "the STEP header carries an export timestamp, so step_sha256 changes per export; the stable geometry digest is domain.json mask_sha256",
+    "mask_sha256": "b4689f1bfef6263a63956bfd2247db3c7ea7dbce0a668c8f99a0d3751bd20434",
+    "brep_volume_mm3": 314159.26535897935,
+    "bbox_mm": [
+     0.0,
+     0.0,
+     0.0,
+     100.0,
+     100.0,
+     40.0
+    ]
+   },
+   "material": {
+    "name": "AlSi10Mg (LPBF), nominal",
+    "E_MPa": 70000.0,
+    "nu": 0.33,
+    "rho_kg_mm3": 2.67e-06,
+    "allowable_vm_MPa": 60.0,
+    "source": "Nominal handbook values for AlSi10Mg: E 70 GPa, Poisson 0.33, density 2.67 g/cm3. The 60 MPa allowable is a demo design limit chosen so the stress constraint is active; it is not a material strength. Demo inputs, not a qualified material card."
+   },
+   "supports": [
+    {
+     "name": "foot-1",
+     "box": [
+      76.0,
+      64.0,
+      0.0,
+      88.0,
+      76.0,
+      0.0
+     ],
+     "dofs": [
+      0,
+      1,
+      2
+     ]
+    },
+    {
+     "name": "foot-2",
+     "box": [
+      44.0,
+      80.0,
+      0.0,
+      56.0,
+      92.0,
+      0.0
+     ],
+     "dofs": [
+      0,
+      1,
+      2
+     ]
+    },
+    {
+     "name": "foot-3",
+     "box": [
+      12.0,
+      64.0,
+      0.0,
+      24.0,
+      76.0,
+      0.0
+     ],
+     "dofs": [
+      0,
+      1,
+      2
+     ]
+    },
+    {
+     "name": "foot-4",
+     "box": [
+      12.0,
+      28.0,
+      0.0,
+      24.0,
+      40.0,
+      0.0
+     ],
+     "dofs": [
+      0,
+      1,
+      2
+     ]
+    },
+    {
+     "name": "foot-5",
+     "box": [
+      44.0,
+      8.0,
+      0.0,
+      56.0,
+      20.0,
+      0.0
+     ],
+     "dofs": [
+      0,
+      1,
+      2
+     ]
+    },
+    {
+     "name": "foot-6",
+     "box": [
+      76.0,
+      28.0,
+      0.0,
+      88.0,
+      40.0,
+      0.0
+     ],
+     "dofs": [
+      0,
+      1,
+      2
+     ]
+    }
+   ],
+   "loads": [
+    {
+     "name": "cup-down",
+     "box": [
+      40.0,
+      40.0,
+      40.0,
+      60.0,
+      60.0,
+      40.0
+     ],
+     "force": [
+      0.0,
+      0.0,
+      -30000.0
+     ],
+     "axis": "z",
+     "case": "down"
+    }
+   ],
+   "keep_in": [
+    {
+     "name": "foot-1",
+     "box": null,
+     "cyl": {
+      "axis": "z",
+      "center": [
+       82.0,
+       70.0
+      ],
+      "r": 9.0,
+      "span": [
+       0.0,
+       6.0
+      ]
+     },
+     "round_mm": 1.0
+    },
+    {
+     "name": "foot-2",
+     "box": null,
+     "cyl": {
+      "axis": "z",
+      "center": [
+       50.0,
+       86.0
+      ],
+      "r": 9.0,
+      "span": [
+       0.0,
+       6.0
+      ]
+     },
+     "round_mm": 1.0
+    },
+    {
+     "name": "foot-3",
+     "box": null,
+     "cyl": {
+      "axis": "z",
+      "center": [
+       18.0,
+       70.0
+      ],
+      "r": 9.0,
+      "span": [
+       0.0,
+       6.0
+      ]
+     },
+     "round_mm": 1.0
+    },
+    {
+     "name": "foot-4",
+     "box": null,
+     "cyl": {
+      "axis": "z",
+      "center": [
+       18.0,
+       34.0
+      ],
+      "r": 9.0,
+      "span": [
+       0.0,
+       6.0
+      ]
+     },
+     "round_mm": 1.0
+    },
+    {
+     "name": "foot-5",
+     "box": null,
+     "cyl": {
+      "axis": "z",
+      "center": [
+       50.0,
+       14.0
+      ],
+      "r": 9.0,
+      "span": [
+       0.0,
+       6.0
+      ]
+     },
+     "round_mm": 1.0
+    },
+    {
+     "name": "foot-6",
+     "box": null,
+     "cyl": {
+      "axis": "z",
+      "center": [
+       82.0,
+       34.0
+      ],
+      "r": 9.0,
+      "span": [
+       0.0,
+       6.0
+      ]
+     },
+     "round_mm": 1.0
+    },
+    {
+     "name": "cup",
+     "box": null,
+     "cyl": {
+      "axis": "z",
+      "center": [
+       50.0,
+       50.0
+      ],
+      "r": 15.0,
+      "span": [
+       34.0,
+       40.0
+      ]
+     },
+     "round_mm": 1.0
+    }
+   ],
+   "keep_out": [],
+   "resolution": {
+    "gen_mm": 4.0,
+    "fea_mm": 4.0,
+    "field_h_mm": 2.0,
+    "check_factor": 0.5,
+    "check_levels": [
+     {
+      "level": 1,
+      "h_mm": 2.0,
+      "gpu_only": false
+     }
+    ],
+    "stress_exclude_mm": 6.0,
+    "patch_keep_in_mm": 0.0
+   },
+   "grid": {
+    "origin_mm": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "envelope_mm": [
+     100.0,
+     100.0,
+     40.0
+    ],
+    "derived_from": "spec"
+   },
+   "stress_exclude": [
+    [
+     76.0,
+     64.0,
+     0.0,
+     88.0,
+     76.0,
+     8.0
+    ],
+    [
+     44.0,
+     80.0,
+     0.0,
+     56.0,
+     92.0,
+     8.0
+    ],
+    [
+     12.0,
+     64.0,
+     0.0,
+     24.0,
+     76.0,
+     8.0
+    ],
+    [
+     12.0,
+     28.0,
+     0.0,
+     24.0,
+     40.0,
+     8.0
+    ],
+    [
+     44.0,
+     8.0,
+     0.0,
+     56.0,
+     20.0,
+     8.0
+    ],
+    [
+     76.0,
+     28.0,
+     0.0,
+     88.0,
+     40.0,
+     8.0
+    ],
+    [
+     40.0,
+     40.0,
+     32.0,
+     60.0,
+     60.0,
+     40.0
+    ]
+   ],
+   "stress_exclude_effective_mm": 8.0,
+   "stress_exclude_lattice_mm": 4.0,
+   "seed": 7,
+   "objective": {
+    "output": "mass_kg",
+    "sense": "min"
+   },
+   "constraints": [
+    {
+     "output": "vm_p99_MPa",
+     "op": "<=",
+     "limit": 60.0
+    },
+    {
+     "output": "umax_mm",
+     "op": "<=",
+     "limit": 0.035
+    }
+   ],
+   "variables": {
+    "volfrac": [
+     0.13,
+     0.38
+    ],
+    "rmin_mm": [
+     6.0,
+     12.0
+    ]
+   },
+   "fixed": {
+    "penal": 3.0
+   },
+   "solver_digest": {
+    "source_commit": "62de9811e555e2b46d23a7923fecbbb3124192ac",
+    "content_sha256": "da7c28a37dabbe8ba55e1817d668c734a4cf951da15740d1e9f837d611ed8ac9",
+    "snapshot_path": "/opt/aces/engineering/SNAPSHOT",
+    "snapshot_present": true,
+    "simlab_imported_from": "/opt/aces/engineering/lib/simlab",
+    "gendesign_imported_from": "/opt/aces/engineering/lib/gendesign",
+    "matches_snapshot": true,
+    "mismatches": [],
+    "modules_checked": 20,
+    "golden_code_sha256": "d3bd56049088529c1e9c5593eae9893fe66ed03c9ff4584063acbef51e54d8e7",
+    "golden_code_files": [
+     "golden/__init__.py",
+     "golden/acescli.py",
+     "golden/case.py",
+     "golden/compute.py",
+     "golden/conforming.py",
+     "golden/demo.py",
+     "golden/domain.py",
+     "golden/evidence.py",
+     "golden/export.py",
+     "golden/fea.py",
+     "golden/generator.py",
+     "golden/optimise.py",
+     "golden/organic.py",
+     "golden/pipeline.py",
+     "golden/progress.py",
+     "golden/render.py",
+     "golden/report.py",
+     "golden/rig.py",
+     "golden/rigside.py",
+     "golden/rundir.py",
+     "golden/spec.py",
+     "golden/surrogate.py",
+     "golden/sweep.py",
+     "golden/verify.py",
+     "golden_cli.py"
+    ]
+   },
+   "demo": false,
+   "hypothesis": "A SIMP-generated organic root mount meets vm_p99 <= 60 MPa and umax <= 0.035 mm at minimum mass, and a GP surrogate fitted to a 10-design sweep predicts the verified winner within 10 %."
+  },
+  "voxel": {
+   "stats": {
+    "step": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/inputs/domain.step",
+    "solids": 1,
+    "brep_volume_mm3": 314159.26535897935,
+    "bbox_mm": [
+     0.0,
+     0.0,
+     0.0,
+     100.0,
+     100.0,
+     40.0
+    ],
+    "elem_mm": 4.0,
+    "origin_mm": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "envelope_mm": [
+     100.0,
+     100.0,
+     40.0
+    ],
+    "shape": [
+     25,
+     25,
+     10
+    ],
+    "cells": 6250,
+    "solid_cells": 4890,
+    "solid_fraction": 0.7824,
+    "voxel_volume_mm3": 312960.0,
+    "volume_ratio_voxel_over_brep": 0.9961826198007913,
+    "watertight": true,
+    "tessellation_faces": 500,
+    "wall_s": 0.018066883087158203
+   },
+   "stats_fea": null,
+   "shape": [
+    25,
+    25,
+    10
+   ],
+   "h_gen_mm": 4.0,
+   "design_share": 0.7824,
+   "n_void_boxes": 136,
+   "field_h_mm": 2.0,
+   "mask_slices": "domain/mask_slices.png",
+   "wall_s": 0.48767518997192383
+  },
+  "compute": {
+   "rows": [
+    {
+     "step": "kernel",
+     "computation": "element and patch tests",
+     "solver": "gendesign.fea3d.self_test",
+     "device": "cpu",
+     "resolution_mm": 1.0,
+     "size": "10x2x2 bar (40 elements)",
+     "count": 1,
+     "wall_s": 0.0021,
+     "wall_s_sum": 0.0021,
+     "grade": "-",
+     "role": null,
+     "source": "compute.json#kernel_selftest",
+     "note": "element checks and the uniaxial bar: passed"
+    },
+    {
+     "step": "domain",
+     "computation": "STEP -> voxel mask",
+     "solver": "step-structures stage_mesh (Embree containment)",
+     "device": "cpu",
+     "resolution_mm": 4.0,
+     "size": "6250 cells, 4890 solid",
+     "count": 1,
+     "wall_s": 0.48767518997192383,
+     "wall_s_sum": 0.018066883087158203,
+     "grade": "-",
+     "role": null,
+     "source": "domain/domain.json#wall_s, domain/mesh.json",
+     "note": "voxel/B-rep volume 0.9962; watertight tessellation True; wall_s is the whole domain step (passive boxes, design-space SDF), wall_s_sum the stage_mesh records"
+    },
+    {
+     "step": "generate",
+     "computation": "SIMP x 11",
+     "solver": "gendesign.topopt3d.run_case (OC, FFT filter)",
+     "device": "cpu/numpy x4",
+     "resolution_mm": 4.0,
+     "size": "6250 elements",
+     "count": 11,
+     "wall_s": null,
+     "wall_s_sum": 21.515231370925903,
+     "grade": "-",
+     "role": "sweep, verify",
+     "source": "d###/status.json#diagnostics.generator, v###/status.json#diagnostics.generator",
+     "note": "10 sweep and 1 verify designs; the 10 sweep designs ran concurrently in 4 workers, wall_s_sum is the sum over designs"
+    },
+    {
+     "step": "skin",
+     "computation": "organic skin x 11",
+     "solver": "golden.organic (EDT SDF, smooth unions, Taubin)",
+     "device": "cpu",
+     "resolution_mm": 2.0,
+     "size": "50000 field points",
+     "count": 11,
+     "wall_s": null,
+     "wall_s_sum": 0.34630680084228516,
+     "grade": "-",
+     "role": "sweep, verify",
+     "source": "d###/skin.json, v###/skin.json",
+     "note": "10 of 11 watertight single-body skins; median 10660 faces"
+    },
+    {
+     "step": "solve",
+     "computation": "real FEA x 9",
+     "solver": "step-structures stage_solve, Jacobi-PCG FP64",
+     "device": "cpu/numpy x4",
+     "resolution_mm": 4.0,
+     "size": "6250 elements, 22308 DOF",
+     "count": 9,
+     "wall_s": null,
+     "wall_s_sum": 1.5220756530761719,
+     "grade": "preview-grade",
+     "role": "sweep",
+     "source": "d###/solve.json",
+     "note": "9 of 9 converged; ran concurrently in 4 workers"
+    },
+    {
+     "step": "surrogate",
+     "computation": "GP K-fold per round",
+     "solver": "simlab.surrogate.tabular (gp)",
+     "device": "cpu",
+     "resolution_mm": null,
+     "size": "n=9",
+     "count": 1,
+     "wall_s": 1.0987,
+     "wall_s_sum": 1.0987,
+     "grade": "-",
+     "role": null,
+     "source": "surrogate/round-K/cv.json",
+     "note": "round 1: weak, max CV MAPE 4.96 % on vm_p99_MPa, 31 GP warnings"
+    },
+    {
+     "step": "optimise",
+     "computation": "grid per round",
+     "solver": "golden.optimise",
+     "device": "cpu",
+     "resolution_mm": null,
+     "size": "1681 candidates",
+     "count": 1,
+     "wall_s": 0.0056,
+     "wall_s_sum": 0.0056,
+     "grade": "-",
+     "role": null,
+     "source": "optimise/round-K.json",
+     "note": "round 1: 1022 predicted feasible"
+    },
+    {
+     "step": "verify",
+     "computation": "real FEA x 1",
+     "solver": "step-structures stage_solve, Jacobi-PCG FP64",
+     "device": "cpu/numpy",
+     "resolution_mm": 4.0,
+     "size": "6250 elements, 22308 DOF",
+     "count": 1,
+     "wall_s": 0.16553521156311035,
+     "wall_s_sum": 0.16553521156311035,
+     "grade": "preview-grade",
+     "role": "verify",
+     "source": "v###/solve.json",
+     "note": "round 1 v001: PASS"
+    },
+    {
+     "step": "check",
+     "computation": "finer real FEA, level 1",
+     "solver": "step-structures stage_solve",
+     "device": "cpu/numpy",
+     "resolution_mm": 2.0,
+     "size": "50000 elements, 163863 DOF",
+     "count": 1,
+     "wall_s": 5.941338300704956,
+     "wall_s_sum": 5.941338300704956,
+     "grade": "independent check -> verified-desktop",
+     "role": "check",
+     "source": "x001/solve.json",
+     "note": "estimate 2.71 s, budget 60 s"
+    },
+    {
+     "step": "check",
+     "computation": "finer real FEA, level 2",
+     "solver": "step-structures stage_solve",
+     "device": "-",
+     "resolution_mm": 1.0,
+     "size": null,
+     "count": 0,
+     "wall_s": null,
+     "wall_s_sum": null,
+     "grade": "-",
+     "role": "check",
+     "source": "validation.json#independent_check.levels",
+     "note": "not run: GPU-only extra level: no usable GPU"
+    },
+    {
+     "step": "parity",
+     "computation": "CuPy / Warp re-solve",
+     "solver": "step-structures stage_solve / WarpApplyK",
+     "device": "-",
+     "resolution_mm": null,
+     "size": null,
+     "count": 0,
+     "wall_s": null,
+     "wall_s_sum": null,
+     "grade": "-",
+     "role": "parity",
+     "source": "validation.json#device_parity",
+     "note": "not run: no device parity: no usable GPU (CuPy is not importable here (an optional extra; the packaged venv does not ship it))"
+    },
+    {
+     "step": "rig",
+     "computation": "sim lane sim/pool",
+     "solver": "simlab-mcp",
+     "device": "rig",
+     "resolution_mm": null,
+     "size": null,
+     "count": 0,
+     "wall_s": null,
+     "wall_s_sum": null,
+     "grade": "not used",
+     "role": null,
+     "source": "compute.json#rig.lanes",
+     "note": "stale-manifest: desktop only (run with --lane sim/pool to send the independent check and the conforming check to the rig)"
+    },
+    {
+     "step": "warp-lattice",
+     "computation": "rod-lattice generator",
+     "solver": "gendesign.lattice_opt",
+     "device": "-",
+     "resolution_mm": null,
+     "size": null,
+     "count": 0,
+     "wall_s": null,
+     "wall_s_sum": null,
+     "grade": "not used",
+     "role": null,
+     "source": "compute.json#warp",
+     "note": "not used: cantilever demonstrator, not wired into the golden path (v0)"
+    },
+    {
+     "step": "fno",
+     "computation": "field surrogate",
+     "solver": "simlab.surrogate.fno (torch, PhysicsNeMo)",
+     "device": "-",
+     "resolution_mm": null,
+     "size": null,
+     "count": 0,
+     "wall_s": null,
+     "wall_s_sum": null,
+     "grade": "not used",
+     "role": null,
+     "source": "compute.json#torch, compute.json#physicsnemo",
+     "note": "not installed (torch, PhysicsNeMo); a field (FNO) surrogate needs O(100) solved fields; v0 fits a tabular GP"
+    },
+    {
+     "step": "second-discretisation",
+     "computation": "conforming tet10 (C3D10) at 2 mm",
+     "solver": "gmsh 4.15.2 + CalculiX ccx 2.23",
+     "device": "cpu x4",
+     "resolution_mm": 2.0,
+     "size": "38618 C3D10, 187011 DOF",
+     "count": 1,
+     "wall_s": 27.14492440223694,
+     "wall_s_sum": 27.14492440223694,
+     "grade": "second discretisation -> agrees",
+     "role": "conforming",
+     "source": "m001/conforming.json",
+     "note": ""
+    }
+   ],
+   "detected_utc": "2026-10-10T10:22:10.404+00:00",
+   "plan": {
+    "sweep": {
+     "device": "cpu",
+     "jobs": 4,
+     "reason": "no usable GPU (CuPy is not importable here (an optional extra; the packaged venv does not ship it))"
+    },
+    "verify": {
+     "device": "cpu"
+    },
+    "check_mode": "auto",
+    "check_budget_s": 60.0,
+    "parity": [],
+    "rig": {
+     "submit": false,
+     "lane": null,
+     "url": null,
+     "sweep": false,
+     "check": false,
+     "conforming": false,
+     "budget_s": null,
+     "reason": "no rig lane: everything runs on this desktop (--lane LANE sends the independent check and the conforming check to a rig)"
+    },
+    "conforming": {
+     "mode": "auto",
+     "host": "desktop",
+     "fallback": null,
+     "h_mm": 2.0,
+     "threads": 4,
+     "max_dof": 1500000,
+     "timeout_s": 900.0,
+     "reason": "conforming tet10 at 2 mm on this desktop (gmsh 4.15.2, ccx 2.23, 4 threads)"
+    },
+    "cells": {
+     "gen": 6250,
+     "fea": 6250
+    },
+    "notes": [
+     "no device parity: no usable GPU (CuPy is not importable here (an optional extra; the packaged venv does not ship it))"
+    ]
+   }
+  },
+  "sweep": {
+   "sampler": {
+    "kind": "lhs",
+    "optimization": "random-cd",
+    "seed": 7,
+    "n": 10
+   },
+   "variables": {
+    "volfrac": [
+     0.13,
+     0.38
+    ],
+    "rmin_mm": [
+     6.0,
+     12.0
+    ]
+   },
+   "n": 10,
+   "n_ok": 9,
+   "rows": [
+    {
+     "case_id": "d000",
+     "status": "FINISHED",
+     "design_status": "ok",
+     "error": null,
+     "wall_s": 3.829543113708496,
+     "volfrac": 0.18807,
+     "rmin_mm": 9.568144,
+     "mass_kg": 0.1390104949130709,
+     "umax_mm": 0.03949597969109304,
+     "vm_p99_MPa": 63.07597625732422,
+     "vm_max_MPa": 74.6639825493752,
+     "compliance_Nmm": 1061.9741222296054,
+     "pcg_iters": 262,
+     "faces": 10020,
+     "genus": 0
+    },
+    {
+     "case_id": "d001",
+     "status": "FINISHED",
+     "design_status": "ok",
+     "error": null,
+     "wall_s": 3.515202760696411,
+     "volfrac": 0.236767,
+     "rmin_mm": 10.654526,
+     "mass_kg": 0.18458650508360216,
+     "umax_mm": 0.030312620300250486,
+     "vm_p99_MPa": 51.56760787963858,
+     "vm_max_MPa": 60.51854151090643,
+     "compliance_Nmm": 800.5808178548717,
+     "pcg_iters": 218,
+     "faces": 10472,
+     "genus": 0
+    },
+    {
+     "case_id": "d002",
+     "status": "FINISHED",
+     "design_status": "ok",
+     "error": null,
+     "wall_s": 3.152186870574951,
+     "volfrac": 0.343311,
+     "rmin_mm": 7.278705,
+     "mass_kg": 0.28398063056729483,
+     "umax_mm": 0.024385252890536235,
+     "vm_p99_MPa": 38.99544914245605,
+     "vm_max_MPa": 41.77760935581193,
+     "compliance_Nmm": 620.9766472164354,
+     "pcg_iters": 202,
+     "faces": 11248,
+     "genus": 0
+    },
+    {
+     "case_id": "d003",
+     "status": "FINISHED",
+     "design_status": "ok",
+     "error": null,
+     "wall_s": 3.0808799266815186,
+     "volfrac": 0.365216,
+     "rmin_mm": 10.098503,
+     "mass_kg": 0.3043088983350911,
+     "umax_mm": 0.02408612451044269,
+     "vm_p99_MPa": 38.26887306213383,
+     "vm_max_MPa": 41.03264728813841,
+     "compliance_Nmm": 612.7274007561978,
+     "pcg_iters": 201,
+     "faces": 10952,
+     "genus": 0
+    },
+    {
+     "case_id": "d004",
+     "status": "FINISHED",
+     "design_status": "ok",
+     "error": null,
+     "wall_s": 2.3803718090057373,
+     "volfrac": 0.153482,
+     "rmin_mm": 6.688165,
+     "mass_kg": 0.11282886762689724,
+     "umax_mm": 0.0509200721606507,
+     "vm_p99_MPa": 79.45272384643555,
+     "vm_max_MPa": 83.38282726320496,
+     "compliance_Nmm": 1365.39638083824,
+     "pcg_iters": 288,
+     "faces": 9596,
+     "genus": 0
+    },
+    {
+     "case_id": "d005",
+     "status": "FINISHED",
+     "design_status": "ok",
+     "error": null,
+     "wall_s": 1.862640142440796,
+     "volfrac": 0.227793,
+     "rmin_mm": 7.857916,
+     "mass_kg": 0.17952260209990445,
+     "umax_mm": 0.0313004833106861,
+     "vm_p99_MPa": 53.09709568023681,
+     "vm_max_MPa": 57.786927646596624,
+     "compliance_Nmm": 825.0726888577077,
+     "pcg_iters": 225,
+     "faces": 10660,
+     "genus": 0
+    },
+    {
+     "case_id": "d006",
+     "status": "FAILED",
+     "design_status": "multi-body",
+     "error": "the skin has 3 solid bodies; a part is one body",
+     "wall_s": 1.9605374336242676,
+     "volfrac": 0.160054,
+     "rmin_mm": 10.961384,
+     "mass_kg": null,
+     "umax_mm": null,
+     "vm_p99_MPa": null,
+     "vm_max_MPa": null,
+     "compliance_Nmm": null,
+     "pcg_iters": null,
+     "faces": 8364,
+     "genus": 0
+    },
+    {
+     "case_id": "d007",
+     "status": "FINISHED",
+     "design_status": "ok",
+     "error": null,
+     "wall_s": 1.8094756603240967,
+     "volfrac": 0.291534,
+     "rmin_mm": 11.632002,
+     "mass_kg": 0.2416999232783147,
+     "umax_mm": 0.026439725487716004,
+     "vm_p99_MPa": 40.65169860839844,
+     "vm_max_MPa": 49.685382730872576,
+     "compliance_Nmm": 684.2886413774618,
+     "pcg_iters": 183,
+     "faces": 10628,
+     "genus": 0
+    },
+    {
+     "case_id": "d008",
+     "status": "FINISHED",
+     "design_status": "ok",
+     "error": null,
+     "wall_s": 1.8030362129211426,
+     "volfrac": 0.265513,
+     "rmin_mm": 6.232518,
+     "mass_kg": 0.2147839657852622,
+     "umax_mm": 0.027364489952812737,
+     "vm_p99_MPa": 42.3959314346316,
+     "vm_max_MPa": 50.37578528539723,
+     "compliance_Nmm": 707.9479357086913,
+     "pcg_iters": 218,
+     "faces": 10968,
+     "genus": 0
+    },
+    {
+     "case_id": "d009",
+     "status": "FINISHED",
+     "design_status": "ok",
+     "error": null,
+     "wall_s": 1.7643635272979736,
+     "volfrac": 0.312479,
+     "rmin_mm": 8.814415,
+     "mass_kg": 0.2577047887589702,
+     "umax_mm": 0.02547660226106646,
+     "vm_p99_MPa": 39.35591793060303,
+     "vm_max_MPa": 45.957249886257756,
+     "compliance_Nmm": 653.5375084478961,
+     "pcg_iters": 208,
+     "faces": 11100,
+     "genus": 0
+    }
+   ],
+   "failed": [
+    {
+     "case_id": "d006",
+     "design_status": "multi-body",
+     "error": "the skin has 3 solid bodies; a part is one body"
+    }
+   ],
+   "csv_sha256": "9a5961e5d90936f3e0c6dec8178343e705e61ce3808ab8dfb1fd832aa2c53814",
+   "gallery": "figures/sweep_gallery.png",
+   "scatter": "figures/sweep_scatter.png"
+  },
+  "surrogate": {
+   "rounds": [
+    {
+     "round": 1,
+     "source": "surrogate/round-1/cv.json",
+     "kind": "gp",
+     "folds": 5,
+     "n": 9,
+     "inputs": [
+      "volfrac",
+      "rmin_mm"
+     ],
+     "outputs": [
+      "mass_kg",
+      "vm_p99_MPa",
+      "umax_mm",
+      "compliance_Nmm",
+      "vm_max_MPa"
+     ],
+     "log_outputs": {
+      "policy": "auto-positive",
+      "applied": "always",
+      "per_output": {
+       "mass_kg": true,
+       "vm_p99_MPa": true,
+       "umax_mm": true,
+       "compliance_Nmm": true,
+       "vm_max_MPa": true
+      }
+     },
+     "cv": {
+      "mass_kg": {
+       "rmse": 0.0027632243577762686,
+       "mae": 0.0023785258111402603,
+       "rel_rmse": 0.045198665217385886,
+       "mape_pct": 1.0925876509919477,
+       "r2": 0.9979570806625667,
+       "y_range": [
+        0.11282886762689724,
+        0.3043088983350911
+       ]
+      },
+      "vm_p99_MPa": {
+       "rmse": 5.46653401990623,
+       "mae": 3.135741540179131,
+       "rel_rmse": 0.4143338798017111,
+       "mape_pct": 4.957916556939834,
+       "r2": 0.8283274360484612,
+       "y_range": [
+        38.26887306213383,
+        79.45272384643555
+       ]
+      },
+      "umax_mm": {
+       "rmse": 0.0004734028159273442,
+       "mae": 0.00024596574734492825,
+       "rel_rmse": 0.05678275029685455,
+       "mape_pct": 0.6233459016019028,
+       "r2": 0.9967757192687251,
+       "y_range": [
+        0.02408612451044269,
+        0.0509200721606507
+       ]
+      },
+      "compliance_Nmm": {
+       "rmse": 3.6738205188788435,
+       "mae": 2.3086311828819186,
+       "rel_rmse": 0.01562713201291322,
+       "mape_pct": 0.25833183130101656,
+       "r2": 0.999755792745051,
+       "y_range": [
+        612.7274007561978,
+        1365.39638083824
+       ]
+      },
+      "vm_max_MPa": {
+       "rmse": 2.2407739174367682,
+       "mae": 1.5903004615971368,
+       "rel_rmse": 0.1620763838798352,
+       "mape_pct": 2.6675285815461374,
+       "r2": 0.9737312457884363,
+       "y_range": [
+        41.03264728813841,
+        83.38282726320496
+       ]
+      }
+     },
+     "status": "weak",
+     "flags": [
+      "vm_p99_MPa R2 0.828 < 0.9"
+     ],
+     "gp_warnings": 31,
+     "gp_warning_kinds": {
+      "ConvergenceWarning": 31
+     },
+     "model_sha256": "9b5305e1bd561d9bb3ef64bd7fc447ca7352bc8e7298e4bac50ad0d2b23c1d0c",
+     "data_sha256": "14b829b1bef8945e67315b769065e37899182ab3e934a8851b4b6ec85687c6ca",
+     "training_cases": [
+      "d000",
+      "d001",
+      "d002",
+      "d003",
+      "d004",
+      "d005",
+      "d007",
+      "d008",
+      "d009"
+     ],
+     "wall_s": 1.0987
+    }
+   ]
+  },
+  "optimise": {
+   "rounds": [
+    {
+     "round": 1,
+     "source": "optimise/round-1.json",
+     "method": "grid",
+     "n_candidates": 1681,
+     "n_excluded": 0,
+     "n_feasible": 1022,
+     "kappa": 1.0,
+     "tol": 0.1,
+     "margins": {
+      "vm_p99_MPa": 0.1,
+      "umax_mm": 0.1
+     },
+     "exclusion_radius": 0.02,
+     "excluded": [],
+     "winner": {
+      "params": {
+       "volfrac": 0.23,
+       "rmin_mm": 11.55
+      },
+      "pred": {
+       "mass_kg": 0.1794185186943987,
+       "vm_p99_MPa": 53.64268077824985,
+       "umax_mm": 0.03125823036655014,
+       "compliance_Nmm": 829.561281237644,
+       "vm_max_MPa": 62.55815522463984
+      },
+      "sd": {
+       "mass_kg": 0.0021137847015872957,
+       "vm_p99_MPa": 0.32583423292789604,
+       "umax_mm": 2.730350865370705e-05,
+       "compliance_Nmm": 0.7083041484674482,
+       "vm_max_MPa": 1.4571187613561207
+      }
+     },
+     "from_feasible": true,
+     "closest_infeasible": null,
+     "top": [
+      {
+       "params": {
+        "volfrac": 0.23,
+        "rmin_mm": 11.55
+       },
+       "pred": {
+        "mass_kg": 0.1794185186943987,
+        "vm_p99_MPa": 53.64268077824985,
+        "umax_mm": 0.03125823036655014,
+        "compliance_Nmm": 829.561281237644,
+        "vm_max_MPa": 62.55815522463984
+       },
+       "sd": {
+        "mass_kg": 0.0021137847015872957,
+        "vm_p99_MPa": 0.32583423292789604,
+        "umax_mm": 2.730350865370705e-05,
+        "compliance_Nmm": 0.7083041484674482,
+        "vm_max_MPa": 1.4571187613561207
+       }
+      },
+      {
+       "params": {
+        "volfrac": 0.23,
+        "rmin_mm": 11.4
+       },
+       "pred": {
+        "mass_kg": 0.17942054383805559,
+        "vm_p99_MPa": 53.598273225319,
+        "umax_mm": 0.03124718984588943,
+        "compliance_Nmm": 829.0077340782041,
+        "vm_max_MPa": 62.400751246388594
+       },
+       "sd": {
+        "mass_kg": 0.0021010953942893207,
+        "vm_p99_MPa": 0.3098186519788477,
+        "umax_mm": 2.59853982635342e-05,
+        "compliance_Nmm": 0.674004404237678,
+        "vm_max_MPa": 1.4339923843297235
+       }
+      },
+      {
+       "params": {
+        "volfrac": 0.23,
+        "rmin_mm": 11.25
+       },
+       "pred": {
+        "mass_kg": 0.17942255762108505,
+        "vm_p99_MPa": 53.55380502534827,
+        "umax_mm": 0.031236158901950382,
+        "compliance_Nmm": 828.4547474364945,
+        "vm_max_MPa": 62.24374923136291
+       },
+       "sd": {
+        "mass_kg": 0.0020891178535740185,
+        "vm_p99_MPa": 0.2938734409973698,
+        "umax_mm": 2.4669998396193576e-05,
+        "compliance_Nmm": 0.6398138406124758,
+        "vm_max_MPa": 1.4121005967692533
+       }
+      },
+      {
+       "params": {
+        "volfrac": 0.23,
+        "rmin_mm": 11.1
+       },
+       "pred": {
+        "mass_kg": 0.17942456002969268,
+        "vm_p99_MPa": 53.509277406114826,
+        "umax_mm": 0.031225137533411586,
+        "compliance_Nmm": 827.9023211823344,
+        "vm_max_MPa": 62.08716135718944
+       },
+       "sd": {
+        "mass_kg": 0.0020778644298279497,
+        "vm_p99_MPa": 0.2779980331161198,
+        "umax_mm": 2.335736797016985e-05,
+        "compliance_Nmm": 0.6057324517212237,
+        "vm_max_MPa": 1.3914515740269024
+       }
+      },
+      {
+       "params": {
+        "volfrac": 0.23,
+        "rmin_mm": 10.95
+       },
+       "pred": {
+        "mass_kg": 0.1794265510502244,
+        "vm_p99_MPa": 53.46469161839817,
+        "umax_mm": 0.031214125738911767,
+        "compliance_Nmm": 827.3504551834502,
+        "vm_max_MPa": 61.93099979809763
+       },
+       "sd": {
+        "mass_kg": 0.0020673469900145125,
+        "vm_p99_MPa": 0.26219230586342945,
+        "umax_mm": 2.2047597270877586e-05,
+        "compliance_Nmm": 0.5717610125069541,
+        "vm_max_MPa": 1.372052747618845
+       }
+      }
+     ],
+     "wall_s": 0.0056
+    }
+   ],
+   "map": "figures/optimise_map.png"
+  },
+  "verification": {
+   "rounds": [
+    {
+     "round": 1,
+     "case_id": "v001",
+     "params": {
+      "volfrac": 0.23,
+      "rmin_mm": 11.55
+     },
+     "from_feasible": true,
+     "h_fea_mm": 4.0,
+     "device": "cpu",
+     "solver": "step-structures stage_solve",
+     "rows": [
+      {
+       "output": "mass_kg",
+       "role": "objective",
+       "predicted": 0.1794185186943987,
+       "sd": 0.0021137847015872957,
+       "solved": 0.17698581438899466,
+       "abs_err": 0.002432704305404043,
+       "rel_err": 0.013745193725284877,
+       "tol": 0.1,
+       "agree": true,
+       "op": null,
+       "limit": null,
+       "meets": null
+      },
+      {
+       "output": "vm_p99_MPa",
+       "role": "constraint",
+       "predicted": 53.64268077824985,
+       "sd": 0.32583423292789604,
+       "solved": 54.47464675903315,
+       "abs_err": 0.831965980783302,
+       "rel_err": 0.015272535579046098,
+       "tol": 0.1,
+       "agree": true,
+       "op": "<=",
+       "limit": 60.0,
+       "meets": true
+      },
+      {
+       "output": "umax_mm",
+       "role": "constraint",
+       "predicted": 0.03125823036655014,
+       "sd": 2.730350865370705e-05,
+       "solved": 0.031198331261040144,
+       "abs_err": 5.989910550999872e-05,
+       "rel_err": 0.001919945814050623,
+       "tol": 0.1,
+       "agree": true,
+       "op": "<=",
+       "limit": 0.035,
+       "meets": true
+      },
+      {
+       "output": "compliance_Nmm",
+       "role": "reported",
+       "predicted": 829.561281237644,
+       "sd": 0.7083041484674482,
+       "solved": 828.0079936559462,
+       "abs_err": 1.553287581697873,
+       "rel_err": 0.0018759330750414169,
+       "tol": 0.1,
+       "agree": true,
+       "op": null,
+       "limit": null,
+       "meets": null
+      },
+      {
+       "output": "vm_max_MPa",
+       "role": "reported",
+       "predicted": 62.55815522463984,
+       "sd": 1.4571187613561207,
+       "solved": 64.49043111436654,
+       "abs_err": 1.9322758897267036,
+       "rel_err": 0.029962210770463436,
+       "tol": 0.1,
+       "agree": true,
+       "op": null,
+       "limit": null,
+       "meets": null
+      }
+     ],
+     "status": "FINISHED",
+     "design_status": "ok",
+     "converged": true,
+     "passed": true,
+     "reasons": []
+    }
+   ],
+   "resolution_mm": {
+    "generator": 4.0,
+    "field": 2.0,
+    "solve": 4.0,
+    "check": [
+     2.0,
+     1.0
+    ]
+   },
+   "outcome": "pass",
+   "tol": 0.1,
+   "kappa": 1.0,
+   "cv_margin": true,
+   "check_objective": true
+  },
+  "check": {
+   "independent_check": {
+    "ran": true,
+    "reason": "CPU estimate 2.7 s is within the 60 s budget",
+    "passed": true,
+    "levels": [
+     {
+      "level": 1,
+      "case_id": "x001",
+      "h_mm": 2.0,
+      "device": "cpu",
+      "gating": true,
+      "est_s": 2.7109642028808594,
+      "budget_s": 60.0,
+      "ran": true,
+      "reason": "CPU estimate 2.7 s is within the 60 s budget",
+      "rows": [
+       {
+        "output": "mass_kg",
+        "role": "objective",
+        "coarse": 0.17698581438899466,
+        "fine": 0.17698581438899466,
+        "rel_gap": 0.0,
+        "tol": 0.1,
+        "agree": true,
+        "op": null,
+        "limit": null,
+        "meets_fine": null
+       },
+       {
+        "output": "vm_p99_MPa",
+        "role": "constraint",
+        "coarse": 54.47464675903315,
+        "fine": 56.87937175750742,
+        "rel_gap": 0.044143930094884244,
+        "tol": 0.1,
+        "agree": true,
+        "op": "<=",
+        "limit": 60.0,
+        "meets_fine": true
+       },
+       {
+        "output": "umax_mm",
+        "role": "constraint",
+        "coarse": 0.031198331261040144,
+        "fine": 0.03248296743203556,
+        "rel_gap": 0.041176438580855956,
+        "tol": 0.1,
+        "agree": true,
+        "op": "<=",
+        "limit": 0.035,
+        "meets_fine": true
+       },
+       {
+        "output": "compliance_Nmm",
+        "role": "reported",
+        "coarse": 828.0079936559462,
+        "fine": 864.8460520128981,
+        "rel_gap": 0.04448997912966874,
+        "tol": 0.1,
+        "agree": true,
+        "op": null,
+        "limit": null,
+        "meets_fine": null
+       },
+       {
+        "output": "mass_voxel_kg",
+        "role": "reported",
+        "coarse": 0.18215808,
+        "fine": 0.17929583999999998,
+        "rel_gap": -0.015712945590994457,
+        "tol": 0.1,
+        "agree": true,
+        "op": null,
+        "limit": null,
+        "meets_fine": null
+       },
+       {
+        "output": "vm_max_MPa",
+        "role": "reported",
+        "coarse": 64.49043111436654,
+        "fine": 105.3919182769137,
+        "rel_gap": 0.6342256743486946,
+        "tol": 0.1,
+        "agree": false,
+        "op": null,
+        "limit": null,
+        "meets_fine": null
+       }
+      ],
+      "passed": true,
+      "host": "desktop",
+      "fea_solver": "pcg",
+      "rig": null,
+      "rig_attempt": null
+     },
+     {
+      "level": 2,
+      "case_id": null,
+      "h_mm": 1.0,
+      "device": null,
+      "gating": false,
+      "est_s": null,
+      "budget_s": 60.0,
+      "ran": false,
+      "reason": "GPU-only extra level: no usable GPU",
+      "rows": [],
+      "passed": null,
+      "host": null,
+      "fea_solver": null,
+      "rig": null,
+      "rig_attempt": null
+     }
+    ]
+   },
+   "device_parity": [],
+   "parity_reason": "not run: no device parity: no usable GPU (CuPy is not importable here (an optional extra; the packaged venv does not ship it))",
+   "grade": "verified-desktop",
+   "grade_reasons": [
+    "the 2 mm check agrees with the 4 mm solve within 10 % and meets every constraint",
+    "not rig-verified: the level-1 check ran on this desktop (x001: no rig lane was used)"
+   ],
+   "scope": "voxel FEA (H8, fictitious domain, Jacobi-PCG or multigrid-PCG, FP64, linear static) on this desktop or on a rig lane, with a conforming tet10 (C3D10, gmsh + CalculiX ccx) second discretisation when it can run. Grades: preview-grade (every solve on its own), verified-desktop (the finer-resolution level-1 check agrees within tol and meets every constraint), rig-verified (also: the level-1 check solved on the rig on an image the golden-check validation names, the conforming check ran on the rig on an image the ccx-check validation names and agrees within its bands and meets every constraint, the rig ran this desktop's golden code, and every pulled file verified). A conforming check that violates a constraint caps the grade at preview-grade. No grade is a sign-off.",
+   "chart": "figures/check_levels.png"
+  },
+  "conforming": {
+   "ran": true,
+   "passed": true,
+   "case_id": "m001",
+   "host": "desktop",
+   "mode": "auto",
+   "reason": "agrees within its bands and meets every constraint",
+   "h_mm": 2.0,
+   "source_case": "v001",
+   "reference": {
+    "case_id": "x001",
+    "h_mm": 2.0,
+    "host": "desktop"
+   },
+   "bands": {
+    "mass": 0.01,
+    "stress": 0.15,
+    "other": 0.1
+   },
+   "rows": [
+    {
+     "output": "mass_kg",
+     "role": "objective",
+     "voxel": 0.17698581438899466,
+     "conforming": 0.1769858143889947,
+     "rel_gap": 1.5682373026024176e-16,
+     "band": 0.01,
+     "agree": true,
+     "op": null,
+     "limit": null,
+     "meets_conforming": null
+    },
+    {
+     "output": "vm_p99_MPa",
+     "role": "constraint",
+     "voxel": 56.87937175750742,
+     "conforming": 53.63380623106495,
+     "rel_gap": -0.057060502360666315,
+     "band": 0.15,
+     "agree": true,
+     "op": "<=",
+     "limit": 60.0,
+     "meets_conforming": true
+    },
+    {
+     "output": "umax_mm",
+     "role": "constraint",
+     "voxel": 0.03248296743203556,
+     "conforming": 0.031756483004286275,
+     "rel_gap": -0.022365088080986365,
+     "band": 0.1,
+     "agree": true,
+     "op": "<=",
+     "limit": 0.035,
+     "meets_conforming": true
+    },
+    {
+     "output": "compliance_Nmm",
+     "role": "gating",
+     "voxel": 864.8460520128981,
+     "conforming": 844.9543317078405,
+     "rel_gap": -0.02300030191357213,
+     "band": 0.1,
+     "agree": true,
+     "op": null,
+     "limit": null,
+     "meets_conforming": null
+    },
+    {
+     "output": "vm_max_MPa",
+     "role": "reported",
+     "voxel": 105.3919182769137,
+     "conforming": 144.52246998675278,
+     "rel_gap": 0.37128607534237,
+     "band": 0.15,
+     "agree": false,
+     "op": null,
+     "limit": null,
+     "meets_conforming": null
+    },
+    {
+     "output": "vm_p95_MPa",
+     "role": "reported",
+     "voxel": 40.97390766143798,
+     "conforming": 41.16215030966936,
+     "rel_gap": 0.004594207850195902,
+     "band": 0.15,
+     "agree": true,
+     "op": null,
+     "limit": null,
+     "meets_conforming": null
+    },
+    {
+     "output": "mesh_volume_mm3",
+     "role": "reported",
+     "voxel": 66286.82186853733,
+     "conforming": 66286.82186853734,
+     "rel_gap": 2.1952953570811996e-16,
+     "band": 0.01,
+     "agree": true,
+     "op": null,
+     "limit": null,
+     "meets_conforming": null
+    }
+   ],
+   "constraints_met": true,
+   "record": "m001/conforming.json",
+   "rig": null,
+   "rig_attempt": null,
+   "check_status": "ok",
+   "mesh": {
+    "tool": "gmsh",
+    "version": "4.15.2",
+    "route": "discrete",
+    "algorithm_3d": 1,
+    "size_mm": 2.0,
+    "element": "C3D10",
+    "nodes": 62337,
+    "elements": 38618,
+    "dof": 187011,
+    "volume_mm3": 66286.82186853734,
+    "volume_rel_err": 2.1952953570811996e-16,
+    "min_sicn": 0.3383439805889851,
+    "p01_sicn": 0.5779595591862573
+   },
+   "bcs": {
+    "window_mm": 2.0,
+    "supports": [
+     {
+      "name": "foot-1",
+      "mode": "surface",
+      "axis": "z",
+      "plane_mm": 0.0,
+      "faces": 74,
+      "nodes": 193,
+      "area_mm2": 146.96140224165353,
+      "projected_mm2": 146.5909406443534,
+      "footprint_mm2": 144.0,
+      "coverage": 1.0179926433635653,
+      "plane_offset_mm": 0.34906550124287605
+     },
+     {
+      "name": "foot-2",
+      "mode": "surface",
+      "axis": "z",
+      "plane_mm": 0.0,
+      "faces": 73,
+      "nodes": 192,
+      "area_mm2": 145.9873811338048,
+      "projected_mm2": 145.76864230552746,
+      "footprint_mm2": 144.0,
+      "coverage": 1.0122822382328296,
+      "plane_offset_mm": 0.30619676783680916
+     },
+     {
+      "name": "foot-3",
+      "mode": "surface",
+      "axis": "z",
+      "plane_mm": 0.0,
+      "faces": 73,
+      "nodes": 192,
+      "area_mm2": 145.89286714918023,
+      "projected_mm2": 145.54998366892505,
+      "footprint_mm2": 144.0,
+      "coverage": 1.0107637754786463,
+      "plane_offset_mm": 0.33115725343426067
+     },
+     {
+      "name": "foot-4",
+      "mode": "surface",
+      "axis": "z",
+      "plane_mm": 0.0,
+      "faces": 73,
+      "nodes": 192,
+      "area_mm2": 145.5828733438045,
+      "projected_mm2": 145.28646198948536,
+      "footprint_mm2": 144.0,
+      "coverage": 1.0089337638158706,
+      "plane_offset_mm": 0.3473492922882239
+     },
+     {
+      "name": "foot-5",
+      "mode": "surface",
+      "axis": "z",
+      "plane_mm": 0.0,
+      "faces": 73,
+      "nodes": 192,
+      "area_mm2": 145.97433220670655,
+      "projected_mm2": 145.75722112333824,
+      "footprint_mm2": 144.0,
+      "coverage": 1.0122029244676267,
+      "plane_offset_mm": 0.30443892379601795
+     },
+     {
+      "name": "foot-6",
+      "mode": "surface",
+      "axis": "z",
+      "plane_mm": 0.0,
+      "faces": 73,
+      "nodes": 192,
+      "area_mm2": 145.75166205628517,
+      "projected_mm2": 145.4500477999536,
+      "footprint_mm2": 144.0,
+      "coverage": 1.0100697763885667,
+      "plane_offset_mm": 0.3343914933502674
+     }
+    ],
+    "loads": [
+     {
+      "name": "cup-down",
+      "mode": "traction",
+      "axis": "z",
+      "plane_mm": 40.0,
+      "faces": 200,
+      "nodes": 339,
+      "area_mm2": 400.56751642013455,
+      "projected_mm2": 400.56520296021336,
+      "footprint_mm2": 400.0,
+      "coverage": 1.0014130074005334,
+      "plane_offset_mm": 0.01567840576171875
+     }
+    ]
+   },
+   "solver": {
+    "tool": "CalculiX ccx",
+    "version": "2.23",
+    "linear_solver": "Factoring the system of equations using the symmetric spooles solver",
+    "threads": 4,
+    "rc": 0,
+    "wall_s": 19.940021514892578,
+    "sha256": "31be21fc2f0902bd9a05acc2651dbac6dc2a2573dabbf235e39a38cb6f458862"
+   },
+   "equilibrium": {
+    "applied_N": [
+     0.0,
+     0.0,
+     -29999.99999999999
+    ],
+    "reaction_N": [
+     0.00039700000024822657,
+     -0.0009999999992942321,
+     30000.0
+    ],
+    "rel_residual": 3.586407981355218e-08
+   },
+   "metrics": {
+    "mass_kg": 0.1769858143889947,
+    "mesh_volume_mm3": 66286.82186853734,
+    "compliance_Nmm": 844.9543317078405,
+    "umax_mm": 0.031756483004286275,
+    "vm_max_MPa": 144.52246998675278,
+    "vm_p99_MPa": 53.63380623106495,
+    "vm_p95_MPa": 41.16215030966936,
+    "vm_max_ip_MPa": 212.50385584118138
+   },
+   "wall": {
+    "wall_s_mesh": 4.982531309127808,
+    "wall_s_solve": 19.940021514892578,
+    "wall_s_post": 2.043644905090332,
+    "wall_s": 27.14492440223694
+   },
+   "stress": {
+    "elements_total": 38618,
+    "elements_included": 33715,
+    "volume_included_mm3": 56468.30319022189
+   },
+   "message": "38618 C3D10, 187011 DOF, discrete route; equilibrium 3.59e-08",
+   "chart": "figures/conforming.png"
+  },
+  "rig": {
+   "status": "not run: no rig lane was used (desktop only)"
+  },
+  "winner": {
+   "label": "winner",
+   "case_id": "v001",
+   "params": {
+    "volfrac": 0.23,
+    "rmin_mm": 11.55
+   },
+   "metrics": {
+    "mass_kg": 0.17698581438899466,
+    "mass_voxel_kg": 0.18215808,
+    "mesh_volume_mm3": 66286.82186853733,
+    "voxel_volume_mm3": 68224.0,
+    "solid_fraction": 0.17056,
+    "compliance_Nmm": 828.0079936559462,
+    "umax_mm": 0.031198331261040144,
+    "vm_max_MPa": 64.49043111436654,
+    "vm_p99_MPa": 54.47464675903315,
+    "vm_p95_MPa": 40.70475196838378
+   },
+   "grade": "verified-desktop",
+   "verdict": "PASS",
+   "stl": {
+    "path": "winner/winner.stl",
+    "sha256": "de0f92f004ebe1675b4fa796d6707e0c00ca7afc339cd06af6d50dd7de3849ab",
+    "faces": 10380,
+    "vertices": 5192,
+    "watertight": true,
+    "solids": 1,
+    "cavities": 0,
+    "mesh_volume_mm3": 66286.82186853733,
+    "area_mm2": 14313.520685096937,
+    "bbox_mm": [
+     8.657236099243164,
+     4.323824405670166,
+     -0.021370211616158485,
+     91.34980010986328,
+     95.6721420288086,
+     40.02708053588867
+    ],
+    "genus": 0
+   },
+   "density": {
+    "path": "v001/generator/density.npy",
+    "sha256": "8ea1b85e37ffec4198065ac64ba09b76f88c4ab9c668b02ca51096f5e1efab6d"
+   },
+   "step": {
+    "written": false,
+    "reason": "the part is an organic mesh (marching cubes of an implicit field); a STEP would be a faceted pretence of a B-rep"
+   },
+   "renders": {
+    "iso": "winner/winner_iso.png",
+    "stress": "winner/winner_stress.png",
+    "density_slices": "winner/density_slices.png",
+    "vm_slices": "winner/vm_slices.png",
+    "disp_slices": "winner/disp_slices.png"
+   },
+   "mass_kg": 0.17698581438899466,
+   "voxel": {
+    "h_mm": 4.0,
+    "cells": 6250,
+    "solid_cells": 1066,
+    "voxel_volume_mm3": 68224.0,
+    "mesh_volume_mm3": 66286.82186853733,
+    "volume_ratio_voxel_over_mesh": 1.029224181773333,
+    "mask_sha256": "80d2a668dfeb70f15908b48efe1ac36fdf5dca41c4b476baf9d4fa8de9827934"
+   },
+   "infill": null,
+   "cavities": 0,
+   "cavity_note": null,
+   "note": null
+  },
+  "evidence": {
+   "files_sha256": "d174b3cc138ed411177d7a2ddc4ad7cc6fd85a39eaf91e2f96411f123e579914",
+   "anchored_files": 209,
+   "bundle_copy": "evidence/bundle.json",
+   "record_copy": "evidence/record.md",
+   "simlab": {
+    "root": "/home/aces/.local/share/aces/simlab/evidence",
+    "path": "/home/aces/.local/share/aces/simlab/evidence/golden-cad-gold-20261010T102210Z-bc7391/20261010T102259Z_bundle.json",
+    "record": "/home/aces/.local/share/aces/simlab/evidence/golden-cad-gold-20261010T102210Z-bc7391/20261010T102259Z_record.md",
+    "ledger": "/home/aces/.local/share/aces/simlab/evidence/ledger.jsonl",
+    "entry": 4,
+    "entries": 4,
+    "sha256": "a134a66fddc5ba3c31c5ea0870b57d42b4117328594005702001bd15aaa60f82",
+    "previous": "91aaf1ad18778878b7779b6c3719e45c538e14217997aa76695ed01a41a17e71",
+    "verify": {
+     "ok": true,
+     "problems": [],
+     "relocated": 0,
+     "head": "a134a66fddc5ba3c31c5ea0870b57d42b4117328594005702001bd15aaa60f82"
+    }
+   },
+   "aces": {
+    "path": "/home/aces/.local/state/aces/ledger.jsonl",
+    "n": 10,
+    "entries": 10,
+    "hash": "81692fab319e1a67f16b0cedbbec5833f512f8d2406abfca876cf7fb0f6ba01e",
+    "prev": "aa7a80cafdbd249cb062f95c21eae7b441b170319d045cdee43f608530ca11b2",
+    "verify": {
+     "ok": true,
+     "message": "chain intact"
+    }
+   },
+   "project": {
+    "name": "cad-gold",
+    "evidence_ref": "golden/20261010T102210Z-bc7391 bundle:a134a66fddc5ba3c PASS",
+    "components": [
+     "aces-engineering",
+     "gendesign",
+     "simlab",
+     "build123d",
+     "cadquery-ocp",
+     "gmsh",
+     "calculix-ccx"
+    ],
+    "messages": []
+   },
+   "commands": [
+    "aces golden verify 20261010T102210Z-bc7391",
+    "aces-evidence verify",
+    "aces ledger verify"
+   ]
+  },
+  "environment": {
+   "host": "aces-rehearsal",
+   "platform": "Linux-7.2.5-3-omarchy-x86_64-with-glibc2.44",
+   "python": "3.14.7",
+   "cpu": {
+    "model": "Intel(R) Core(TM) Ultra 9 285HX",
+    "logical": 4,
+    "usable": 4,
+    "mem_total_gb": 8.32,
+    "mem_available_gb": 6.88,
+    "numpy": "2.4.6"
+   },
+   "blas_threads_per_solve": 1,
+   "workers": 4,
+   "gpu": {
+    "name": null,
+    "usable": false,
+    "reason": "CuPy is not importable here (an optional extra; the packaged venv does not ship it)",
+    "cuda_runtime": null,
+    "mem_total_mib": null
+   },
+   "warp": {
+    "version": null,
+    "usable": false,
+    "reason": "not probed: Warp's apply_K runs on the CuPy device arrays and no usable CuPy GPU was found; warp-lang is not installed"
+   },
+   "packages": {
+    "python": "3.14.7",
+    "numpy": "2.4.6",
+    "scipy": "1.17.1",
+    "optuna": "5.0.0",
+    "build123d": "0.11.1",
+    "trimesh": "5.1.0",
+    "skimage": "0.26.0"
+   },
+   "known_warnings": [
+    "the vendored gendesign/filters.py calls numpy.fft.irfftn with s= but without axes=, a NumPy 2 DeprecationWarning (filtered in the workers; to be fixed upstream in cudax-sim-runtime, never patched in vendor/)",
+    "31 Gaussian-process warnings captured while fitting (counted, not printed)"
+   ]
+  },
+  "limits": {
+   "grade_meaning": "every desktop solve is preview-grade; verified-desktop means the finer-resolution independent check agreed within tol and the constraints held there; rig-verified adds that the level-1 check was solved on the rig with a validated image, that the conforming tet10 second discretisation ran on the rig and agreed within its bands with every constraint met, and that the rig ran this desktop's golden code; a conforming check that violates a constraint caps the grade at preview-grade",
+   "method": "linear static voxel FEA (H8 elements, fictitious domain with a soft void, Jacobi-PCG, FP64)",
+   "generator": "SIMP topology optimisation without projection: grey zones remain in the density field, so the organic skin is the iso-surface of a partly grey field (M_nd below, per design)",
+   "simp": {
+    "d000": {
+     "mnd_pct": 26.716965622947708,
+     "iterations_run": 25,
+     "stopped_at_cap": true,
+     "final_change": 0.05182322475245904
+    },
+    "d001": {
+     "mnd_pct": 31.637190062652408,
+     "iterations_run": 25,
+     "stopped_at_cap": true,
+     "final_change": 0.047088184375091324
+    },
+    "d002": {
+     "mnd_pct": 23.42711823355469,
+     "iterations_run": 25,
+     "stopped_at_cap": true,
+     "final_change": 0.06898536981514902
+    },
+    "d003": {
+     "mnd_pct": 30.362807434417547,
+     "iterations_run": 25,
+     "stopped_at_cap": true,
+     "final_change": 0.04007955466171409
+    },
+    "d004": {
+     "mnd_pct": 18.15383234317143,
+     "iterations_run": 25,
+     "stopped_at_cap": true,
+     "final_change": 0.053398136417622255
+    },
+    "d005": {
+     "mnd_pct": 23.649831133952958,
+     "iterations_run": 25,
+     "stopped_at_cap": true,
+     "final_change": 0.05370166888355865
+    },
+    "d006": {
+     "mnd_pct": 27.15784681805421,
+     "iterations_run": 25,
+     "stopped_at_cap": true,
+     "final_change": 0.1696004501330347
+    },
+    "d007": {
+     "mnd_pct": 33.91209261085892,
+     "iterations_run": 25,
+     "stopped_at_cap": true,
+     "final_change": 0.06258661994052162
+    },
+    "d008": {
+     "mnd_pct": 19.849627410659,
+     "iterations_run": 25,
+     "stopped_at_cap": true,
+     "final_change": 0.04854300578913762
+    },
+    "d009": {
+     "mnd_pct": 26.51043180825839,
+     "iterations_run": 25,
+     "stopped_at_cap": true,
+     "final_change": 0.05563310377567526
+    },
+    "v001": {
+     "mnd_pct": 32.92917107190775,
+     "iterations_run": 25,
+     "stopped_at_cap": true,
+     "final_change": 0.04440126290131008
+    }
+   },
+   "iterations": 25,
+   "stress": "the constrained stress is vm_p99 outside the boundary-condition zones; vm_max is recorded but is resolution-sensitive and is never constrained",
+   "check": "CPU estimate 2.7 s is within the 60 s budget",
+   "not_verified": [
+    "no rig run (desktop only)",
+    "no fatigue or buckling check",
+    "nominal material properties (see the material source)"
+   ],
+   "argv": [
+    "run",
+    "--spec",
+    "/tmp/rm.json",
+    "--step",
+    "/home/aces/Work/cad-vm/cad/local/20261010T102209Z-disc/part.step",
+    "--project",
+    "cad-gold",
+    "--new",
+    "--json",
+    "--progress",
+    "lines"
+   ],
+   "seed": 7,
+   "determinism": "BLAS runs one thread per solve and sweep.csv carries no wall times, so the same seed on the same machine reproduces sweep.csv byte for byte for any --jobs"
+  }
+ },
+ "provenance": [
+  {
+   "pointer": "/sections/summary/rounds",
+   "source": "validation.json",
+   "key": "final_round"
+  },
+  {
+   "pointer": "/sections/summary/tol",
+   "source": "validation.json",
+   "key": "tol"
+  },
+  {
+   "pointer": "/sections/summary/params/volfrac",
+   "source": "validation.json",
+   "key": "winner_params.volfrac"
+  },
+  {
+   "pointer": "/sections/summary/params/rmin_mm",
+   "source": "validation.json",
+   "key": "winner_params.rmin_mm"
+  },
+  {
+   "pointer": "/sections/summary/mass_kg",
+   "source": "v001/results.json",
+   "key": "mass_kg"
+  },
+  {
+   "pointer": "/sections/summary/constraints/0/limit",
+   "source": "validation.json",
+   "key": "constraints.0.limit"
+  },
+  {
+   "pointer": "/sections/summary/constraints/0/value",
+   "source": "v001/results.json",
+   "key": "vm_p99_MPa"
+  },
+  {
+   "pointer": "/sections/summary/constraints/1/limit",
+   "source": "validation.json",
+   "key": "constraints.1.limit"
+  },
+  {
+   "pointer": "/sections/summary/constraints/1/value",
+   "source": "v001/results.json",
+   "key": "umax_mm"
+  },
+  {
+   "pointer": "/sections/summary/max_rel_err/value",
+   "source": "validation.json",
+   "key": "rounds.0.rows.1.rel_err"
+  },
+  {
+   "pointer": "/sections/summary/check/h_mm",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.h_mm"
+  },
+  {
+   "pointer": "/sections/summary/check/max_gap/value",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.1.rel_gap"
+  },
+  {
+   "pointer": "/sections/summary/conforming/h_mm",
+   "source": "validation.json",
+   "key": "conforming.h_mm"
+  },
+  {
+   "pointer": "/sections/summary/conforming/max_gap/value",
+   "source": "validation.json",
+   "key": "conforming.rows.1.rel_gap"
+  },
+  {
+   "pointer": "/sections/summary/simlab_entry",
+   "source": "evidence/ledgers.json",
+   "key": "simlab.entry"
+  },
+  {
+   "pointer": "/sections/summary/aces_entry",
+   "source": "evidence/ledgers.json",
+   "key": "aces.n"
+  },
+  {
+   "pointer": "/sections/summary/wall_s",
+   "source": "run.json",
+   "key": "sum:stages.wall_s:compute,inputs,domain,sweep,loop,check,export,evidence"
+  },
+  {
+   "pointer": "/sections/key_numbers/mass_kg",
+   "source": "v001/results.json",
+   "key": "mass_kg"
+  },
+  {
+   "pointer": "/sections/key_numbers/mesh_volume_mm3",
+   "source": "v001/results.json",
+   "key": "mesh_volume_mm3"
+  },
+  {
+   "pointer": "/sections/key_numbers/voxel_volume_mm3",
+   "source": "v001/results.json",
+   "key": "voxel_volume_mm3"
+  },
+  {
+   "pointer": "/sections/key_numbers/mass_voxel_kg",
+   "source": "v001/results.json",
+   "key": "mass_voxel_kg"
+  },
+  {
+   "pointer": "/sections/key_numbers/compliance_Nmm",
+   "source": "v001/results.json",
+   "key": "compliance_Nmm"
+  },
+  {
+   "pointer": "/sections/key_numbers/umax_mm",
+   "source": "v001/results.json",
+   "key": "umax_mm"
+  },
+  {
+   "pointer": "/sections/key_numbers/vm_p99_MPa",
+   "source": "v001/results.json",
+   "key": "vm_p99_MPa"
+  },
+  {
+   "pointer": "/sections/key_numbers/vm_p95_MPa",
+   "source": "v001/results.json",
+   "key": "vm_p95_MPa"
+  },
+  {
+   "pointer": "/sections/key_numbers/vm_max_MPa",
+   "source": "v001/results.json",
+   "key": "vm_max_MPa"
+  },
+  {
+   "pointer": "/sections/key_numbers/pcg_iters",
+   "source": "v001/results.json",
+   "key": "pcg_iters"
+  },
+  {
+   "pointer": "/sections/key_numbers/designs/n",
+   "source": "sweep.json",
+   "key": "n"
+  },
+  {
+   "pointer": "/sections/key_numbers/designs/n_ok",
+   "source": "sweep.json",
+   "key": "n_ok"
+  },
+  {
+   "pointer": "/sections/inputs/stress_exclude_effective_mm",
+   "source": "domain/domain.json",
+   "key": "stress_exclude_effective_mm"
+  },
+  {
+   "pointer": "/sections/inputs/stress_exclude_lattice_mm",
+   "source": "domain/domain.json",
+   "key": "stress_exclude_lattice_mm"
+  },
+  {
+   "pointer": "/sections/compute/rows/0/resolution_mm",
+   "source": "compute_used.json",
+   "key": "rows.0.resolution_mm"
+  },
+  {
+   "pointer": "/sections/compute/rows/0/count",
+   "source": "compute_used.json",
+   "key": "rows.0.count"
+  },
+  {
+   "pointer": "/sections/compute/rows/0/wall_s",
+   "source": "compute_used.json",
+   "key": "rows.0.wall_s"
+  },
+  {
+   "pointer": "/sections/compute/rows/0/wall_s_sum",
+   "source": "compute_used.json",
+   "key": "rows.0.wall_s_sum"
+  },
+  {
+   "pointer": "/sections/compute/rows/1/resolution_mm",
+   "source": "compute_used.json",
+   "key": "rows.1.resolution_mm"
+  },
+  {
+   "pointer": "/sections/compute/rows/1/count",
+   "source": "compute_used.json",
+   "key": "rows.1.count"
+  },
+  {
+   "pointer": "/sections/compute/rows/1/wall_s",
+   "source": "compute_used.json",
+   "key": "rows.1.wall_s"
+  },
+  {
+   "pointer": "/sections/compute/rows/1/wall_s_sum",
+   "source": "compute_used.json",
+   "key": "rows.1.wall_s_sum"
+  },
+  {
+   "pointer": "/sections/compute/rows/2/resolution_mm",
+   "source": "compute_used.json",
+   "key": "rows.2.resolution_mm"
+  },
+  {
+   "pointer": "/sections/compute/rows/2/count",
+   "source": "compute_used.json",
+   "key": "rows.2.count"
+  },
+  {
+   "pointer": "/sections/compute/rows/2/wall_s_sum",
+   "source": "compute_used.json",
+   "key": "rows.2.wall_s_sum"
+  },
+  {
+   "pointer": "/sections/compute/rows/3/resolution_mm",
+   "source": "compute_used.json",
+   "key": "rows.3.resolution_mm"
+  },
+  {
+   "pointer": "/sections/compute/rows/3/count",
+   "source": "compute_used.json",
+   "key": "rows.3.count"
+  },
+  {
+   "pointer": "/sections/compute/rows/3/wall_s_sum",
+   "source": "compute_used.json",
+   "key": "rows.3.wall_s_sum"
+  },
+  {
+   "pointer": "/sections/compute/rows/4/resolution_mm",
+   "source": "compute_used.json",
+   "key": "rows.4.resolution_mm"
+  },
+  {
+   "pointer": "/sections/compute/rows/4/count",
+   "source": "compute_used.json",
+   "key": "rows.4.count"
+  },
+  {
+   "pointer": "/sections/compute/rows/4/wall_s_sum",
+   "source": "compute_used.json",
+   "key": "rows.4.wall_s_sum"
+  },
+  {
+   "pointer": "/sections/compute/rows/5/count",
+   "source": "compute_used.json",
+   "key": "rows.5.count"
+  },
+  {
+   "pointer": "/sections/compute/rows/5/wall_s",
+   "source": "compute_used.json",
+   "key": "rows.5.wall_s"
+  },
+  {
+   "pointer": "/sections/compute/rows/5/wall_s_sum",
+   "source": "compute_used.json",
+   "key": "rows.5.wall_s_sum"
+  },
+  {
+   "pointer": "/sections/compute/rows/6/count",
+   "source": "compute_used.json",
+   "key": "rows.6.count"
+  },
+  {
+   "pointer": "/sections/compute/rows/6/wall_s",
+   "source": "compute_used.json",
+   "key": "rows.6.wall_s"
+  },
+  {
+   "pointer": "/sections/compute/rows/6/wall_s_sum",
+   "source": "compute_used.json",
+   "key": "rows.6.wall_s_sum"
+  },
+  {
+   "pointer": "/sections/compute/rows/7/resolution_mm",
+   "source": "compute_used.json",
+   "key": "rows.7.resolution_mm"
+  },
+  {
+   "pointer": "/sections/compute/rows/7/count",
+   "source": "compute_used.json",
+   "key": "rows.7.count"
+  },
+  {
+   "pointer": "/sections/compute/rows/7/wall_s",
+   "source": "compute_used.json",
+   "key": "rows.7.wall_s"
+  },
+  {
+   "pointer": "/sections/compute/rows/7/wall_s_sum",
+   "source": "compute_used.json",
+   "key": "rows.7.wall_s_sum"
+  },
+  {
+   "pointer": "/sections/compute/rows/8/resolution_mm",
+   "source": "compute_used.json",
+   "key": "rows.8.resolution_mm"
+  },
+  {
+   "pointer": "/sections/compute/rows/8/count",
+   "source": "compute_used.json",
+   "key": "rows.8.count"
+  },
+  {
+   "pointer": "/sections/compute/rows/8/wall_s",
+   "source": "compute_used.json",
+   "key": "rows.8.wall_s"
+  },
+  {
+   "pointer": "/sections/compute/rows/8/wall_s_sum",
+   "source": "compute_used.json",
+   "key": "rows.8.wall_s_sum"
+  },
+  {
+   "pointer": "/sections/compute/rows/9/resolution_mm",
+   "source": "compute_used.json",
+   "key": "rows.9.resolution_mm"
+  },
+  {
+   "pointer": "/sections/compute/rows/9/count",
+   "source": "compute_used.json",
+   "key": "rows.9.count"
+  },
+  {
+   "pointer": "/sections/compute/rows/10/count",
+   "source": "compute_used.json",
+   "key": "rows.10.count"
+  },
+  {
+   "pointer": "/sections/compute/rows/11/count",
+   "source": "compute_used.json",
+   "key": "rows.11.count"
+  },
+  {
+   "pointer": "/sections/compute/rows/12/count",
+   "source": "compute_used.json",
+   "key": "rows.12.count"
+  },
+  {
+   "pointer": "/sections/compute/rows/13/count",
+   "source": "compute_used.json",
+   "key": "rows.13.count"
+  },
+  {
+   "pointer": "/sections/compute/rows/14/resolution_mm",
+   "source": "compute_used.json",
+   "key": "rows.14.resolution_mm"
+  },
+  {
+   "pointer": "/sections/compute/rows/14/count",
+   "source": "compute_used.json",
+   "key": "rows.14.count"
+  },
+  {
+   "pointer": "/sections/compute/rows/14/wall_s",
+   "source": "compute_used.json",
+   "key": "rows.14.wall_s"
+  },
+  {
+   "pointer": "/sections/compute/rows/14/wall_s_sum",
+   "source": "compute_used.json",
+   "key": "rows.14.wall_s_sum"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/0/predicted",
+   "source": "validation.json",
+   "key": "rounds.0.rows.0.predicted"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/0/sd",
+   "source": "validation.json",
+   "key": "rounds.0.rows.0.sd"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/0/solved",
+   "source": "validation.json",
+   "key": "rounds.0.rows.0.solved"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/0/abs_err",
+   "source": "validation.json",
+   "key": "rounds.0.rows.0.abs_err"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/0/rel_err",
+   "source": "validation.json",
+   "key": "rounds.0.rows.0.rel_err"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/0/tol",
+   "source": "validation.json",
+   "key": "rounds.0.rows.0.tol"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/1/predicted",
+   "source": "validation.json",
+   "key": "rounds.0.rows.1.predicted"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/1/sd",
+   "source": "validation.json",
+   "key": "rounds.0.rows.1.sd"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/1/solved",
+   "source": "validation.json",
+   "key": "rounds.0.rows.1.solved"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/1/abs_err",
+   "source": "validation.json",
+   "key": "rounds.0.rows.1.abs_err"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/1/rel_err",
+   "source": "validation.json",
+   "key": "rounds.0.rows.1.rel_err"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/1/tol",
+   "source": "validation.json",
+   "key": "rounds.0.rows.1.tol"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/1/limit",
+   "source": "validation.json",
+   "key": "rounds.0.rows.1.limit"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/2/predicted",
+   "source": "validation.json",
+   "key": "rounds.0.rows.2.predicted"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/2/sd",
+   "source": "validation.json",
+   "key": "rounds.0.rows.2.sd"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/2/solved",
+   "source": "validation.json",
+   "key": "rounds.0.rows.2.solved"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/2/abs_err",
+   "source": "validation.json",
+   "key": "rounds.0.rows.2.abs_err"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/2/rel_err",
+   "source": "validation.json",
+   "key": "rounds.0.rows.2.rel_err"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/2/tol",
+   "source": "validation.json",
+   "key": "rounds.0.rows.2.tol"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/2/limit",
+   "source": "validation.json",
+   "key": "rounds.0.rows.2.limit"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/3/predicted",
+   "source": "validation.json",
+   "key": "rounds.0.rows.3.predicted"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/3/sd",
+   "source": "validation.json",
+   "key": "rounds.0.rows.3.sd"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/3/solved",
+   "source": "validation.json",
+   "key": "rounds.0.rows.3.solved"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/3/abs_err",
+   "source": "validation.json",
+   "key": "rounds.0.rows.3.abs_err"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/3/rel_err",
+   "source": "validation.json",
+   "key": "rounds.0.rows.3.rel_err"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/3/tol",
+   "source": "validation.json",
+   "key": "rounds.0.rows.3.tol"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/4/predicted",
+   "source": "validation.json",
+   "key": "rounds.0.rows.4.predicted"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/4/sd",
+   "source": "validation.json",
+   "key": "rounds.0.rows.4.sd"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/4/solved",
+   "source": "validation.json",
+   "key": "rounds.0.rows.4.solved"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/4/abs_err",
+   "source": "validation.json",
+   "key": "rounds.0.rows.4.abs_err"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/4/rel_err",
+   "source": "validation.json",
+   "key": "rounds.0.rows.4.rel_err"
+  },
+  {
+   "pointer": "/sections/verification/rounds/0/rows/4/tol",
+   "source": "validation.json",
+   "key": "rounds.0.rows.4.tol"
+  },
+  {
+   "pointer": "/sections/verification/resolution_mm/generator",
+   "source": "validation.json",
+   "key": "resolution_mm.generator"
+  },
+  {
+   "pointer": "/sections/verification/resolution_mm/field",
+   "source": "validation.json",
+   "key": "resolution_mm.field"
+  },
+  {
+   "pointer": "/sections/verification/resolution_mm/solve",
+   "source": "validation.json",
+   "key": "resolution_mm.solve"
+  },
+  {
+   "pointer": "/sections/verification/resolution_mm/check/0",
+   "source": "validation.json",
+   "key": "resolution_mm.check.0"
+  },
+  {
+   "pointer": "/sections/verification/resolution_mm/check/1",
+   "source": "validation.json",
+   "key": "resolution_mm.check.1"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/level",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.level"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/h_mm",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.h_mm"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/est_s",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.est_s"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/budget_s",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.budget_s"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/0/coarse",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.0.coarse"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/0/fine",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.0.fine"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/0/rel_gap",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.0.rel_gap"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/0/tol",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.0.tol"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/1/coarse",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.1.coarse"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/1/fine",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.1.fine"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/1/rel_gap",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.1.rel_gap"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/1/tol",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.1.tol"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/1/limit",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.1.limit"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/2/coarse",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.2.coarse"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/2/fine",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.2.fine"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/2/rel_gap",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.2.rel_gap"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/2/tol",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.2.tol"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/2/limit",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.2.limit"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/3/coarse",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.3.coarse"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/3/fine",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.3.fine"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/3/rel_gap",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.3.rel_gap"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/3/tol",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.3.tol"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/4/coarse",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.4.coarse"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/4/fine",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.4.fine"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/4/rel_gap",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.4.rel_gap"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/4/tol",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.4.tol"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/5/coarse",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.5.coarse"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/5/fine",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.5.fine"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/5/rel_gap",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.5.rel_gap"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/0/rows/5/tol",
+   "source": "validation.json",
+   "key": "independent_check.levels.0.rows.5.tol"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/1/level",
+   "source": "validation.json",
+   "key": "independent_check.levels.1.level"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/1/h_mm",
+   "source": "validation.json",
+   "key": "independent_check.levels.1.h_mm"
+  },
+  {
+   "pointer": "/sections/check/independent_check/levels/1/budget_s",
+   "source": "validation.json",
+   "key": "independent_check.levels.1.budget_s"
+  },
+  {
+   "pointer": "/sections/conforming/h_mm",
+   "source": "validation.json",
+   "key": "conforming.h_mm"
+  },
+  {
+   "pointer": "/sections/conforming/reference/h_mm",
+   "source": "validation.json",
+   "key": "conforming.reference.h_mm"
+  },
+  {
+   "pointer": "/sections/conforming/bands/mass",
+   "source": "validation.json",
+   "key": "conforming.bands.mass"
+  },
+  {
+   "pointer": "/sections/conforming/bands/stress",
+   "source": "validation.json",
+   "key": "conforming.bands.stress"
+  },
+  {
+   "pointer": "/sections/conforming/bands/other",
+   "source": "validation.json",
+   "key": "conforming.bands.other"
+  },
+  {
+   "pointer": "/sections/conforming/rows/0/voxel",
+   "source": "validation.json",
+   "key": "conforming.rows.0.voxel"
+  },
+  {
+   "pointer": "/sections/conforming/rows/0/conforming",
+   "source": "validation.json",
+   "key": "conforming.rows.0.conforming"
+  },
+  {
+   "pointer": "/sections/conforming/rows/0/rel_gap",
+   "source": "validation.json",
+   "key": "conforming.rows.0.rel_gap"
+  },
+  {
+   "pointer": "/sections/conforming/rows/0/band",
+   "source": "validation.json",
+   "key": "conforming.rows.0.band"
+  },
+  {
+   "pointer": "/sections/conforming/rows/1/voxel",
+   "source": "validation.json",
+   "key": "conforming.rows.1.voxel"
+  },
+  {
+   "pointer": "/sections/conforming/rows/1/conforming",
+   "source": "validation.json",
+   "key": "conforming.rows.1.conforming"
+  },
+  {
+   "pointer": "/sections/conforming/rows/1/rel_gap",
+   "source": "validation.json",
+   "key": "conforming.rows.1.rel_gap"
+  },
+  {
+   "pointer": "/sections/conforming/rows/1/band",
+   "source": "validation.json",
+   "key": "conforming.rows.1.band"
+  },
+  {
+   "pointer": "/sections/conforming/rows/1/limit",
+   "source": "validation.json",
+   "key": "conforming.rows.1.limit"
+  },
+  {
+   "pointer": "/sections/conforming/rows/2/voxel",
+   "source": "validation.json",
+   "key": "conforming.rows.2.voxel"
+  },
+  {
+   "pointer": "/sections/conforming/rows/2/conforming",
+   "source": "validation.json",
+   "key": "conforming.rows.2.conforming"
+  },
+  {
+   "pointer": "/sections/conforming/rows/2/rel_gap",
+   "source": "validation.json",
+   "key": "conforming.rows.2.rel_gap"
+  },
+  {
+   "pointer": "/sections/conforming/rows/2/band",
+   "source": "validation.json",
+   "key": "conforming.rows.2.band"
+  },
+  {
+   "pointer": "/sections/conforming/rows/2/limit",
+   "source": "validation.json",
+   "key": "conforming.rows.2.limit"
+  },
+  {
+   "pointer": "/sections/conforming/rows/3/voxel",
+   "source": "validation.json",
+   "key": "conforming.rows.3.voxel"
+  },
+  {
+   "pointer": "/sections/conforming/rows/3/conforming",
+   "source": "validation.json",
+   "key": "conforming.rows.3.conforming"
+  },
+  {
+   "pointer": "/sections/conforming/rows/3/rel_gap",
+   "source": "validation.json",
+   "key": "conforming.rows.3.rel_gap"
+  },
+  {
+   "pointer": "/sections/conforming/rows/3/band",
+   "source": "validation.json",
+   "key": "conforming.rows.3.band"
+  },
+  {
+   "pointer": "/sections/conforming/rows/4/voxel",
+   "source": "validation.json",
+   "key": "conforming.rows.4.voxel"
+  },
+  {
+   "pointer": "/sections/conforming/rows/4/conforming",
+   "source": "validation.json",
+   "key": "conforming.rows.4.conforming"
+  },
+  {
+   "pointer": "/sections/conforming/rows/4/rel_gap",
+   "source": "validation.json",
+   "key": "conforming.rows.4.rel_gap"
+  },
+  {
+   "pointer": "/sections/conforming/rows/4/band",
+   "source": "validation.json",
+   "key": "conforming.rows.4.band"
+  },
+  {
+   "pointer": "/sections/conforming/rows/5/voxel",
+   "source": "validation.json",
+   "key": "conforming.rows.5.voxel"
+  },
+  {
+   "pointer": "/sections/conforming/rows/5/conforming",
+   "source": "validation.json",
+   "key": "conforming.rows.5.conforming"
+  },
+  {
+   "pointer": "/sections/conforming/rows/5/rel_gap",
+   "source": "validation.json",
+   "key": "conforming.rows.5.rel_gap"
+  },
+  {
+   "pointer": "/sections/conforming/rows/5/band",
+   "source": "validation.json",
+   "key": "conforming.rows.5.band"
+  },
+  {
+   "pointer": "/sections/conforming/rows/6/voxel",
+   "source": "validation.json",
+   "key": "conforming.rows.6.voxel"
+  },
+  {
+   "pointer": "/sections/conforming/rows/6/conforming",
+   "source": "validation.json",
+   "key": "conforming.rows.6.conforming"
+  },
+  {
+   "pointer": "/sections/conforming/rows/6/rel_gap",
+   "source": "validation.json",
+   "key": "conforming.rows.6.rel_gap"
+  },
+  {
+   "pointer": "/sections/conforming/rows/6/band",
+   "source": "validation.json",
+   "key": "conforming.rows.6.band"
+  },
+  {
+   "pointer": "/sections/conforming/mesh/algorithm_3d",
+   "source": "m001/conforming.json",
+   "key": "mesh.algorithm_3d"
+  },
+  {
+   "pointer": "/sections/conforming/mesh/size_mm",
+   "source": "m001/conforming.json",
+   "key": "mesh.size_mm"
+  },
+  {
+   "pointer": "/sections/conforming/mesh/nodes",
+   "source": "m001/conforming.json",
+   "key": "mesh.nodes"
+  },
+  {
+   "pointer": "/sections/conforming/mesh/elements",
+   "source": "m001/conforming.json",
+   "key": "mesh.elements"
+  },
+  {
+   "pointer": "/sections/conforming/mesh/dof",
+   "source": "m001/conforming.json",
+   "key": "mesh.dof"
+  },
+  {
+   "pointer": "/sections/conforming/mesh/volume_mm3",
+   "source": "m001/conforming.json",
+   "key": "mesh.volume_mm3"
+  },
+  {
+   "pointer": "/sections/conforming/mesh/volume_rel_err",
+   "source": "m001/conforming.json",
+   "key": "mesh.volume_rel_err"
+  },
+  {
+   "pointer": "/sections/conforming/mesh/min_sicn",
+   "source": "m001/conforming.json",
+   "key": "mesh.min_sicn"
+  },
+  {
+   "pointer": "/sections/conforming/mesh/p01_sicn",
+   "source": "m001/conforming.json",
+   "key": "mesh.p01_sicn"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/window_mm",
+   "source": "m001/conforming.json",
+   "key": "bcs.window_mm"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/0/plane_mm",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.0.plane_mm"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/0/faces",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.0.faces"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/0/nodes",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.0.nodes"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/0/area_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.0.area_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/0/projected_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.0.projected_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/0/footprint_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.0.footprint_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/0/coverage",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.0.coverage"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/0/plane_offset_mm",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.0.plane_offset_mm"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/1/plane_mm",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.1.plane_mm"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/1/faces",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.1.faces"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/1/nodes",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.1.nodes"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/1/area_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.1.area_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/1/projected_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.1.projected_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/1/footprint_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.1.footprint_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/1/coverage",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.1.coverage"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/1/plane_offset_mm",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.1.plane_offset_mm"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/2/plane_mm",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.2.plane_mm"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/2/faces",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.2.faces"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/2/nodes",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.2.nodes"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/2/area_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.2.area_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/2/projected_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.2.projected_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/2/footprint_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.2.footprint_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/2/coverage",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.2.coverage"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/2/plane_offset_mm",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.2.plane_offset_mm"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/3/plane_mm",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.3.plane_mm"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/3/faces",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.3.faces"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/3/nodes",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.3.nodes"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/3/area_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.3.area_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/3/projected_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.3.projected_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/3/footprint_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.3.footprint_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/3/coverage",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.3.coverage"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/3/plane_offset_mm",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.3.plane_offset_mm"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/4/plane_mm",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.4.plane_mm"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/4/faces",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.4.faces"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/4/nodes",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.4.nodes"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/4/area_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.4.area_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/4/projected_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.4.projected_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/4/footprint_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.4.footprint_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/4/coverage",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.4.coverage"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/4/plane_offset_mm",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.4.plane_offset_mm"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/5/plane_mm",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.5.plane_mm"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/5/faces",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.5.faces"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/5/nodes",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.5.nodes"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/5/area_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.5.area_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/5/projected_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.5.projected_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/5/footprint_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.5.footprint_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/5/coverage",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.5.coverage"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/supports/5/plane_offset_mm",
+   "source": "m001/conforming.json",
+   "key": "bcs.supports.5.plane_offset_mm"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/loads/0/plane_mm",
+   "source": "m001/conforming.json",
+   "key": "bcs.loads.0.plane_mm"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/loads/0/faces",
+   "source": "m001/conforming.json",
+   "key": "bcs.loads.0.faces"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/loads/0/nodes",
+   "source": "m001/conforming.json",
+   "key": "bcs.loads.0.nodes"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/loads/0/area_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.loads.0.area_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/loads/0/projected_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.loads.0.projected_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/loads/0/footprint_mm2",
+   "source": "m001/conforming.json",
+   "key": "bcs.loads.0.footprint_mm2"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/loads/0/coverage",
+   "source": "m001/conforming.json",
+   "key": "bcs.loads.0.coverage"
+  },
+  {
+   "pointer": "/sections/conforming/bcs/loads/0/plane_offset_mm",
+   "source": "m001/conforming.json",
+   "key": "bcs.loads.0.plane_offset_mm"
+  },
+  {
+   "pointer": "/sections/conforming/solver/threads",
+   "source": "m001/conforming.json",
+   "key": "solver.threads"
+  },
+  {
+   "pointer": "/sections/conforming/solver/rc",
+   "source": "m001/conforming.json",
+   "key": "solver.rc"
+  },
+  {
+   "pointer": "/sections/conforming/solver/wall_s",
+   "source": "m001/conforming.json",
+   "key": "solver.wall_s"
+  },
+  {
+   "pointer": "/sections/conforming/equilibrium/applied_N/0",
+   "source": "m001/conforming.json",
+   "key": "equilibrium.applied_N.0"
+  },
+  {
+   "pointer": "/sections/conforming/equilibrium/applied_N/1",
+   "source": "m001/conforming.json",
+   "key": "equilibrium.applied_N.1"
+  },
+  {
+   "pointer": "/sections/conforming/equilibrium/applied_N/2",
+   "source": "m001/conforming.json",
+   "key": "equilibrium.applied_N.2"
+  },
+  {
+   "pointer": "/sections/conforming/equilibrium/reaction_N/0",
+   "source": "m001/conforming.json",
+   "key": "equilibrium.reaction_N.0"
+  },
+  {
+   "pointer": "/sections/conforming/equilibrium/reaction_N/1",
+   "source": "m001/conforming.json",
+   "key": "equilibrium.reaction_N.1"
+  },
+  {
+   "pointer": "/sections/conforming/equilibrium/reaction_N/2",
+   "source": "m001/conforming.json",
+   "key": "equilibrium.reaction_N.2"
+  },
+  {
+   "pointer": "/sections/conforming/equilibrium/rel_residual",
+   "source": "m001/conforming.json",
+   "key": "equilibrium.rel_residual"
+  },
+  {
+   "pointer": "/sections/conforming/metrics/mass_kg",
+   "source": "m001/conforming.json",
+   "key": "metrics.mass_kg"
+  },
+  {
+   "pointer": "/sections/conforming/metrics/mesh_volume_mm3",
+   "source": "m001/conforming.json",
+   "key": "metrics.mesh_volume_mm3"
+  },
+  {
+   "pointer": "/sections/conforming/metrics/compliance_Nmm",
+   "source": "m001/conforming.json",
+   "key": "metrics.compliance_Nmm"
+  },
+  {
+   "pointer": "/sections/conforming/metrics/umax_mm",
+   "source": "m001/conforming.json",
+   "key": "metrics.umax_mm"
+  },
+  {
+   "pointer": "/sections/conforming/metrics/vm_max_MPa",
+   "source": "m001/conforming.json",
+   "key": "metrics.vm_max_MPa"
+  },
+  {
+   "pointer": "/sections/conforming/metrics/vm_p99_MPa",
+   "source": "m001/conforming.json",
+   "key": "metrics.vm_p99_MPa"
+  },
+  {
+   "pointer": "/sections/conforming/metrics/vm_p95_MPa",
+   "source": "m001/conforming.json",
+   "key": "metrics.vm_p95_MPa"
+  },
+  {
+   "pointer": "/sections/conforming/metrics/vm_max_ip_MPa",
+   "source": "m001/conforming.json",
+   "key": "metrics.vm_max_ip_MPa"
+  },
+  {
+   "pointer": "/sections/conforming/wall/wall_s_mesh",
+   "source": "m001/conforming.json",
+   "key": "wall_s_mesh"
+  },
+  {
+   "pointer": "/sections/conforming/wall/wall_s_solve",
+   "source": "m001/conforming.json",
+   "key": "wall_s_solve"
+  },
+  {
+   "pointer": "/sections/conforming/wall/wall_s_post",
+   "source": "m001/conforming.json",
+   "key": "wall_s_post"
+  },
+  {
+   "pointer": "/sections/conforming/wall/wall_s",
+   "source": "m001/conforming.json",
+   "key": "wall_s"
+  },
+  {
+   "pointer": "/sections/conforming/stress/elements_total",
+   "source": "m001/conforming.json",
+   "key": "stress.elements_total"
+  },
+  {
+   "pointer": "/sections/conforming/stress/elements_included",
+   "source": "m001/conforming.json",
+   "key": "stress.elements_included"
+  },
+  {
+   "pointer": "/sections/conforming/stress/volume_included_mm3",
+   "source": "m001/conforming.json",
+   "key": "stress.volume_included_mm3"
+  },
+  {
+   "pointer": "/sections/evidence/simlab/entry",
+   "source": "evidence/ledgers.json",
+   "key": "simlab.entry"
+  },
+  {
+   "pointer": "/sections/evidence/simlab/entries",
+   "source": "evidence/ledgers.json",
+   "key": "simlab.entries"
+  },
+  {
+   "pointer": "/sections/evidence/simlab/verify/relocated",
+   "source": "evidence/ledgers.json",
+   "key": "simlab.verify.relocated"
+  },
+  {
+   "pointer": "/sections/evidence/aces/n",
+   "source": "evidence/ledgers.json",
+   "key": "aces.n"
+  },
+  {
+   "pointer": "/sections/evidence/aces/entries",
+   "source": "evidence/ledgers.json",
+   "key": "aces.entries"
+  },
+  {
+   "pointer": "/sections/limits/simp/d000/mnd_pct",
+   "source": "d000/status.json",
+   "key": "diagnostics.generator.mnd_pct"
+  },
+  {
+   "pointer": "/sections/limits/simp/d000/iterations_run",
+   "source": "d000/status.json",
+   "key": "diagnostics.generator.iterations_run"
+  },
+  {
+   "pointer": "/sections/limits/simp/d000/final_change",
+   "source": "d000/status.json",
+   "key": "diagnostics.generator.final_change"
+  },
+  {
+   "pointer": "/sections/limits/simp/d001/mnd_pct",
+   "source": "d001/status.json",
+   "key": "diagnostics.generator.mnd_pct"
+  },
+  {
+   "pointer": "/sections/limits/simp/d001/iterations_run",
+   "source": "d001/status.json",
+   "key": "diagnostics.generator.iterations_run"
+  },
+  {
+   "pointer": "/sections/limits/simp/d001/final_change",
+   "source": "d001/status.json",
+   "key": "diagnostics.generator.final_change"
+  },
+  {
+   "pointer": "/sections/limits/simp/d002/mnd_pct",
+   "source": "d002/status.json",
+   "key": "diagnostics.generator.mnd_pct"
+  },
+  {
+   "pointer": "/sections/limits/simp/d002/iterations_run",
+   "source": "d002/status.json",
+   "key": "diagnostics.generator.iterations_run"
+  },
+  {
+   "pointer": "/sections/limits/simp/d002/final_change",
+   "source": "d002/status.json",
+   "key": "diagnostics.generator.final_change"
+  },
+  {
+   "pointer": "/sections/limits/simp/d003/mnd_pct",
+   "source": "d003/status.json",
+   "key": "diagnostics.generator.mnd_pct"
+  },
+  {
+   "pointer": "/sections/limits/simp/d003/iterations_run",
+   "source": "d003/status.json",
+   "key": "diagnostics.generator.iterations_run"
+  },
+  {
+   "pointer": "/sections/limits/simp/d003/final_change",
+   "source": "d003/status.json",
+   "key": "diagnostics.generator.final_change"
+  },
+  {
+   "pointer": "/sections/limits/simp/d004/mnd_pct",
+   "source": "d004/status.json",
+   "key": "diagnostics.generator.mnd_pct"
+  },
+  {
+   "pointer": "/sections/limits/simp/d004/iterations_run",
+   "source": "d004/status.json",
+   "key": "diagnostics.generator.iterations_run"
+  },
+  {
+   "pointer": "/sections/limits/simp/d004/final_change",
+   "source": "d004/status.json",
+   "key": "diagnostics.generator.final_change"
+  },
+  {
+   "pointer": "/sections/limits/simp/d005/mnd_pct",
+   "source": "d005/status.json",
+   "key": "diagnostics.generator.mnd_pct"
+  },
+  {
+   "pointer": "/sections/limits/simp/d005/iterations_run",
+   "source": "d005/status.json",
+   "key": "diagnostics.generator.iterations_run"
+  },
+  {
+   "pointer": "/sections/limits/simp/d005/final_change",
+   "source": "d005/status.json",
+   "key": "diagnostics.generator.final_change"
+  },
+  {
+   "pointer": "/sections/limits/simp/d006/mnd_pct",
+   "source": "d006/status.json",
+   "key": "diagnostics.generator.mnd_pct"
+  },
+  {
+   "pointer": "/sections/limits/simp/d006/iterations_run",
+   "source": "d006/status.json",
+   "key": "diagnostics.generator.iterations_run"
+  },
+  {
+   "pointer": "/sections/limits/simp/d006/final_change",
+   "source": "d006/status.json",
+   "key": "diagnostics.generator.final_change"
+  },
+  {
+   "pointer": "/sections/limits/simp/d007/mnd_pct",
+   "source": "d007/status.json",
+   "key": "diagnostics.generator.mnd_pct"
+  },
+  {
+   "pointer": "/sections/limits/simp/d007/iterations_run",
+   "source": "d007/status.json",
+   "key": "diagnostics.generator.iterations_run"
+  },
+  {
+   "pointer": "/sections/limits/simp/d007/final_change",
+   "source": "d007/status.json",
+   "key": "diagnostics.generator.final_change"
+  },
+  {
+   "pointer": "/sections/limits/simp/d008/mnd_pct",
+   "source": "d008/status.json",
+   "key": "diagnostics.generator.mnd_pct"
+  },
+  {
+   "pointer": "/sections/limits/simp/d008/iterations_run",
+   "source": "d008/status.json",
+   "key": "diagnostics.generator.iterations_run"
+  },
+  {
+   "pointer": "/sections/limits/simp/d008/final_change",
+   "source": "d008/status.json",
+   "key": "diagnostics.generator.final_change"
+  },
+  {
+   "pointer": "/sections/limits/simp/d009/mnd_pct",
+   "source": "d009/status.json",
+   "key": "diagnostics.generator.mnd_pct"
+  },
+  {
+   "pointer": "/sections/limits/simp/d009/iterations_run",
+   "source": "d009/status.json",
+   "key": "diagnostics.generator.iterations_run"
+  },
+  {
+   "pointer": "/sections/limits/simp/d009/final_change",
+   "source": "d009/status.json",
+   "key": "diagnostics.generator.final_change"
+  },
+  {
+   "pointer": "/sections/limits/simp/v001/mnd_pct",
+   "source": "v001/status.json",
+   "key": "diagnostics.generator.mnd_pct"
+  },
+  {
+   "pointer": "/sections/limits/simp/v001/iterations_run",
+   "source": "v001/status.json",
+   "key": "diagnostics.generator.iterations_run"
+  },
+  {
+   "pointer": "/sections/limits/simp/v001/final_change",
+   "source": "v001/status.json",
+   "key": "diagnostics.generator.final_change"
+  }
+ ]
+}

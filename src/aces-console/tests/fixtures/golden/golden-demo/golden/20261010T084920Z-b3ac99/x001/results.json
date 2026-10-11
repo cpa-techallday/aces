@@ -1,0 +1,138 @@
+{
+ "schema": "aces-golden-case/1",
+ "case_id": "x001",
+ "role": "check",
+ "round": null,
+ "level": 1,
+ "source_case": "v001",
+ "design": null,
+ "mass_kg": 0.17698581438899466,
+ "mass_voxel_kg": 0.17929583999999998,
+ "mesh_volume_mm3": 66286.82186853733,
+ "voxel_volume_mm3": 67152.0,
+ "solid_fraction": 0.16788,
+ "compliance_Nmm": 864.846052012898,
+ "umax_mm": 0.03248296743194983,
+ "vm_max_MPa": 105.39191827732034,
+ "vm_p99_MPa": 56.87937175750742,
+ "vm_p95_MPa": 40.97390766143798,
+ "pcg_iters": 443,
+ "pcg_relres": 9.802443554641544e-09,
+ "converged": true,
+ "elements": 50000,
+ "dof": 163863,
+ "elem_mm": 2.0,
+ "n_fixed_dofs": 882,
+ "device": "NVIDIA CMP 170HX",
+ "dtype": "float64",
+ "backend": "step-structures.stage_solve",
+ "lane": "rig-gpu",
+ "grade": "preview-grade",
+ "fea_solver": "pcg",
+ "fea_solver_reason": "auto: Jacobi-PCG (50,000 cells < 200,000)",
+ "generator": null,
+ "skin": null,
+ "voxel": {
+  "h_mm": 2.0,
+  "cells": 50000,
+  "solid_cells": 8394,
+  "voxel_volume_mm3": 67152.0,
+  "mesh_volume_mm3": 66286.82186853733,
+  "volume_ratio_voxel_over_mesh": 1.0130520382041928,
+  "mask_sha256": "85a14d58f387eeb092bcd139d6e9b823f4be9dc8889ce9763644393747fe8cc5"
+ },
+ "checks": {
+  "load_coverage": {
+   "cup-down": 1.0
+  },
+  "support_coverage": {
+   "foot-1": 1.0,
+   "foot-2": 1.0,
+   "foot-3": 1.0,
+   "foot-4": 1.0,
+   "foot-5": 1.0,
+   "foot-6": 1.0
+  },
+  "load_path_connected": true,
+  "solid_components": 1
+ },
+ "stress": {
+  "measure": "vm_p99",
+  "exclude_mm": 8.0,
+  "exclude_boxes": [
+   [
+    76.0,
+    64.0,
+    0.0,
+    88.0,
+    76.0,
+    8.0
+   ],
+   [
+    44.0,
+    80.0,
+    0.0,
+    56.0,
+    92.0,
+    8.0
+   ],
+   [
+    12.0,
+    64.0,
+    0.0,
+    24.0,
+    76.0,
+    8.0
+   ],
+   [
+    12.0,
+    28.0,
+    0.0,
+    24.0,
+    40.0,
+    8.0
+   ],
+   [
+    44.0,
+    8.0,
+    0.0,
+    56.0,
+    20.0,
+    8.0
+   ],
+   [
+    76.0,
+    28.0,
+    0.0,
+    88.0,
+    40.0,
+    8.0
+   ],
+   [
+    40.0,
+    40.0,
+    32.0,
+    60.0,
+    60.0,
+    40.0
+   ]
+  ],
+  "n_elements": 7158
+ },
+ "wall_s_generate": null,
+ "wall_s_skin": null,
+ "wall_s_voxel": 1.0776817798614502,
+ "wall_s_solve": 1.0291171073913574,
+ "wall_s_post": 0.9880471229553223,
+ "wall_s_total": 3.1592602729797363,
+ "artifacts": [
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/x001/case.md",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/x001/disp_slices.png",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/x001/fields.npz",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/x001/fields.vtk",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/x001/mask.npy",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/x001/mesh.json",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/x001/solve.json",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/x001/vm_slices.png"
+ ]
+}

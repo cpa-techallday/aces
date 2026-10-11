@@ -1,0 +1,95 @@
+{
+  "schema": "simlab-evidence/1",
+  "experiment": {
+    "id": "golden-cad-gold-20261010T102210Z-bc7391",
+    "project": "cad-gold",
+    "owner": "aces",
+    "physics": "structures",
+    "solver": "step-structures",
+    "description": "aces golden root-mount: Six-foot root mount computed inside a disc design space 100 mm across and 40 mm tall: six bolted feet on a 36 mm ring and a 30 kN load on a top cup. The disc is only the input domain; the part is computed (SIMP topology optimisation, organic implicit skin) and solved on the real voxel FEA. Demo inputs.",
+    "spec_sha256": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+    "hypothesis": "A SIMP-generated organic root mount meets vm_p99 <= 60 MPa and umax <= 0.035 mm at minimum mass, and a GP surrogate fitted to a 10-design sweep predicts the verified winner within 10 %.",
+    "expected": "the surrogate's winner meets every constraint on the real solver and agrees within tol",
+    "rd_activity": null,
+    "company": null,
+    "tags": {
+      "golden": "0.2.0",
+      "generator": "simp-organic",
+      "domain_source": "step",
+      "sampler": "lhs-random-cd",
+      "grade": "preview-grade",
+      "vendored_snapshot": "62de9811e555"
+    }
+  },
+  "case": {
+    "case_id": "d006",
+    "role": "sweep",
+    "volfrac": 0.160054,
+    "rmin_mm": 10.961384,
+    "h_gen_mm": 4.0,
+    "h_fea_mm": 4.0,
+    "device": "cpu",
+    "backend": "adapter",
+    "source_case": null,
+    "reuse_mask": false,
+    "round": null,
+    "level": null,
+    "seed": 7,
+    "fea_solver": "pcg"
+  },
+  "inputs_sha256": {
+    "spec.json": "b6c8bbefb1e9df1305ca900f598903a007b07b387751c93b4f90c30ba936ef94",
+    "spec.effective.json": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+    "domain.step": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+    "case.json": "99123c6960a988e4e84801f249f2b6ca0e9de8eb2ae3c6847a889165ef6c3138"
+  },
+  "geometry": {
+    "source": "step",
+    "ref": "domain.step",
+    "sha256": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92"
+  },
+  "environment": {
+    "host": "aces-rehearsal",
+    "platform": "Linux-7.2.5-3-omarchy-x86_64-with-glibc2.44",
+    "in_container": false,
+    "image": null,
+    "image_digest": null,
+    "cuda_visible_devices": null,
+    "gpus": [],
+    "packages": {
+      "python": "3.14.7",
+      "numpy": "2.4.6",
+      "scipy": "1.17.1",
+      "optuna": "5.0.0",
+      "build123d": "0.11.1",
+      "trimesh": "5.1.0",
+      "skimage": "0.26.0"
+    }
+  },
+  "git_rev": null,
+  "started_utc": "2026-10-10T10:22:15.967000+00:00",
+  "finished_utc": "2026-10-10T10:22:17.927000+00:00",
+  "wall_s": 1.96,
+  "status": "FAILED",
+  "error": "the skin has 3 solid bodies; a part is one body",
+  "results": null,
+  "run_dir": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d006",
+  "stages": [
+    {
+      "stage": "generate",
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T10:22:15.967+00:00",
+      "finished_utc": "2026-10-10T10:22:17.899+00:00",
+      "wall_s": 1.932692050933838,
+      "device": "cpu"
+    },
+    {
+      "stage": "skin",
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T10:22:17.899+00:00",
+      "finished_utc": "2026-10-10T10:22:17.927+00:00",
+      "wall_s": 0.027607440948486328,
+      "device": "cpu"
+    }
+  ]
+}

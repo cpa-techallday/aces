@@ -1,0 +1,426 @@
+$ /opt/aces/engineering/venv/bin/python -m aces_engineering.golden.conforming mesh --stl /home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/v001/part.stl --out /home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/m001 --size 2.0 --threads 1 --case-id m001
+Warning : Skipping unknown option '-noenv'
+Info    : Clearing all models and views...
+Info    : Done clearing all models and views
+attempt A (remesh, Algorithm3D 1) failed: RuntimeError: the remeshed volume differs from the STL's by -0.508 % (limit 0.5 %)
+attempt B (remesh, Algorithm3D 10) failed: RuntimeError: the remeshed volume differs from the STL's by -0.508 % (limit 0.5 %)
+gmsh: Info: Clearing all models and views...
+gmsh: Info: Done clearing all models and views
+gmsh: Info: Reading '/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/m001/.mesh-zbasj555/all.stl'...
+gmsh: Info: Mesh is in binary format
+gmsh: Info: 10380 facets in solid 0 aces golden conforming mesher input                                            
+gmsh: Info: Done reading '/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/m001/.mesh-zbasj555/all.stl'
+gmsh: Info: Classifying surfaces (angle: 40)...
+gmsh: Info: Splitting triangulations to make them parametrizable:
+gmsh: Info:  - Level 0 partition with 10380 triangles split in 2 parts because poincare characteristic 2 is not 0
+gmsh: Info: Found 2 model surfaces
+gmsh: Info: Found 1 model curves
+gmsh: Info: Done classifying surfaces (Wall 0.083597s, CPU 0.082079s)
+gmsh: Info: Creating geometry of discrete curves...
+gmsh: Info: Done creating geometry of discrete curves (Wall 4.796e-06s, CPU 5e-06s)
+gmsh: Info: Creating geometry of discrete surfaces...
+gmsh: Progress: Creating geometry
+gmsh: Progress: Creating geometry
+gmsh: Info: Done creating geometry of discrete surfaces (Wall 0.0389336s, CPU 0.035782s)
+gmsh: Info: Meshing 1D...
+gmsh: Info: Meshing curve 3 (Discrete curve)
+gmsh: Progress: Meshing 1D...
+gmsh: Info: Done meshing 1D (Wall 0.000534952s, CPU 0.000536s)
+gmsh: Info: Meshing 2D...
+gmsh: Info: Meshing surface 2 (Discrete surface, Frontal-Delaunay)
+gmsh: Progress: Meshing 2D...
+gmsh: Info: Meshing surface 3 (Discrete surface, Frontal-Delaunay)
+gmsh: Progress: Meshing 2D...
+gmsh: Info: Done meshing 2D (Wall 0.186475s, CPU 0.185635s)
+gmsh: Info: Meshing 3D...
+gmsh: Progress: Meshing 3D...
+gmsh: Info: 3D Meshing 1 volume with 1 connected component
+gmsh: Info: Tetrahedrizing 4629 nodes...
+gmsh: Info: Done tetrahedrizing 4637 nodes (Wall 0.0377063s, CPU 0.034634s)
+gmsh: Info: Reconstructing mesh...
+gmsh: Info:  - Creating surface mesh
+gmsh: Info:  - Identifying boundary edges
+gmsh: Info:  - Recovering boundary
+gmsh: Info: Done reconstructing mesh (Wall 0.0829653s, CPU 0.075685s)
+gmsh: Info: Found volume 1
+gmsh: Info: It. 0 - 0 nodes created - worst tet radius 9.16772 (nodes removed 0 0)
+gmsh: Info: It. 500 - 498 nodes created - worst tet radius 1.8306 (nodes removed 0 2)
+gmsh: Info: It. 1000 - 998 nodes created - worst tet radius 1.503 (nodes removed 0 2)
+gmsh: Info: It. 1500 - 1498 nodes created - worst tet radius 1.35162 (nodes removed 0 2)
+gmsh: Info: It. 2000 - 1998 nodes created - worst tet radius 1.24402 (nodes removed 0 2)
+gmsh: Info: It. 2500 - 2498 nodes created - worst tet radius 1.17052 (nodes removed 0 2)
+gmsh: Info: It. 3000 - 2998 nodes created - worst tet radius 1.10698 (nodes removed 0 2)
+gmsh: Info: It. 3500 - 3498 nodes created - worst tet radius 1.05777 (nodes removed 0 2)
+gmsh: Info: It. 4000 - 3998 nodes created - worst tet radius 1.01752 (nodes removed 0 2)
+gmsh: Info: 3D refinement terminated (8879 nodes total):
+gmsh: Info:  - 2 Delaunay cavities modified for star shapeness
+gmsh: Info:  - 2 nodes could not be inserted
+gmsh: Info:  - 40758 tetrahedra created in 0.121295 sec. (336023 tets/s)
+gmsh: Info: 0 node relocations
+gmsh: Progress: Meshing 3D...
+gmsh: Info: Done meshing 3D (Wall 0.270015s, CPU 0.261906s)
+gmsh: Info: Optimizing mesh...
+gmsh: Info: Optimizing volume 1
+gmsh: Info: Optimization starts (volume = 65950.2) with worst = 0.00113675 / average = 0.763492:
+gmsh: Info: 0.00 < quality < 0.10 :        99 elements
+gmsh: Info: 0.10 < quality < 0.20 :       313 elements
+gmsh: Info: 0.20 < quality < 0.30 :       489 elements
+gmsh: Info: 0.30 < quality < 0.40 :       741 elements
+gmsh: Info: 0.40 < quality < 0.50 :      1198 elements
+gmsh: Info: 0.50 < quality < 0.60 :      2219 elements
+gmsh: Info: 0.60 < quality < 0.70 :      5120 elements
+gmsh: Info: 0.70 < quality < 0.80 :     10281 elements
+gmsh: Info: 0.80 < quality < 0.90 :     13937 elements
+gmsh: Info: 0.90 < quality < 1.00 :      6361 elements
+gmsh: Info: 890 edge swaps, 16 node relocations (volume = 65950.2): worst = 0.169474 / average = 0.776809 (Wall 0.0111219s, CPU 0.011061s)
+gmsh: Info: 896 edge swaps, 16 node relocations (volume = 65950.2): worst = 0.169474 / average = 0.776908 (Wall 0.0130559s, CPU 0.012991s)
+gmsh: Info: No ill-shaped tets in the mesh :-)
+gmsh: Info: 0.00 < quality < 0.10 :         0 elements
+gmsh: Info: 0.10 < quality < 0.20 :         1 elements
+gmsh: Info: 0.20 < quality < 0.30 :         0 elements
+gmsh: Info: 0.30 < quality < 0.40 :       747 elements
+gmsh: Info: 0.40 < quality < 0.50 :      1144 elements
+gmsh: Info: 0.50 < quality < 0.60 :      2202 elements
+gmsh: Info: 0.60 < quality < 0.70 :      5123 elements
+gmsh: Info: 0.70 < quality < 0.80 :     10293 elements
+gmsh: Info: 0.80 < quality < 0.90 :     14097 elements
+gmsh: Info: 0.90 < quality < 1.00 :      6355 elements
+gmsh: Info: Done optimizing mesh (Wall 0.0376714s, CPU 0.037424s)
+gmsh: Info: Optimizing mesh (Netgen)...
+gmsh: Info: Optimizing volume 1
+gmsh: Info: CalcLocalH: 8879 Points 39967 Elements 9254 Surface Elements 
+gmsh: Info: Remove Illegal Elements 
+gmsh: Info: 232 illegal tets 
+gmsh: Info: SplitImprove 
+gmsh: Info: badmax = 37.4771 
+gmsh: Info: 72 splits performed 
+gmsh: Info: SwapImprove  
+gmsh: Info: 9 swaps performed 
+gmsh: Info: SwapImprove2  
+gmsh: Info: 0 swaps performed 
+gmsh: Info: 0 illegal tets 
+gmsh: Info: Volume Optimization 
+gmsh: Info: CombineImprove 
+gmsh: Info: 261 elements combined 
+gmsh: Info: ImproveMesh 
+gmsh: Info: Total badness = 54597 
+gmsh: Info: Total badness = 52081 
+gmsh: Info: SplitImprove 
+gmsh: Info: badmax = 14.3761 
+gmsh: Info: 0 splits performed 
+gmsh: Info: ImproveMesh 
+gmsh: Info: Total badness = 52081 
+gmsh: Info: Total badness = 51669.9 
+gmsh: Info: SwapImprove  
+gmsh: Info: 2256 swaps performed 
+gmsh: Info: SwapImprove2  
+gmsh: Info: 0 swaps performed 
+gmsh: Info: ImproveMesh 
+gmsh: Info: Total badness = 47763.3 
+gmsh: Info: Total badness = 46782.5 
+gmsh: Info: CombineImprove 
+gmsh: Info: 38 elements combined 
+gmsh: Info: ImproveMesh 
+gmsh: Info: Total badness = 46441.5 
+gmsh: Info: Total badness = 46332.1 
+gmsh: Info: SplitImprove 
+gmsh: Info: badmax = 7.47473 
+gmsh: Info: 0 splits performed 
+gmsh: Info: ImproveMesh 
+gmsh: Info: Total badness = 46332.1 
+gmsh: Info: Total badness = 46314.3 
+gmsh: Info: SwapImprove  
+gmsh: Info: 330 swaps performed 
+gmsh: Info: SwapImprove2  
+gmsh: Info: 0 swaps performed 
+gmsh: Info: ImproveMesh 
+gmsh: Info: Total badness = 46044.6 
+gmsh: Info: Total badness = 45879.7 
+gmsh: Info: CombineImprove 
+gmsh: Info: 15 elements combined 
+gmsh: Info: ImproveMesh 
+gmsh: Info: Total badness = 45745.1 
+gmsh: Info: Total badness = 45721.4 
+gmsh: Info: SplitImprove 
+gmsh: Info: badmax = 6.95139 
+gmsh: Info: 0 splits performed 
+gmsh: Info: ImproveMesh 
+gmsh: Info: Total badness = 45721.4 
+gmsh: Info: Total badness = 45717.8 
+gmsh: Info: SwapImprove  
+gmsh: Info: 108 swaps performed 
+gmsh: Info: SwapImprove2  
+gmsh: Info: 0 swaps performed 
+gmsh: Info: ImproveMesh 
+gmsh: Info: Total badness = 45669.6 
+gmsh: Info: Total badness = 45616.8 
+gmsh: Info: Done optimizing mesh (Wall 1.12135s, CPU 1.11488s)
+gmsh: Info: Meshing order 2 (curvilinear off)...
+gmsh: Info: Meshing curve 3 order 2
+gmsh: Progress: Meshing order 2 (curvilinear off)...
+gmsh: Info: Meshing surface 2 order 2
+gmsh: Progress: Meshing order 2 (curvilinear off)...
+gmsh: Info: Meshing surface 3 order 2
+gmsh: Progress: Meshing order 2 (curvilinear off)...
+gmsh: Info: Meshing volume 1 order 2
+gmsh: Progress: Meshing order 2 (curvilinear off)...
+gmsh: Info: Done meshing order 2 (Wall 0.156374s, CPU 0.155663s)
+gmsh: Info: 58681 nodes 46125 elements
+gmsh: Info: Clearing all models and views...
+gmsh: Info: Done clearing all models and views
+gmsh: Info: Reading '/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/m001/.mesh-zbasj555/all.stl'...
+gmsh: Info: Mesh is in binary format
+gmsh: Info: 10380 facets in solid 0 aces golden conforming mesher input                                            
+gmsh: Info: Done reading '/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/m001/.mesh-zbasj555/all.stl'
+gmsh: Info: Classifying surfaces (angle: 40)...
+gmsh: Info: Splitting triangulations to make them parametrizable:
+gmsh: Info:  - Level 0 partition with 10380 triangles split in 2 parts because poincare characteristic 2 is not 0
+gmsh: Info: Found 2 model surfaces
+gmsh: Info: Found 1 model curves
+gmsh: Info: Done classifying surfaces (Wall 0.0799868s, CPU 0.079694s)
+gmsh: Info: Creating geometry of discrete curves...
+gmsh: Info: Done creating geometry of discrete curves (Wall 8.428e-06s, CPU 9e-06s)
+gmsh: Info: Creating geometry of discrete surfaces...
+gmsh: Progress: Creating geometry
+gmsh: Progress: Creating geometry
+gmsh: Info: Done creating geometry of discrete surfaces (Wall 0.0392443s, CPU 0.039088s)
+gmsh: Info: Meshing 1D...
+gmsh: Info: Meshing curve 3 (Discrete curve)
+gmsh: Progress: Meshing 1D...
+gmsh: Info: Done meshing 1D (Wall 0.00052552s, CPU 0.000521s)
+gmsh: Info: Meshing 2D...
+gmsh: Info: Meshing surface 2 (Discrete surface, Frontal-Delaunay)
+gmsh: Progress: Meshing 2D...
+gmsh: Info: Meshing surface 3 (Discrete surface, Frontal-Delaunay)
+gmsh: Progress: Meshing 2D...
+gmsh: Info: Done meshing 2D (Wall 0.180752s, CPU 0.180083s)
+gmsh: Info: Meshing 3D...
+gmsh: Progress: Meshing 3D...
+gmsh: Info: 3D Meshing 1 volume with 1 connected component
+gmsh: Info: Input mesh hash d240f62af7e6bcbc
+gmsh: Info: Creating an empty mesh with 4629 vertices
+gmsh: Info: Initialization of tet. mesh
+gmsh: Info: Delaunay of       4625 points on   1 threads - mesh.nvert: 4         
+gmsh: Info: Recovering 16 missing facet(s)
+gmsh: Info: Recover Delaunay
+gmsh: Info: All volumes of the BRep were found and colorized accordingly
+gmsh: Info: Computing mesh sizes...
+gmsh: Info: Done computing mesh sizes
+gmsh: Info: Delaunay of      10127 points on   1 threads - mesh.nvert: 4629      
+gmsh: Info:           -       9102 points filtered
+gmsh: Info:           =       1025 points added
+gmsh: Info: Computing mesh sizes...
+gmsh: Info: Done computing mesh sizes
+gmsh: Info: Delaunay of       5504 points on   1 threads - mesh.nvert: 5654      
+gmsh: Info:           -       3991 points filtered
+gmsh: Info:           =       1513 points added
+gmsh: Info: Computing mesh sizes...
+gmsh: Info: Done computing mesh sizes
+gmsh: Info: Delaunay of       2468 points on   1 threads - mesh.nvert: 7167      
+gmsh: Info:           -       1554 points filtered
+gmsh: Info:           =        914 points added
+gmsh: Info: Computing mesh sizes...
+gmsh: Info: Done computing mesh sizes
+gmsh: Info: Delaunay of        346 points on   1 threads - mesh.nvert: 8081      
+gmsh: Info:           -        135 points filtered
+gmsh: Info:           =        211 points added
+gmsh: Info: Computing mesh sizes...
+gmsh: Info: Done computing mesh sizes
+gmsh: Info: Delaunay of         23 points on   1 threads - mesh.nvert: 8292      
+gmsh: Info:           -          6 points filtered
+gmsh: Info:           =         17 points added
+gmsh: Info: Computing mesh sizes...
+gmsh: Info: Done computing mesh sizes
+gmsh: Info: Improving       1303 tet. on   1 thrd (S & ER)
+gmsh: Info: Improving         38 tet. on   1 thrd (S & ER)
+gmsh: Info: Improving          8 tet. on   1 thrd (S & ER)
+gmsh: Info: Improving          7 tet. on   1 thrd (S & ER)
+gmsh: Info: Improving          7 tet. on   1 thrd (GSC)
+gmsh: Info:  	Final tet. mesh contains 53069 tetrahedra
+gmsh: Info:  	Final tet. mesh contains 8309 vertices
+gmsh: Info: tEmptyMesh  	 = 	    0.006
+gmsh: Info: tVerifyBnd  	 = 	    0.003
+gmsh: Info: tBndRecovery	 = 	    0.012
+gmsh: Info: tConvertMesh	 = 	    0.004
+gmsh: Info: tRefine     	 = 	    0.021
+gmsh: Info: tOptimize   	 = 	    0.003
+gmsh: Progress: Meshing 3D...
+gmsh: Info: Done meshing 3D (Wall 0.0574276s, CPU 0.055192s)
+gmsh: Info: Meshing order 2 (curvilinear off)...
+gmsh: Info: Meshing curve 3 order 2
+gmsh: Progress: Meshing order 2 (curvilinear off)...
+gmsh: Info: Meshing surface 2 order 2
+gmsh: Progress: Meshing order 2 (curvilinear off)...
+gmsh: Info: Meshing surface 3 order 2
+gmsh: Progress: Meshing order 2 (curvilinear off)...
+gmsh: Info: Meshing volume 1 order 2
+gmsh: Progress: Meshing order 2 (curvilinear off)...
+gmsh: Info: Done meshing order 2 (Wall 0.142745s, CPU 0.141992s)
+gmsh: Info: 57420 nodes 45520 elements
+gmsh: Info: Clearing all models and views...
+gmsh: Info: Done clearing all models and views
+gmsh: Info: Reading '/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/m001/.mesh-zbasj555/comp-0.stl'...
+gmsh: Info: Mesh is in binary format
+gmsh: Info: 10380 facets in solid 0 aces golden conforming mesher input                                            
+gmsh: Info: Done reading '/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/m001/.mesh-zbasj555/comp-0.stl'
+gmsh: Info: Meshing 1D...
+gmsh: Info: Done meshing 1D (Wall 7.778e-06s, CPU 1e-05s)
+gmsh: Info: Meshing 2D...
+gmsh: Progress: Meshing 2D...
+gmsh: Info: Done meshing 2D (Wall 1.295e-05s, CPU 1.3e-05s)
+gmsh: Info: Meshing 3D...
+gmsh: Progress: Meshing 3D...
+gmsh: Info: 3D Meshing 1 volume with 1 connected component
+gmsh: Info: Tetrahedrizing 5192 nodes...
+gmsh: Info: Done tetrahedrizing 5200 nodes (Wall 0.0510982s, CPU 0.049822s)
+gmsh: Info: Reconstructing mesh...
+gmsh: Info:  - Creating surface mesh
+gmsh: Info:  - Identifying boundary edges
+gmsh: Info:  - Recovering boundary
+gmsh: Info: Done reconstructing mesh (Wall 0.102469s, CPU 0.100862s)
+gmsh: Info: Found volume 1
+gmsh: Info: It. 0 - 0 nodes created - worst tet radius 9.11482 (nodes removed 0 0)
+gmsh: Info: It. 500 - 412 nodes created - worst tet radius 1.92519 (nodes removed 0 88)
+gmsh: Info: It. 1000 - 884 nodes created - worst tet radius 1.58755 (nodes removed 0 116)
+gmsh: Info: It. 1500 - 1368 nodes created - worst tet radius 1.39439 (nodes removed 0 132)
+gmsh: Info: It. 2000 - 1857 nodes created - worst tet radius 1.27459 (nodes removed 0 143)
+gmsh: Info: It. 2500 - 2352 nodes created - worst tet radius 1.19258 (nodes removed 0 148)
+gmsh: Info: It. 3000 - 2845 nodes created - worst tet radius 1.1275 (nodes removed 0 155)
+gmsh: Info: It. 3500 - 3338 nodes created - worst tet radius 1.0765 (nodes removed 0 162)
+gmsh: Info: It. 4000 - 3830 nodes created - worst tet radius 1.03409 (nodes removed 0 170)
+gmsh: Info: It. 4500 - 4325 nodes created - worst tet radius 1.00116 (nodes removed 0 175)
+gmsh: Info: 3D refinement terminated (9534 nodes total):
+gmsh: Info:  - 69 Delaunay cavities modified for star shapeness
+gmsh: Info:  - 175 nodes could not be inserted
+gmsh: Info:  - 43580 tetrahedra created in 0.148479 sec. (293510 tets/s)
+gmsh: Info: 1 node relocations
+gmsh: Progress: Meshing 3D...
+gmsh: Info: Done meshing 3D (Wall 0.330008s, CPU 0.327284s)
+gmsh: Info: Optimizing mesh...
+gmsh: Info: Optimizing volume 1
+gmsh: Info: Optimization starts (volume = 66286.8) with worst = 0.000804846 / average = 0.732977:
+gmsh: Info: 0.00 < quality < 0.10 :       478 elements
+gmsh: Info: 0.10 < quality < 0.20 :       453 elements
+gmsh: Info: 0.20 < quality < 0.30 :       644 elements
+gmsh: Info: 0.30 < quality < 0.40 :       926 elements
+gmsh: Info: 0.40 < quality < 0.50 :      1717 elements
+gmsh: Info: 0.50 < quality < 0.60 :      3474 elements
+gmsh: Info: 0.60 < quality < 0.70 :      6683 elements
+gmsh: Info: 0.70 < quality < 0.80 :     10438 elements
+gmsh: Info: 0.80 < quality < 0.90 :     12976 elements
+gmsh: Info: 0.90 < quality < 1.00 :      5791 elements
+gmsh: Info: 1495 edge swaps, 60 node relocations (volume = 66286.8): worst = 0.00211596 / average = 0.752202 (Wall 0.0138098s, CPU 0.013723s)
+gmsh: Info: 1529 edge swaps, 69 node relocations (volume = 66286.8): worst = 0.00211596 / average = 0.752623 (Wall 0.0168544s, CPU 0.016758s)
+gmsh: Info: No ill-shaped tets in the mesh :-)
+gmsh: Info: 0.00 < quality < 0.10 :        12 elements
+gmsh: Info: 0.10 < quality < 0.20 :        23 elements
+gmsh: Info: 0.20 < quality < 0.30 :        22 elements
+gmsh: Info: 0.30 < quality < 0.40 :       952 elements
+gmsh: Info: 0.40 < quality < 0.50 :      1773 elements
+gmsh: Info: 0.50 < quality < 0.60 :      3541 elements
+gmsh: Info: 0.60 < quality < 0.70 :      6715 elements
+gmsh: Info: 0.70 < quality < 0.80 :     10376 elements
+gmsh: Info: 0.80 < quality < 0.90 :     13037 elements
+gmsh: Info: 0.90 < quality < 1.00 :      5785 elements
+gmsh: Info: Done optimizing mesh (Wall 0.0447705s, CPU 0.043485s)
+gmsh: Info: Optimizing mesh (Netgen)...
+gmsh: Info: Optimizing volume 1
+gmsh: Info: CalcLocalH: 9534 Points 42266 Elements 10380 Surface Elements 
+gmsh: Info: Remove Illegal Elements 
+gmsh: Info: 377 illegal tets 
+gmsh: Info: SplitImprove 
+gmsh: Info: badmax = 2674.47 
+gmsh: Info: 93 splits performed 
+gmsh: Info: SwapImprove  
+gmsh: Info: 48 swaps performed 
+gmsh: Info: SwapImprove2  
+gmsh: Info: 0 swaps performed 
+gmsh: Info: 35 illegal tets 
+gmsh: Info: SplitImprove 
+gmsh: Info: badmax = 5634.82 
+gmsh: Info: 11 splits performed 
+gmsh: Info: SwapImprove  
+gmsh: Info: 4 swaps performed 
+gmsh: Info: SwapImprove2  
+gmsh: Info: 0 swaps performed 
+gmsh: Info: 6 illegal tets 
+gmsh: Info: SplitImprove 
+gmsh: Info: badmax = 5634.82 
+gmsh: Info: 2 splits performed 
+gmsh: Info: SwapImprove  
+gmsh: Info: 1 swaps performed 
+gmsh: Info: SwapImprove2  
+gmsh: Info: 0 swaps performed 
+gmsh: Info: 3 illegal tets 
+gmsh: Info: SplitImprove 
+gmsh: Info: badmax = 5634.82 
+gmsh: Info: 1 splits performed 
+gmsh: Info: SwapImprove  
+gmsh: Info: 0 swaps performed 
+gmsh: Info: SwapImprove2  
+gmsh: Info: 0 swaps performed 
+gmsh: Info: 0 illegal tets 
+gmsh: Info: Volume Optimization 
+gmsh: Info: CombineImprove 
+gmsh: Info: 293 elements combined 
+gmsh: Info: ImproveMesh 
+gmsh: Info: Total badness = 61480.1 
+gmsh: Info: Total badness = 57971.9 
+gmsh: Info: SplitImprove 
+gmsh: Info: badmax = 54.4298 
+gmsh: Info: 4 splits performed 
+gmsh: Info: ImproveMesh 
+gmsh: Info: Total badness = 57988.5 
+gmsh: Info: Total badness = 57438.7 
+gmsh: Info: SwapImprove  
+gmsh: Info: 2510 swaps performed 
+gmsh: Info: SwapImprove2  
+gmsh: Info: 0 swaps performed 
+gmsh: Info: ImproveMesh 
+gmsh: Info: Total badness = 52838.5 
+gmsh: Info: Total badness = 51628.7 
+gmsh: Info: CombineImprove 
+gmsh: Info: 75 elements combined 
+gmsh: Info: ImproveMesh 
+gmsh: Info: Total badness = 50931.2 
+gmsh: Info: Total badness = 50774.3 
+gmsh: Info: SplitImprove 
+gmsh: Info: badmax = 14.5086 
+gmsh: Info: 0 splits performed 
+gmsh: Info: ImproveMesh 
+gmsh: Info: Total badness = 50774.3 
+gmsh: Info: Total badness = 50754.2 
+gmsh: Info: SwapImprove  
+gmsh: Info: 444 swaps performed 
+gmsh: Info: SwapImprove2  
+gmsh: Info: 0 swaps performed 
+gmsh: Info: ImproveMesh 
+gmsh: Info: Total badness = 50398.9 
+gmsh: Info: Total badness = 50175.6 
+gmsh: Info: CombineImprove 
+gmsh: Info: 12 elements combined 
+gmsh: Info: ImproveMesh 
+gmsh: Info: Total badness = 50062.4 
+gmsh: Info: Total badness = 50038.8 
+gmsh: Info: SplitImprove 
+gmsh: Info: badmax = 11.9807 
+gmsh: Info: 0 splits performed 
+gmsh: Info: ImproveMesh 
+gmsh: Info: Total badness = 50038.8 
+gmsh: Info: Total badness = 50034.9 
+gmsh: Info: SwapImprove  
+gmsh: Info: 161 swaps performed 
+gmsh: Info: SwapImprove2  
+gmsh: Info: 0 swaps performed 
+gmsh: Info: ImproveMesh 
+gmsh: Info: Total badness = 49953.6 
+gmsh: Info: Total badness = 49869.7 
+gmsh: Info: Done optimizing mesh (Wall 1.18258s, CPU 1.17737s)
+gmsh: Info: Meshing order 2 (curvilinear off)...
+gmsh: Info: Meshing surface 1 order 2
+gmsh: Progress: Meshing order 2 (curvilinear off)...
+gmsh: Info: Meshing volume 1 order 2
+gmsh: Progress: Meshing order 2 (curvilinear off)...
+gmsh: Info: Done meshing order 2 (Wall 0.152093s, CPU 0.151416s)
+gmsh: Info: 62337 nodes 48998 elements
+mesh: ok: 38618 C3D10, 62337 nodes, route discrete

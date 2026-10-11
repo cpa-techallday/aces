@@ -1,0 +1,196 @@
+{
+ "schema": "aces-golden-case/1",
+ "case_id": "v001",
+ "role": "verify",
+ "round": 1,
+ "level": null,
+ "source_case": null,
+ "design": {
+  "volfrac": 0.23,
+  "rmin_mm": 11.55
+ },
+ "mass_kg": 0.17698581438899466,
+ "mass_voxel_kg": 0.18215808,
+ "mesh_volume_mm3": 66286.82186853733,
+ "voxel_volume_mm3": 68224.0,
+ "solid_fraction": 0.17056,
+ "compliance_Nmm": 828.0079936559462,
+ "umax_mm": 0.031198331261040144,
+ "vm_max_MPa": 64.49043111436654,
+ "vm_p99_MPa": 54.47464675903315,
+ "vm_p95_MPa": 40.70475196838378,
+ "pcg_iters": 221,
+ "pcg_relres": 9.903717352953755e-09,
+ "converged": true,
+ "elements": 6250,
+ "dof": 22308,
+ "elem_mm": 4.0,
+ "n_fixed_dofs": 288,
+ "device": "cpu/numpy",
+ "dtype": "float64",
+ "backend": "step-structures.stage_solve",
+ "lane": "desktop-cpu",
+ "grade": "preview-grade",
+ "fea_solver": "pcg",
+ "fea_solver_reason": "pcg requested",
+ "generator": {
+  "kind": "simp",
+  "h_mm": 4.0,
+  "elements": 6250,
+  "volfrac_design": 0.23,
+  "volfrac_box": 0.179952,
+  "rmin_mm": 11.55,
+  "penal": 3.0,
+  "iterations_run": 25,
+  "converged": false,
+  "stopped_at_cap": true,
+  "final_change": 0.04440126290131008,
+  "compliance_Nmm": 1428.905721073511,
+  "solves_unconverged": 0,
+  "mnd_pct": 32.92917107190775,
+  "device": "cpu/numpy",
+  "wall_s": 1.6246960163116455
+ },
+ "skin": {
+  "status": "ok",
+  "message": "",
+  "field_h_mm": 2.0,
+  "upsample": 2,
+  "sigma_vox": 1.0,
+  "blend_mm": 5.0,
+  "clip_blend_mm": 2.0,
+  "taubin_iters": 5,
+  "iso": 0.5,
+  "clipped_to_domain": true,
+  "infill": null,
+  "faces": 10380,
+  "vertices": 5192,
+  "watertight": true,
+  "solids": 1,
+  "cavities": 0,
+  "cavity_volume_mm3": 0.0,
+  "islands_removed": 0,
+  "removed_volume_mm3": 0.0,
+  "euler": 2,
+  "genus": 0,
+  "mesh_volume_mm3": 66286.82158001249,
+  "area_mm2": 14313.520679263096,
+  "bbox_mm": [
+   8.657236173387039,
+   4.323824442256578,
+   -0.021370211137457407,
+   91.34980264393772,
+   95.67213957989452,
+   40.027080115294865
+  ],
+  "wall_s": 0.028720378875732422
+ },
+ "voxel": {
+  "h_mm": 4.0,
+  "cells": 6250,
+  "solid_cells": 1066,
+  "voxel_volume_mm3": 68224.0,
+  "mesh_volume_mm3": 66286.82186853733,
+  "volume_ratio_voxel_over_mesh": 1.029224181773333,
+  "mask_sha256": "80d2a668dfeb70f15908b48efe1ac36fdf5dca41c4b476baf9d4fa8de9827934"
+ },
+ "checks": {
+  "load_coverage": {
+   "cup-down": 1.0
+  },
+  "support_coverage": {
+   "foot-1": 1.0,
+   "foot-2": 1.0,
+   "foot-3": 1.0,
+   "foot-4": 1.0,
+   "foot-5": 1.0,
+   "foot-6": 1.0
+  },
+  "load_path_connected": true,
+  "solid_components": 1
+ },
+ "stress": {
+  "measure": "vm_p99",
+  "exclude_mm": 8.0,
+  "exclude_boxes": [
+   [
+    76.0,
+    64.0,
+    0.0,
+    88.0,
+    76.0,
+    8.0
+   ],
+   [
+    44.0,
+    80.0,
+    0.0,
+    56.0,
+    92.0,
+    8.0
+   ],
+   [
+    12.0,
+    64.0,
+    0.0,
+    24.0,
+    76.0,
+    8.0
+   ],
+   [
+    12.0,
+    28.0,
+    0.0,
+    24.0,
+    40.0,
+    8.0
+   ],
+   [
+    44.0,
+    8.0,
+    0.0,
+    56.0,
+    20.0,
+    8.0
+   ],
+   [
+    76.0,
+    28.0,
+    0.0,
+    88.0,
+    40.0,
+    8.0
+   ],
+   [
+    40.0,
+    40.0,
+    32.0,
+    60.0,
+    60.0,
+    40.0
+   ]
+  ],
+  "n_elements": 908
+ },
+ "wall_s_generate": 1.6247634887695312,
+ "wall_s_skin": 0.029120206832885742,
+ "wall_s_voxel": 0.021550416946411133,
+ "wall_s_solve": 0.16246581077575684,
+ "wall_s_post": 0.2664766311645508,
+ "wall_s_total": 2.10616397857666,
+ "artifacts": [
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/v001/case.md",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/v001/disp_slices.png",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/v001/fields.npz",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/v001/fields.vtk",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/v001/generator/density.npy",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/v001/generator/report.json",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/v001/generator/slices.png",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/v001/mask.npy",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/v001/mesh.json",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/v001/part.stl",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/v001/skin.json",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/v001/solve.json",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/v001/vm_slices.png"
+ ]
+}

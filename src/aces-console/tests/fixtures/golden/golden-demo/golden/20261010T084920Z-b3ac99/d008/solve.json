@@ -1,0 +1,18 @@
+{
+  "compliance_Nmm": 707.9479357086913,
+  "umax_mm": 0.027364489952812737,
+  "vm_max_MPa": 50.37578528539723,
+  "volume_mm3": 82816.0,
+  "mass_kg": 0.22111872,
+  "solid_fraction": 0.20704,
+  "pcg_iters": 218.0,
+  "pcg_relres": 9.236059968194214e-09,
+  "converged": 1.0,
+  "solver": "pcg",
+  "device": "cpu/numpy",
+  "dtype": "float64",
+  "elements": 6250,
+  "dof": 22308,
+  "n_fixed_dofs": 288,
+  "wall_s": 0.19147300720214844
+}

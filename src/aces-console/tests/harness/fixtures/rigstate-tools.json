@@ -1,0 +1,117 @@
+{
+ "result": {
+  "tools": [
+   {
+    "name": "rig_endpoints",
+    "description": "Per-endpoint GET /v1/models: which model is loaded and its served max_model_len. 'Started' is not 'serving' \u2014 this tool is what confirms an endpoint is actually answering and at what context. matchesExpected:false with models:[] means a pending adapter is not attached.",
+    "inputSchema": {
+     "type": "object",
+     "properties": {
+      "name": {
+       "type": "string",
+       "description": "one endpoint by name; omit for all"
+      }
+     },
+     "additionalProperties": false,
+     "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "annotations": {
+     "readOnlyHint": true,
+     "destructiveHint": false,
+     "idempotentHint": true,
+     "openWorldHint": true
+    },
+    "execution": {
+     "taskSupport": "forbidden"
+    }
+   },
+   {
+    "name": "rig_gpus",
+    "description": "Per-GPU truth from nvidia-smi: memory, utilisation, temperature, power, and compute processes. 'idle' (no VRAM held, no compute procs) is what a deploy preflight should read instead of assuming a card is free.",
+    "inputSchema": {
+     "type": "object",
+     "properties": {
+      "index": {
+       "type": "integer",
+       "minimum": 0,
+       "description": "one GPU by index; omit for all"
+      }
+     },
+     "additionalProperties": false,
+     "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "annotations": {
+     "readOnlyHint": true,
+     "destructiveHint": false,
+     "idempotentHint": true,
+     "openWorldHint": true
+    },
+    "execution": {
+     "taskSupport": "forbidden"
+    }
+   },
+   {
+    "name": "rig_services",
+    "description": "Per-unit systemd state (active/running, main PID, since when). Cross-check against rig_gpus.processes.pid and rig_endpoints.reachable: all three together mean 'truly serving'.",
+    "inputSchema": {
+     "type": "object",
+     "properties": {
+      "name": {
+       "type": "string",
+       "description": "one service by name; omit for all"
+      }
+     },
+     "additionalProperties": false,
+     "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "annotations": {
+     "readOnlyHint": true,
+     "destructiveHint": false,
+     "idempotentHint": true,
+     "openWorldHint": true
+    },
+    "execution": {
+     "taskSupport": "forbidden"
+    }
+   },
+   {
+    "name": "rig_health",
+    "description": "Endpoint liveness per the router's health contract: GET /v1/models, timeout 3000ms, rolling consecutive-failure count. Gives the routing layer a real health signal to walk fallback chains against.",
+    "inputSchema": {
+     "$schema": "http://json-schema.org/draft-07/schema#",
+     "type": "object",
+     "properties": {}
+    },
+    "annotations": {
+     "readOnlyHint": true,
+     "destructiveHint": false,
+     "idempotentHint": true,
+     "openWorldHint": true
+    },
+    "execution": {
+     "taskSupport": "forbidden"
+    }
+   },
+   {
+    "name": "rig_snapshot",
+    "description": "The single call that answers 'what is the rig actually doing right now.' Runs endpoints + GPUs + services concurrently, returns everything with one timestamp and an explicit degraded list. This is the anti-hallucination tool.",
+    "inputSchema": {
+     "$schema": "http://json-schema.org/draft-07/schema#",
+     "type": "object",
+     "properties": {}
+    },
+    "annotations": {
+     "readOnlyHint": true,
+     "destructiveHint": false,
+     "idempotentHint": true,
+     "openWorldHint": true
+    },
+    "execution": {
+     "taskSupport": "forbidden"
+    }
+   }
+  ]
+ },
+ "jsonrpc": "2.0",
+ "id": 1
+}

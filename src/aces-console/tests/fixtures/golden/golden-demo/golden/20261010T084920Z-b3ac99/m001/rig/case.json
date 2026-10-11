@@ -1,0 +1,46 @@
+{
+  "golden": {
+    "schema": "aces-golden-rig/1",
+    "kind": "conforming",
+    "stage": "conf",
+    "run_id": "20261010T084920Z-b3ac99",
+    "project": "golden-demo",
+    "golden_version": "0.2.0",
+    "golden_compute_sha256": "1f1a56410bf48ebee4d22ab92920b2b6af2f81e491487dfbd1c68fddf0269714",
+    "desktop_host": "aces-rehearsal",
+    "lane": "sim/pool",
+    "files": {
+      "eff": {
+        "path": "golden/20261010T084920Z-b3ac99/spec.effective.json",
+        "sha256": "acc99c6a2671265e41521b81d1ce216ba0c61d4f3759665286e456c317045b52",
+        "bytes": 6374
+      },
+      "domain": {
+        "path": "golden/20261010T084920Z-b3ac99/domain.json",
+        "sha256": "a2320df10bb6642484aafb5bc2927fd7c05690eb138e3dc1555be4550333265a",
+        "bytes": 20149
+      },
+      "stl": {
+        "path": "golden/20261010T084920Z-b3ac99/v001.part.stl",
+        "sha256": "de0f92f004ebe1675b4fa796d6707e0c00ca7afc339cd06af6d50dd7de3849ab",
+        "bytes": 519084,
+        "case_id": "v001"
+      }
+    }
+  },
+  "golden_case": {
+    "case_id": "m001",
+    "role": "conforming",
+    "source_case": "v001",
+    "level": 1,
+    "h_mm": 2.0,
+    "device": "rig",
+    "host": "rig",
+    "lane": "sim/pool",
+    "threads": 16,
+    "max_dof": 3000000,
+    "timeout_s": 3000.0,
+    "seed": 7
+  },
+  "case_id": "c000"
+}

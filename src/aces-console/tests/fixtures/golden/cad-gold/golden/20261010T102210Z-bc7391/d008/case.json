@@ -1,0 +1,16 @@
+{
+ "case_id": "d008",
+ "role": "sweep",
+ "volfrac": 0.265513,
+ "rmin_mm": 6.232518,
+ "h_gen_mm": 4.0,
+ "h_fea_mm": 4.0,
+ "device": "cpu",
+ "backend": "adapter",
+ "source_case": null,
+ "reuse_mask": false,
+ "round": null,
+ "level": null,
+ "seed": 7,
+ "fea_solver": "pcg"
+}

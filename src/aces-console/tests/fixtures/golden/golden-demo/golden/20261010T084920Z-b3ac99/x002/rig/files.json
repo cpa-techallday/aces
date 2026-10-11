@@ -1,0 +1,29 @@
+{
+ "schema": "aces-golden-files/1",
+ "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+ "rig_case_id": "c001",
+ "golden_case_id": "x002",
+ "root": "golden/x002",
+ "files": [
+  {
+   "path": "golden/x002/fields.npz",
+   "bytes": 1122020,
+   "sha256": "fa4ede760bf5970a89310f5a9358b7f83d388c65e473d7f5d76d9300887b2ec4"
+  },
+  {
+   "path": "golden/x002/mask.npy",
+   "bytes": 400128,
+   "sha256": "1018043fe3179058a687b3b76f862f115f767b92400b13986b34d4ce462a6b41"
+  },
+  {
+   "path": "golden/x002/mesh.json",
+   "bytes": 465,
+   "sha256": "4d057d125ba87b3f585e9c98a1514ba0c67fe17e4c66031ba7c7799e35eec8ea"
+  },
+  {
+   "path": "golden/x002/solve.json",
+   "bytes": 871,
+   "sha256": "59f14ce5d234ae9ef43c83ae893a063ef64e0aae7022d6a3770f223306612c12"
+  }
+ ]
+}

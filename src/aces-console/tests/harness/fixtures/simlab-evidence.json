@@ -1,0 +1,147 @@
+{
+ "ledger": [
+  {
+   "ts": "2026-10-06T04:15:06.393042+00:00",
+   "experiment": "halo-skeleton-v2-singlepin-mg",
+   "path": "/work/out/evidence/halo-skeleton-v2-singlepin-mg/20261006T041506Z_bundle.json",
+   "record": "/work/out/evidence/halo-skeleton-v2-singlepin-mg/20261006T041506Z_record.md",
+   "sha256": "c0a6ef8b9631e9457849c001a03382c178e08bff53f49c88aa9ac3e75c2aeba9",
+   "previous": null,
+   "n_cases": 1,
+   "n_finished": 1,
+   "company": "omni"
+  },
+  {
+   "ts": "2026-10-06T04:15:06.811212+00:00",
+   "experiment": "halo-skeleton-v1-singlepin-mg",
+   "path": "/work/out/evidence/halo-skeleton-v1-singlepin-mg/20261006T041506Z_bundle.json",
+   "record": "/work/out/evidence/halo-skeleton-v1-singlepin-mg/20261006T041506Z_record.md",
+   "sha256": "03c5e006da449e81bb0e0922ac0df36fed5aa503333cbe6c065ce9a28abf438f",
+   "previous": "c0a6ef8b9631e9457849c001a03382c178e08bff53f49c88aa9ac3e75c2aeba9",
+   "n_cases": 1,
+   "n_finished": 1,
+   "company": "omni"
+  },
+  {
+   "ts": "2026-10-06T04:15:07.212325+00:00",
+   "experiment": "halo-skeleton-v2-launch8g-mg",
+   "path": "/work/out/evidence/halo-skeleton-v2-launch8g-mg/20261006T041507Z_bundle.json",
+   "record": "/work/out/evidence/halo-skeleton-v2-launch8g-mg/20261006T041507Z_record.md",
+   "sha256": "b6b9ae19571f4a2875f3c5566e0c5e8264901afbba6d7bd6efb6017ad6fa2a0e",
+   "previous": "03c5e006da449e81bb0e0922ac0df36fed5aa503333cbe6c065ce9a28abf438f",
+   "n_cases": 1,
+   "n_finished": 1,
+   "company": "omni"
+  },
+  {
+   "ts": "2026-10-06T04:15:07.715141+00:00",
+   "experiment": "halo-skeleton-v1-launch8g-mg",
+   "path": "/work/out/evidence/halo-skeleton-v1-launch8g-mg/20261006T041507Z_bundle.json",
+   "record": "/work/out/evidence/halo-skeleton-v1-launch8g-mg/20261006T041507Z_record.md",
+   "sha256": "6af795a1b811985b1c6f07480423b49fcef08888f3fc943f5a03b4c599b96463",
+   "previous": "b6b9ae19571f4a2875f3c5566e0c5e8264901afbba6d7bd6efb6017ad6fa2a0e",
+   "n_cases": 1,
+   "n_finished": 1,
+   "company": "omni"
+  },
+  {
+   "ts": "2026-10-06T04:15:08.140672+00:00",
+   "experiment": "hermes-packaging-mg",
+   "path": "/work/out/evidence/hermes-packaging-mg/20261006T041508Z_bundle.json",
+   "record": "/work/out/evidence/hermes-packaging-mg/20261006T041508Z_record.md",
+   "sha256": "1d6e6f5f5605f1eadad3513bb06e7ee1b08bdef39cb41817c8cb2a17525dc048",
+   "previous": "6af795a1b811985b1c6f07480423b49fcef08888f3fc943f5a03b4c599b96463",
+   "n_cases": 3,
+   "n_finished": 3,
+   "company": "omni"
+  },
+  {
+   "ts": "2026-10-10T08:40:48.735470+00:00",
+   "experiment": "golden-20261010T083934Z-b3ac99-check",
+   "path": "/work/out/evidence/golden-20261010T083934Z-b3ac99-check/20261010T084048Z_bundle.json",
+   "record": "/work/out/evidence/golden-20261010T083934Z-b3ac99-check/20261010T084048Z_record.md",
+   "sha256": "da0e0d19c9fd5a2b9bd3679ffb2b1d3912556e07a5dea037fca48562b9f7821e",
+   "previous": "1d6e6f5f5605f1eadad3513bb06e7ee1b08bdef39cb41817c8cb2a17525dc048",
+   "n_cases": 2,
+   "n_finished": 2,
+   "company": null
+  },
+  {
+   "ts": "2026-10-10T08:41:13.089507+00:00",
+   "experiment": "golden-20261010T083934Z-b3ac99-conf",
+   "path": "/work/out/evidence/golden-20261010T083934Z-b3ac99-conf/20261010T084113Z_bundle.json",
+   "record": "/work/out/evidence/golden-20261010T083934Z-b3ac99-conf/20261010T084113Z_record.md",
+   "sha256": "77065e66fbd467051afee1433ee07ea566ce61c65668e2198a7e57cc97425db8",
+   "previous": "da0e0d19c9fd5a2b9bd3679ffb2b1d3912556e07a5dea037fca48562b9f7821e",
+   "n_cases": 1,
+   "n_finished": 1,
+   "company": null
+  },
+  {
+   "ts": "2026-10-10T08:46:58.846142+00:00",
+   "experiment": "golden-20261010T084243Z-b3ac99-sweep",
+   "path": "/work/out/evidence/golden-20261010T084243Z-b3ac99-sweep/20261010T084658Z_bundle.json",
+   "record": "/work/out/evidence/golden-20261010T084243Z-b3ac99-sweep/20261010T084658Z_record.md",
+   "sha256": "1127a190d03320840162883d9f4fa3a0d83f9da940e52068b7b79e7222d14d20",
+   "previous": "77065e66fbd467051afee1433ee07ea566ce61c65668e2198a7e57cc97425db8",
+   "n_cases": 10,
+   "n_finished": 9,
+   "company": null
+  },
+  {
+   "ts": "2026-10-10T08:47:26.743566+00:00",
+   "experiment": "golden-20261010T084243Z-b3ac99-check",
+   "path": "/work/out/evidence/golden-20261010T084243Z-b3ac99-check/20261010T084726Z_bundle.json",
+   "record": "/work/out/evidence/golden-20261010T084243Z-b3ac99-check/20261010T084726Z_record.md",
+   "sha256": "32ed3e5508f7fd96e2032697e07efe91031a51aab247388cdfcefc78f50dd668",
+   "previous": "1127a190d03320840162883d9f4fa3a0d83f9da940e52068b7b79e7222d14d20",
+   "n_cases": 2,
+   "n_finished": 2,
+   "company": null
+  },
+  {
+   "ts": "2026-10-10T08:48:13.539218+00:00",
+   "experiment": "golden-20261010T084243Z-b3ac99-conf",
+   "path": "/work/out/evidence/golden-20261010T084243Z-b3ac99-conf/20261010T084813Z_bundle.json",
+   "record": "/work/out/evidence/golden-20261010T084243Z-b3ac99-conf/20261010T084813Z_record.md",
+   "sha256": "f14b5d51b33ff9e4c9a8a504623b8ee4daa04f7a6d6264cfb18acf3f71dedbd7",
+   "previous": "32ed3e5508f7fd96e2032697e07efe91031a51aab247388cdfcefc78f50dd668",
+   "n_cases": 1,
+   "n_finished": 1,
+   "company": null
+  },
+  {
+   "ts": "2026-10-10T08:49:51.953625+00:00",
+   "experiment": "golden-20261010T084920Z-b3ac99-check",
+   "path": "/work/out/evidence/golden-20261010T084920Z-b3ac99-check/20261010T084951Z_bundle.json",
+   "record": "/work/out/evidence/golden-20261010T084920Z-b3ac99-check/20261010T084951Z_record.md",
+   "sha256": "ca739f1306f7cf1746973ddd1b474f046304956b06162e4976953ba6ea61d8b7",
+   "previous": "f14b5d51b33ff9e4c9a8a504623b8ee4daa04f7a6d6264cfb18acf3f71dedbd7",
+   "n_cases": 2,
+   "n_finished": 2,
+   "company": null
+  },
+  {
+   "ts": "2026-10-10T08:50:39.146561+00:00",
+   "experiment": "golden-20261010T084920Z-b3ac99-conf",
+   "path": "/work/out/evidence/golden-20261010T084920Z-b3ac99-conf/20261010T085039Z_bundle.json",
+   "record": "/work/out/evidence/golden-20261010T084920Z-b3ac99-conf/20261010T085039Z_record.md",
+   "sha256": "99c016909836f4b8f276020bb8e53f0bf5052efac499371849eafc44d9ae394d",
+   "previous": "ca739f1306f7cf1746973ddd1b474f046304956b06162e4976953ba6ea61d8b7",
+   "n_cases": 1,
+   "n_finished": 1,
+   "company": null
+  },
+  {
+   "ts": "2026-10-10T08:52:00.265372+00:00",
+   "experiment": "golden-20261010T084920Z-b3ac99-conf",
+   "path": "/work/out/evidence/golden-20261010T084920Z-b3ac99-conf/20261010T085200Z_bundle.json",
+   "record": "/work/out/evidence/golden-20261010T084920Z-b3ac99-conf/20261010T085200Z_record.md",
+   "sha256": "132b2ca0723654b5af0f1443e97ed82abc6ad069fc61bd2c0ac68a768d5aaddf",
+   "previous": "99c016909836f4b8f276020bb8e53f0bf5052efac499371849eafc44d9ae394d",
+   "n_cases": 1,
+   "n_finished": 1,
+   "company": null
+  }
+ ]
+}

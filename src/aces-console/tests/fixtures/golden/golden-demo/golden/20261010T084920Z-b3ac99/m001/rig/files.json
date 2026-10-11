@@ -1,0 +1,54 @@
+{
+ "schema": "aces-golden-files/1",
+ "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+ "rig_case_id": "c000",
+ "golden_case_id": "m001",
+ "root": "golden/m001",
+ "files": [
+  {
+   "path": "golden/m001/ccx.cvg",
+   "bytes": 274,
+   "sha256": "65086dedb4572132b815ace04b294909c7f6f337111f9704fc310b02320f67f7"
+  },
+  {
+   "path": "golden/m001/ccx.dat.gz",
+   "bytes": 6253840,
+   "sha256": "62d53a376c8014f813fa4a52ccb210a94d61b5256b410911ef607a9eb16387f3"
+  },
+  {
+   "path": "golden/m001/ccx.inp.gz",
+   "bytes": 2877143,
+   "sha256": "ca35cae20b2ec88aaae6039e9572e2ea1ecc0ad953b90ab0553b752ee871ec0f"
+  },
+  {
+   "path": "golden/m001/ccx.log",
+   "bytes": 2265,
+   "sha256": "40c2b49ce149e73c6ccfdc8e5c6cadafd4a4ae5e2656c6cb64a59231dfc95208"
+  },
+  {
+   "path": "golden/m001/ccx.sta",
+   "bytes": 170,
+   "sha256": "01e324ec0ea28f4d1fd7f5e2da1277af53812b873e218be1604c17a4c8e4990d"
+  },
+  {
+   "path": "golden/m001/conforming.json",
+   "bytes": 9168,
+   "sha256": "da8fff3ab4a51efa7608696c36ea77acd238ff261d461f1488b358da5cc4f5c9"
+  },
+  {
+   "path": "golden/m001/mesh.log",
+   "bytes": 20366,
+   "sha256": "83c1a9f209636bcdaf77a7d6218c37efd7c7c70b6c1efb3f5f93b6e776c5a9f3"
+  },
+  {
+   "path": "golden/m001/mesh.npz",
+   "bytes": 4586032,
+   "sha256": "0d40bef4eb18b001fbb4043190227655192be0a2553f132c222b5b99dfc76e17"
+  },
+  {
+   "path": "golden/m001/tetmesh.json",
+   "bytes": 1644,
+   "sha256": "28ad5b8daf02464c8f45afd5ca986b457e048a2ba2ba44dcfea126c37207c2d8"
+  }
+ ]
+}
