@@ -1,0 +1,59 @@
+{
+ "schema": "aces-golden-winner/1",
+ "label": "winner",
+ "case_id": "v001",
+ "params": {
+  "volfrac": 0.23,
+  "rmin_mm": 11.55
+ },
+ "metrics": {
+  "mass_kg": 0.17698581438899466,
+  "mass_voxel_kg": 0.18215808,
+  "mesh_volume_mm3": 66286.82186853733,
+  "voxel_volume_mm3": 68224.0,
+  "solid_fraction": 0.17056,
+  "compliance_Nmm": 828.0079936559462,
+  "umax_mm": 0.031198331261040144,
+  "vm_max_MPa": 64.49043111436654,
+  "vm_p99_MPa": 54.47464675903315,
+  "vm_p95_MPa": 40.70475196838378
+ },
+ "grade": "rig-verified",
+ "verdict": "PASS",
+ "stl": {
+  "path": "winner/winner.stl",
+  "sha256": "de0f92f004ebe1675b4fa796d6707e0c00ca7afc339cd06af6d50dd7de3849ab",
+  "faces": 10380,
+  "vertices": 5192,
+  "watertight": true,
+  "solids": 1,
+  "cavities": 0,
+  "mesh_volume_mm3": 66286.82186853733,
+  "area_mm2": 14313.520685096937,
+  "bbox_mm": [
+   8.657236099243164,
+   4.323824405670166,
+   -0.021370211616158485,
+   91.34980010986328,
+   95.6721420288086,
+   40.02708053588867
+  ],
+  "genus": 0
+ },
+ "mass_kg": 0.17698581438899466,
+ "density": {
+  "path": "v001/generator/density.npy",
+  "sha256": "8ea1b85e37ffec4198065ac64ba09b76f88c4ab9c668b02ca51096f5e1efab6d"
+ },
+ "step": {
+  "written": false,
+  "reason": "the part is an organic mesh (marching cubes of an implicit field); a STEP would be a faceted pretence of a B-rep"
+ },
+ "renders": {
+  "iso": "winner/winner_iso.png",
+  "stress": "winner/winner_stress.png",
+  "density_slices": "winner/density_slices.png",
+  "vm_slices": "winner/vm_slices.png",
+  "disp_slices": "winner/disp_slices.png"
+ }
+}

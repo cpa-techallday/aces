@@ -1,0 +1,482 @@
+{
+ "schema": "aces-golden-conforming/1",
+ "case_id": "m001",
+ "where": "rig",
+ "status": "ok",
+ "message": "38618 C3D10, 187011 DOF, discrete route; equilibrium 3.59e-08",
+ "started_utc": "2026-10-10T08:49:35.454+00:00",
+ "finished_utc": "2026-10-10T08:50:29.761+00:00",
+ "wall_s": 54.30682992935181,
+ "wall_s_mesh": 10.03571343421936,
+ "wall_s_solve": 39.850008487701416,
+ "wall_s_post": 3.4336390495300293,
+ "host": "dff3f8b4dc43",
+ "threads": 16,
+ "timeout_s": 3000.0,
+ "max_dof": 3000000,
+ "source": {
+  "stl": "v001/part.stl",
+  "sha256": "de0f92f004ebe1675b4fa796d6707e0c00ca7afc339cd06af6d50dd7de3849ab",
+  "faces": 10380,
+  "vertices": 5192,
+  "volume_mm3": 66286.82186853733,
+  "area_mm2": 14313.520685096937,
+  "watertight": true,
+  "shells": 1,
+  "cavities": 0,
+  "bbox_mm": [
+   8.657236099243164,
+   4.323824405670166,
+   -0.021370211616158485,
+   91.34980010986328,
+   95.6721420288086,
+   40.02708053588867
+  ]
+ },
+ "mesh": {
+  "tool": "gmsh",
+  "version": "4.15.2",
+  "route": "discrete",
+  "algorithm_3d": 1,
+  "size_mm": 2.0,
+  "threads": 1,
+  "element": "C3D10",
+  "second_order_linear": true,
+  "nodes": 62337,
+  "elements": 38618,
+  "dof": 187011,
+  "dof_estimate": 306577,
+  "volume_mm3": 66286.82186853734,
+  "volume_rel_err": 2.1952953570811996e-16,
+  "min_sicn": 0.3383439805889851,
+  "p01_sicn": 0.5779595591862573,
+  "attempts": [
+   {
+    "attempt": "A",
+    "route": "remesh",
+    "algorithm_3d": 1,
+    "ok": false,
+    "error": "RuntimeError: the remeshed volume differs from the STL's by -0.508 % (limit 0.5 %)",
+    "wall_s": 3.929265260696411,
+    "elements": 36744,
+    "volume_rel_err": -0.0050778777263749,
+    "min_sicn": 0.4517217200341393,
+    "netgen": true
+   },
+   {
+    "attempt": "B",
+    "route": "remesh",
+    "algorithm_3d": 10,
+    "ok": false,
+    "error": "RuntimeError: the remeshed volume differs from the STL's by -0.508 % (limit 0.5 %)",
+    "wall_s": 1.391045331954956,
+    "elements": 36176,
+    "volume_rel_err": -0.0050778777263751195,
+    "min_sicn": 0.34750656552776665,
+    "netgen": true
+   },
+   {
+    "attempt": "C",
+    "route": "discrete",
+    "algorithm_3d": 1,
+    "ok": true,
+    "error": null,
+    "wall_s": 3.6578757762908936,
+    "elements": 38618,
+    "volume_rel_err": 2.1952953570811996e-16,
+    "min_sicn": 0.3383439805889851,
+    "netgen": true
+   }
+  ]
+ },
+ "bcs": {
+  "window_mm": 2.0,
+  "normal_min": 0.7071067811865476,
+  "supports": [
+   {
+    "name": "foot-1",
+    "box": [
+     76.0,
+     64.0,
+     0.0,
+     88.0,
+     76.0,
+     0.0
+    ],
+    "dofs": [
+     0,
+     1,
+     2
+    ],
+    "mode": "surface",
+    "axis": "z",
+    "plane_mm": 0.0,
+    "faces": 74,
+    "nodes": 193,
+    "area_mm2": 146.96140224165353,
+    "projected_mm2": 146.5909406443534,
+    "footprint_mm2": 144.0,
+    "coverage": 1.0179926433635653,
+    "plane_offset_mm": 0.34906550124287605,
+    "overlap_nodes": 0
+   },
+   {
+    "name": "foot-2",
+    "box": [
+     44.0,
+     80.0,
+     0.0,
+     56.0,
+     92.0,
+     0.0
+    ],
+    "dofs": [
+     0,
+     1,
+     2
+    ],
+    "mode": "surface",
+    "axis": "z",
+    "plane_mm": 0.0,
+    "faces": 73,
+    "nodes": 192,
+    "area_mm2": 145.9873811338048,
+    "projected_mm2": 145.76864230552746,
+    "footprint_mm2": 144.0,
+    "coverage": 1.0122822382328296,
+    "plane_offset_mm": 0.30619676783680916,
+    "overlap_nodes": 0
+   },
+   {
+    "name": "foot-3",
+    "box": [
+     12.0,
+     64.0,
+     0.0,
+     24.0,
+     76.0,
+     0.0
+    ],
+    "dofs": [
+     0,
+     1,
+     2
+    ],
+    "mode": "surface",
+    "axis": "z",
+    "plane_mm": 0.0,
+    "faces": 73,
+    "nodes": 192,
+    "area_mm2": 145.89286714918023,
+    "projected_mm2": 145.54998366892505,
+    "footprint_mm2": 144.0,
+    "coverage": 1.0107637754786463,
+    "plane_offset_mm": 0.33115725343426067,
+    "overlap_nodes": 0
+   },
+   {
+    "name": "foot-4",
+    "box": [
+     12.0,
+     28.0,
+     0.0,
+     24.0,
+     40.0,
+     0.0
+    ],
+    "dofs": [
+     0,
+     1,
+     2
+    ],
+    "mode": "surface",
+    "axis": "z",
+    "plane_mm": 0.0,
+    "faces": 73,
+    "nodes": 192,
+    "area_mm2": 145.5828733438045,
+    "projected_mm2": 145.28646198948536,
+    "footprint_mm2": 144.0,
+    "coverage": 1.0089337638158706,
+    "plane_offset_mm": 0.3473492922882239,
+    "overlap_nodes": 0
+   },
+   {
+    "name": "foot-5",
+    "box": [
+     44.0,
+     8.0,
+     0.0,
+     56.0,
+     20.0,
+     0.0
+    ],
+    "dofs": [
+     0,
+     1,
+     2
+    ],
+    "mode": "surface",
+    "axis": "z",
+    "plane_mm": 0.0,
+    "faces": 73,
+    "nodes": 192,
+    "area_mm2": 145.97433220670655,
+    "projected_mm2": 145.75722112333824,
+    "footprint_mm2": 144.0,
+    "coverage": 1.0122029244676267,
+    "plane_offset_mm": 0.30443892379601795,
+    "overlap_nodes": 0
+   },
+   {
+    "name": "foot-6",
+    "box": [
+     76.0,
+     28.0,
+     0.0,
+     88.0,
+     40.0,
+     0.0
+    ],
+    "dofs": [
+     0,
+     1,
+     2
+    ],
+    "mode": "surface",
+    "axis": "z",
+    "plane_mm": 0.0,
+    "faces": 73,
+    "nodes": 192,
+    "area_mm2": 145.75166205628517,
+    "projected_mm2": 145.4500477999536,
+    "footprint_mm2": 144.0,
+    "coverage": 1.0100697763885667,
+    "plane_offset_mm": 0.3343914933502674,
+    "overlap_nodes": 0
+   }
+  ],
+  "loads": [
+   {
+    "name": "cup-down",
+    "box": [
+     40.0,
+     40.0,
+     40.0,
+     60.0,
+     60.0,
+     40.0
+    ],
+    "force": [
+     0.0,
+     0.0,
+     -30000.0
+    ],
+    "axis": "z",
+    "mode": "traction",
+    "plane_mm": 40.0,
+    "faces": 200,
+    "nodes": 339,
+    "area_mm2": 400.56751642013455,
+    "projected_mm2": 400.56520296021336,
+    "footprint_mm2": 400.0,
+    "coverage": 1.0014130074005334,
+    "plane_offset_mm": 0.01567840576171875,
+    "traction_MPa": [
+     0.0,
+     0.0,
+     -74.893741429933
+    ]
+   }
+  ]
+ },
+ "solver": {
+  "tool": "CalculiX ccx",
+  "version": "2.23",
+  "path": "/usr/local/bin/ccx",
+  "sha256": "31be21fc2f0902bd9a05acc2651dbac6dc2a2573dabbf235e39a38cb6f458862",
+  "linear_solver": "Factoring the system of equations using the symmetric spooles solver",
+  "card": "*STATIC, SOLVER=SPOOLES",
+  "threads": 16,
+  "rc": 0,
+  "wall_s": 39.850008487701416,
+  "errors": [],
+  "warnings": []
+ },
+ "equilibrium": {
+  "applied_N": [
+   0.0,
+   0.0,
+   -29999.99999999999
+  ],
+  "reaction_N": [
+   0.00039700000024822657,
+   -0.0009999999992942321,
+   30000.0
+  ],
+  "per_support_N": {
+   "foot-1": [
+    -2996.811,
+    -1887.673,
+    4144.258
+   ],
+   "foot-2": [
+    4.775054,
+    -4416.583,
+    5566.727
+   ],
+   "foot-3": [
+    2983.007,
+    -1881.464,
+    4097.623
+   ],
+   "foot-4": [
+    3813.73,
+    1987.104,
+    5484.857
+   ],
+   "foot-5": [
+    -6.297657,
+    4197.343,
+    5272.182
+   ],
+   "foot-6": [
+    -3798.403,
+    2001.272,
+    5434.353
+   ]
+  },
+  "rf_totals_N": {
+   "foot-1": [
+    -2996.811,
+    -1887.673,
+    4144.258
+   ],
+   "foot-2": [
+    4.775054,
+    -4416.583,
+    5566.727
+   ],
+   "foot-3": [
+    2983.007,
+    -1881.464,
+    4097.623
+   ],
+   "foot-4": [
+    3813.73,
+    1987.104,
+    5484.857
+   ],
+   "foot-5": [
+    -6.297657,
+    4197.343,
+    5272.182
+   ],
+   "foot-6": [
+    -3798.403,
+    2001.272,
+    5434.353
+   ]
+  },
+  "rel_residual": 3.586407981355218e-08
+ },
+ "metrics": {
+  "mass_kg": 0.1769858143889947,
+  "mesh_volume_mm3": 66286.82186853734,
+  "compliance_Nmm": 844.9543317078405,
+  "umax_mm": 0.031756483004286275,
+  "vm_max_MPa": 144.52246998675278,
+  "vm_p99_MPa": 53.63380623106495,
+  "vm_p95_MPa": 41.16215030966936,
+  "vm_max_ip_MPa": 212.50385584118138
+ },
+ "stress": {
+  "measure": "von Mises of each element's mean stress over its 4 integration points; vm_p99 and vm_p95 are element-volume-weighted percentiles over the elements outside the exclusion boxes",
+  "exclude_boxes": [
+   [
+    76.0,
+    64.0,
+    0.0,
+    88.0,
+    76.0,
+    8.0
+   ],
+   [
+    44.0,
+    80.0,
+    0.0,
+    56.0,
+    92.0,
+    8.0
+   ],
+   [
+    12.0,
+    64.0,
+    0.0,
+    24.0,
+    76.0,
+    8.0
+   ],
+   [
+    12.0,
+    28.0,
+    0.0,
+    24.0,
+    40.0,
+    8.0
+   ],
+   [
+    44.0,
+    8.0,
+    0.0,
+    56.0,
+    20.0,
+    8.0
+   ],
+   [
+    76.0,
+    28.0,
+    0.0,
+    88.0,
+    40.0,
+    8.0
+   ],
+   [
+    40.0,
+    40.0,
+    32.0,
+    60.0,
+    60.0,
+    40.0
+   ]
+  ],
+  "elements_total": 38618,
+  "elements_included": 33715,
+  "volume_included_mm3": 56468.30319022189
+ },
+ "material": {
+  "E_MPa": 70000.0,
+  "nu": 0.33,
+  "rho_kg_mm3": 2.67e-06
+ },
+ "files": {
+  "tetmesh.json": "28ad5b8daf02464c8f45afd5ca986b457e048a2ba2ba44dcfea126c37207c2d8",
+  "mesh.npz": "0d40bef4eb18b001fbb4043190227655192be0a2553f132c222b5b99dfc76e17",
+  "mesh.log": "83c1a9f209636bcdaf77a7d6218c37efd7c7c70b6c1efb3f5f93b6e776c5a9f3",
+  "ccx.inp.gz": "ca35cae20b2ec88aaae6039e9572e2ea1ecc0ad953b90ab0553b752ee871ec0f",
+  "ccx.dat.gz": "62d53a376c8014f813fa4a52ccb210a94d61b5256b410911ef607a9eb16387f3",
+  "ccx.sta": "01e324ec0ea28f4d1fd7f5e2da1277af53812b873e218be1604c17a4c8e4990d",
+  "ccx.cvg": "65086dedb4572132b815ace04b294909c7f6f337111f9704fc310b02320f67f7",
+  "ccx.log": "40c2b49ce149e73c6ccfdc8e5c6cadafd4a4ae5e2656c6cb64a59231dfc95208"
+ },
+ "artifacts": [
+  "ccx.cvg",
+  "ccx.dat.gz",
+  "ccx.inp.gz",
+  "ccx.log",
+  "ccx.sta",
+  "mesh.log",
+  "mesh.npz",
+  "tetmesh.json"
+ ]
+}

@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 # Install-test the built packages in a clean Arch container: enable the [aces] repo, install the named packages,
 # exercise the CLI, and dry-run dependency resolution for the big meta-packages (no multi-GB downloads).
-# Usage: bin/install-test [pkg ...]   (default: aces-base aces-creative aces-consoles aces-omarchy aces-cad-onshape)
+# Usage: bin/install-test [pkg ...]   (default: aces-base aces-creative aces-consoles aces-console aces-omarchy aces-cad-onshape)
+#
+# aces-console (2026-10-11) replaces aces-consoles: when both are named, aces-consoles is installed first and the
+# aces-console block exercises the replacement through pacman -Su, then runs the package's install check (spec 7.2)
+# with a random GRID CONTROL token that must appear in no output and no log, and the installed unit tests.
 #
 # Signed repo: when keys/aces-pkgs.pub.asc exists and the repo database carries a signature, the container trusts
 # that key through pacman-key and installs with SigLevel = Required DatabaseRequired, which is exactly what a
@@ -11,7 +15,7 @@ here="$(cd "$(dirname "$0")/.." && pwd)"
 hostpath() { if command -v cygpath >/dev/null 2>&1; then cygpath -w "$1"; else printf '%s' "$1"; fi; }
 repo="$(hostpath "$here/repo")"
 keys="$(hostpath "$here/keys")"
-pkgs="${*:-aces-base aces-creative aces-consoles aces-omarchy aces-cad-onshape}"
+pkgs="${*:-aces-base aces-creative aces-consoles aces-console aces-omarchy aces-cad-onshape}"
 sigmode="Optional TrustAll"
 if [ -f "$here/keys/aces-pkgs.pub.asc" ] && [ -f "$here/keys/FINGERPRINT" ] && [ -f "$here/repo/x86_64/aces.db.tar.zst.sig" ]; then
   sigmode="Required DatabaseRequired"
@@ -32,8 +36,15 @@ fi
 printf "\n[aces]\nSigLevel = %s\nServer = file:///repo/x86_64\n" "$SIGMODE" >> /etc/pacman.conf
 pacman -Sy --noconfirm >/dev/null
 echo "== [aces] repo contents"; pacman -Sl aces
-echo "== install: $PKGS"
-pacman -S --noconfirm $PKGS >/dev/null
+# aces-console replaces aces-consoles: when both are named, aces-consoles is installed here and the replacement is
+# exercised through pacman -Su in the aces-console block below
+install_pkgs="$PKGS"; replace_consoles=0
+if [[ " $PKGS " == *" aces-consoles "* && " $PKGS " == *" aces-console "* ]]; then
+  replace_consoles=1
+  install_pkgs="$(printf "%s\n" $PKGS | grep -v -x "aces-console" | tr "\n" " ")"
+fi
+echo "== install: $install_pkgs"
+pacman -S --noconfirm $install_pkgs >/dev/null
 echo "== aces --version"; aces --version
 echo "== aces doctor --offline"; aces doctor --offline || true
 echo "== aces policy show"; aces policy show
@@ -191,6 +202,41 @@ if command -v aces-cad >/dev/null 2>&1; then
   chmod -R a+rX /logs/cad
 else
   echo "== local CAD: aces-cad not in this run"
+fi
+if [[ " $PKGS " == *" aces-console "* ]]; then
+  echo "== aces-console: the one desktop console (replacement of aces-consoles, launcher entry, loopback server, install check, installed tests)"
+  if [ "$replace_consoles" -eq 1 ]; then
+    echo "== replacement: $(pacman -Q aces-consoles) is installed; pacman -Su must replace it with aces-console (replaces=aces-consoles)"
+    pacman -Su --noconfirm >/dev/null || pacman -Su --ask=4 --noconfirm >/dev/null
+    # by name: `pacman -Q aces-consoles` keeps answering after the replacement, through the provides= of aces-console
+    if pacman -Qq | grep -q -x "aces-consoles"; then echo "aces-console: aces-consoles is still installed after pacman -Su"; exit 1; fi
+    echo "replacement done: no package named aces-consoles is installed; pacman -Q aces-consoles now answers \"$(pacman -Q aces-consoles 2>/dev/null)\" through provides="
+  fi
+  pacman -Q aces-console
+  pacman -Qi aces-console | grep -E "^(Name|Version|Provides|Replaces|Conflicts)"
+  ls -la /usr/share/applications/aces.desktop /usr/share/aces/console/static/index.html /usr/share/aces/console/tests/install_check.py
+  head -5 /usr/share/licenses/aces-console/LICENSES.md
+  aces-console --version
+  aces-console url
+  aces-console status || true
+  # the default set leaves 3 ledger entries (the project + ledger block above); the golden block adds its golden.run and
+  # evidence entries (5 after it in every run so far), the CAD block its classify and cad.pull (7 after it; spec 7.2)
+  EXPECT_LEDGER=3
+  if pacman -Q aces-cad >/dev/null 2>&1; then EXPECT_LEDGER=">=7"; elif pacman -Q aces-engineering >/dev/null 2>&1; then EXPECT_LEDGER=">=5"; fi
+  echo "== install check (spec 7.2): expected ledger entries ${EXPECT_LEDGER}; a random GRID CONTROL token is set and must appear in no output and no log"
+  export ACES_GC_TOKEN="$(python3 -c "import secrets;print(secrets.token_hex(16))")"
+  python3 -I /usr/share/aces/console/tests/install_check.py --port 8070 --expect-ledger "${EXPECT_LEDGER}" 2>&1 | tee /tmp/console-check.log
+  test "${PIPESTATUS[0]}" -eq 0
+  test -s /root/.local/state/aces/console/server.log
+  # an explicit test rather than the negated grep of spec 7.2: under set -e a negated command never stops the script
+  if grep -q -- "${ACES_GC_TOKEN}" /tmp/console-check.log /root/.local/state/aces/console/*.log; then echo "aces-console: the token value leaked into the check log or the server log"; exit 1; fi
+  echo "token check: the token value is in neither /tmp/console-check.log nor /root/.local/state/aces/console/*.log"
+  unset ACES_GC_TOKEN
+  aces ledger verify
+  echo "== installed tests of aces-console (fakes on 127.0.0.1 only; the browser harness prints SKIP without a browser)"
+  PYTHONDONTWRITEBYTECODE=1 NO_COLOR=1 python -m unittest discover -s /usr/share/aces/console/tests -t /usr/share/aces/console
+else
+  echo "== aces-console: not in this run"
 fi
 echo "== dependency dry-run for the meta-packages (resolution only, nothing downloaded)"
 for m in aces-field aces-survey aces-os; do

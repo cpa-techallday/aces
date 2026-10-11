@@ -2,7 +2,10 @@
 # The aces command line and the /etc/aces defaults. Sources are packed from src/aces-base by bin/build.
 pkgname=aces-base
 pkgver=0.1.0
-pkgrel=3
+pkgrel=4
+# 0.1.0-4: a documented [console] table in /etc/aces/aces.toml and DEFAULTS (bind, port, static_dir, state_dir) for
+# aces-console, which reads it through aces.config.load(); the console itself needs only >=0.1.0-3 (a missing table
+# falls back to the same values inside the console package)
 pkgdesc="ACES OS base: the aces CLI (fabric manifest, policy and ledger with ledger record, projects, doctor, lane tests, the aces golden passthrough) and /etc/aces defaults"
 arch=('any')
 url="file:///usr/share/doc/aces-base"

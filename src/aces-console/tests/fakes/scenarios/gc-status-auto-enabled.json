@@ -1,0 +1,9 @@
+{
+ "derived": true,
+ "derived_from": "gc-status.json",
+ "note": "The capture has auto_enabled false and detected_mode transition. This scenario settles detected_mode and turns auto_enabled on, so the only gate that can refuse is the auto-mode gate (build spec 4.5, enforced server-side).",
+ "changes": {
+  "detected_mode": "sim-lab-4",
+  "auto_enabled": true
+ }
+}

@@ -1,0 +1,16 @@
+{
+ "case_id": "v001",
+ "role": "verify",
+ "volfrac": 0.23,
+ "rmin_mm": 11.55,
+ "h_gen_mm": 4.0,
+ "h_fea_mm": 4.0,
+ "device": "cpu",
+ "backend": "adapter",
+ "source_case": null,
+ "reuse_mask": false,
+ "round": 1,
+ "level": null,
+ "seed": 7,
+ "fea_solver": "pcg"
+}

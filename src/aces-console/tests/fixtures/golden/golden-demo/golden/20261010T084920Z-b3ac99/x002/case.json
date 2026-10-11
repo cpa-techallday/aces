@@ -1,0 +1,16 @@
+{
+ "case_id": "x002",
+ "role": "check",
+ "h_gen_mm": null,
+ "h_fea_mm": 1.0,
+ "device": "rig",
+ "backend": "adapter",
+ "source_case": "v001",
+ "reuse_mask": false,
+ "round": null,
+ "level": 2,
+ "seed": 7,
+ "host": "rig",
+ "lane": "sim/pool",
+ "fea_solver": "auto"
+}

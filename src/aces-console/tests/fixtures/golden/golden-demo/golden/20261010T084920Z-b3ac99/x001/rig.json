@@ -1,0 +1,113 @@
+{
+ "schema": "aces-golden-rig-case/1",
+ "case_id": "x001",
+ "lane": "sim/pool",
+ "url": "http://192.168.1.65:8022/mcp",
+ "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+ "rig_case_id": "c000",
+ "job_id": "golden-20261010T084920Z-b3ac99-check--c000--run--5b7df8",
+ "job_status": "finished",
+ "state": "result",
+ "design_status": "ok",
+ "reason": null,
+ "queue": "sim",
+ "gpu": 0,
+ "owner": "daaeb15fe6ec:2569:golden-20261010T084920Z-b3ac99-check--c000--run--5b7df8",
+ "gpu_name": "NVIDIA CMP 170HX",
+ "gpu_uuid": "GPU-787b2119-ba37-7d54-a632-543b3a9a6e36",
+ "image": "aces-golden:0.1",
+ "image_id": "sha256:d45698807541b49195d75de749d193ef33c5dc2803f0ccb0980d0e489e5f1201",
+ "image_digest": "sha256:d45698807541b49195d75de749d193ef33c5dc2803f0ccb0980d0e489e5f1201 aces-golden@sha256:d45698807541b49195d75de749d193ef33c5dc2803f0ccb0980d0e489e5f1201",
+ "submitted_utc": "2026-10-10T08:49:33.340569+00:00",
+ "started_utc": "2026-10-10T08:49:34.963493+00:00",
+ "finished_utc": "2026-10-10T08:49:38.143077+00:00",
+ "wait_s": 1.622924,
+ "run_s": 3.179584,
+ "pulled_utc": "2026-10-10T08:49:45.715+00:00",
+ "files": [
+  {
+   "rig": "c000/golden/x001/case.md",
+   "local": "x001/case.md",
+   "bytes": 974,
+   "sha256": "893b3f41eb77f634e0e62493de50b0e096b1645c946774f25ddcdfb4eb8c8493",
+   "chunks": 1
+  },
+  {
+   "rig": "c000/golden/x001/disp_slices.png",
+   "local": "x001/disp_slices.png",
+   "bytes": 44677,
+   "sha256": "5b05b77435fa38c1842227a84de83bcf2cf802ce457d177691c80d9aac03827b",
+   "chunks": 1
+  },
+  {
+   "rig": "c000/golden/x001/fields.npz",
+   "local": "x001/fields.npz",
+   "bytes": 637836,
+   "sha256": "09c49acfb61a9abb13bcad9ad4de1c06897e7c5d9085e8f8bdb81711b1624192",
+   "chunks": 1
+  },
+  {
+   "rig": "c000/golden/x001/fields.vtk",
+   "local": "x001/fields.vtk",
+   "bytes": 1255779,
+   "sha256": "e9123828afb075f8b317f59be48839ed2f58bbcfc82586bf36742edd651ca5f9",
+   "chunks": 1
+  },
+  {
+   "rig": "c000/golden/x001/mask.npy",
+   "local": "x001/mask.npy",
+   "bytes": 50128,
+   "sha256": "85a14d58f387eeb092bcd139d6e9b823f4be9dc8889ce9763644393747fe8cc5",
+   "chunks": 1
+  },
+  {
+   "rig": "c000/golden/x001/mesh.json",
+   "local": "x001/mesh.json",
+   "bytes": 459,
+   "sha256": "628b313955466b45e947e105a4510eb1f7b821d8e11289f7833f6d2d4112ac93",
+   "chunks": 1
+  },
+  {
+   "rig": "c000/golden/x001/solve.json",
+   "local": "x001/solve.json",
+   "bytes": 445,
+   "sha256": "f44089b2b64b5fae8394971ec4965739eae565c20a6345c46e0b67ad66d27caf",
+   "chunks": 1
+  },
+  {
+   "rig": "c000/golden/x001/vm_slices.png",
+   "local": "x001/vm_slices.png",
+   "bytes": 46291,
+   "sha256": "d9bf9814948a7587c2c53afbd4758ba7605a0566a0d93208853b003ec2053e20",
+   "chunks": 1
+  }
+ ],
+ "records": {
+  "outcome.json": "f596fe4c24e6b6eb10fbf2a3d47464d0a09a5a3021372a1baa4f880ea47bb838",
+  "files.json": "73da1f6bf4b5a4264502192e27ed5ac341200a2f75a2328fe0d9c05f5202b99e",
+  "results.json": "3eb0da028f9412d0c1c3b239bba7da1883911701f034a96540cf0dcb39e4e3a1",
+  "evidence.json": "04aac08a68e3ebf3828a78be1624e52dd35cb7fe43d8ad52dc506ae1b263c709",
+  "status.json": "e36fa86976030c9a6f16a6ba6a798de01c9c8189975b169d9fe854d58c71b021",
+  "case.json": "0929e8d78257e55a1faca031d3b62f7b387bfe155a51302a87a94d53638ad083",
+  "worker.log": "93d72a6381b53d0393557559ef6f1e50af2b8b49ce9d13007f608ec5fbe8f562"
+ },
+ "code": {
+  "golden_compute_sha256": "1f1a56410bf48ebee4d22ab92920b2b6af2f81e491487dfbd1c68fddf0269714",
+  "modules": {
+   "gendesign/__init__.py": "1881e8c86cba8e50886ff40ee49387f5062a079bb416d1efa3d5ce2e2874f3b1",
+   "gendesign/evaluators.py": "9853e92028a6fcc4724ce7743a45b90297f0932db2d21e2432c9edbd31c44d13",
+   "gendesign/fea3d.py": "e80c35bfb56bd794ec9d36894bbd8d4e55eba78c7290757a6dc695474108a26c",
+   "gendesign/progress.py": "24a80751fe6e6a20553018520349875b2f4a5c31f2303168a48ac043b1586956",
+   "simlab/__init__.py": "eba89800110ae56fcda4aa4b7e03b2214fbe2776554f92904827e4c307939443",
+   "simlab/evidence.py": "e0757360d60a609ca1528ad8a6348b2798a3fa87c817c32aa682db70b27ef7f5",
+   "simlab/post.py": "80ade4c3bd96d0f8b48b4264ab9a56b046e37947ce14c4f7a48d3da39ecdfa8e",
+   "simlab/registry.py": "c3bfd0826428e7f4570819d036f6c5839d150aecfbae8da6211b7bd3f1c84cce",
+   "simlab/solvers/__init__.py": "b6600c7d7c5061cfb7aeffa9d0ba8ae95f5f14314438b232f006d633e0f08c25",
+   "simlab/solvers/golden_check.py": "384487c3e41eb98e5e5f03bfcb78d6122ef61d2e4ec5908cc7f398427b4c74bb",
+   "simlab/solvers/step_structures.py": "103497387087a2d1ab406911d9ab12e5d416cb1471191b43737e5923f715dd3d",
+   "simlab/spec.py": "b2e335e305ef66ec9327158d28f16e4b1e92366ba12e3814689704939dea0aa2",
+   "simlab/tracking.py": "8e9b0b156fd1f6942b06536c4e9a3c700f7f00304a64337cc7b9474810b2862a"
+  }
+ },
+ "device_forced": null
+}

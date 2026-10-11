@@ -1,0 +1,193 @@
+{
+ "schema": "aces-golden-case/1",
+ "case_id": "d000",
+ "role": "sweep",
+ "round": null,
+ "level": null,
+ "source_case": null,
+ "design": {
+  "volfrac": 0.18807,
+  "rmin_mm": 9.568144
+ },
+ "mass_kg": 0.1390104949130709,
+ "mass_voxel_kg": 0.14063424,
+ "mesh_volume_mm3": 52063.85577268573,
+ "voxel_volume_mm3": 52672.0,
+ "solid_fraction": 0.13168,
+ "compliance_Nmm": 1061.9741222296054,
+ "umax_mm": 0.03949597969109304,
+ "vm_max_MPa": 74.6639825493752,
+ "vm_p99_MPa": 63.07597625732422,
+ "vm_p95_MPa": 55.34433822631836,
+ "pcg_iters": 262,
+ "pcg_relres": 9.563267042932118e-09,
+ "converged": true,
+ "elements": 6250,
+ "dof": 22308,
+ "elem_mm": 4.0,
+ "n_fixed_dofs": 288,
+ "device": "cpu/numpy",
+ "dtype": "float64",
+ "backend": "step-structures.stage_solve",
+ "lane": "desktop-cpu",
+ "grade": "preview-grade",
+ "fea_solver": "pcg",
+ "fea_solver_reason": "pcg requested",
+ "generator": {
+  "kind": "simp",
+  "h_mm": 4.0,
+  "elements": 6250,
+  "volfrac_design": 0.18807,
+  "volfrac_box": 0.147145968,
+  "rmin_mm": 9.568144,
+  "penal": 3.0,
+  "iterations_run": 25,
+  "converged": false,
+  "stopped_at_cap": true,
+  "final_change": 0.05182322475245904,
+  "compliance_Nmm": 1803.9287237179994,
+  "solves_unconverged": 0,
+  "mnd_pct": 26.716965622947708,
+  "device": "cpu/numpy",
+  "wall_s": 3.2828874588012695
+ },
+ "skin": {
+  "status": "ok",
+  "message": "",
+  "field_h_mm": 2.0,
+  "upsample": 2,
+  "sigma_vox": 1.0,
+  "blend_mm": 5.0,
+  "clip_blend_mm": 2.0,
+  "taubin_iters": 5,
+  "iso": 0.5,
+  "clipped_to_domain": true,
+  "infill": null,
+  "faces": 10020,
+  "vertices": 5012,
+  "watertight": true,
+  "solids": 1,
+  "cavities": 0,
+  "cavity_volume_mm3": 0.0,
+  "islands_removed": 0,
+  "removed_volume_mm3": 0.0,
+  "euler": 2,
+  "genus": 0,
+  "mesh_volume_mm3": 52063.855743800465,
+  "area_mm2": 13717.59236734017,
+  "bbox_mm": [
+   8.28614223828799,
+   3.9482875527126273,
+   -0.02317110640073193,
+   91.72223633650441,
+   96.04744349316857,
+   40.027084547596715
+  ],
+  "wall_s": 0.03278684616088867
+ },
+ "voxel": {
+  "h_mm": 4.0,
+  "cells": 6250,
+  "solid_cells": 823,
+  "voxel_volume_mm3": 52672.0,
+  "mesh_volume_mm3": 52063.85577268573,
+  "volume_ratio_voxel_over_mesh": 1.0116807374000394,
+  "mask_sha256": "cce278c49875c16fa27b96d983f7df5e4cbc90568b12ec0882fa934f076cbc7e"
+ },
+ "checks": {
+  "load_coverage": {
+   "cup-down": 1.0
+  },
+  "support_coverage": {
+   "foot-1": 1.0,
+   "foot-2": 1.0,
+   "foot-3": 1.0,
+   "foot-4": 1.0,
+   "foot-5": 1.0,
+   "foot-6": 1.0
+  },
+  "load_path_connected": true,
+  "solid_components": 1
+ },
+ "stress": {
+  "measure": "vm_p99",
+  "exclude_mm": 8.0,
+  "exclude_boxes": [
+   [
+    76.0,
+    64.0,
+    0.0,
+    88.0,
+    76.0,
+    8.0
+   ],
+   [
+    44.0,
+    80.0,
+    0.0,
+    56.0,
+    92.0,
+    8.0
+   ],
+   [
+    12.0,
+    64.0,
+    0.0,
+    24.0,
+    76.0,
+    8.0
+   ],
+   [
+    12.0,
+    28.0,
+    0.0,
+    24.0,
+    40.0,
+    8.0
+   ],
+   [
+    44.0,
+    8.0,
+    0.0,
+    56.0,
+    20.0,
+    8.0
+   ],
+   [
+    76.0,
+    28.0,
+    0.0,
+    88.0,
+    40.0,
+    8.0
+   ],
+   [
+    40.0,
+    40.0,
+    32.0,
+    60.0,
+    60.0,
+    40.0
+   ]
+  ],
+  "n_elements": 665
+ },
+ "wall_s_generate": 3.2837610244750977,
+ "wall_s_skin": 0.29550909996032715,
+ "wall_s_voxel": 0.021329879760742188,
+ "wall_s_solve": 0.21615123748779297,
+ "wall_s_post": null,
+ "wall_s_total": 4.109435558319092,
+ "artifacts": [
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d000/fields.npz",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d000/generator/density.npy",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d000/generator/report.json",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d000/generator/slices.png",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d000/mask.npy",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d000/mesh.json",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d000/part.stl",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d000/skin.json",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d000/solve.json",
+  "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d000/thumb.png"
+ ]
+}

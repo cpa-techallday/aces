@@ -1,0 +1,144 @@
+{
+ "schema": "aces-golden-compute/1",
+ "detected_utc": "2026-10-10T10:22:10.404+00:00",
+ "host": "aces-rehearsal",
+ "platform": "Linux-7.2.5-3-omarchy-x86_64-with-glibc2.44",
+ "python": "3.14.7",
+ "cpu": {
+  "logical": 4,
+  "usable": 4,
+  "model": "Intel(R) Core(TM) Ultra 9 285HX",
+  "mem_total_gb": 8.32,
+  "mem_available_gb": 6.88,
+  "numpy": "2.4.6",
+  "blas": [
+   {
+    "user_api": "blas",
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "prefix": "libscipy_openblas",
+    "filepath": "/opt/aces/engineering/venv/lib/python3.14/site-packages/numpy.libs/libscipy_openblas64_-32a4b2a6.so",
+    "version": "0.3.31.188.0",
+    "threading_layer": "pthreads",
+    "architecture": "Haswell"
+   }
+  ],
+  "blas_threads_per_solve": 1
+ },
+ "kernel_selftest": {
+  "passed": true,
+  "wall_s": 0.0021,
+  "source": "gendesign.fea3d.self_test"
+ },
+ "gpu": {
+  "cupy": "not available (ModuleNotFoundError)",
+  "present": false,
+  "usable": false,
+  "reason": "CuPy is not importable here (an optional extra; the packaged venv does not ship it)",
+  "name": null,
+  "cuda_runtime": null,
+  "mem_free_mib": null,
+  "mem_total_mib": null,
+  "patch_test": null
+ },
+ "warp": {
+  "importable": null,
+  "usable": false,
+  "version": null,
+  "cuda_devices": null,
+  "reason": "not probed: Warp's apply_K runs on the CuPy device arrays and no usable CuPy GPU was found; warp-lang is not installed"
+ },
+ "torch": {
+  "installed": false,
+  "use": "not used",
+  "reason": "a field (FNO) surrogate needs O(100) solved fields; v0 fits a tabular GP"
+ },
+ "physicsnemo": {
+  "installed": false,
+  "use": "not used",
+  "reason": "a field (FNO) surrogate needs O(100) solved fields; v0 fits a tabular GP"
+ },
+ "conforming_mesh": {
+  "gmsh": "4.15.2",
+  "gmsh_reason": "gmsh 4.15.2",
+  "ccx": "/usr/bin/ccx",
+  "ccx_version": "2.23",
+  "ccx_sha256": "31be21fc2f0902bd9a05acc2651dbac6dc2a2573dabbf235e39a38cb6f458862",
+  "usable": true,
+  "reason": "gmsh 4.15.2 and CalculiX ccx 2.23 at /usr/bin/ccx",
+  "code_aster": null,
+  "use": "available"
+ },
+ "rig": {
+  "manifest": {
+   "path": "/home/aces/.config/aces/fabric.json",
+   "present": true,
+   "generated": "2026-10-10T08:49:18+00:00",
+   "age_s": 5571.3,
+   "stale": true,
+   "mode": "sim-lab-4"
+  },
+  "simlab_mcp": {
+   "url": "http://192.168.1.65:8022/mcp",
+   "health": "http 200"
+  },
+  "lanes": [
+   {
+    "id": "sim/pool",
+    "kind": "sim",
+    "gpus": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "endpoint": "http://192.168.1.65:8022/mcp",
+    "status": "stale-manifest",
+    "use": "not used",
+    "reason": "desktop only (run with --lane sim/pool to send the independent check and the conforming check to the rig)"
+   }
+  ],
+  "max_age_s": 900.0,
+  "probe": null
+ },
+ "plan": {
+  "sweep": {
+   "device": "cpu",
+   "jobs": 4,
+   "reason": "no usable GPU (CuPy is not importable here (an optional extra; the packaged venv does not ship it))"
+  },
+  "verify": {
+   "device": "cpu"
+  },
+  "check_mode": "auto",
+  "check_budget_s": 60.0,
+  "parity": [],
+  "rig": {
+   "submit": false,
+   "lane": null,
+   "url": null,
+   "sweep": false,
+   "check": false,
+   "conforming": false,
+   "budget_s": null,
+   "reason": "no rig lane: everything runs on this desktop (--lane LANE sends the independent check and the conforming check to a rig)"
+  },
+  "conforming": {
+   "mode": "auto",
+   "host": "desktop",
+   "fallback": null,
+   "h_mm": 2.0,
+   "threads": 4,
+   "max_dof": 1500000,
+   "timeout_s": 900.0,
+   "reason": "conforming tet10 at 2 mm on this desktop (gmsh 4.15.2, ccx 2.23, 4 threads)"
+  },
+  "cells": {
+   "gen": 6250,
+   "fea": 6250
+  },
+  "notes": [
+   "no device parity: no usable GPU (CuPy is not importable here (an optional extra; the packaged venv does not ship it))"
+  ]
+ }
+}

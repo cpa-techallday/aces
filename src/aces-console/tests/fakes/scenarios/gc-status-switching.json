@@ -1,0 +1,9 @@
+{
+ "derived": true,
+ "derived_from": "gc-status.json",
+ "note": "The capture has switching null. This scenario settles detected_mode and sets switching to a target mode name (the string form index.html:525-528 renders) so the switching gate can be exercised.",
+ "changes": {
+  "detected_mode": "sim-lab-4",
+  "switching": "sim-lab-8"
+ }
+}

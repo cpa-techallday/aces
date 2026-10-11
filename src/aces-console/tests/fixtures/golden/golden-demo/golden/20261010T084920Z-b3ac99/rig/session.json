@@ -1,0 +1,303 @@
+{
+ "schema": "aces-golden-rig-session/1",
+ "lane": "sim/pool",
+ "lane_source": "cli",
+ "url": "http://192.168.1.65:8022/mcp",
+ "token_source": "not set",
+ "principal": "anonymous",
+ "policy": "full",
+ "server": {
+  "name": "simlab",
+  "version": "0.4.0",
+  "protocol": "2025-06-18"
+ },
+ "tools": [
+  "rig_capacity",
+  "sim_cancel",
+  "sim_evidence",
+  "sim_get_file",
+  "sim_list_experiments",
+  "sim_list_solvers",
+  "sim_list_specs",
+  "sim_put_file",
+  "sim_put_spec",
+  "sim_report",
+  "sim_report_files",
+  "sim_results",
+  "sim_status",
+  "sim_submit",
+  "sim_sweep",
+  "sim_validate",
+  "sim_whoami"
+ ],
+ "missing_optional": [],
+ "solvers": {
+  "golden-case": {
+   "image": "aces-golden:0.1",
+   "validation": "pass",
+   "validation_image_id": "sha256:d45698807541b49195d75de749d193ef33c5dc2803f0ccb0980d0e489e5f1201",
+   "compute_sha256": "1f1a56410bf48ebee4d22ab92920b2b6af2f81e491487dfbd1c68fddf0269714"
+  },
+  "golden-check": {
+   "image": "aces-golden:0.1",
+   "validation": "pass",
+   "validation_image_id": "sha256:d45698807541b49195d75de749d193ef33c5dc2803f0ccb0980d0e489e5f1201",
+   "compute_sha256": "1f1a56410bf48ebee4d22ab92920b2b6af2f81e491487dfbd1c68fddf0269714"
+  },
+  "ccx-check": {
+   "image": "aces-golden:0.1",
+   "validation": "pass",
+   "validation_image_id": "sha256:d45698807541b49195d75de749d193ef33c5dc2803f0ccb0980d0e489e5f1201",
+   "compute_sha256": "1f1a56410bf48ebee4d22ab92920b2b6af2f81e491487dfbd1c68fddf0269714"
+  }
+ },
+ "capacity": {
+  "mode": "sim-lab-4",
+  "pool": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "available": [
+   0,
+   2,
+   3
+  ],
+  "derated": [],
+  "source": "rig-state http://host.docker.internal:8010/mcp",
+  "errors": []
+ },
+ "manifest": {
+  "path": "/home/aces/.config/aces/fabric.json",
+  "age_s": 0.2,
+  "stale": false,
+  "mode": "sim-lab-4"
+ },
+ "budget_s": 1800.0,
+ "scope": {
+  "sweep": false,
+  "check": true,
+  "conforming": true
+ },
+ "uploads": [
+  {
+   "name": "golden/20261010T084920Z-b3ac99/spec.effective.json",
+   "local": "inputs/spec.effective.json",
+   "sha256": "acc99c6a2671265e41521b81d1ce216ba0c61d4f3759665286e456c317045b52",
+   "bytes": 6374,
+   "existed": false,
+   "uploaded_utc": "2026-10-10T08:49:33.219+00:00"
+  },
+  {
+   "name": "golden/20261010T084920Z-b3ac99/domain.json",
+   "local": "domain/domain.json",
+   "sha256": "a2320df10bb6642484aafb5bc2927fd7c05690eb138e3dc1555be4550333265a",
+   "bytes": 20149,
+   "existed": false,
+   "uploaded_utc": "2026-10-10T08:49:33.224+00:00"
+  },
+  {
+   "name": "golden/20261010T084920Z-b3ac99/v001.part.stl",
+   "local": "v001/part.stl",
+   "sha256": "de0f92f004ebe1675b4fa796d6707e0c00ca7afc339cd06af6d50dd7de3849ab",
+   "bytes": 519084,
+   "existed": false,
+   "uploaded_utc": "2026-10-10T08:49:33.243+00:00"
+  }
+ ],
+ "experiments": [
+  {
+   "id": "golden-20261010T084920Z-b3ac99-check",
+   "stage": "check",
+   "kind": "mesh",
+   "solver": "golden-check",
+   "spec": "rig/specs/golden-20261010T084920Z-b3ac99-check.yaml",
+   "spec_sha256": "212d143f485566b7a688bc6de1dfd601ae862c77d3a5a6cb52c3fc670ea9e19a",
+   "spec_path": "cases/uploaded/anonymous/golden-20261010T084920Z-b3ac99-check.yaml",
+   "submitted_utc": "2026-10-10T08:49:33.341+00:00",
+   "finished_utc": "2026-10-10T08:49:51.936+00:00",
+   "wall_s": 18.724,
+   "queue": "sim",
+   "exp_dir": "/work/out/queue/golden-20261010T084920Z-b3ac99-check",
+   "lease_wait_s": 1800,
+   "cases": {
+    "c000": "x001",
+    "c001": "x002"
+   },
+   "jobs": {
+    "c000": "golden-20261010T084920Z-b3ac99-check--c000--run--5b7df8",
+    "c001": "golden-20261010T084920Z-b3ac99-check--c001--run--a53d84"
+   },
+   "counts": {
+    "cases": 2,
+    "finished": 2,
+    "failed": 0,
+    "delivered": 2,
+    "not_delivered": 0
+   },
+   "cancelled": false,
+   "rig_evidence": {
+    "bundle_sha256": "ca739f1306f7cf1746973ddd1b474f046304956b06162e4976953ba6ea61d8b7",
+    "ledger_entry_sha256": "02e9a09cf0777fcad9eb19d93e3557e846eb1e0e84b609b56e2fd122d6e41cfb"
+   }
+  },
+  {
+   "id": "golden-20261010T084920Z-b3ac99-conf",
+   "stage": "conf",
+   "kind": "conforming",
+   "solver": "ccx-check",
+   "spec": "rig/specs/golden-20261010T084920Z-b3ac99-conf.yaml",
+   "spec_sha256": "d1b55760ea489a7ad353c9f87bb5eddc4db9a64c1e9b283a17445e89626c78e3",
+   "spec_path": "cases/uploaded/anonymous/golden-20261010T084920Z-b3ac99-conf.yaml",
+   "submitted_utc": "2026-10-10T08:49:33.395+00:00",
+   "finished_utc": "2026-10-10T08:50:39.134+00:00",
+   "wall_s": 65.792,
+   "queue": "cpu",
+   "exp_dir": "/work/out/queue/golden-20261010T084920Z-b3ac99-conf",
+   "lease_wait_s": 1800,
+   "cases": {
+    "c000": "m001"
+   },
+   "jobs": {
+    "c000": "golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c"
+   },
+   "counts": {
+    "cases": 1,
+    "finished": 1,
+    "failed": 0,
+    "delivered": 1,
+    "not_delivered": 0
+   },
+   "cancelled": false,
+   "rig_evidence": {
+    "bundle_sha256": "99c016909836f4b8f276020bb8e53f0bf5052efac499371849eafc44d9ae394d",
+    "ledger_entry_sha256": "9eb60a9703483c65d474edd48a02ae77e2c19db965291b0f4100573fa288840c"
+   }
+  }
+ ],
+ "events": [
+  {
+   "t": 13.427,
+   "utc": "2026-10-10T08:49:33.341+00:00",
+   "experiment": "golden-20261010T084920Z-b3ac99-check",
+   "case": null,
+   "state": "submitted",
+   "gpu": null,
+   "detail": "2 case(s), lease wait 1800 s"
+  },
+  {
+   "t": 13.481,
+   "utc": "2026-10-10T08:49:33.395+00:00",
+   "experiment": "golden-20261010T084920Z-b3ac99-conf",
+   "case": null,
+   "state": "submitted",
+   "gpu": null,
+   "detail": "1 case(s), lease wait 1800 s"
+  },
+  {
+   "t": 13.491,
+   "utc": "2026-10-10T08:49:33.405+00:00",
+   "experiment": "golden-20261010T084920Z-b3ac99-check",
+   "case": "x001",
+   "state": "unknown",
+   "gpu": null,
+   "detail": "started"
+  },
+  {
+   "t": 13.491,
+   "utc": "2026-10-10T08:49:33.405+00:00",
+   "experiment": "golden-20261010T084920Z-b3ac99-check",
+   "case": "x002",
+   "state": "unknown",
+   "gpu": null,
+   "detail": "started"
+  },
+  {
+   "t": 15.501,
+   "utc": "2026-10-10T08:49:35.415+00:00",
+   "experiment": "golden-20261010T084920Z-b3ac99-check",
+   "case": "x001",
+   "state": "running",
+   "gpu": 0,
+   "detail": "GPU 0"
+  },
+  {
+   "t": 15.501,
+   "utc": "2026-10-10T08:49:35.415+00:00",
+   "experiment": "golden-20261010T084920Z-b3ac99-check",
+   "case": "x002",
+   "state": "running",
+   "gpu": 2,
+   "detail": "GPU 2"
+  },
+  {
+   "t": 25.588,
+   "utc": "2026-10-10T08:49:45.502+00:00",
+   "experiment": "golden-20261010T084920Z-b3ac99-check",
+   "case": "x001",
+   "state": "finished",
+   "gpu": 0,
+   "detail": "finished"
+  },
+  {
+   "t": 25.803,
+   "utc": "2026-10-10T08:49:45.717+00:00",
+   "experiment": "golden-20261010T084920Z-b3ac99-check",
+   "case": "x001",
+   "state": "result",
+   "gpu": 0,
+   "detail": "FINISHED ok"
+  },
+  {
+   "t": 31.867,
+   "utc": "2026-10-10T08:49:51.781+00:00",
+   "experiment": "golden-20261010T084920Z-b3ac99-check",
+   "case": "x002",
+   "state": "finished",
+   "gpu": 2,
+   "detail": "finished"
+  },
+  {
+   "t": 32.022,
+   "utc": "2026-10-10T08:49:51.936+00:00",
+   "experiment": "golden-20261010T084920Z-b3ac99-check",
+   "case": "x002",
+   "state": "result",
+   "gpu": 2,
+   "detail": "FINISHED ok"
+  },
+  {
+   "t": 32.052,
+   "utc": "2026-10-10T08:49:51.966+00:00",
+   "experiment": "golden-20261010T084920Z-b3ac99-conf",
+   "case": "m001",
+   "state": "running",
+   "gpu": null,
+   "detail": "the rig CPU"
+  },
+  {
+   "t": 78.433,
+   "utc": "2026-10-10T08:50:38.347+00:00",
+   "experiment": "golden-20261010T084920Z-b3ac99-conf",
+   "case": "m001",
+   "state": "finished",
+   "gpu": null,
+   "detail": "finished"
+  },
+  {
+   "t": 79.219,
+   "utc": "2026-10-10T08:50:39.133+00:00",
+   "experiment": "golden-20261010T084920Z-b3ac99-conf",
+   "case": "m001",
+   "state": "result",
+   "gpu": null,
+   "detail": "FINISHED ok"
+  }
+ ],
+ "cancelled": [],
+ "integrity_error": null,
+ "started_utc": "2026-10-10T08:49:19.914+00:00",
+ "finished_utc": "2026-10-10T08:50:39.149+00:00",
+ "wall_s": 79.235
+}

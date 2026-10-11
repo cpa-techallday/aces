@@ -1,0 +1,915 @@
+{
+ "key": "queue/aces-cal-air-03d",
+ "n_stale": 0,
+ "reports": [],
+ "spec_path": "/work/out/queue/aces-cal-air-03d/spec.resolved.json",
+ "summary_path": null,
+ "id": "aces-cal-air-03d",
+ "project": "ACES-calibration",
+ "physics": "cfd",
+ "solver": "aces-tpms-periodic",
+ "image": "aces-cfd:0.1",
+ "stages": [],
+ "description": "ACES calibration samples: periodic diamond unit cells, t/a [0.20, 0.24, 0.28], Re [1.0, 3.0, 60.0], Air at 320 K, 96 voxels per cell. Campaign 3: firm up diamond Nu (D30 scatter 0.143 sits just under the 0.15 refusal line) by adding low-Re anchors and an intermediate Re point at the thick walls where campaign 2 only had Re 10/30/100. All Re kept under the Mach ceiling observed in 02r (Re 100, wr 0.28 -> Mach 0.151).",
+ "hypothesis": "Diamond Nu scatter at thick wall ratios (0.20-0.28) tightens below 0.12 once the Re spread is filled in; if it does not, diamond Nu at thick walls is genuinely broad and the refusal policy stays honest.",
+ "sweep": {
+  "tpms": [
+   "diamond"
+  ],
+  "wall_ratio": [
+   0.2,
+   0.24,
+   0.28
+  ],
+  "re": [
+   1.0,
+   3.0,
+   60.0
+  ]
+ },
+ "outputs": [
+  "re_achieved",
+  "dpdx_Pa_m",
+  "mass_flux_kg_m2s",
+  "h_W_m2K",
+  "nusselt_h1",
+  "mach"
+ ],
+ "exp_dir": "/work/out/queue/aces-cal-air-03d",
+ "root": "queue",
+ "n_cases": 9,
+ "n_done": 9,
+ "n_failed": 0,
+ "n_running": 0,
+ "updated": 1791624080.773324,
+ "validation": "pass",
+ "cases": [
+  {
+   "case_id": "c000",
+   "params": {
+    "cell_m": 0.004,
+    "fluid": "Air",
+    "T_K": 320.0,
+    "p_Pa": 200000.0,
+    "n": 96,
+    "thermal": true,
+    "tpms": "diamond",
+    "wall_ratio": 0.2,
+    "re": 1.0
+   },
+   "run_dir": "/work/out/queue/aces-cal-air-03d/c000",
+   "status": "FINISHED",
+   "wall_s": 62.517919,
+   "mlflow_run_id": "54db1a96a9c0489c8d3ee776d0a9933f",
+   "error": null,
+   "results": {
+    "converged": 1,
+    "re_achieved": 0.9996280073863026,
+    "dpdx_Pa_m": 17.661901514943626,
+    "mass_flux_kg_m2s": 0.003807727593359963,
+    "h_W_m2K": 136.665931021132,
+    "nusselt_h1": 4.9189098932405075,
+    "mach": 0.04095436026613575,
+    "grid_peclet": 0.10007651574294339,
+    "phi_voxel": 0.19599971064814814,
+    "flow_steps": 4000,
+    "thermal_steps": 3600,
+    "problems": "",
+    "notes": "",
+    "wall_s": 62.17571568489075,
+    "device": "cuda"
+   },
+   "artifacts": [
+    "out/aces-cal-air-03d/c000/sample.json",
+    "out/aces-cal-air-03d/c000/measurement.json"
+   ],
+   "stages": [],
+   "current_stage": null,
+   "progress": {
+    "solver": "aces-tpms-periodic",
+    "case_id": "c000",
+    "phase": "done",
+    "step": 1,
+    "total": 1,
+    "fraction": 1.0,
+    "updated_utc": "2026-10-10T09:19:12.788574+00:00",
+    "pid": 1,
+    "started_utc": "2026-10-10T09:18:06.581905+00:00",
+    "status": "FINISHED"
+   },
+   "progress_age_s": 54928.49212002754,
+   "files": [
+    {
+     "name": "case.json",
+     "bytes": 181,
+     "mtime": 1791622502.050117
+    },
+    {
+     "name": "evidence.json",
+     "bytes": 3503,
+     "mtime": 1791623952.6401706
+    },
+    {
+     "name": "measurement.json",
+     "bytes": 271,
+     "mtime": 1791623949.1000981
+    },
+    {
+     "name": "progress.json",
+     "bytes": 242,
+     "mtime": 1791623952.7888622
+    },
+    {
+     "name": "results.json",
+     "bytes": 555,
+     "mtime": 1791623950.3187768
+    },
+    {
+     "name": "sample.json",
+     "bytes": 1276,
+     "mtime": 1791623949.0997858
+    },
+    {
+     "name": "status.json",
+     "bytes": 137,
+     "mtime": 1791623952.7893305
+    },
+    {
+     "name": "worker.log",
+     "bytes": 2875,
+     "mtime": 1791623952.730759
+    }
+   ]
+  },
+  {
+   "case_id": "c001",
+   "params": {
+    "cell_m": 0.004,
+    "fluid": "Air",
+    "T_K": 320.0,
+    "p_Pa": 200000.0,
+    "n": 96,
+    "thermal": true,
+    "tpms": "diamond",
+    "wall_ratio": 0.2,
+    "re": 3.0
+   },
+   "run_dir": "/work/out/queue/aces-cal-air-03d/c001",
+   "status": "FINISHED",
+   "wall_s": 62.598954,
+   "mlflow_run_id": "c81d9addfefc49e5a4a3a2ecb470de2a",
+   "error": null,
+   "results": {
+    "converged": 1,
+    "re_achieved": 2.9902540411601466,
+    "dpdx_Pa_m": 53.002842838213475,
+    "mass_flux_kg_m2s": 0.011390309934845116,
+    "h_W_m2K": 138.20837361443475,
+    "nusselt_h1": 4.974425822303906,
+    "mach": 0.12248374368081849,
+    "grid_peclet": 0.29930259496358763,
+    "phi_voxel": 0.19599971064814814,
+    "flow_steps": 4000,
+    "thermal_steps": 3600,
+    "problems": "",
+    "notes": "",
+    "wall_s": 62.26108121871948,
+    "device": "cuda"
+   },
+   "artifacts": [
+    "out/aces-cal-air-03d/c001/sample.json",
+    "out/aces-cal-air-03d/c001/measurement.json"
+   ],
+   "stages": [],
+   "current_stage": null,
+   "progress": {
+    "solver": "aces-tpms-periodic",
+    "case_id": "c001",
+    "phase": "done",
+    "step": 1,
+    "total": 1,
+    "fraction": 1.0,
+    "updated_utc": "2026-10-10T09:19:12.756439+00:00",
+    "pid": 1,
+    "started_utc": "2026-10-10T09:18:06.465409+00:00",
+    "status": "FINISHED"
+   },
+   "progress_age_s": 54928.52456521988,
+   "files": [
+    {
+     "name": "case.json",
+     "bytes": 181,
+     "mtime": 1791622502.0516834
+    },
+    {
+     "name": "evidence.json",
+     "bytes": 3504,
+     "mtime": 1791623952.5345418
+    },
+    {
+     "name": "measurement.json",
+     "bytes": 273,
+     "mtime": 1791623949.0647006
+    },
+    {
+     "name": "progress.json",
+     "bytes": 242,
+     "mtime": 1791623952.756687
+    },
+    {
+     "name": "results.json",
+     "bytes": 556,
+     "mtime": 1791623950.264907
+    },
+    {
+     "name": "sample.json",
+     "bytes": 1274,
+     "mtime": 1791623949.0645933
+    },
+    {
+     "name": "status.json",
+     "bytes": 137,
+     "mtime": 1791623952.7570932
+    },
+    {
+     "name": "worker.log",
+     "bytes": 2875,
+     "mtime": 1791623952.6977592
+    }
+   ]
+  },
+  {
+   "case_id": "c002",
+   "params": {
+    "cell_m": 0.004,
+    "fluid": "Air",
+    "T_K": 320.0,
+    "p_Pa": 200000.0,
+    "n": 96,
+    "thermal": true,
+    "tpms": "diamond",
+    "wall_ratio": 0.2,
+    "re": 60.0
+   },
+   "run_dir": "/work/out/queue/aces-cal-air-03d/c002",
+   "status": "FINISHED",
+   "wall_s": 785.304998,
+   "mlflow_run_id": "34dcb431b6e04fa3816e58350ea4a5ae",
+   "error": null,
+   "results": {
+    "converged": 1,
+    "re_achieved": 59.90624343346283,
+    "dpdx_Pa_m": 1491.9831810487233,
+    "mass_flux_kg_m2s": 0.22819154170415776,
+    "h_W_m2K": 187.17741622854692,
+    "nusselt_h1": 6.736930247344754,
+    "mach": 0.1389188613339051,
+    "grid_peclet": 5.637562435860813,
+    "phi_voxel": 0.19599971064814814,
+    "flow_steps": 55200,
+    "thermal_steps": 15200,
+    "problems": "",
+    "notes": "",
+    "wall_s": 784.9869287014008,
+    "device": "cuda"
+   },
+   "artifacts": [
+    "out/aces-cal-air-03d/c002/sample.json",
+    "out/aces-cal-air-03d/c002/measurement.json"
+   ],
+   "stages": [],
+   "current_stage": null,
+   "progress": {
+    "solver": "aces-tpms-periodic",
+    "case_id": "c002",
+    "phase": "done",
+    "step": 1,
+    "total": 1,
+    "fraction": 1.0,
+    "updated_utc": "2026-10-10T09:11:51.680381+00:00",
+    "pid": 1,
+    "started_utc": "2026-10-10T08:58:42.669392+00:00",
+    "status": "FINISHED"
+   },
+   "progress_age_s": 55369.60088181496,
+   "files": [
+    {
+     "name": "case.json",
+     "bytes": 182,
+     "mtime": 1791622502.0525088
+    },
+    {
+     "name": "evidence.json",
+     "bytes": 3503,
+     "mtime": 1791623511.4937034
+    },
+    {
+     "name": "measurement.json",
+     "bytes": 272,
+     "mtime": 1791623507.9746633
+    },
+    {
+     "name": "progress.json",
+     "bytes": 242,
+     "mtime": 1791623511.680631
+    },
+    {
+     "name": "results.json",
+     "bytes": 553,
+     "mtime": 1791623509.2735825
+    },
+    {
+     "name": "sample.json",
+     "bytes": 1495,
+     "mtime": 1791623507.9745314
+    },
+    {
+     "name": "status.json",
+     "bytes": 138,
+     "mtime": 1791623511.6807013
+    },
+    {
+     "name": "worker.log",
+     "bytes": 2875,
+     "mtime": 1791623511.621702
+    }
+   ]
+  },
+  {
+   "case_id": "c003",
+   "params": {
+    "cell_m": 0.004,
+    "fluid": "Air",
+    "T_K": 320.0,
+    "p_Pa": 200000.0,
+    "n": 96,
+    "thermal": true,
+    "tpms": "diamond",
+    "wall_ratio": 0.24,
+    "re": 1.0
+   },
+   "run_dir": "/work/out/queue/aces-cal-air-03d/c003",
+   "status": "FINISHED",
+   "wall_s": 54.708036,
+   "mlflow_run_id": "5139ac20494940409f54d880417f8197",
+   "error": null,
+   "results": {
+    "converged": 1,
+    "re_achieved": 0.9996474044461863,
+    "dpdx_Pa_m": 26.33338519809723,
+    "mass_flux_kg_m2s": 0.003554997861705071,
+    "h_W_m2K": 151.69603764454698,
+    "nusselt_h1": 4.806930797558464,
+    "mach": 0.04811532907324665,
+    "grid_peclet": 0.11757513622932268,
+    "phi_voxel": 0.1609519675925926,
+    "flow_steps": 3400,
+    "thermal_steps": 3000,
+    "problems": "",
+    "notes": "",
+    "wall_s": 54.38704204559326,
+    "device": "cuda"
+   },
+   "artifacts": [
+    "out/aces-cal-air-03d/c003/sample.json",
+    "out/aces-cal-air-03d/c003/measurement.json"
+   ],
+   "stages": [],
+   "current_stage": null,
+   "progress": {
+    "solver": "aces-tpms-periodic",
+    "case_id": "c003",
+    "phase": "done",
+    "step": 1,
+    "total": 1,
+    "fraction": 1.0,
+    "updated_utc": "2026-10-10T08:59:58.379293+00:00",
+    "pid": 1,
+    "started_utc": "2026-10-10T08:58:59.750929+00:00",
+    "status": "FINISHED"
+   },
+   "progress_age_s": 56082.90225958824,
+   "files": [
+    {
+     "name": "case.json",
+     "bytes": 182,
+     "mtime": 1791622502.0532577
+    },
+    {
+     "name": "evidence.json",
+     "bytes": 3503,
+     "mtime": 1791622798.1472168
+    },
+    {
+     "name": "measurement.json",
+     "bytes": 273,
+     "mtime": 1791622794.4592712
+    },
+    {
+     "name": "progress.json",
+     "bytes": 242,
+     "mtime": 1791622798.379513
+    },
+    {
+     "name": "results.json",
+     "bytes": 554,
+     "mtime": 1791622795.7808273
+    },
+    {
+     "name": "sample.json",
+     "bytes": 1263,
+     "mtime": 1791622794.458867
+    },
+    {
+     "name": "status.json",
+     "bytes": 137,
+     "mtime": 1791622798.379783
+    },
+    {
+     "name": "worker.log",
+     "bytes": 2875,
+     "mtime": 1791622798.3197515
+    }
+   ]
+  },
+  {
+   "case_id": "c004",
+   "params": {
+    "cell_m": 0.004,
+    "fluid": "Air",
+    "T_K": 320.0,
+    "p_Pa": 200000.0,
+    "n": 96,
+    "thermal": true,
+    "tpms": "diamond",
+    "wall_ratio": 0.24,
+    "re": 3.0
+   },
+   "run_dir": "/work/out/queue/aces-cal-air-03d/c004",
+   "status": "FINISHED",
+   "wall_s": 54.478599,
+   "mlflow_run_id": "d445de4ee7184c278bb2d0a53f2f6332",
+   "error": null,
+   "results": {
+    "converged": 1,
+    "re_achieved": 2.9907492283572608,
+    "dpdx_Pa_m": 79.0234661764193,
+    "mass_flux_kg_m2s": 0.010635857267689737,
+    "h_W_m2K": 153.42070688627203,
+    "nusselt_h1": 4.861581965923691,
+    "mach": 0.14404572313206152,
+    "grid_peclet": 0.35199168013007287,
+    "phi_voxel": 0.1609519675925926,
+    "flow_steps": 3400,
+    "thermal_steps": 2800,
+    "problems": "",
+    "notes": "",
+    "wall_s": 54.16708588600159,
+    "device": "cuda"
+   },
+   "artifacts": [
+    "out/aces-cal-air-03d/c004/sample.json",
+    "out/aces-cal-air-03d/c004/measurement.json"
+   ],
+   "stages": [],
+   "current_stage": null,
+   "progress": {
+    "solver": "aces-tpms-periodic",
+    "case_id": "c004",
+    "phase": "done",
+    "step": 1,
+    "total": 1,
+    "fraction": 1.0,
+    "updated_utc": "2026-10-10T09:00:30.311653+00:00",
+    "pid": 1,
+    "started_utc": "2026-10-10T08:59:31.903406+00:00",
+    "status": "FINISHED"
+   },
+   "progress_age_s": 56050.970532655716,
+   "files": [
+    {
+     "name": "case.json",
+     "bytes": 182,
+     "mtime": 1791622502.0534766
+    },
+    {
+     "name": "evidence.json",
+     "bytes": 3502,
+     "mtime": 1791622830.0808787
+    },
+    {
+     "name": "measurement.json",
+     "bytes": 272,
+     "mtime": 1791622826.3822858
+    },
+    {
+     "name": "progress.json",
+     "bytes": 242,
+     "mtime": 1791622830.3118663
+    },
+    {
+     "name": "results.json",
+     "bytes": 553,
+     "mtime": 1791622827.7202973
+    },
+    {
+     "name": "sample.json",
+     "bytes": 1258,
+     "mtime": 1791622826.3819327
+    },
+    {
+     "name": "status.json",
+     "bytes": 137,
+     "mtime": 1791622830.3122745
+    },
+    {
+     "name": "worker.log",
+     "bytes": 2875,
+     "mtime": 1791622830.2528229
+    }
+   ]
+  },
+  {
+   "case_id": "c005",
+   "params": {
+    "cell_m": 0.004,
+    "fluid": "Air",
+    "T_K": 320.0,
+    "p_Pa": 200000.0,
+    "n": 96,
+    "thermal": true,
+    "tpms": "diamond",
+    "wall_ratio": 0.24,
+    "re": 60.0
+   },
+   "run_dir": "/work/out/queue/aces-cal-air-03d/c005",
+   "status": "FINISHED",
+   "wall_s": 590.864944,
+   "mlflow_run_id": "b352eb0bcc2247c599104f083a30d00e",
+   "error": null,
+   "results": {
+    "converged": 1,
+    "re_achieved": 59.90279759952883,
+    "dpdx_Pa_m": 2205.7467238120375,
+    "mass_flux_kg_m2s": 0.21302943060653998,
+    "h_W_m2K": 206.88677928969418,
+    "nusselt_h1": 6.55581020056433,
+    "mach": 0.1415020481934764,
+    "grid_peclet": 6.522406255392719,
+    "phi_voxel": 0.1609519675925926,
+    "flow_steps": 50800,
+    "thermal_steps": 13800,
+    "problems": "",
+    "notes": "",
+    "wall_s": 590.5467767715454,
+    "device": "cuda"
+   },
+   "artifacts": [
+    "out/aces-cal-air-03d/c005/sample.json",
+    "out/aces-cal-air-03d/c005/measurement.json"
+   ],
+   "stages": [],
+   "current_stage": null,
+   "progress": {
+    "solver": "aces-tpms-periodic",
+    "case_id": "c005",
+    "phase": "done",
+    "step": 1,
+    "total": 1,
+    "fraction": 1.0,
+    "updated_utc": "2026-10-10T09:10:01.209266+00:00",
+    "pid": 1,
+    "started_utc": "2026-10-10T09:00:06.594211+00:00",
+    "status": "FINISHED"
+   },
+   "progress_age_s": 55480.07316184044,
+   "files": [
+    {
+     "name": "case.json",
+     "bytes": 183,
+     "mtime": 1791622502.0549326
+    },
+    {
+     "name": "evidence.json",
+     "bytes": 3502,
+     "mtime": 1791623400.9793093
+    },
+    {
+     "name": "measurement.json",
+     "bytes": 273,
+     "mtime": 1791623397.459432
+    },
+    {
+     "name": "progress.json",
+     "bytes": 242,
+     "mtime": 1791623401.2095
+    },
+    {
+     "name": "results.json",
+     "bytes": 551,
+     "mtime": 1791623398.6894712
+    },
+    {
+     "name": "sample.json",
+     "bytes": 1480,
+     "mtime": 1791623397.4580421
+    },
+    {
+     "name": "status.json",
+     "bytes": 138,
+     "mtime": 1791623401.2098386
+    },
+    {
+     "name": "worker.log",
+     "bytes": 2875,
+     "mtime": 1791623401.151996
+    }
+   ]
+  },
+  {
+   "case_id": "c006",
+   "params": {
+    "cell_m": 0.004,
+    "fluid": "Air",
+    "T_K": 320.0,
+    "p_Pa": 200000.0,
+    "n": 96,
+    "thermal": true,
+    "tpms": "diamond",
+    "wall_ratio": 0.28,
+    "re": 1.0
+   },
+   "run_dir": "/work/out/queue/aces-cal-air-03d/c006",
+   "status": "FINISHED",
+   "wall_s": 47.902613,
+   "mlflow_run_id": "fd9c0bd740a2404d8ed0eab6e9a7b322",
+   "error": null,
+   "results": {
+    "converged": 1,
+    "re_achieved": 0.9996644424464841,
+    "dpdx_Pa_m": 37.431631299370686,
+    "mass_flux_kg_m2s": 0.0033105435268574947,
+    "h_W_m2K": 168.41210955671554,
+    "nusselt_h1": 4.735241612321922,
+    "mach": 0.0553118399990171,
+    "grid_peclet": 0.135160607819576,
+    "phi_voxel": 0.13411458333333334,
+    "flow_steps": 2800,
+    "thermal_steps": 2600,
+    "problems": "",
+    "notes": "",
+    "wall_s": 47.63135504722595,
+    "device": "cuda"
+   },
+   "artifacts": [
+    "out/aces-cal-air-03d/c006/sample.json",
+    "out/aces-cal-air-03d/c006/measurement.json"
+   ],
+   "stages": [],
+   "current_stage": null,
+   "progress": {
+    "solver": "aces-tpms-periodic",
+    "case_id": "c006",
+    "phase": "done",
+    "step": 1,
+    "total": 1,
+    "fraction": 1.0,
+    "updated_utc": "2026-10-10T09:01:30.503668+00:00",
+    "pid": 1,
+    "started_utc": "2026-10-10T09:00:38.640891+00:00",
+    "status": "FINISHED"
+   },
+   "progress_age_s": 55990.779725551605,
+   "files": [
+    {
+     "name": "case.json",
+     "bytes": 182,
+     "mtime": 1791622502.05571
+    },
+    {
+     "name": "evidence.json",
+     "bytes": 3503,
+     "mtime": 1791622890.2695491
+    },
+    {
+     "name": "measurement.json",
+     "bytes": 275,
+     "mtime": 1791622886.5437407
+    },
+    {
+     "name": "progress.json",
+     "bytes": 242,
+     "mtime": 1791622890.5031965
+    },
+    {
+     "name": "results.json",
+     "bytes": 554,
+     "mtime": 1791622887.8687813
+    },
+    {
+     "name": "sample.json",
+     "bytes": 1274,
+     "mtime": 1791622886.543622
+    },
+    {
+     "name": "status.json",
+     "bytes": 137,
+     "mtime": 1791622890.5043807
+    },
+    {
+     "name": "worker.log",
+     "bytes": 2875,
+     "mtime": 1791622890.444198
+    }
+   ]
+  },
+  {
+   "case_id": "c007",
+   "params": {
+    "cell_m": 0.004,
+    "fluid": "Air",
+    "T_K": 320.0,
+    "p_Pa": 200000.0,
+    "n": 96,
+    "thermal": true,
+    "tpms": "diamond",
+    "wall_ratio": 0.28,
+    "re": 3.0
+   },
+   "run_dir": "/work/out/queue/aces-cal-air-03d/c007",
+   "status": "FINISHED",
+   "wall_s": 44.524358,
+   "mlflow_run_id": "4f6b5cd86da0469ab115f91bfa0fceb6",
+   "error": null,
+   "results": {
+    "converged": 0,
+    "re_achieved": 2.9913857293554225,
+    "dpdx_Pa_m": null,
+    "mass_flux_kg_m2s": null,
+    "h_W_m2K": null,
+    "nusselt_h1": null,
+    "mach": 0.15590176012085089,
+    "grid_peclet": null,
+    "phi_voxel": 0.13411458333333334,
+    "flow_steps": 3000,
+    "thermal_steps": null,
+    "problems": "Mach 0.156 exceeds 0.15; lower u_lattice",
+    "notes": "",
+    "wall_s": 44.214619398117065,
+    "device": "cuda"
+   },
+   "artifacts": [
+    "out/aces-cal-air-03d/c007/sample.json"
+   ],
+   "stages": [],
+   "current_stage": null,
+   "progress": {
+    "solver": "aces-tpms-periodic",
+    "case_id": "c007",
+    "phase": "done",
+    "step": 1,
+    "total": 1,
+    "fraction": 1.0,
+    "updated_utc": "2026-10-10T09:11:14.141626+00:00",
+    "pid": 1,
+    "started_utc": "2026-10-10T09:10:25.906352+00:00",
+    "status": "FINISHED"
+   },
+   "progress_age_s": 55407.142114400864,
+   "files": [
+    {
+     "name": "case.json",
+     "bytes": 182,
+     "mtime": 1791622502.056489
+    },
+    {
+     "name": "evidence.json",
+     "bytes": 3422,
+     "mtime": 1791623473.9161253
+    },
+    {
+     "name": "progress.json",
+     "bytes": 242,
+     "mtime": 1791623474.1419108
+    },
+    {
+     "name": "results.json",
+     "bytes": 475,
+     "mtime": 1791623471.6853664
+    },
+    {
+     "name": "sample.json",
+     "bytes": 883,
+     "mtime": 1791623470.4301653
+    },
+    {
+     "name": "status.json",
+     "bytes": 137,
+     "mtime": 1791623474.142371
+    },
+    {
+     "name": "worker.log",
+     "bytes": 2875,
+     "mtime": 1791623474.0841234
+    }
+   ]
+  },
+  {
+   "case_id": "c008",
+   "params": {
+    "cell_m": 0.004,
+    "fluid": "Air",
+    "T_K": 320.0,
+    "p_Pa": 200000.0,
+    "n": 96,
+    "thermal": true,
+    "tpms": "diamond",
+    "wall_ratio": 0.28,
+    "re": 60.0
+   },
+   "run_dir": "/work/out/queue/aces-cal-air-03d/c008",
+   "status": "FINISHED",
+   "wall_s": 709.466524,
+   "mlflow_run_id": "995871e0c77449bb9c22d937ee5cedb6",
+   "error": null,
+   "results": {
+    "converged": 1,
+    "re_achieved": 59.90400958514435,
+    "dpdx_Pa_m": 3097.1406743739917,
+    "mass_flux_kg_m2s": 0.1983813995420023,
+    "h_W_m2K": 227.54493480209837,
+    "nusselt_h1": 6.397878672644475,
+    "mach": 0.1429798652364512,
+    "grid_peclet": 7.42753673507345,
+    "phi_voxel": 0.13411458333333334,
+    "flow_steps": 47200,
+    "thermal_steps": 12800,
+    "problems": "",
+    "notes": "",
+    "wall_s": 709.128720998764,
+    "device": "cuda"
+   },
+   "artifacts": [
+    "out/aces-cal-air-03d/c008/sample.json",
+    "out/aces-cal-air-03d/c008/measurement.json"
+   ],
+   "stages": [],
+   "current_stage": null,
+   "progress": {
+    "solver": "aces-tpms-periodic",
+    "case_id": "c008",
+    "phase": "done",
+    "step": 1,
+    "total": 1,
+    "fraction": 1.0,
+    "updated_utc": "2026-10-10T09:21:20.772412+00:00",
+    "pid": 1,
+    "started_utc": "2026-10-10T09:09:27.434281+00:00",
+    "status": "FINISHED"
+   },
+   "progress_age_s": 54800.51160144806,
+   "files": [
+    {
+     "name": "case.json",
+     "bytes": 183,
+     "mtime": 1791622502.0573175
+    },
+    {
+     "name": "evidence.json",
+     "bytes": 3501,
+     "mtime": 1791624080.563871
+    },
+    {
+     "name": "measurement.json",
+     "bytes": 272,
+     "mtime": 1791624076.9010584
+    },
+    {
+     "name": "progress.json",
+     "bytes": 242,
+     "mtime": 1791624080.7726855
+    },
+    {
+     "name": "results.json",
+     "bytes": 550,
+     "mtime": 1791624078.1946456
+    },
+    {
+     "name": "sample.json",
+     "bytes": 1492,
+     "mtime": 1791624076.8178773
+    },
+    {
+     "name": "status.json",
+     "bytes": 138,
+     "mtime": 1791624080.773324
+    },
+    {
+     "name": "worker.log",
+     "bytes": 2875,
+     "mtime": 1791624080.7158508
+    }
+   ]
+  }
+ ]
+}

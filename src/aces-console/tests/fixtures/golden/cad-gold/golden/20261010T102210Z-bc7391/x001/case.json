@@ -1,0 +1,15 @@
+{
+ "case_id": "x001",
+ "role": "check",
+ "h_gen_mm": null,
+ "h_fea_mm": 2.0,
+ "device": "cpu",
+ "backend": "adapter",
+ "source_case": "v001",
+ "reuse_mask": false,
+ "round": null,
+ "level": 1,
+ "seed": 7,
+ "host": "desktop",
+ "fea_solver": "auto"
+}

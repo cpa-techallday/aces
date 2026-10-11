@@ -1,0 +1,240 @@
+{
+  "schema": "simlab-evidence/1",
+  "experiment": {
+    "id": "golden-cad-gold-20261010T102210Z-bc7391",
+    "project": "cad-gold",
+    "owner": "aces",
+    "physics": "structures",
+    "solver": "step-structures",
+    "description": "aces golden root-mount: Six-foot root mount computed inside a disc design space 100 mm across and 40 mm tall: six bolted feet on a 36 mm ring and a 30 kN load on a top cup. The disc is only the input domain; the part is computed (SIMP topology optimisation, organic implicit skin) and solved on the real voxel FEA. Demo inputs.",
+    "spec_sha256": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+    "hypothesis": "A SIMP-generated organic root mount meets vm_p99 <= 60 MPa and umax <= 0.035 mm at minimum mass, and a GP surrogate fitted to a 10-design sweep predicts the verified winner within 10 %.",
+    "expected": "the surrogate's winner meets every constraint on the real solver and agrees within tol",
+    "rd_activity": null,
+    "company": null,
+    "tags": {
+      "golden": "0.2.0",
+      "generator": "simp-organic",
+      "domain_source": "step",
+      "sampler": "lhs-random-cd",
+      "grade": "preview-grade",
+      "vendored_snapshot": "62de9811e555"
+    }
+  },
+  "case": {
+    "case_id": "x001",
+    "role": "check",
+    "h_gen_mm": null,
+    "h_fea_mm": 2.0,
+    "device": "cpu",
+    "backend": "adapter",
+    "source_case": "v001",
+    "reuse_mask": false,
+    "round": null,
+    "level": 1,
+    "seed": 7,
+    "host": "desktop",
+    "fea_solver": "auto"
+  },
+  "inputs_sha256": {
+    "spec.json": "b6c8bbefb1e9df1305ca900f598903a007b07b387751c93b4f90c30ba936ef94",
+    "spec.effective.json": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+    "domain.step": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+    "case.json": "581e266632e65cdb6a51d41aa231b81751b39f992526e32b98af4a906f580258",
+    "part.stl": "de0f92f004ebe1675b4fa796d6707e0c00ca7afc339cd06af6d50dd7de3849ab"
+  },
+  "geometry": {
+    "source": "step",
+    "ref": "domain.step",
+    "sha256": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92"
+  },
+  "environment": {
+    "host": "aces-rehearsal",
+    "platform": "Linux-7.2.5-3-omarchy-x86_64-with-glibc2.44",
+    "in_container": false,
+    "image": null,
+    "image_digest": null,
+    "cuda_visible_devices": null,
+    "gpus": [],
+    "packages": {
+      "python": "3.14.7",
+      "numpy": "2.4.6",
+      "scipy": "1.17.1",
+      "optuna": "5.0.0",
+      "build123d": "0.11.1",
+      "trimesh": "5.1.0",
+      "skimage": "0.26.0"
+    }
+  },
+  "git_rev": null,
+  "started_utc": "2026-10-10T10:22:49.984000+00:00",
+  "finished_utc": "2026-10-10T10:22:56.215000+00:00",
+  "wall_s": 6.231,
+  "status": "FINISHED",
+  "error": null,
+  "results": {
+    "schema": "aces-golden-case/1",
+    "case_id": "x001",
+    "role": "check",
+    "round": null,
+    "level": 1,
+    "source_case": "v001",
+    "design": null,
+    "mass_kg": 0.17698581438899466,
+    "mass_voxel_kg": 0.17929583999999998,
+    "mesh_volume_mm3": 66286.82186853733,
+    "voxel_volume_mm3": 67152.0,
+    "solid_fraction": 0.16788,
+    "compliance_Nmm": 864.8460520128981,
+    "umax_mm": 0.03248296743203556,
+    "vm_max_MPa": 105.3919182769137,
+    "vm_p99_MPa": 56.87937175750742,
+    "vm_p95_MPa": 40.97390766143798,
+    "pcg_iters": 443,
+    "pcg_relres": 9.79135156480709e-09,
+    "converged": true,
+    "elements": 50000,
+    "dof": 163863,
+    "elem_mm": 2.0,
+    "n_fixed_dofs": 882,
+    "device": "cpu/numpy",
+    "dtype": "float64",
+    "backend": "step-structures.stage_solve",
+    "lane": "desktop-cpu",
+    "grade": "preview-grade",
+    "fea_solver": "pcg",
+    "fea_solver_reason": "auto: Jacobi-PCG (50,000 cells < 200,000)",
+    "generator": null,
+    "skin": null,
+    "voxel": {
+      "h_mm": 2.0,
+      "cells": 50000,
+      "solid_cells": 8394,
+      "voxel_volume_mm3": 67152.0,
+      "mesh_volume_mm3": 66286.82186853733,
+      "volume_ratio_voxel_over_mesh": 1.0130520382041928,
+      "mask_sha256": "85a14d58f387eeb092bcd139d6e9b823f4be9dc8889ce9763644393747fe8cc5"
+    },
+    "checks": {
+      "load_coverage": {
+        "cup-down": 1.0
+      },
+      "support_coverage": {
+        "foot-1": 1.0,
+        "foot-2": 1.0,
+        "foot-3": 1.0,
+        "foot-4": 1.0,
+        "foot-5": 1.0,
+        "foot-6": 1.0
+      },
+      "load_path_connected": true,
+      "solid_components": 1
+    },
+    "stress": {
+      "measure": "vm_p99",
+      "exclude_mm": 8.0,
+      "exclude_boxes": [
+        [
+          76.0,
+          64.0,
+          0.0,
+          88.0,
+          76.0,
+          8.0
+        ],
+        [
+          44.0,
+          80.0,
+          0.0,
+          56.0,
+          92.0,
+          8.0
+        ],
+        [
+          12.0,
+          64.0,
+          0.0,
+          24.0,
+          76.0,
+          8.0
+        ],
+        [
+          12.0,
+          28.0,
+          0.0,
+          24.0,
+          40.0,
+          8.0
+        ],
+        [
+          44.0,
+          8.0,
+          0.0,
+          56.0,
+          20.0,
+          8.0
+        ],
+        [
+          76.0,
+          28.0,
+          0.0,
+          88.0,
+          40.0,
+          8.0
+        ],
+        [
+          40.0,
+          40.0,
+          32.0,
+          60.0,
+          60.0,
+          40.0
+        ]
+      ],
+      "n_elements": 7158
+    },
+    "wall_s_generate": null,
+    "wall_s_skin": null,
+    "wall_s_voxel": 0.04844069480895996,
+    "wall_s_solve": 5.941673755645752,
+    "wall_s_post": 0.2386157512664795,
+    "wall_s_total": 6.230319976806641,
+    "artifacts": [
+      "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/x001/case.md",
+      "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/x001/disp_slices.png",
+      "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/x001/fields.npz",
+      "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/x001/fields.vtk",
+      "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/x001/mask.npy",
+      "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/x001/mesh.json",
+      "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/x001/solve.json",
+      "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/x001/vm_slices.png"
+    ]
+  },
+  "run_dir": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/x001",
+  "stages": [
+    {
+      "stage": "voxel",
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T10:22:49.984+00:00",
+      "finished_utc": "2026-10-10T10:22:50.033+00:00",
+      "wall_s": 0.04844069480895996,
+      "device": "cpu"
+    },
+    {
+      "stage": "solve",
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T10:22:50.033+00:00",
+      "finished_utc": "2026-10-10T10:22:55.975+00:00",
+      "wall_s": 5.941673755645752,
+      "device": "cpu"
+    },
+    {
+      "stage": "post",
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T10:22:55.976+00:00",
+      "finished_utc": "2026-10-10T10:22:56.214+00:00",
+      "wall_s": 0.2386157512664795,
+      "device": "cpu"
+    }
+  ]
+}

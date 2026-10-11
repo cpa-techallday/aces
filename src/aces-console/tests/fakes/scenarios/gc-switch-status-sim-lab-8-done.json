@@ -1,0 +1,8 @@
+{
+ "derived": true,
+ "derived_from": "gc-switch-status.json",
+ "note": "The capture is the completed switch to sim-lab-4 (done true, ok true, 49 log lines). This scenario retargets it to sim-lab-8 so the outcome watcher sees the engine report done for the mode a test requested; the test supplies startedAt (the request time in ms) through apply_scenario(extra=...), because the watcher only accepts a switch that started after the console's request. The log lines are the capture's and still name sim-lab-4: the watcher reads target, done, ok, phase and startedAt, never the log text.",
+ "changes": {
+  "target": "sim-lab-8"
+ }
+}

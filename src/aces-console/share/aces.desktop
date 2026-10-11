@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=ACES
+Comment=ACES console: fabric, simulation work, projects, golden and CAD records, the ledger. Mode switching is a human act, confirmed here, never by an agent.
+Exec=aces-console open
+Icon=utilities-system-monitor
+Terminal=false
+Categories=Development;Science;Engineering;
+Keywords=ACES;rig;simulation;golden;CAD;ledger;

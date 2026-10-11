@@ -1,0 +1,27 @@
+{
+ "elem_mm": 4.0,
+ "origin_mm": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "envelope_mm": [
+  100.0,
+  100.0,
+  40.0
+ ],
+ "shape": [
+  25,
+  25,
+  10
+ ],
+ "cells": 6250,
+ "solid_cells": 686,
+ "solid_fraction": 0.10976,
+ "mesh_volume_mm3": 42258.00285651582,
+ "voxel_volume_mm3": 43904.0,
+ "volume_ratio_voxel_over_mesh": 1.0389511342756317,
+ "watertight": true,
+ "source": "mesh",
+ "mesh_path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d004/part.stl"
+}

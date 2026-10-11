@@ -1,0 +1,209 @@
+{
+ "gridcontrol_modes": {
+  "cad-engineering": {
+   "label": "CAD Engineering",
+   "switchable": true,
+   "pending": null
+  },
+  "general-fleet": {
+   "label": "General Fleet (3x Apodex workers)",
+   "switchable": true,
+   "pending": null
+  },
+  "general-flagship": {
+   "label": "General Flagship (GLM-5.2 ik GPU-offload, cards 0-5+7)",
+   "switchable": true,
+   "pending": null
+  },
+  "rag-training": {
+   "label": "RAG & Training",
+   "switchable": true,
+   "pending": "embed/reranker/vl-embed services installed; QLoRA training env (unsloth) still not installed - training jobs remain manual"
+  },
+  "batch-overnight": {
+   "label": "Batch Overnight",
+   "switchable": true,
+   "pending": "8 throughput workers installed (8040-8047); redis-rq queue provisioning still pending"
+  },
+  "hybrid-big-model": {
+   "label": "Hybrid Big-Model (CPU flagship)",
+   "switchable": true,
+   "pending": null
+  },
+  "video-studio": {
+   "label": "Video Studio (LTX-2.5 x6 + editor + director)",
+   "switchable": true,
+   "pending": null
+  },
+  "general-fleet-v2": {
+   "label": "General Fleet v2 (2x 122B PP2 + 2x GLM-4.7-Flash + GPT-OSS-20B)",
+   "switchable": true,
+   "pending": null
+  },
+  "redteam-mission": {
+   "label": "Redteam Mission (redteam-v5 + ephemeral BlackArch VM via Tor)",
+   "switchable": true,
+   "pending": null
+  },
+  "sim-lab-4": {
+   "label": "Sim Lab 4 (GPUs 0-3 simulation; GLM-Flash on 4,5 + GPT-OSS on 7; 6 rests)",
+   "switchable": true,
+   "pending": null
+  },
+  "sim-lab-8": {
+   "label": "Sim Lab 8 (ALL GPUs simulation; overnight sweeps + surrogate training; no local LLM)",
+   "switchable": true,
+   "pending": null
+  }
+ },
+ "status": {
+  "mode": "sim-lab-4",
+  "detected_mode": "transition",
+  "auto_enabled": false,
+  "last_switch_ts": 1791355467907,
+  "queue": {
+   "queued": -1,
+   "running": -1
+  },
+  "gpus": [
+   {
+    "index": 0,
+    "util": 97,
+    "mem_used_mb": 3816,
+    "temp_c": 36,
+    "derated": false
+   },
+   {
+    "index": 1,
+    "util": 0,
+    "mem_used_mb": 14,
+    "temp_c": 27,
+    "derated": false
+   },
+   {
+    "index": 2,
+    "util": 0,
+    "mem_used_mb": 14,
+    "temp_c": 28,
+    "derated": false
+   },
+   {
+    "index": 3,
+    "util": 0,
+    "mem_used_mb": 14,
+    "temp_c": 29,
+    "derated": false
+   },
+   {
+    "index": 4,
+    "util": 100,
+    "mem_used_mb": 58642,
+    "temp_c": 58,
+    "derated": false
+   },
+   {
+    "index": 5,
+    "util": 0,
+    "mem_used_mb": 57842,
+    "temp_c": 29,
+    "derated": false
+   },
+   {
+    "index": 6,
+    "util": 0,
+    "mem_used_mb": 14,
+    "temp_c": 31,
+    "derated": false
+   },
+   {
+    "index": 7,
+    "util": 0,
+    "mem_used_mb": 55494,
+    "temp_c": 30,
+    "derated": false
+   }
+  ],
+  "switching": null,
+  "mc_console": "http://127.0.0.1:3100",
+  "gridwatch": "http://192.168.1.65:3000"
+ },
+ "switch": {
+  "target": "sim-lab-4",
+  "phase": "done",
+  "startedAt": 1791355466561,
+  "done": true,
+  "ok": true,
+  "log_tail": [
+   "[2026-10-07T06:44:27.907Z] MC agents remapped: orchestrator,atlas-research,cad-specialist,compiler,ops-admin,cybersec,marketing-content,judge,redteam,cloud-rescue-bunny,cloud-rescue-longcat",
+   "[2026-10-07T06:44:27.907Z] MC endpoints enabled=[14,15,16,2,9] disabled=[4,5,6,7,8,10,11,12,13,17,18,19,20,21,22,23,24,25,26,27,28,29]",
+   "[2026-10-07T06:44:27.907Z] SWITCH COMPLETE -> sim-lab-4 in 1s"
+  ]
+ },
+ "sim_modes": {
+  "sim-lab-4": {
+   "label": "Sim Lab 4 (GPUs 0-3 simulation; CAD + tools LLM lanes on 4,5,7; 6 rests)",
+   "sim_gpus": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "llm_gpus": [
+    4,
+    5,
+    7
+   ],
+   "rest": [
+    6
+   ],
+   "keep_services": [
+    "cad",
+    "tools"
+   ],
+   "stop_services": [
+    "apodex-1",
+    "apodex-2",
+    "apodex-3",
+    "strategist"
+   ]
+  },
+  "sim-lab-8": {
+   "label": "Sim Lab 8 (all GPUs simulation; overnight sweeps and surrogate training)",
+   "sim_gpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "llm_gpus": [],
+   "rest": [],
+   "keep_services": [],
+   "stop_services": [
+    "apodex-1",
+    "apodex-2",
+    "apodex-3",
+    "strategist",
+    "tools",
+    "cad"
+   ]
+  },
+  "batch-overnight": {
+   "label": "existing GRID CONTROL mode; no simulation GPUs unless Aaron assigns some",
+   "sim_gpus": []
+  },
+  "general-fleet-v2": {
+   "label": "existing GRID CONTROL mode (current); all cards hold vLLM weights",
+   "sim_gpus": []
+  },
+  "workstation": {
+   "label": "darkness, single RTX PRO 4000 (used when no GRID CONTROL endpoint is configured)",
+   "sim_gpus": [
+    0
+   ]
+  }
+ }
+}

@@ -1,0 +1,128 @@
+{
+ "schema": "aces-golden-run/1",
+ "run_id": "20261010T084920Z-b3ac99",
+ "project": "golden-demo",
+ "exp_id": "golden-golden-demo-20261010T084920Z-b3ac99",
+ "run_dir": "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99",
+ "tool": {
+  "name": "aces-golden",
+  "version": "0.2.0",
+  "python": "3.14.7",
+  "argv": [
+   "run",
+   "--demo",
+   "--lane",
+   "sim/pool",
+   "--json",
+   "--progress",
+   "lines"
+  ]
+ },
+ "created_utc": "2026-10-10T08:49:20.069+00:00",
+ "finished_utc": "2026-10-10T08:50:43.042+00:00",
+ "status": "done",
+ "seed": 7,
+ "demo": "root-mount",
+ "spec_sha256": "b6c8bbefb1e9df1305ca900f598903a007b07b387751c93b4f90c30ba936ef94",
+ "resolution": {
+  "gen_mm": 4.0,
+  "fea_mm": 4.0,
+  "field_h_mm": 2.0,
+  "check_levels": [
+   {
+    "level": 1,
+    "h_mm": 2.0,
+    "gpu_only": false
+   }
+  ]
+ },
+ "stages": [
+  {
+   "name": "compute",
+   "status": "done",
+   "started_utc": "2026-10-10T08:49:19.914+00:00",
+   "wall_s": 0.156,
+   "note": "cpu: Intel(R) Core(TM) Ultra 9 285HX · 4 of 4 logical CPUs usable · 7.04 of 8.32 GB free · numpy 2.4.6 · BLAS 1 thread per solve"
+  },
+  {
+   "name": "inputs",
+   "status": "done",
+   "started_utc": "2026-10-10T08:49:20.070+00:00",
+   "wall_s": 1.406,
+   "note": "sweep cpu x4, verify cpu, parity none, check auto, conforming auto on the rig, rig lane sim/pool (check, conforming)"
+  },
+  {
+   "name": "domain",
+   "status": "done",
+   "started_utc": "2026-10-10T08:49:21.476+00:00",
+   "wall_s": 0.465,
+   "note": "grid [25, 25, 10] at 4 mm, design share 0.7824, 136 passive void boxes, 0.5 s"
+  },
+  {
+   "name": "sweep",
+   "status": "done",
+   "started_utc": "2026-10-10T08:49:21.942+00:00",
+   "wall_s": 8.066,
+   "note": "9 of 10 designs finished in 8.1 s (27.7 s of case time)"
+  },
+  {
+   "name": "loop",
+   "status": "done",
+   "started_utc": "2026-10-10T08:49:30.008+00:00",
+   "wall_s": 3.203,
+   "note": "pass after 1 round(s)"
+  },
+  {
+   "name": "check",
+   "status": "done",
+   "started_utc": "2026-10-10T08:49:33.211+00:00",
+   "wall_s": 65.94,
+   "note": "grade rig-verified, verdict PASS"
+  },
+  {
+   "name": "export",
+   "status": "done",
+   "started_utc": "2026-10-10T08:50:39.535+00:00",
+   "wall_s": 2.691,
+   "note": "winner v001"
+  },
+  {
+   "name": "evidence",
+   "status": "done",
+   "started_utc": "2026-10-10T08:50:42.226+00:00",
+   "wall_s": 0.771,
+   "note": "bundle 91aaf1ad1877, simlab ledger entry 3 of 3, aces ledger entry 4; verify: simlab True, aces True"
+  },
+  {
+   "name": "report",
+   "status": "done",
+   "started_utc": "2026-10-10T08:50:42.997+00:00",
+   "wall_s": 0.045,
+   "note": "report.md, report.html, report.json"
+  }
+ ],
+ "outcome": "pass",
+ "verdict": "PASS",
+ "grade": "rig-verified",
+ "exit_code": 0,
+ "message": "verification passed (rig-verified)",
+ "note": null,
+ "paths": {
+  "report_md": "report.md",
+  "report_html": "report.html",
+  "report_json": "report.json",
+  "stl": "winner/winner.stl"
+ },
+ "timings": {
+  "compute_s": 0.156,
+  "inputs_s": 1.406,
+  "domain_s": 0.465,
+  "sweep_s": 8.066,
+  "loop_s": 3.203,
+  "check_s": 65.94,
+  "export_s": 2.691,
+  "evidence_s": 0.771,
+  "report_s": 0.045,
+  "total_s": 83.806
+ }
+}

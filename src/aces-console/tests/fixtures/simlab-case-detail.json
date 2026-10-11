@@ -1,0 +1,244 @@
+{
+ "case_id": "c000",
+ "params": {
+  "cell_m": 0.004,
+  "fluid": "Air",
+  "T_K": 320.0,
+  "p_Pa": 200000.0,
+  "n": 96,
+  "thermal": true,
+  "tpms": "diamond",
+  "wall_ratio": 0.2,
+  "re": 1.0
+ },
+ "run_dir": "/work/out/queue/aces-cal-air-03d/c000",
+ "status": "FINISHED",
+ "wall_s": 62.517919,
+ "mlflow_run_id": "54db1a96a9c0489c8d3ee776d0a9933f",
+ "error": null,
+ "results": {
+  "converged": 1,
+  "re_achieved": 0.9996280073863026,
+  "dpdx_Pa_m": 17.661901514943626,
+  "mass_flux_kg_m2s": 0.003807727593359963,
+  "h_W_m2K": 136.665931021132,
+  "nusselt_h1": 4.9189098932405075,
+  "mach": 0.04095436026613575,
+  "grid_peclet": 0.10007651574294339,
+  "phi_voxel": 0.19599971064814814,
+  "flow_steps": 4000,
+  "thermal_steps": 3600,
+  "problems": "",
+  "notes": "",
+  "wall_s": 62.17571568489075,
+  "device": "cuda"
+ },
+ "artifacts": [
+  "out/aces-cal-air-03d/c000/sample.json",
+  "out/aces-cal-air-03d/c000/measurement.json"
+ ],
+ "stages": [],
+ "current_stage": null,
+ "progress": {
+  "solver": "aces-tpms-periodic",
+  "case_id": "c000",
+  "phase": "done",
+  "step": 1,
+  "total": 1,
+  "fraction": 1.0,
+  "updated_utc": "2026-10-10T09:19:12.788574+00:00",
+  "pid": 1,
+  "started_utc": "2026-10-10T09:18:06.581905+00:00",
+  "status": "FINISHED"
+ },
+ "progress_age_s": 54928.49212002754,
+ "files": [
+  {
+   "name": "case.json",
+   "bytes": 181,
+   "mtime": 1791622502.050117
+  },
+  {
+   "name": "evidence.json",
+   "bytes": 3503,
+   "mtime": 1791623952.6401706
+  },
+  {
+   "name": "measurement.json",
+   "bytes": 271,
+   "mtime": 1791623949.1000981
+  },
+  {
+   "name": "progress.json",
+   "bytes": 242,
+   "mtime": 1791623952.7888622
+  },
+  {
+   "name": "results.json",
+   "bytes": 555,
+   "mtime": 1791623950.3187768
+  },
+  {
+   "name": "sample.json",
+   "bytes": 1276,
+   "mtime": 1791623949.0997858
+  },
+  {
+   "name": "status.json",
+   "bytes": 137,
+   "mtime": 1791623952.7893305
+  },
+  {
+   "name": "worker.log",
+   "bytes": 2875,
+   "mtime": 1791623952.730759
+  }
+ ],
+ "evidence": {
+  "schema": "simlab-evidence/1",
+  "experiment": {
+   "id": "aces-cal-air-03d",
+   "project": "ACES-calibration",
+   "owner": "aaron",
+   "physics": "cfd",
+   "solver": "aces-tpms-periodic",
+   "description": "ACES calibration samples: periodic diamond unit cells, t/a [0.20, 0.24, 0.28], Re [1.0, 3.0, 60.0], Air at 320 K, 96 voxels per cell. Campaign 3: firm up diamond Nu (D30 scatter 0.143 sits just under the 0.15 refusal line) by adding low-Re anchors and an intermediate Re point at the thick walls where campaign 2 only had Re 10/30/100. All Re kept under the Mach ceiling observed in 02r (Re 100, wr 0.28 -> Mach 0.151).",
+   "spec_sha256": "0e5df831acc43b686708716f0dfe465db364322d541fe7b0905d4f8ba7f8235d",
+   "hypothesis": "Diamond Nu scatter at thick wall ratios (0.20-0.28) tightens below 0.12 once the Re spread is filled in; if it does not, diamond Nu at thick walls is genuinely broad and the refusal policy stays honest.",
+   "expected": "dpdx and H1 h per case (rows carry boundary uniform_heat_flux); fitted with `aces calibrate`, which takes the boundary from the rows.",
+   "rd_activity": "ACES fast-tier calibration of TPMS heat-exchanger cores",
+   "company": "carbon",
+   "tags": {
+    "kind": "calibration",
+    "system": "hx",
+    "origin": "aces"
+   }
+  },
+  "case": {
+   "cell_m": 0.004,
+   "fluid": "Air",
+   "T_K": 320.0,
+   "p_Pa": 200000.0,
+   "n": 96,
+   "thermal": true,
+   "tpms": "diamond",
+   "wall_ratio": 0.2,
+   "re": 1.0,
+   "case_id": "c000"
+  },
+  "inputs_sha256": {
+   "aces-cal-air-03d.yaml": "0e5df831acc43b686708716f0dfe465db364322d541fe7b0905d4f8ba7f8235d"
+  },
+  "geometry": {
+   "source": "parametric",
+   "ref": null,
+   "sha256": null
+  },
+  "environment": {
+   "host": "9942c6e9b2ad",
+   "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
+   "in_container": true,
+   "image": "aces-cfd:0.1",
+   "image_digest": "sha256:c95bff6e9d76b5b75ef841b68d766beb0b3b1309b133cd1ca37cb23313bc8000 aces-cfd@sha256:c95bff6e9d76b5b75ef841b68d766beb0b3b1309b133cd1ca37cb23313bc8000",
+   "cuda_visible_devices": null,
+   "gpus": [
+    {
+     "index": 0,
+     "name": "NVIDIA CMP 170HX",
+     "driver": "610.43.03",
+     "memory": "65536 MiB",
+     "uuid": "GPU-f9f3f3be-8085-c53b-3e22-68f3c412749d",
+     "serial": "1322421043203",
+     "pci_bus_id": "00000000:61:00.0"
+    }
+   ],
+   "packages": {
+    "python": "3.12.3",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "cupy": "14.2.0",
+    "optuna": "5.0.0",
+    "build123d": "0.13.0",
+    "trimesh": "5.1.1",
+    "skimage": "0.26.0",
+    "mlflow": "3.16.1"
+   }
+  },
+  "git_rev": null,
+  "started_utc": "2026-10-10T09:18:06.582226+00:00",
+  "finished_utc": "2026-10-10T09:19:09.100145+00:00",
+  "wall_s": 62.517919,
+  "status": "FINISHED",
+  "error": null,
+  "results": {
+   "converged": 1,
+   "re_achieved": 0.9996280073863026,
+   "dpdx_Pa_m": 17.661901514943626,
+   "mass_flux_kg_m2s": 0.003807727593359963,
+   "h_W_m2K": 136.665931021132,
+   "nusselt_h1": 4.9189098932405075,
+   "mach": 0.04095436026613575,
+   "grid_peclet": 0.10007651574294339,
+   "phi_voxel": 0.19599971064814814,
+   "flow_steps": 4000,
+   "thermal_steps": 3600,
+   "problems": "",
+   "notes": "",
+   "wall_s": 62.17571568489075,
+   "device": "cuda",
+   "artifacts": [
+    "out/aces-cal-air-03d/c000/sample.json",
+    "out/aces-cal-air-03d/c000/measurement.json"
+   ]
+  },
+  "run_dir": "/work/out/aces-cal-air-03d/c000"
+ },
+ "case_md": null,
+ "extra": {},
+ "experiment": {
+  "key": "queue/aces-cal-air-03d",
+  "n_stale": 0,
+  "reports": [],
+  "spec_path": "/work/out/queue/aces-cal-air-03d/spec.resolved.json",
+  "summary_path": null,
+  "id": "aces-cal-air-03d",
+  "project": "ACES-calibration",
+  "physics": "cfd",
+  "solver": "aces-tpms-periodic",
+  "image": "aces-cfd:0.1",
+  "stages": [],
+  "description": "ACES calibration samples: periodic diamond unit cells, t/a [0.20, 0.24, 0.28], Re [1.0, 3.0, 60.0], Air at 320 K, 96 voxels per cell. Campaign 3: firm up diamond Nu (D30 scatter 0.143 sits just under the 0.15 refusal line) by adding low-Re anchors and an intermediate Re point at the thick walls where campaign 2 only had Re 10/30/100. All Re kept under the Mach ceiling observed in 02r (Re 100, wr 0.28 -> Mach 0.151).",
+  "hypothesis": "Diamond Nu scatter at thick wall ratios (0.20-0.28) tightens below 0.12 once the Re spread is filled in; if it does not, diamond Nu at thick walls is genuinely broad and the refusal policy stays honest.",
+  "sweep": {
+   "tpms": [
+    "diamond"
+   ],
+   "wall_ratio": [
+    0.2,
+    0.24,
+    0.28
+   ],
+   "re": [
+    1.0,
+    3.0,
+    60.0
+   ]
+  },
+  "outputs": [
+   "re_achieved",
+   "dpdx_Pa_m",
+   "mass_flux_kg_m2s",
+   "h_W_m2K",
+   "nusselt_h1",
+   "mach"
+  ],
+  "exp_dir": "/work/out/queue/aces-cal-air-03d",
+  "root": "queue",
+  "n_cases": 9,
+  "n_done": 9,
+  "n_failed": 0,
+  "n_running": 0,
+  "updated": 1791624080.773324,
+  "validation": "pass"
+ }
+}

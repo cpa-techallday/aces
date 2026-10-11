@@ -1,0 +1,1183 @@
+<!doctype html><html><head><meta charset='utf-8'><title>aces golden root-mount 20261010T102210Z-bc7391</title><style>body{font-family:Segoe UI,Arial,sans-serif;max-width:1000px;margin:32px auto;padding:0 16px;color:#222}table{border-collapse:collapse;font-size:13px;margin:8px 0}td,th{border:1px solid #bbb;padding:3px 8px}th{background:#eef}img{max-width:100%}code{background:#f4f4f4;padding:1px 4px}pre{background:#f4f4f4;padding:8px;overflow:auto}</style></head><body><h1>aces golden: root-mount (20261010T102210Z-bc7391)</h1>
+<p><strong>PASS · verified-desktop · root-mount: volfrac 0.23 rmin_mm 11.55 · mass 0.177 kg · vm_p99_MPa 54.47 &lt;= 60 · umax_mm 0.0312 &lt;= 0.035 · predicted within 10 % (max 1.527 % on vm_p99_MPa) · check 2 mm: max gap +4.414 % on vm_p99_MPa, constraints met · conforming tet10 2 mm (ccx 2.23, desktop): max gap -5.706 % on vm_p99_MPa, constraints met · bundle a134a66fddc5 simlab #4 · aces #10 · stages 49 s</strong></p>
+<p>Project <code>cad-gold</code> · run directory <code>/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391</code> · created 2026-10-10T10:22:10.518+00:00</p>
+<p>Six-foot root mount computed inside a disc design space 100 mm across and 40 mm tall: six bolted feet on a 36 mm ring and a 30 kN load on a top cup. The disc is only the input domain; the part is computed (SIMP topology optimisation, organic implicit skin) and solved on the real voxel FEA. Demo inputs.</p>
+<p><img alt="iso" src="winner/winner_iso.png" /></p>
+<p><img alt="stress" src="winner/winner_stress.png" /></p>
+<h2>1. Key numbers</h2>
+<p>Case <code>v001</code> (vm_max is resolution-sensitive and never constrained).</p>
+<table>
+<thead>
+<tr>
+<th>quantity</th>
+<th>value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>mass_kg</td>
+<td>0.177</td>
+</tr>
+<tr>
+<td>mesh_volume_mm3</td>
+<td>66290</td>
+</tr>
+<tr>
+<td>mass_voxel_kg</td>
+<td>0.1822</td>
+</tr>
+<tr>
+<td>voxel_volume_mm3</td>
+<td>68220</td>
+</tr>
+<tr>
+<td>compliance_Nmm</td>
+<td>828</td>
+</tr>
+<tr>
+<td>umax_mm</td>
+<td>0.0312</td>
+</tr>
+<tr>
+<td>vm_p99_MPa</td>
+<td>54.47</td>
+</tr>
+<tr>
+<td>vm_p95_MPa</td>
+<td>40.7</td>
+</tr>
+<tr>
+<td>vm_max_MPa</td>
+<td>64.49</td>
+</tr>
+<tr>
+<td>pcg_iters</td>
+<td>221</td>
+</tr>
+<tr>
+<td>constraint vm_p99_MPa &lt;= 60</td>
+<td>54.47 (met)</td>
+</tr>
+<tr>
+<td>constraint umax_mm &lt;= 0.035</td>
+<td>0.0312 (met)</td>
+</tr>
+<tr>
+<td>designs finished</td>
+<td>9 of 10</td>
+</tr>
+<tr>
+<td>grade</td>
+<td>verified-desktop</td>
+</tr>
+</tbody>
+</table>
+<h2>2. Inputs and provenance</h2>
+<ul>
+<li>spec <code>inputs/spec.json</code> sha256 <code>b6c8bbefb1e9df1305ca900f598903a007b07b387751c93b4f90c30ba936ef94</code> (spec file); effective spec sha256 <code>dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7</code></li>
+<li>overrides: domain.source = step, domain.step_file = /home/aces/Work/cad-vm/cad/local/20261010T102209Z-disc/part.step</li>
+<li>design space: step <code>/home/aces/Work/cad-vm/cad/local/20261010T102209Z-disc/part.step</code> -&gt; <code>inputs/domain.step</code> sha256 <code>2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92</code> (B-rep volume 314200 mm3)</li>
+<li>the STEP header carries an export timestamp, so step_sha256 changes per export; the stable geometry digest is domain.json mask_sha256</li>
+<li>voxel mask sha256 <code>b4689f1bfef6263a63956bfd2247db3c7ea7dbce0a668c8f99a0d3751bd20434</code>; seed 7</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>material</th>
+<th>E (MPa)</th>
+<th>nu</th>
+<th>density (kg/mm3)</th>
+<th>allowable vm (MPa)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AlSi10Mg (LPBF), nominal</td>
+<td>70000</td>
+<td>0.33</td>
+<td>2.67e-06</td>
+<td>60</td>
+</tr>
+</tbody>
+</table>
+<p>Material source: Nominal handbook values for AlSi10Mg: E 70 GPa, Poisson 0.33, density 2.67 g/cm3. The 60 MPa allowable is a demo design limit chosen so the stress constraint is active; it is not a material strength. Demo inputs, not a qualified material card.</p>
+<table>
+<thead>
+<tr>
+<th>kind</th>
+<th>name</th>
+<th>box (mm, part frame)</th>
+<th>detail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>support</td>
+<td>foot-1</td>
+<td>76, 64, 0, 88, 76, 0</td>
+<td>dofs [0, 1, 2]</td>
+</tr>
+<tr>
+<td>support</td>
+<td>foot-2</td>
+<td>44, 80, 0, 56, 92, 0</td>
+<td>dofs [0, 1, 2]</td>
+</tr>
+<tr>
+<td>support</td>
+<td>foot-3</td>
+<td>12, 64, 0, 24, 76, 0</td>
+<td>dofs [0, 1, 2]</td>
+</tr>
+<tr>
+<td>support</td>
+<td>foot-4</td>
+<td>12, 28, 0, 24, 40, 0</td>
+<td>dofs [0, 1, 2]</td>
+</tr>
+<tr>
+<td>support</td>
+<td>foot-5</td>
+<td>44, 8, 0, 56, 20, 0</td>
+<td>dofs [0, 1, 2]</td>
+</tr>
+<tr>
+<td>support</td>
+<td>foot-6</td>
+<td>76, 28, 0, 88, 40, 0</td>
+<td>dofs [0, 1, 2]</td>
+</tr>
+<tr>
+<td>load</td>
+<td>cup-down</td>
+<td>40, 40, 40, 60, 60, 40</td>
+<td>force [0.0, 0.0, -30000.0] N, axis z, case down</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>region</th>
+<th>name</th>
+<th>shape (mm)</th>
+<th>round (mm)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>keep-in</td>
+<td>foot-1</td>
+<td>cylinder z, centre (82, 70), r 9, span 0..6</td>
+<td>1</td>
+</tr>
+<tr>
+<td>keep-in</td>
+<td>foot-2</td>
+<td>cylinder z, centre (50, 86), r 9, span 0..6</td>
+<td>1</td>
+</tr>
+<tr>
+<td>keep-in</td>
+<td>foot-3</td>
+<td>cylinder z, centre (18, 70), r 9, span 0..6</td>
+<td>1</td>
+</tr>
+<tr>
+<td>keep-in</td>
+<td>foot-4</td>
+<td>cylinder z, centre (18, 34), r 9, span 0..6</td>
+<td>1</td>
+</tr>
+<tr>
+<td>keep-in</td>
+<td>foot-5</td>
+<td>cylinder z, centre (50, 14), r 9, span 0..6</td>
+<td>1</td>
+</tr>
+<tr>
+<td>keep-in</td>
+<td>foot-6</td>
+<td>cylinder z, centre (82, 34), r 9, span 0..6</td>
+<td>1</td>
+</tr>
+<tr>
+<td>keep-in</td>
+<td>cup</td>
+<td>cylinder z, centre (50, 50), r 15, span 34..40</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>resolutions (mm): generator 4, skin field 2, solve 4, check levels 1: 2</li>
+<li>grid: origin [0.0, 0.0, 0.0] mm, envelope [100.0, 100.0, 40.0] mm</li>
+<li>stress-exclusion zones (vm_p99 ignores them): 7 boxes, 8 mm (the spec asks 6 mm: rounded up to the 4 mm lattice, so every solve resolution excludes the same zone)</li>
+<li>objective min mass_kg; constraints vm_p99_MPa &lt;= 60, umax_mm &lt;= 0.035</li>
+<li>design variables: volfrac [0.13, 0.38], rmin_mm [6, 12]; fixed: penal 3</li>
+<li>solver digest: vendored snapshot 62de9811e555 content sha256 <code>da7c28a37dabbe8ba55e1817d668c734a4cf951da15740d1e9f837d611ed8ac9</code>; imported modules match the snapshot: True; golden code sha256 <code>d3bd56049088529c1e9c5593eae9893fe66ed03c9ff4584063acbef51e54d8e7</code></li>
+<li>hypothesis: A SIMP-generated organic root mount meets vm_p99 &lt;= 60 MPa and umax &lt;= 0.035 mm at minimum mass, and a GP surrogate fitted to a 10-design sweep predicts the verified winner within 10 %.</li>
+</ul>
+<h2>3. Design-space voxelisation</h2>
+<p>step-structures stage_mesh at 4 mm: 6250 cells, 4890 inside the design space (design share 0.7824), voxel/B-rep volume 0.9962, watertight tessellation True; 136 passive void boxes keep the generator inside the design space.</p>
+<p><img alt="design-space mask slices" src="domain/mask_slices.png" /></p>
+<h2>4. Compute used</h2>
+<table>
+<thead>
+<tr>
+<th>step</th>
+<th>computation</th>
+<th>solver</th>
+<th>device</th>
+<th>resolution (mm)</th>
+<th>size</th>
+<th>count</th>
+<th>wall s</th>
+<th>sum s</th>
+<th>grade</th>
+<th>note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>kernel</td>
+<td>element and patch tests</td>
+<td>gendesign.fea3d.self_test</td>
+<td>cpu</td>
+<td>1</td>
+<td>10x2x2 bar (40 elements)</td>
+<td>1</td>
+<td>0.0021</td>
+<td>0.0021</td>
+<td>-</td>
+<td>element checks and the uniaxial bar: passed</td>
+</tr>
+<tr>
+<td>domain</td>
+<td>STEP -&gt; voxel mask</td>
+<td>step-structures stage_mesh (Embree containment)</td>
+<td>cpu</td>
+<td>4</td>
+<td>6250 cells, 4890 solid</td>
+<td>1</td>
+<td>0.488</td>
+<td>0.0181</td>
+<td>-</td>
+<td>voxel/B-rep volume 0.9962; watertight tessellation True; wall_s is the whole domain step (passive boxes, design-space SDF), wall_s_sum the stage_mesh records</td>
+</tr>
+<tr>
+<td>generate</td>
+<td>SIMP x 11</td>
+<td>gendesign.topopt3d.run_case (OC, FFT filter)</td>
+<td>cpu/numpy x4</td>
+<td>4</td>
+<td>6250 elements</td>
+<td>11</td>
+<td>-</td>
+<td>21.5</td>
+<td>-</td>
+<td>10 sweep and 1 verify designs; the 10 sweep designs ran concurrently in 4 workers, wall_s_sum is the sum over designs</td>
+</tr>
+<tr>
+<td>skin</td>
+<td>organic skin x 11</td>
+<td>golden.organic (EDT SDF, smooth unions, Taubin)</td>
+<td>cpu</td>
+<td>2</td>
+<td>50000 field points</td>
+<td>11</td>
+<td>-</td>
+<td>0.346</td>
+<td>-</td>
+<td>10 of 11 watertight single-body skins; median 10660 faces</td>
+</tr>
+<tr>
+<td>solve</td>
+<td>real FEA x 9</td>
+<td>step-structures stage_solve, Jacobi-PCG FP64</td>
+<td>cpu/numpy x4</td>
+<td>4</td>
+<td>6250 elements, 22308 DOF</td>
+<td>9</td>
+<td>-</td>
+<td>1.52</td>
+<td>preview-grade</td>
+<td>9 of 9 converged; ran concurrently in 4 workers</td>
+</tr>
+<tr>
+<td>surrogate</td>
+<td>GP K-fold per round</td>
+<td>simlab.surrogate.tabular (gp)</td>
+<td>cpu</td>
+<td>-</td>
+<td>n=9</td>
+<td>1</td>
+<td>1.1</td>
+<td>1.1</td>
+<td>-</td>
+<td>round 1: weak, max CV MAPE 4.96 % on vm_p99_MPa, 31 GP warnings</td>
+</tr>
+<tr>
+<td>optimise</td>
+<td>grid per round</td>
+<td>golden.optimise</td>
+<td>cpu</td>
+<td>-</td>
+<td>1681 candidates</td>
+<td>1</td>
+<td>0.0056</td>
+<td>0.0056</td>
+<td>-</td>
+<td>round 1: 1022 predicted feasible</td>
+</tr>
+<tr>
+<td>verify</td>
+<td>real FEA x 1</td>
+<td>step-structures stage_solve, Jacobi-PCG FP64</td>
+<td>cpu/numpy</td>
+<td>4</td>
+<td>6250 elements, 22308 DOF</td>
+<td>1</td>
+<td>0.166</td>
+<td>0.166</td>
+<td>preview-grade</td>
+<td>round 1 v001: PASS</td>
+</tr>
+<tr>
+<td>check</td>
+<td>finer real FEA, level 1</td>
+<td>step-structures stage_solve</td>
+<td>cpu/numpy</td>
+<td>2</td>
+<td>50000 elements, 163863 DOF</td>
+<td>1</td>
+<td>5.94</td>
+<td>5.94</td>
+<td>independent check -&gt; verified-desktop</td>
+<td>estimate 2.71 s, budget 60 s</td>
+</tr>
+<tr>
+<td>check</td>
+<td>finer real FEA, level 2</td>
+<td>step-structures stage_solve</td>
+<td>-</td>
+<td>1</td>
+<td>-</td>
+<td>0</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>not run: GPU-only extra level: no usable GPU</td>
+</tr>
+<tr>
+<td>parity</td>
+<td>CuPy / Warp re-solve</td>
+<td>step-structures stage_solve / WarpApplyK</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>0</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>not run: no device parity: no usable GPU (CuPy is not importable here (an optional extra; the packaged venv does not ship it))</td>
+</tr>
+<tr>
+<td>rig</td>
+<td>sim lane sim/pool</td>
+<td>simlab-mcp</td>
+<td>rig</td>
+<td>-</td>
+<td>-</td>
+<td>0</td>
+<td>-</td>
+<td>-</td>
+<td>not used</td>
+<td>stale-manifest: desktop only (run with --lane sim/pool to send the independent check and the conforming check to the rig)</td>
+</tr>
+<tr>
+<td>warp-lattice</td>
+<td>rod-lattice generator</td>
+<td>gendesign.lattice_opt</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>0</td>
+<td>-</td>
+<td>-</td>
+<td>not used</td>
+<td>not used: cantilever demonstrator, not wired into the golden path (v0)</td>
+</tr>
+<tr>
+<td>fno</td>
+<td>field surrogate</td>
+<td>simlab.surrogate.fno (torch, PhysicsNeMo)</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>0</td>
+<td>-</td>
+<td>-</td>
+<td>not used</td>
+<td>not installed (torch, PhysicsNeMo); a field (FNO) surrogate needs O(100) solved fields; v0 fits a tabular GP</td>
+</tr>
+<tr>
+<td>second-discretisation</td>
+<td>conforming tet10 (C3D10) at 2 mm</td>
+<td>gmsh 4.15.2 + CalculiX ccx 2.23</td>
+<td>cpu x4</td>
+<td>2</td>
+<td>38618 C3D10, 187011 DOF</td>
+<td>1</td>
+<td>27.1</td>
+<td>27.1</td>
+<td>second discretisation -&gt; agrees</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2>5. Generative sweep</h2>
+<p>10 designs from a Latin hypercube (random-cd, seed 7) over volfrac [0.13, 0.38], rmin_mm [6, 12]; 9 finished. Every design is generated (SIMP), skinned (organic implicit surface) and solved on the real voxel FEA; all are preview-grade.</p>
+<table>
+<thead>
+<tr>
+<th>case_id</th>
+<th>status</th>
+<th>volfrac</th>
+<th>rmin_mm</th>
+<th>mass_kg</th>
+<th>umax_mm</th>
+<th>vm_p99_MPa</th>
+<th>vm_max_MPa</th>
+<th>compliance_Nmm</th>
+<th>pcg_iters</th>
+<th>faces</th>
+<th>genus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>d000</td>
+<td>FINISHED</td>
+<td>0.1881</td>
+<td>9.568</td>
+<td>0.139</td>
+<td>0.0395</td>
+<td>63.08</td>
+<td>74.66</td>
+<td>1062</td>
+<td>262</td>
+<td>10020</td>
+<td>0</td>
+</tr>
+<tr>
+<td>d001</td>
+<td>FINISHED</td>
+<td>0.2368</td>
+<td>10.65</td>
+<td>0.1846</td>
+<td>0.03031</td>
+<td>51.57</td>
+<td>60.52</td>
+<td>800.6</td>
+<td>218</td>
+<td>10472</td>
+<td>0</td>
+</tr>
+<tr>
+<td>d002</td>
+<td>FINISHED</td>
+<td>0.3433</td>
+<td>7.279</td>
+<td>0.284</td>
+<td>0.02439</td>
+<td>39</td>
+<td>41.78</td>
+<td>621</td>
+<td>202</td>
+<td>11248</td>
+<td>0</td>
+</tr>
+<tr>
+<td>d003</td>
+<td>FINISHED</td>
+<td>0.3652</td>
+<td>10.1</td>
+<td>0.3043</td>
+<td>0.02409</td>
+<td>38.27</td>
+<td>41.03</td>
+<td>612.7</td>
+<td>201</td>
+<td>10952</td>
+<td>0</td>
+</tr>
+<tr>
+<td>d004</td>
+<td>FINISHED</td>
+<td>0.1535</td>
+<td>6.688</td>
+<td>0.1128</td>
+<td>0.05092</td>
+<td>79.45</td>
+<td>83.38</td>
+<td>1365</td>
+<td>288</td>
+<td>9596</td>
+<td>0</td>
+</tr>
+<tr>
+<td>d005</td>
+<td>FINISHED</td>
+<td>0.2278</td>
+<td>7.858</td>
+<td>0.1795</td>
+<td>0.0313</td>
+<td>53.1</td>
+<td>57.79</td>
+<td>825.1</td>
+<td>225</td>
+<td>10660</td>
+<td>0</td>
+</tr>
+<tr>
+<td>d006</td>
+<td>FAILED</td>
+<td>0.1601</td>
+<td>10.96</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>8364</td>
+<td>0</td>
+</tr>
+<tr>
+<td>d007</td>
+<td>FINISHED</td>
+<td>0.2915</td>
+<td>11.63</td>
+<td>0.2417</td>
+<td>0.02644</td>
+<td>40.65</td>
+<td>49.69</td>
+<td>684.3</td>
+<td>183</td>
+<td>10628</td>
+<td>0</td>
+</tr>
+<tr>
+<td>d008</td>
+<td>FINISHED</td>
+<td>0.2655</td>
+<td>6.233</td>
+<td>0.2148</td>
+<td>0.02736</td>
+<td>42.4</td>
+<td>50.38</td>
+<td>707.9</td>
+<td>218</td>
+<td>10968</td>
+<td>0</td>
+</tr>
+<tr>
+<td>d009</td>
+<td>FINISHED</td>
+<td>0.3125</td>
+<td>8.814</td>
+<td>0.2577</td>
+<td>0.02548</td>
+<td>39.36</td>
+<td>45.96</td>
+<td>653.5</td>
+<td>208</td>
+<td>11100</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>Failed designs:</p>
+<ul>
+<li>d006: multi-body (the skin has 3 solid bodies; a part is one body)</li>
+</ul>
+<p><img alt="sweep gallery" src="figures/sweep_gallery.png" /></p>
+<p><img alt="sweep scatter" src="figures/sweep_scatter.png" /></p>
+<p>sweep.csv sha256 <code>9a5961e5d90936f3e0c6dec8178343e705e61ce3808ab8dfb1fd832aa2c53814</code></p>
+<h2>6. Surrogate</h2>
+<p>Round 1: gp on 9 real solves, 5-fold CV; log outputs auto-positive -&gt; always; status <strong>weak</strong> (vm_p99_MPa R2 0.828 &lt; 0.9); 31 GP warnings captured; model sha256 <code>9b5305e1bd561d9bb3ef64bd7fc447ca7352bc8e7298e4bac50ad0d2b23c1d0c</code></p>
+<table>
+<thead>
+<tr>
+<th>output</th>
+<th>RMSE</th>
+<th>MAE</th>
+<th>MAPE %</th>
+<th>R2</th>
+<th>log</th>
+<th>range</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>mass_kg</td>
+<td>0.002763</td>
+<td>0.002379</td>
+<td>1.093</td>
+<td>0.998</td>
+<td>yes</td>
+<td>0.1128, 0.3043</td>
+</tr>
+<tr>
+<td>vm_p99_MPa</td>
+<td>5.467</td>
+<td>3.136</td>
+<td>4.958</td>
+<td>0.8283</td>
+<td>yes</td>
+<td>38.27, 79.45</td>
+</tr>
+<tr>
+<td>umax_mm</td>
+<td>0.0004734</td>
+<td>0.000246</td>
+<td>0.6233</td>
+<td>0.9968</td>
+<td>yes</td>
+<td>0.02409, 0.05092</td>
+</tr>
+<tr>
+<td>compliance_Nmm</td>
+<td>3.674</td>
+<td>2.309</td>
+<td>0.2583</td>
+<td>0.9998</td>
+<td>yes</td>
+<td>612.7, 1365</td>
+</tr>
+<tr>
+<td>vm_max_MPa</td>
+<td>2.241</td>
+<td>1.59</td>
+<td>2.668</td>
+<td>0.9737</td>
+<td>yes</td>
+<td>41.03, 83.38</td>
+</tr>
+</tbody>
+</table>
+<h2>7. Optimisation</h2>
+<p>Round 1: grid over 1681 candidates (0 within 0.02 of a verified design excluded: none); kappa 1, margins vm_p99_MPa 10 %, umax_mm 10 %; 1022 predicted feasible.</p>
+<p>winner: volfrac 0.23, rmin_mm 11.55 -&gt; mass_kg 0.1794 +- 0.002114, vm_p99_MPa 53.64 +- 0.3258, umax_mm 0.03126 +- 2.73e-05, compliance_Nmm 829.6 +- 0.7083, vm_max_MPa 62.56 +- 1.457</p>
+<table>
+<thead>
+<tr>
+<th>volfrac</th>
+<th>rmin_mm</th>
+<th>mass_kg</th>
+<th>vm_p99_MPa</th>
+<th>umax_mm</th>
+<th>compliance_Nmm</th>
+<th>vm_max_MPa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.23</td>
+<td>11.55</td>
+<td>0.1794</td>
+<td>53.64</td>
+<td>0.03126</td>
+<td>829.6</td>
+<td>62.56</td>
+</tr>
+<tr>
+<td>0.23</td>
+<td>11.4</td>
+<td>0.1794</td>
+<td>53.6</td>
+<td>0.03125</td>
+<td>829</td>
+<td>62.4</td>
+</tr>
+<tr>
+<td>0.23</td>
+<td>11.25</td>
+<td>0.1794</td>
+<td>53.55</td>
+<td>0.03124</td>
+<td>828.5</td>
+<td>62.24</td>
+</tr>
+<tr>
+<td>0.23</td>
+<td>11.1</td>
+<td>0.1794</td>
+<td>53.51</td>
+<td>0.03123</td>
+<td>827.9</td>
+<td>62.09</td>
+</tr>
+<tr>
+<td>0.23</td>
+<td>10.95</td>
+<td>0.1794</td>
+<td>53.46</td>
+<td>0.03121</td>
+<td>827.4</td>
+<td>61.93</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="optimisation map" src="figures/optimise_map.png" /></p>
+<h2>8. Verification</h2>
+<p>Resolutions recorded in the validation record (mm): generator 4, field 2, solve 4, check 2, 1. Tolerance 10 %, kappa 1.</p>
+<p>Round 1: <code>v001</code> (from the feasible set, cpu, step-structures stage_solve) -&gt; <strong>PASS</strong></p>
+<table>
+<thead>
+<tr>
+<th>output</th>
+<th>role</th>
+<th>predicted</th>
+<th>sd</th>
+<th>solved</th>
+<th>rel err</th>
+<th>agree</th>
+<th>limit</th>
+<th>meets</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>mass_kg</td>
+<td>objective</td>
+<td>0.1794</td>
+<td>0.002114</td>
+<td>0.177</td>
+<td>1.375 %</td>
+<td>yes</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>vm_p99_MPa</td>
+<td>constraint</td>
+<td>53.64</td>
+<td>0.3258</td>
+<td>54.47</td>
+<td>1.527 %</td>
+<td>yes</td>
+<td>&lt;= 60</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>umax_mm</td>
+<td>constraint</td>
+<td>0.03126</td>
+<td>2.73e-05</td>
+<td>0.0312</td>
+<td>0.192 %</td>
+<td>yes</td>
+<td>&lt;= 0.035</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>compliance_Nmm</td>
+<td>reported</td>
+<td>829.6</td>
+<td>0.7083</td>
+<td>828</td>
+<td>0.1876 %</td>
+<td>yes</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>vm_max_MPa</td>
+<td>reported</td>
+<td>62.56</td>
+<td>1.457</td>
+<td>64.49</td>
+<td>2.996 %</td>
+<td>yes</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<h2>9. Independent check and device parity</h2>
+<table>
+<thead>
+<tr>
+<th>level</th>
+<th>case</th>
+<th>h (mm)</th>
+<th>device</th>
+<th>host</th>
+<th>gating</th>
+<th>estimate s</th>
+<th>budget s</th>
+<th>ran</th>
+<th>passed</th>
+<th>reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>x001</td>
+<td>2</td>
+<td>cpu</td>
+<td>desktop</td>
+<td>yes</td>
+<td>2.711</td>
+<td>60</td>
+<td>yes</td>
+<td>yes</td>
+<td>CPU estimate 2.7 s is within the 60 s budget</td>
+</tr>
+<tr>
+<td>2</td>
+<td>-</td>
+<td>1</td>
+<td>-</td>
+<td>desktop</td>
+<td>no</td>
+<td>-</td>
+<td>60</td>
+<td>no</td>
+<td>-</td>
+<td>GPU-only extra level: no usable GPU</td>
+</tr>
+</tbody>
+</table>
+<p>Level 1 (2 mm):</p>
+<table>
+<thead>
+<tr>
+<th>output</th>
+<th>role</th>
+<th>coarse</th>
+<th>fine</th>
+<th>gap</th>
+<th>agree</th>
+<th>limit</th>
+<th>meets at fine h</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>mass_kg</td>
+<td>objective</td>
+<td>0.177</td>
+<td>0.177</td>
+<td>+0 %</td>
+<td>yes</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>vm_p99_MPa</td>
+<td>constraint</td>
+<td>54.47</td>
+<td>56.88</td>
+<td>+4.414 %</td>
+<td>yes</td>
+<td>&lt;= 60</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>umax_mm</td>
+<td>constraint</td>
+<td>0.0312</td>
+<td>0.03248</td>
+<td>+4.118 %</td>
+<td>yes</td>
+<td>&lt;= 0.035</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>compliance_Nmm</td>
+<td>reported</td>
+<td>828</td>
+<td>864.8</td>
+<td>+4.449 %</td>
+<td>yes</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>mass_voxel_kg</td>
+<td>reported</td>
+<td>0.1822</td>
+<td>0.1793</td>
+<td>-1.571 %</td>
+<td>yes</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>vm_max_MPa</td>
+<td>reported</td>
+<td>64.49</td>
+<td>105.4</td>
+<td>+63.42 %</td>
+<td>no</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="check levels" src="figures/check_levels.png" /></p>
+<p>Device parity: not run: no device parity: no usable GPU (CuPy is not importable here (an optional extra; the packaged venv does not ship it)).</p>
+<p>Grade <strong>verified-desktop</strong>: the 2 mm check agrees with the 4 mm solve within 10 % and meets every constraint; not rig-verified: the level-1 check ran on this desktop (x001: no rig lane was used)</p>
+<p>Scope: voxel FEA (H8, fictitious domain, Jacobi-PCG or multigrid-PCG, FP64, linear static) on this desktop or on a rig lane, with a conforming tet10 (C3D10, gmsh + CalculiX ccx) second discretisation when it can run. Grades: preview-grade (every solve on its own), verified-desktop (the finer-resolution level-1 check agrees within tol and meets every constraint), rig-verified (also: the level-1 check solved on the rig on an image the golden-check validation names, the conforming check ran on the rig on an image the ccx-check validation names and agrees within its bands and meets every constraint, the rig ran this desktop's golden code, and every pulled file verified). A conforming check that violates a constraint caps the grade at preview-grade. No grade is a sign-off.</p>
+<h2>10. Conforming second discretisation</h2>
+<p>Case <code>m001</code> on the desktop (mode <code>auto</code>), the part of <code>v001</code>: gmsh 4.15.2 C3D10 (straight-sided tet10) at 2 mm, discrete route (Algorithm3D 1): 38618 elements, 62337 nodes, 187011 DOF; minimum SICN 0.3383 (1st percentile 0.578); mesh volume 66290 mm3 (+2.195e-14 % against the STL).</p>
+<p>Boundary conditions on the mesh surface (window 2 mm, faces facing within 45 degrees of the plane normal):</p>
+<table>
+<thead>
+<tr>
+<th>kind</th>
+<th>name</th>
+<th>mode</th>
+<th>faces</th>
+<th>nodes</th>
+<th>area (mm2)</th>
+<th>projected (mm2)</th>
+<th>footprint (mm2)</th>
+<th>coverage</th>
+<th>plane offset (mm)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>support</td>
+<td>foot-1</td>
+<td>surface</td>
+<td>74</td>
+<td>193</td>
+<td>147</td>
+<td>146.6</td>
+<td>144</td>
+<td>1.018</td>
+<td>0.3491</td>
+</tr>
+<tr>
+<td>support</td>
+<td>foot-2</td>
+<td>surface</td>
+<td>73</td>
+<td>192</td>
+<td>146</td>
+<td>145.8</td>
+<td>144</td>
+<td>1.012</td>
+<td>0.3062</td>
+</tr>
+<tr>
+<td>support</td>
+<td>foot-3</td>
+<td>surface</td>
+<td>73</td>
+<td>192</td>
+<td>145.9</td>
+<td>145.5</td>
+<td>144</td>
+<td>1.011</td>
+<td>0.3312</td>
+</tr>
+<tr>
+<td>support</td>
+<td>foot-4</td>
+<td>surface</td>
+<td>73</td>
+<td>192</td>
+<td>145.6</td>
+<td>145.3</td>
+<td>144</td>
+<td>1.009</td>
+<td>0.3473</td>
+</tr>
+<tr>
+<td>support</td>
+<td>foot-5</td>
+<td>surface</td>
+<td>73</td>
+<td>192</td>
+<td>146</td>
+<td>145.8</td>
+<td>144</td>
+<td>1.012</td>
+<td>0.3044</td>
+</tr>
+<tr>
+<td>support</td>
+<td>foot-6</td>
+<td>surface</td>
+<td>73</td>
+<td>192</td>
+<td>145.8</td>
+<td>145.5</td>
+<td>144</td>
+<td>1.01</td>
+<td>0.3344</td>
+</tr>
+<tr>
+<td>load</td>
+<td>cup-down</td>
+<td>traction</td>
+<td>200</td>
+<td>339</td>
+<td>400.6</td>
+<td>400.6</td>
+<td>400</td>
+<td>1.001</td>
+<td>0.01568</td>
+</tr>
+</tbody>
+</table>
+<p>Solver: CalculiX ccx 2.23 (Factoring the system of equations using the symmetric spooles solver), 4 threads; mesh 4.983 s, solve 19.94 s, post 2.044 s. Equilibrium: applied [0, 0, -30000] N, reactions [0.000397, -0.001, 30000] N, relative residual 3.586e-08.</p>
+<table>
+<thead>
+<tr>
+<th>output</th>
+<th>role</th>
+<th>voxel (x001, 2 mm)</th>
+<th>tet10</th>
+<th>gap</th>
+<th>band</th>
+<th>agree</th>
+<th>limit</th>
+<th>meets on tet10</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>mass_kg</td>
+<td>objective</td>
+<td>0.177</td>
+<td>0.177</td>
+<td>+1.568e-14 %</td>
+<td>1 %</td>
+<td>yes</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>vm_p99_MPa</td>
+<td>constraint</td>
+<td>56.88</td>
+<td>53.63</td>
+<td>-5.706 %</td>
+<td>15 %</td>
+<td>yes</td>
+<td>&lt;= 60</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>umax_mm</td>
+<td>constraint</td>
+<td>0.03248</td>
+<td>0.03176</td>
+<td>-2.237 %</td>
+<td>10 %</td>
+<td>yes</td>
+<td>&lt;= 0.035</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>compliance_Nmm</td>
+<td>gating</td>
+<td>864.8</td>
+<td>845</td>
+<td>-2.3 %</td>
+<td>10 %</td>
+<td>yes</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>vm_max_MPa</td>
+<td>reported</td>
+<td>105.4</td>
+<td>144.5</td>
+<td>+37.13 %</td>
+<td>15 %</td>
+<td>no</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>vm_p95_MPa</td>
+<td>reported</td>
+<td>40.97</td>
+<td>41.16</td>
+<td>+0.4594 %</td>
+<td>15 %</td>
+<td>yes</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>mesh_volume_mm3</td>
+<td>reported</td>
+<td>66290</td>
+<td>66290</td>
+<td>+2.195e-14 %</td>
+<td>1 %</td>
+<td>yes</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="conforming against voxel" src="figures/conforming.png" /></p>
+<p>Verdict: <strong>agrees within its bands and meets every constraint</strong>.</p>
+<h2>11. Rig</h2>
+<p>not run: no rig lane was used (desktop only)</p>
+<h2>12. Winner</h2>
+<p><img alt="iso" src="winner/winner_iso.png" /></p>
+<p><img alt="stress" src="winner/winner_stress.png" /></p>
+<p><img alt="density_slices" src="winner/density_slices.png" /></p>
+<p><img alt="vm_slices" src="winner/vm_slices.png" /></p>
+<p><img alt="disp_slices" src="winner/disp_slices.png" /></p>
+<p>Case <code>v001</code>: volfrac 0.23, rmin_mm 11.55; grade verified-desktop, verdict PASS.</p>
+<ul>
+<li><code>winner/winner.stl</code> sha256 <code>de0f92f004ebe1675b4fa796d6707e0c00ca7afc339cd06af6d50dd7de3849ab</code>: 10380 faces, 5192 vertices, watertight True, 1 solid(s), 0 cavities, genus 0, area 14310 mm2, bbox [8.657, 4.324, -0.02137, 91.35, 95.67, 40.03] mm</li>
+<li>mesh volume 66290 mm3 vs voxel volume 68220 mm3 (ratio 1.029); mass 0.177 kg from the mesh volume</li>
+<li>density field <code>v001/generator/density.npy</code> sha256 <code>8ea1b85e37ffec4198065ac64ba09b76f88c4ab9c668b02ca51096f5e1efab6d</code></li>
+<li>STEP: not written: the part is an organic mesh (marching cubes of an implicit field); a STEP would be a faceted pretence of a B-rep</li>
+</ul>
+<h2>13. Evidence</h2>
+<ul>
+<li>anchor <code>evidence/files.sha256</code> (209 files) sha256 <code>d174b3cc138ed411177d7a2ddc4ad7cc6fd85a39eaf91e2f96411f123e579914</code></li>
+<li>bundle <code>/home/aces/.local/share/aces/simlab/evidence/golden-cad-gold-20261010T102210Z-bc7391/20261010T102259Z_bundle.json</code> sha256 <code>a134a66fddc5ba3c31c5ea0870b57d42b4117328594005702001bd15aaa60f82</code>, previous <code>91aaf1ad18778878b7779b6c3719e45c538e14217997aa76695ed01a41a17e71</code>; copy <code>evidence/bundle.json</code>, record <code>evidence/record.md</code></li>
+<li>simlab ledger entry 4 of 4: verify ok (0 relocated)</li>
+<li>aces ledger entry 10 (golden.run) hash <code>81692fab319e1a67f16b0cedbbec5833f512f8d2406abfca876cf7fb0f6ba01e</code>: verify ok (chain intact)</li>
+<li>project evidence <code>golden/20261010T102210Z-bc7391 bundle:a134a66fddc5ba3c PASS</code>; components aces-engineering, gendesign, simlab, build123d, cadquery-ocp, gmsh, calculix-ccx</li>
+<li>verify offline: <code>aces golden verify 20261010T102210Z-bc7391</code>, <code>aces-evidence verify</code>, <code>aces ledger verify</code></li>
+</ul>
+<h2>14. Environment</h2>
+<ul>
+<li>host aces-rehearsal, Linux-7.2.5-3-omarchy-x86_64-with-glibc2.44, Python 3.14.7</li>
+<li>CPU Intel(R) Core(TM) Ultra 9 285HX: 4 of 4 usable, 6.88 of 8.32 GB free; 4 sweep workers; BLAS 1 thread per solve</li>
+<li>GPU: none (not used: CuPy is not importable here (an optional extra; the packaged venv does not ship it))</li>
+<li>Warp: - (not probed: Warp's apply_K runs on the CuPy device arrays and no usable CuPy GPU was found; warp-lang is not installed)</li>
+<li>packages: python 3.14.7, numpy 2.4.6, scipy 1.17.1, optuna 5.0.0, build123d 0.11.1, trimesh 5.1.0, skimage 0.26.0</li>
+<li>known warnings: the vendored gendesign/filters.py calls numpy.fft.irfftn with s= but without axes=, a NumPy 2 DeprecationWarning (filtered in the workers; to be fixed upstream in cudax-sim-runtime, never patched in vendor/); 31 Gaussian-process warnings captured while fitting (counted, not printed)</li>
+</ul>
+<h2>15. Limits and reproduction</h2>
+<ul>
+<li>every desktop solve is preview-grade; verified-desktop means the finer-resolution independent check agreed within tol and the constraints held there; rig-verified adds that the level-1 check was solved on the rig with a validated image, that the conforming tet10 second discretisation ran on the rig and agreed within its bands with every constraint met, and that the rig ran this desktop's golden code; a conforming check that violates a constraint caps the grade at preview-grade</li>
+<li>linear static voxel FEA (H8 elements, fictitious domain with a soft void, Jacobi-PCG, FP64)</li>
+<li>SIMP topology optimisation without projection: grey zones remain in the density field, so the organic skin is the iso-surface of a partly grey field (M_nd below, per design)</li>
+<li>M_nd (percent of grey design elements, 0 % is crisp): d000 26.72 %, d001 31.64 %, d002 23.43 %, d003 30.36 %, d004 18.15 %, d005 23.65 %, d006 27.16 %, d007 33.91 %, d008 19.85 %, d009 26.51 %, v001 32.93 %</li>
+<li>11 of 11 SIMP runs stopped at the 25-iteration cap with the density change still above change_tol (the generator's own convergence; every part was still solved on the real FEA)</li>
+<li>the constrained stress is vm_p99 outside the boundary-condition zones; vm_max is recorded but is resolution-sensitive and is never constrained</li>
+<li>independent check: CPU estimate 2.7 s is within the 60 s budget</li>
+<li>not verified: no rig run (desktop only); no fatigue or buckling check; nominal material properties (see the material source)</li>
+<li>reproduce: <code>aces golden run --spec /tmp/rm.json --step /home/aces/Work/cad-vm/cad/local/20261010T102209Z-disc/part.step --project cad-gold --new --json --progress lines</code> (seed 7)</li>
+<li>BLAS runs one thread per solve and sweep.csv carries no wall times, so the same seed on the same machine reproduces sweep.csv byte for byte for any --jobs</li>
+</ul></body></html>

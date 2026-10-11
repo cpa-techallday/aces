@@ -1,0 +1,6 @@
+# The captures are stored byte-exact: MANIFEST.json carries the sha256 of each file as captured on 2026-10-11 (CRLF
+# line endings included), and tests/test_server.py checks the files against those hashes on every platform.
+*.json -text
+# Builder B: the record-only golden runs under golden/ (every file hashes to the run's own manifest.sha256) and the
+# desktop simlab evidence ledger are stored byte-exact too; golden/MANIFEST.json carries their provenance.
+golden/** -text

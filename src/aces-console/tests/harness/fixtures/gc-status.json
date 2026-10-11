@@ -1,0 +1,71 @@
+{
+ "mode": "sim-lab-4",
+ "detected_mode": "transition",
+ "auto_enabled": false,
+ "last_switch_ts": 1791355467907,
+ "queue": {
+  "queued": -1,
+  "running": -1
+ },
+ "gpus": [
+  {
+   "index": 0,
+   "util": 0,
+   "mem_used_mb": 14,
+   "temp_c": 27,
+   "derated": false
+  },
+  {
+   "index": 1,
+   "util": 0,
+   "mem_used_mb": 14,
+   "temp_c": 27,
+   "derated": false
+  },
+  {
+   "index": 2,
+   "util": 100,
+   "mem_used_mb": 2654,
+   "temp_c": 57,
+   "derated": false
+  },
+  {
+   "index": 3,
+   "util": 0,
+   "mem_used_mb": 14,
+   "temp_c": 29,
+   "derated": false
+  },
+  {
+   "index": 4,
+   "util": 100,
+   "mem_used_mb": 58642,
+   "temp_c": 54,
+   "derated": false
+  },
+  {
+   "index": 5,
+   "util": 0,
+   "mem_used_mb": 57842,
+   "temp_c": 28,
+   "derated": false
+  },
+  {
+   "index": 6,
+   "util": 0,
+   "mem_used_mb": 14,
+   "temp_c": 30,
+   "derated": false
+  },
+  {
+   "index": 7,
+   "util": 0,
+   "mem_used_mb": 55494,
+   "temp_c": 30,
+   "derated": false
+  }
+ ],
+ "switching": null,
+ "mc_console": "http://127.0.0.1:3100",
+ "gridwatch": "http://192.168.1.65:3000"
+}
