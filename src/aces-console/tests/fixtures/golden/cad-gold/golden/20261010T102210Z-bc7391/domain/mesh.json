@@ -1,0 +1,37 @@
+{
+  "step": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/inputs/domain.step",
+  "solids": 1,
+  "brep_volume_mm3": 314159.26535897935,
+  "bbox_mm": [
+    0.0,
+    0.0,
+    0.0,
+    100.0,
+    100.0,
+    40.0
+  ],
+  "elem_mm": 4.0,
+  "origin_mm": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "envelope_mm": [
+    100.0,
+    100.0,
+    40.0
+  ],
+  "shape": [
+    25,
+    25,
+    10
+  ],
+  "cells": 6250,
+  "solid_cells": 4890,
+  "solid_fraction": 0.7824,
+  "voxel_volume_mm3": 312960.0,
+  "volume_ratio_voxel_over_brep": 0.9961826198007913,
+  "watertight": true,
+  "tessellation_faces": 500,
+  "wall_s": 0.018066883087158203
+}

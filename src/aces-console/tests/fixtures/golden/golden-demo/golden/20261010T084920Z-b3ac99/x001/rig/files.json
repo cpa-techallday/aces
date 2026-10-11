@@ -1,0 +1,49 @@
+{
+ "schema": "aces-golden-files/1",
+ "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+ "rig_case_id": "c000",
+ "golden_case_id": "x001",
+ "root": "golden/x001",
+ "files": [
+  {
+   "path": "golden/x001/case.md",
+   "bytes": 974,
+   "sha256": "893b3f41eb77f634e0e62493de50b0e096b1645c946774f25ddcdfb4eb8c8493"
+  },
+  {
+   "path": "golden/x001/disp_slices.png",
+   "bytes": 44677,
+   "sha256": "5b05b77435fa38c1842227a84de83bcf2cf802ce457d177691c80d9aac03827b"
+  },
+  {
+   "path": "golden/x001/fields.npz",
+   "bytes": 637836,
+   "sha256": "09c49acfb61a9abb13bcad9ad4de1c06897e7c5d9085e8f8bdb81711b1624192"
+  },
+  {
+   "path": "golden/x001/fields.vtk",
+   "bytes": 1255779,
+   "sha256": "e9123828afb075f8b317f59be48839ed2f58bbcfc82586bf36742edd651ca5f9"
+  },
+  {
+   "path": "golden/x001/mask.npy",
+   "bytes": 50128,
+   "sha256": "85a14d58f387eeb092bcd139d6e9b823f4be9dc8889ce9763644393747fe8cc5"
+  },
+  {
+   "path": "golden/x001/mesh.json",
+   "bytes": 459,
+   "sha256": "628b313955466b45e947e105a4510eb1f7b821d8e11289f7833f6d2d4112ac93"
+  },
+  {
+   "path": "golden/x001/solve.json",
+   "bytes": 445,
+   "sha256": "f44089b2b64b5fae8394971ec4965739eae565c20a6345c46e0b67ad66d27caf"
+  },
+  {
+   "path": "golden/x001/vm_slices.png",
+   "bytes": 46291,
+   "sha256": "d9bf9814948a7587c2c53afbd4758ba7605a0566a0d93208853b003ec2053e20"
+  }
+ ]
+}

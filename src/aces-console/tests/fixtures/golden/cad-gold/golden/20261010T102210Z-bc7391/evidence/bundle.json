@@ -1,0 +1,5010 @@
+{
+  "schema": "simlab-evidence-bundle/1",
+  "created_utc": "2026-10-10T10:22:59.160903+00:00",
+  "created_by": {
+    "operator": "aces",
+    "host": "aces-rehearsal",
+    "tool": "simlab evidence build"
+  },
+  "company": null,
+  "hypothesis": "A SIMP-generated organic root mount meets vm_p99 <= 60 MPa and umax <= 0.035 mm at minimum mass, and a GP surrogate fitted to a 10-design sweep predicts the verified winner within 10 %.",
+  "expected": "the surrogate's winner meets every constraint on the real solver and agrees within tol",
+  "rd_activity": null,
+  "experiment": {
+    "id": "golden-cad-gold-20261010T102210Z-bc7391",
+    "project": "cad-gold",
+    "owner": "aces",
+    "physics": "structures",
+    "description": "aces golden root-mount: Six-foot root mount computed inside a disc design space 100 mm across and 40 mm tall: six bolted feet on a 36 mm ring and a 30 kN load on a top cup. The disc is only the input domain; the part is computed (SIMP topology optimisation, organic implicit skin) and solved on the real voxel FEA. Demo inputs.",
+    "spec_path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/inputs/spec.effective.json",
+    "spec_sha256": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+    "params": {
+      "generator": {
+        "kind": "simp-organic",
+        "fixed": {
+          "penal": 3.0
+        },
+        "iterations": 25,
+        "change_tol": 0.01,
+        "move": 0.2,
+        "solver_tol": 0.0001,
+        "skin": {
+          "upsample": 2,
+          "sigma_vox": 1.0,
+          "blend_mm": 5.0,
+          "clip_blend_mm": 2.0,
+          "taubin_iters": 5,
+          "iso": 0.5
+        },
+        "infill": null
+      },
+      "material": {
+        "name": "AlSi10Mg (LPBF), nominal",
+        "E_MPa": 70000.0,
+        "nu": 0.33,
+        "rho_kg_mm3": 2.67e-06,
+        "allowable_vm_MPa": 60.0,
+        "source": "Nominal handbook values for AlSi10Mg: E 70 GPa, Poisson 0.33, density 2.67 g/cm3. The 60 MPa allowable is a demo design limit chosen so the stress constraint is active; it is not a material strength. Demo inputs, not a qualified material card."
+      },
+      "resolution": {
+        "gen_mm": 4.0,
+        "fea_mm": 4.0,
+        "field_h_mm": 2.0,
+        "check_factor": 0.5,
+        "check_levels": [
+          {
+            "level": 1,
+            "h_mm": 2.0,
+            "gpu_only": false
+          }
+        ],
+        "stress_exclude_mm": 6.0,
+        "patch_keep_in_mm": 0.0
+      },
+      "grid": {
+        "origin_mm": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "envelope_mm": [
+          100.0,
+          100.0,
+          40.0
+        ],
+        "derived_from": "spec"
+      },
+      "supports": [
+        {
+          "name": "foot-1",
+          "box": [
+            76.0,
+            64.0,
+            0.0,
+            88.0,
+            76.0,
+            0.0
+          ],
+          "dofs": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "name": "foot-2",
+          "box": [
+            44.0,
+            80.0,
+            0.0,
+            56.0,
+            92.0,
+            0.0
+          ],
+          "dofs": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "name": "foot-3",
+          "box": [
+            12.0,
+            64.0,
+            0.0,
+            24.0,
+            76.0,
+            0.0
+          ],
+          "dofs": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "name": "foot-4",
+          "box": [
+            12.0,
+            28.0,
+            0.0,
+            24.0,
+            40.0,
+            0.0
+          ],
+          "dofs": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "name": "foot-5",
+          "box": [
+            44.0,
+            8.0,
+            0.0,
+            56.0,
+            20.0,
+            0.0
+          ],
+          "dofs": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "name": "foot-6",
+          "box": [
+            76.0,
+            28.0,
+            0.0,
+            88.0,
+            40.0,
+            0.0
+          ],
+          "dofs": [
+            0,
+            1,
+            2
+          ]
+        }
+      ],
+      "loads": [
+        {
+          "name": "cup-down",
+          "box": [
+            40.0,
+            40.0,
+            40.0,
+            60.0,
+            60.0,
+            40.0
+          ],
+          "force": [
+            0.0,
+            0.0,
+            -30000.0
+          ],
+          "axis": "z",
+          "case": "down"
+        }
+      ],
+      "constraints": [
+        {
+          "output": "vm_p99_MPa",
+          "op": "<=",
+          "limit": 60.0
+        },
+        {
+          "output": "umax_mm",
+          "op": "<=",
+          "limit": 0.035
+        }
+      ],
+      "objective": {
+        "output": "mass_kg",
+        "sense": "min"
+      },
+      "tol": 0.1,
+      "sweep": {
+        "n": 10,
+        "seed": 7,
+        "sampler": "lhs-random-cd"
+      },
+      "solver": {
+        "dtype": "float64",
+        "tol": 1e-08,
+        "maxiter": 20000
+      }
+    },
+    "sweep": {
+      "volfrac": [
+        0.13,
+        0.38
+      ],
+      "rmin_mm": [
+        6.0,
+        12.0
+      ]
+    },
+    "outputs": [
+      "mass_kg",
+      "vm_p99_MPa",
+      "umax_mm",
+      "compliance_Nmm",
+      "vm_max_MPa"
+    ],
+    "resources": {
+      "vram_gb": 0.0,
+      "cpu_threads": 4,
+      "wall_h": 0.05,
+      "precision": "float64"
+    },
+    "tags": {
+      "golden": "0.2.0",
+      "generator": "simp-organic",
+      "domain_source": "step",
+      "sampler": "lhs-random-cd",
+      "grade": "preview-grade",
+      "vendored_snapshot": "62de9811e555"
+    },
+    "n_cases": 13,
+    "n_finished": 12,
+    "exp_dir": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391"
+  },
+  "method": {
+    "solver": "step-structures",
+    "solver_description": "STEP -> centre-point voxelisation -> GPU voxel FEA -> von Mises / displacement fields (PNG, VTK), the CAD-to-result path",
+    "image": "gendesign:0.3",
+    "stages": {
+      "mesh": "cpu",
+      "solve": "sim",
+      "post": "cpu"
+    },
+    "validation": {
+      "status": "pass",
+      "date": "2026-10-05",
+      "device": "NVIDIA RTX PRO 4000 Blackwell SFF (workstation)",
+      "cases": [
+        {
+          "case": "L-bracket STEP (out/bracket_b3d/bracket.step, build123d) through mesh -> solve -> post at 1 mm vs the evaluator reference in out/bracket_b3d/check.json",
+          "mask": "26694 solid voxels from the STEP round trip = 26694 in the reference (identical mask); voxel/B-rep volume 1.0011",
+          "float32_pipeline": {
+            "compliance_Nmm": 435.29,
+            "umax_mm": 0.5888,
+            "vm_max_MPa": 291.8,
+            "pcg_iters": 20000,
+            "converged": false
+          },
+          "float32_reference_check_json": {
+            "compliance_Nmm": 435.09,
+            "umax_mm": 0.5885,
+            "vm_max_MPa": 291.6,
+            "pcg_iters": 2219
+          },
+          "float64_pipeline": {
+            "compliance_Nmm": 425.85,
+            "umax_mm": 0.5757,
+            "vm_max_MPa": 284.9,
+            "pcg_iters": 1291,
+            "pcg_relres": 9.95e-09,
+            "converged": true
+          },
+          "note": "float32 reproduces the float32 reference to 0.05 % but is under-converged by 2.2 % in compliance (the Phase 2 finding again); float64 converges in 1291 iterations and is the citable number",
+          "record": "out/exp/step-bracket-validation (direct run) and out/queue/step-bracket-validation (3-stage queue run, identical float64 result); report in out/exp/step-bracket-validation/report"
+        },
+        {
+          "case": "HERMES chord bay 40x40x2 RHS, 500 mm, fixed ends, 2 kN mid-span patch; plain / solid 40x20 doubler / RHS 40x20x2 doubler (cases/hermes_chord, Fusion export, 1 mm voxels, float64)",
+          "compliance_Nmm": [
+            291.7,
+            132.8,
+            161.7
+          ],
+          "umax_mm": [
+            0.1827,
+            0.1017,
+            0.1165
+          ],
+          "vm_max_MPa": [
+            51.2,
+            50.8,
+            50.6
+          ],
+          "beam_reference_I_gain": [
+            1.0,
+            4.07,
+            2.78
+          ],
+          "note": "global stiffness gain 2.2x / 1.8x vs 4.1x / 2.8x bending-only theory: shear + local top-wall dimpling under the patch dominate; peak stress unchanged (local wall bending next to the load patch)",
+          "record": "out/exp/hermes-chord-doubler"
+        }
+      ],
+      "note": "Fictitious-domain voxel FEA (void stiffness 1e-9 E) on a centre-point voxelisation; 2 or more voxels through every wall; load patches excluded from the stress read-out via vm_exclude."
+    },
+    "surrogate": null
+  },
+  "geometry": {
+    "source": "step",
+    "ref": "domain.step",
+    "sha256": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92"
+  },
+  "environment": {
+    "hosts": {
+      "aces-rehearsal": {
+        "platform": "Linux-7.2.5-3-omarchy-x86_64-with-glibc2.44",
+        "packages": {
+          "python": "3.14.7",
+          "numpy": "2.4.6",
+          "scipy": "1.17.1",
+          "optuna": "5.0.0",
+          "build123d": "0.11.1",
+          "trimesh": "5.1.0",
+          "skimage": "0.26.0"
+        }
+      }
+    },
+    "images": {},
+    "gpus": {}
+  },
+  "observations": [
+    {
+      "case_id": "d000",
+      "parameters": {
+        "role": "sweep",
+        "volfrac": 0.18807,
+        "rmin_mm": 9.568144,
+        "h_gen_mm": 4.0,
+        "h_fea_mm": 4.0,
+        "device": "cpu",
+        "backend": "adapter",
+        "source_case": null,
+        "reuse_mask": false,
+        "round": null,
+        "level": null,
+        "seed": 7,
+        "fea_solver": "pcg"
+      },
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T10:22:12.447000+00:00",
+      "finished_utc": "2026-10-10T10:22:16.276000+00:00",
+      "wall_s": 3.829,
+      "results": {
+        "schema": "aces-golden-case/1",
+        "case_id": "d000",
+        "role": "sweep",
+        "round": null,
+        "level": null,
+        "source_case": null,
+        "design": {
+          "volfrac": 0.18807,
+          "rmin_mm": 9.568144
+        },
+        "mass_kg": 0.1390104949130709,
+        "mass_voxel_kg": 0.14063424,
+        "mesh_volume_mm3": 52063.85577268573,
+        "voxel_volume_mm3": 52672.0,
+        "solid_fraction": 0.13168,
+        "compliance_Nmm": 1061.9741222296054,
+        "umax_mm": 0.03949597969109304,
+        "vm_max_MPa": 74.6639825493752,
+        "vm_p99_MPa": 63.07597625732422,
+        "vm_p95_MPa": 55.34433822631836,
+        "pcg_iters": 262,
+        "pcg_relres": 9.563267042932118e-09,
+        "converged": true,
+        "elements": 6250,
+        "dof": 22308,
+        "elem_mm": 4.0,
+        "n_fixed_dofs": 288,
+        "device": "cpu/numpy",
+        "dtype": "float64",
+        "backend": "step-structures.stage_solve",
+        "lane": "desktop-cpu",
+        "grade": "preview-grade",
+        "fea_solver": "pcg",
+        "fea_solver_reason": "pcg requested",
+        "generator": {
+          "kind": "simp",
+          "h_mm": 4.0,
+          "elements": 6250,
+          "volfrac_design": 0.18807,
+          "volfrac_box": 0.147145968,
+          "rmin_mm": 9.568144,
+          "penal": 3.0,
+          "iterations_run": 25,
+          "converged": false,
+          "stopped_at_cap": true,
+          "final_change": 0.05182322475245904,
+          "compliance_Nmm": 1803.9287237179994,
+          "solves_unconverged": 0,
+          "mnd_pct": 26.716965622947708,
+          "device": "cpu/numpy",
+          "wall_s": 3.0550122261047363
+        },
+        "skin": {
+          "status": "ok",
+          "message": "",
+          "field_h_mm": 2.0,
+          "upsample": 2,
+          "sigma_vox": 1.0,
+          "blend_mm": 5.0,
+          "clip_blend_mm": 2.0,
+          "taubin_iters": 5,
+          "iso": 0.5,
+          "clipped_to_domain": true,
+          "infill": null,
+          "faces": 10020,
+          "vertices": 5012,
+          "watertight": true,
+          "solids": 1,
+          "cavities": 0,
+          "cavity_volume_mm3": 0.0,
+          "islands_removed": 0,
+          "removed_volume_mm3": 0.0,
+          "euler": 2,
+          "genus": 0,
+          "mesh_volume_mm3": 52063.855743800465,
+          "area_mm2": 13717.59236734017,
+          "bbox_mm": [
+            8.28614223828799,
+            3.9482875527126273,
+            -0.02317110640073193,
+            91.72223633650441,
+            96.04744349316857,
+            40.027084547596715
+          ],
+          "wall_s": 0.03241682052612305
+        },
+        "voxel": {
+          "h_mm": 4.0,
+          "cells": 6250,
+          "solid_cells": 823,
+          "voxel_volume_mm3": 52672.0,
+          "mesh_volume_mm3": 52063.85577268573,
+          "volume_ratio_voxel_over_mesh": 1.0116807374000394,
+          "mask_sha256": "cce278c49875c16fa27b96d983f7df5e4cbc90568b12ec0882fa934f076cbc7e"
+        },
+        "checks": {
+          "load_coverage": {
+            "cup-down": 1.0
+          },
+          "support_coverage": {
+            "foot-1": 1.0,
+            "foot-2": 1.0,
+            "foot-3": 1.0,
+            "foot-4": 1.0,
+            "foot-5": 1.0,
+            "foot-6": 1.0
+          },
+          "load_path_connected": true,
+          "solid_components": 1
+        },
+        "stress": {
+          "measure": "vm_p99",
+          "exclude_mm": 8.0,
+          "exclude_boxes": [
+            [
+              76.0,
+              64.0,
+              0.0,
+              88.0,
+              76.0,
+              8.0
+            ],
+            [
+              44.0,
+              80.0,
+              0.0,
+              56.0,
+              92.0,
+              8.0
+            ],
+            [
+              12.0,
+              64.0,
+              0.0,
+              24.0,
+              76.0,
+              8.0
+            ],
+            [
+              12.0,
+              28.0,
+              0.0,
+              24.0,
+              40.0,
+              8.0
+            ],
+            [
+              44.0,
+              8.0,
+              0.0,
+              56.0,
+              20.0,
+              8.0
+            ],
+            [
+              76.0,
+              28.0,
+              0.0,
+              88.0,
+              40.0,
+              8.0
+            ],
+            [
+              40.0,
+              40.0,
+              32.0,
+              60.0,
+              60.0,
+              40.0
+            ]
+          ],
+          "n_elements": 665
+        },
+        "wall_s_generate": 3.055809736251831,
+        "wall_s_skin": 0.25986289978027344,
+        "wall_s_voxel": 0.021446704864501953,
+        "wall_s_solve": 0.20747113227844238,
+        "wall_s_post": null,
+        "wall_s_total": 3.829543113708496
+      },
+      "artifacts": [
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d000/fields.npz",
+          "sha256": "dc8ac75cb86ab1300107f4a03371cce3a26998721b97f587076527287c7aad13"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d000/generator/density.npy",
+          "sha256": "a46c6c2ae17c59e13cbad1b8b5efcbe57414cc68949c990e167244bb07bf2e9e"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d000/generator/report.json",
+          "sha256": "41a09ca68c649ffb80387f00231feb8b4babf3af8cefdc747769526d34188777"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d000/generator/slices.png",
+          "sha256": "9a6944bcf623416bd45100b6a5b3bbe845637458deee6d5730a11e0a1214d368"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d000/mask.npy",
+          "sha256": "cce278c49875c16fa27b96d983f7df5e4cbc90568b12ec0882fa934f076cbc7e"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d000/mesh.json",
+          "sha256": "00af777e15c6a38f11124e53f04481a0b194721b18aea07328f62c29d9f19d4f"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d000/part.stl",
+          "sha256": "355f1e851811ec2436b14d943ed5d5ec9a18e163f319e4f8bb2e5f5e061a19cf"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d000/skin.json",
+          "sha256": "f56809d3ff7bfd2969ce4df6f853c21f65546c9f716a806bbb3f76679614bd78"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d000/solve.json",
+          "sha256": "ed02fcb4d58cdf8166feafa40faad1f78686fc192bf52aeaf7aa7c2d7b69abb6"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d000/thumb.png",
+          "sha256": "9e5067348d1afec61a8946b69b1365c705491c8693247004f7267847fd406866"
+        }
+      ],
+      "inputs_sha256": {
+        "spec.json": "b6c8bbefb1e9df1305ca900f598903a007b07b387751c93b4f90c30ba936ef94",
+        "spec.effective.json": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+        "domain.step": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+        "case.json": "0a1d231763b1685b301a0a2773c50e2c2e189a6bf5ec625c5fe4864525335cbe",
+        "part.stl": "355f1e851811ec2436b14d943ed5d5ec9a18e163f319e4f8bb2e5f5e061a19cf"
+      },
+      "stages": [
+        {
+          "stage": "generate",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:12.497+00:00",
+          "finished_utc": "2026-10-10T10:22:15.553+00:00",
+          "wall_s": 3.055809736251831,
+          "device": "cpu"
+        },
+        {
+          "stage": "skin",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:15.553+00:00",
+          "finished_utc": "2026-10-10T10:22:15.813+00:00",
+          "wall_s": 0.25986289978027344,
+          "device": "cpu"
+        },
+        {
+          "stage": "voxel",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:15.814+00:00",
+          "finished_utc": "2026-10-10T10:22:15.835+00:00",
+          "wall_s": 0.021446704864501953,
+          "device": "cpu"
+        },
+        {
+          "stage": "solve",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:15.835+00:00",
+          "finished_utc": "2026-10-10T10:22:16.043+00:00",
+          "wall_s": 0.20747113227844238,
+          "device": "cpu"
+        },
+        {
+          "stage": "thumb",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:16.044+00:00",
+          "finished_utc": "2026-10-10T10:22:16.276+00:00",
+          "wall_s": 0.2317180633544922,
+          "device": "cpu"
+        }
+      ],
+      "mlflow_run_id": null,
+      "evidence_sha256": "4d9f0ee2062c5e444d03cec48e55e445ec40d8492cfdc1f14d133a8665999399",
+      "error": null
+    },
+    {
+      "case_id": "d001",
+      "parameters": {
+        "role": "sweep",
+        "volfrac": 0.236767,
+        "rmin_mm": 10.654526,
+        "h_gen_mm": 4.0,
+        "h_fea_mm": 4.0,
+        "device": "cpu",
+        "backend": "adapter",
+        "source_case": null,
+        "reuse_mask": false,
+        "round": null,
+        "level": null,
+        "seed": 7,
+        "fea_solver": "pcg"
+      },
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T10:22:12.447000+00:00",
+      "finished_utc": "2026-10-10T10:22:15.962000+00:00",
+      "wall_s": 3.515,
+      "results": {
+        "schema": "aces-golden-case/1",
+        "case_id": "d001",
+        "role": "sweep",
+        "round": null,
+        "level": null,
+        "source_case": null,
+        "design": {
+          "volfrac": 0.236767,
+          "rmin_mm": 10.654526
+        },
+        "mass_kg": 0.18458650508360216,
+        "mass_voxel_kg": 0.18899327999999999,
+        "mesh_volume_mm3": 69133.52250322179,
+        "voxel_volume_mm3": 70784.0,
+        "solid_fraction": 0.17696,
+        "compliance_Nmm": 800.5808178548717,
+        "umax_mm": 0.030312620300250486,
+        "vm_max_MPa": 60.51854151090643,
+        "vm_p99_MPa": 51.56760787963858,
+        "vm_p95_MPa": 39.45483264923096,
+        "pcg_iters": 218,
+        "pcg_relres": 9.80530478077694e-09,
+        "converged": true,
+        "elements": 6250,
+        "dof": 22308,
+        "elem_mm": 4.0,
+        "n_fixed_dofs": 288,
+        "device": "cpu/numpy",
+        "dtype": "float64",
+        "backend": "step-structures.stage_solve",
+        "lane": "desktop-cpu",
+        "grade": "preview-grade",
+        "fea_solver": "pcg",
+        "fea_solver_reason": "pcg requested",
+        "generator": {
+          "kind": "simp",
+          "h_mm": 4.0,
+          "elements": 6250,
+          "volfrac_design": 0.236767,
+          "volfrac_box": 0.1852465008,
+          "rmin_mm": 10.654526,
+          "penal": 3.0,
+          "iterations_run": 25,
+          "converged": false,
+          "stopped_at_cap": true,
+          "final_change": 0.047088184375091324,
+          "compliance_Nmm": 1271.2665371264125,
+          "solves_unconverged": 0,
+          "mnd_pct": 31.637190062652408,
+          "device": "cpu/numpy",
+          "wall_s": 2.7730393409729004
+        },
+        "skin": {
+          "status": "ok",
+          "message": "",
+          "field_h_mm": 2.0,
+          "upsample": 2,
+          "sigma_vox": 1.0,
+          "blend_mm": 5.0,
+          "clip_blend_mm": 2.0,
+          "taubin_iters": 5,
+          "iso": 0.5,
+          "clipped_to_domain": true,
+          "infill": null,
+          "faces": 10472,
+          "vertices": 5238,
+          "watertight": true,
+          "solids": 1,
+          "cavities": 0,
+          "cavity_volume_mm3": 0.0,
+          "islands_removed": 0,
+          "removed_volume_mm3": 0.0,
+          "euler": 2,
+          "genus": 0,
+          "mesh_volume_mm3": 69133.52248637169,
+          "area_mm2": 14534.1773049948,
+          "bbox_mm": [
+            8.6152869967983,
+            4.257105868180632,
+            -0.021495613288075335,
+            91.38625761306439,
+            95.73982762207454,
+            40.01791157347339
+          ],
+          "wall_s": 0.03536105155944824
+        },
+        "voxel": {
+          "h_mm": 4.0,
+          "cells": 6250,
+          "solid_cells": 1106,
+          "voxel_volume_mm3": 70784.0,
+          "mesh_volume_mm3": 69133.52250322179,
+          "volume_ratio_voxel_over_mesh": 1.023873765389306,
+          "mask_sha256": "875c830ed7ceeaef23bb2d3aca472ce982196dbecd9af67ab78d7fc876136fab"
+        },
+        "checks": {
+          "load_coverage": {
+            "cup-down": 1.0
+          },
+          "support_coverage": {
+            "foot-1": 1.0,
+            "foot-2": 1.0,
+            "foot-3": 1.0,
+            "foot-4": 1.0,
+            "foot-5": 1.0,
+            "foot-6": 1.0
+          },
+          "load_path_connected": true,
+          "solid_components": 1
+        },
+        "stress": {
+          "measure": "vm_p99",
+          "exclude_mm": 8.0,
+          "exclude_boxes": [
+            [
+              76.0,
+              64.0,
+              0.0,
+              88.0,
+              76.0,
+              8.0
+            ],
+            [
+              44.0,
+              80.0,
+              0.0,
+              56.0,
+              92.0,
+              8.0
+            ],
+            [
+              12.0,
+              64.0,
+              0.0,
+              24.0,
+              76.0,
+              8.0
+            ],
+            [
+              12.0,
+              28.0,
+              0.0,
+              24.0,
+              40.0,
+              8.0
+            ],
+            [
+              44.0,
+              8.0,
+              0.0,
+              56.0,
+              20.0,
+              8.0
+            ],
+            [
+              76.0,
+              28.0,
+              0.0,
+              88.0,
+              40.0,
+              8.0
+            ],
+            [
+              40.0,
+              40.0,
+              32.0,
+              60.0,
+              60.0,
+              40.0
+            ]
+          ],
+          "n_elements": 948
+        },
+        "wall_s_generate": 2.773775577545166,
+        "wall_s_skin": 0.27001357078552246,
+        "wall_s_voxel": 0.02263164520263672,
+        "wall_s_solve": 0.16374778747558594,
+        "wall_s_post": null,
+        "wall_s_total": 3.515202760696411
+      },
+      "artifacts": [
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d001/fields.npz",
+          "sha256": "a7c8cace13ac6a17ad06524923e6e709eece9c064efc8d55d0282d424a79a1e2"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d001/generator/density.npy",
+          "sha256": "1cae807dacdd40b056d59852b29b2bf223bf191f6f462fbd7c9960f23eb99009"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d001/generator/report.json",
+          "sha256": "c7605af5cb042fb5a9447c0e04aa23f3be84f78179bf6b9df60816b45494348a"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d001/generator/slices.png",
+          "sha256": "7c6aab6d78a0f9f64a73ca5877a99f67d1acc3c6a7c405e6da135b06326d78ee"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d001/mask.npy",
+          "sha256": "875c830ed7ceeaef23bb2d3aca472ce982196dbecd9af67ab78d7fc876136fab"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d001/mesh.json",
+          "sha256": "09ae91520c750e48fd7d20fe7f6cb5d83a0f0b8b34efe605e31c24ece452c9b0"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d001/part.stl",
+          "sha256": "307fb0a3d9fb6a77dcbeb499e51f785b78f682ba140c8c0e4e90392dd52994de"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d001/skin.json",
+          "sha256": "40fa1f932e981ee1f57b782cfe5e73687f72b812287ed3a6697cc1147962db2c"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d001/solve.json",
+          "sha256": "c7ca673a8919a4c589bf8e4e51a33e6351cef347939172cdddbc0b6df5cbf993"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d001/thumb.png",
+          "sha256": "890bdb9b9112b105fcc3ea0b93efc9681a2667832436a280e34233767b6a6971"
+        }
+      ],
+      "inputs_sha256": {
+        "spec.json": "b6c8bbefb1e9df1305ca900f598903a007b07b387751c93b4f90c30ba936ef94",
+        "spec.effective.json": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+        "domain.step": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+        "case.json": "6a23f236112100585f1e977bfaf8c6a9d7b39f5e23e50a8f2f63d7416e117e14",
+        "part.stl": "307fb0a3d9fb6a77dcbeb499e51f785b78f682ba140c8c0e4e90392dd52994de"
+      },
+      "stages": [
+        {
+          "stage": "generate",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:12.498+00:00",
+          "finished_utc": "2026-10-10T10:22:15.272+00:00",
+          "wall_s": 2.773775577545166,
+          "device": "cpu"
+        },
+        {
+          "stage": "skin",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:15.272+00:00",
+          "finished_utc": "2026-10-10T10:22:15.542+00:00",
+          "wall_s": 0.27001357078552246,
+          "device": "cpu"
+        },
+        {
+          "stage": "voxel",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:15.543+00:00",
+          "finished_utc": "2026-10-10T10:22:15.565+00:00",
+          "wall_s": 0.02263164520263672,
+          "device": "cpu"
+        },
+        {
+          "stage": "solve",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:15.565+00:00",
+          "finished_utc": "2026-10-10T10:22:15.729+00:00",
+          "wall_s": 0.16374778747558594,
+          "device": "cpu"
+        },
+        {
+          "stage": "thumb",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:15.730+00:00",
+          "finished_utc": "2026-10-10T10:22:15.962+00:00",
+          "wall_s": 0.23123526573181152,
+          "device": "cpu"
+        }
+      ],
+      "mlflow_run_id": null,
+      "evidence_sha256": "ebdae4d98a5304268008e571d65d323bece18de13a5035b87274d483c0d4cfcf",
+      "error": null
+    },
+    {
+      "case_id": "d002",
+      "parameters": {
+        "role": "sweep",
+        "volfrac": 0.343311,
+        "rmin_mm": 7.278705,
+        "h_gen_mm": 4.0,
+        "h_fea_mm": 4.0,
+        "device": "cpu",
+        "backend": "adapter",
+        "source_case": null,
+        "reuse_mask": false,
+        "round": null,
+        "level": null,
+        "seed": 7,
+        "fea_solver": "pcg"
+      },
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T10:22:12.447000+00:00",
+      "finished_utc": "2026-10-10T10:22:15.599000+00:00",
+      "wall_s": 3.152,
+      "results": {
+        "schema": "aces-golden-case/1",
+        "case_id": "d002",
+        "role": "sweep",
+        "round": null,
+        "level": null,
+        "source_case": null,
+        "design": {
+          "volfrac": 0.343311,
+          "rmin_mm": 7.278705
+        },
+        "mass_kg": 0.28398063056729483,
+        "mass_voxel_kg": 0.28929984,
+        "mesh_volume_mm3": 106359.78672932391,
+        "voxel_volume_mm3": 108352.0,
+        "solid_fraction": 0.27088,
+        "compliance_Nmm": 620.9766472164354,
+        "umax_mm": 0.024385252890536235,
+        "vm_max_MPa": 41.77760935581193,
+        "vm_p99_MPa": 38.99544914245605,
+        "vm_p95_MPa": 29.637568092346193,
+        "pcg_iters": 202,
+        "pcg_relres": 9.069264040468329e-09,
+        "converged": true,
+        "elements": 6250,
+        "dof": 22308,
+        "elem_mm": 4.0,
+        "n_fixed_dofs": 288,
+        "device": "cpu/numpy",
+        "dtype": "float64",
+        "backend": "step-structures.stage_solve",
+        "lane": "desktop-cpu",
+        "grade": "preview-grade",
+        "fea_solver": "pcg",
+        "fea_solver_reason": "pcg requested",
+        "generator": {
+          "kind": "simp",
+          "h_mm": 4.0,
+          "elements": 6250,
+          "volfrac_design": 0.343311,
+          "volfrac_box": 0.2686065264,
+          "rmin_mm": 7.278705,
+          "penal": 3.0,
+          "iterations_run": 25,
+          "converged": false,
+          "stopped_at_cap": true,
+          "final_change": 0.06898536981514902,
+          "compliance_Nmm": 642.6396965213631,
+          "solves_unconverged": 0,
+          "mnd_pct": 23.42711823355469,
+          "device": "cpu/numpy",
+          "wall_s": 2.30319881439209
+        },
+        "skin": {
+          "status": "ok",
+          "message": "",
+          "field_h_mm": 2.0,
+          "upsample": 2,
+          "sigma_vox": 1.0,
+          "blend_mm": 5.0,
+          "clip_blend_mm": 2.0,
+          "taubin_iters": 5,
+          "iso": 0.5,
+          "clipped_to_domain": true,
+          "infill": null,
+          "faces": 11248,
+          "vertices": 5626,
+          "watertight": true,
+          "solids": 1,
+          "cavities": 0,
+          "cavity_volume_mm3": 0.0,
+          "islands_removed": 0,
+          "removed_volume_mm3": 0.0,
+          "euler": 2,
+          "genus": 0,
+          "mesh_volume_mm3": 106359.78666510947,
+          "area_mm2": 15833.8525608136,
+          "bbox_mm": [
+            7.697130361685047,
+            3.6614135389497404,
+            -0.024168259752232538,
+            92.29553851020933,
+            96.34402293747489,
+            40.02045849304527
+          ],
+          "wall_s": 0.03476285934448242
+        },
+        "voxel": {
+          "h_mm": 4.0,
+          "cells": 6250,
+          "solid_cells": 1693,
+          "voxel_volume_mm3": 108352.0,
+          "mesh_volume_mm3": 106359.78672932391,
+          "volume_ratio_voxel_over_mesh": 1.0187308881668415,
+          "mask_sha256": "af7bd05fc83ad4f91f7f17df268f250c230fea764f72781a926eae5351a0464f"
+        },
+        "checks": {
+          "load_coverage": {
+            "cup-down": 1.0
+          },
+          "support_coverage": {
+            "foot-1": 1.0,
+            "foot-2": 1.0,
+            "foot-3": 1.0,
+            "foot-4": 1.0,
+            "foot-5": 1.0,
+            "foot-6": 1.0
+          },
+          "load_path_connected": true,
+          "solid_components": 1
+        },
+        "stress": {
+          "measure": "vm_p99",
+          "exclude_mm": 8.0,
+          "exclude_boxes": [
+            [
+              76.0,
+              64.0,
+              0.0,
+              88.0,
+              76.0,
+              8.0
+            ],
+            [
+              44.0,
+              80.0,
+              0.0,
+              56.0,
+              92.0,
+              8.0
+            ],
+            [
+              12.0,
+              64.0,
+              0.0,
+              24.0,
+              76.0,
+              8.0
+            ],
+            [
+              12.0,
+              28.0,
+              0.0,
+              24.0,
+              40.0,
+              8.0
+            ],
+            [
+              44.0,
+              8.0,
+              0.0,
+              56.0,
+              20.0,
+              8.0
+            ],
+            [
+              76.0,
+              28.0,
+              0.0,
+              88.0,
+              40.0,
+              8.0
+            ],
+            [
+              40.0,
+              40.0,
+              32.0,
+              60.0,
+              60.0,
+              40.0
+            ]
+          ],
+          "n_elements": 1535
+        },
+        "wall_s_generate": 2.304029703140259,
+        "wall_s_skin": 0.32280802726745605,
+        "wall_s_voxel": 0.02308177947998047,
+        "wall_s_solve": 0.1735401153564453,
+        "wall_s_post": null,
+        "wall_s_total": 3.152186870574951
+      },
+      "artifacts": [
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d002/fields.npz",
+          "sha256": "30418556a5128736f77fee8f0952aacd90b84f8f7fbe3f61d15b003498a7a014"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d002/generator/density.npy",
+          "sha256": "fdebe5adc8b63a2669d53a73ee461f346b849ac9303134b9ebd94967a72b0e0b"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d002/generator/report.json",
+          "sha256": "6069662d3d66c7bf0bfcc0b37bb0f541f12c05a872fdf980fecc245b97420c7a"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d002/generator/slices.png",
+          "sha256": "d0206d504344c1ff18a53df8a05d80ef7d268ccc2eade0cce5696a221bb6add7"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d002/mask.npy",
+          "sha256": "af7bd05fc83ad4f91f7f17df268f250c230fea764f72781a926eae5351a0464f"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d002/mesh.json",
+          "sha256": "0244892363fa867ed7cb39d0f746fb00d8ddf5e60edda59a5a47eee2fae54d6f"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d002/part.stl",
+          "sha256": "a28c22fa772c012eebb7c7490aad82fc5e48f4ba700971538e65f05a8be85e15"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d002/skin.json",
+          "sha256": "23ac1c443dd0c51d9df18cc65a04c09423f316298975a1e08f541519af97a69c"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d002/solve.json",
+          "sha256": "6e9191b971abb11f49a5aad455bcac58ae419749d1cd8b287161cbefa6e2dbba"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d002/thumb.png",
+          "sha256": "8f92aefb74b1ccc3d1184aa8315672ca2986d1293a15925282b1f0a0a8d9d3d4"
+        }
+      ],
+      "inputs_sha256": {
+        "spec.json": "b6c8bbefb1e9df1305ca900f598903a007b07b387751c93b4f90c30ba936ef94",
+        "spec.effective.json": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+        "domain.step": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+        "case.json": "2606d90d97ad0047bc79919c40a5f195b978a2fcf378e030c5c1d713909fa45e",
+        "part.stl": "a28c22fa772c012eebb7c7490aad82fc5e48f4ba700971538e65f05a8be85e15"
+      },
+      "stages": [
+        {
+          "stage": "generate",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:12.499+00:00",
+          "finished_utc": "2026-10-10T10:22:14.803+00:00",
+          "wall_s": 2.304029703140259,
+          "device": "cpu"
+        },
+        {
+          "stage": "skin",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:14.803+00:00",
+          "finished_utc": "2026-10-10T10:22:15.126+00:00",
+          "wall_s": 0.32280802726745605,
+          "device": "cpu"
+        },
+        {
+          "stage": "voxel",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:15.127+00:00",
+          "finished_utc": "2026-10-10T10:22:15.150+00:00",
+          "wall_s": 0.02308177947998047,
+          "device": "cpu"
+        },
+        {
+          "stage": "solve",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:15.150+00:00",
+          "finished_utc": "2026-10-10T10:22:15.324+00:00",
+          "wall_s": 0.1735401153564453,
+          "device": "cpu"
+        },
+        {
+          "stage": "thumb",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:15.325+00:00",
+          "finished_utc": "2026-10-10T10:22:15.599+00:00",
+          "wall_s": 0.2733161449432373,
+          "device": "cpu"
+        }
+      ],
+      "mlflow_run_id": null,
+      "evidence_sha256": "51e5f830453de147c35d9dd26b181bc5e0524d0329a7e71cd7dd1b96b6ffda83",
+      "error": null
+    },
+    {
+      "case_id": "d003",
+      "parameters": {
+        "role": "sweep",
+        "volfrac": 0.365216,
+        "rmin_mm": 10.098503,
+        "h_gen_mm": 4.0,
+        "h_fea_mm": 4.0,
+        "device": "cpu",
+        "backend": "adapter",
+        "source_case": null,
+        "reuse_mask": false,
+        "round": null,
+        "level": null,
+        "seed": 7,
+        "fea_solver": "pcg"
+      },
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T10:22:12.448000+00:00",
+      "finished_utc": "2026-10-10T10:22:15.528000+00:00",
+      "wall_s": 3.08,
+      "results": {
+        "schema": "aces-golden-case/1",
+        "case_id": "d003",
+        "role": "sweep",
+        "round": null,
+        "level": null,
+        "source_case": null,
+        "design": {
+          "volfrac": 0.365216,
+          "rmin_mm": 10.098503
+        },
+        "mass_kg": 0.3043088983350911,
+        "mass_voxel_kg": 0.30621696,
+        "mesh_volume_mm3": 113973.37016295547,
+        "voxel_volume_mm3": 114688.0,
+        "solid_fraction": 0.28672,
+        "compliance_Nmm": 612.7274007561978,
+        "umax_mm": 0.02408612451044269,
+        "vm_max_MPa": 41.03264728813841,
+        "vm_p99_MPa": 38.26887306213383,
+        "vm_p95_MPa": 29.75842275619506,
+        "pcg_iters": 201,
+        "pcg_relres": 9.766607110555196e-09,
+        "converged": true,
+        "elements": 6250,
+        "dof": 22308,
+        "elem_mm": 4.0,
+        "n_fixed_dofs": 288,
+        "device": "cpu/numpy",
+        "dtype": "float64",
+        "backend": "step-structures.stage_solve",
+        "lane": "desktop-cpu",
+        "grade": "preview-grade",
+        "fea_solver": "pcg",
+        "fea_solver_reason": "pcg requested",
+        "generator": {
+          "kind": "simp",
+          "h_mm": 4.0,
+          "elements": 6250,
+          "volfrac_design": 0.365216,
+          "volfrac_box": 0.2857449984,
+          "rmin_mm": 10.098503,
+          "penal": 3.0,
+          "iterations_run": 25,
+          "converged": false,
+          "stopped_at_cap": true,
+          "final_change": 0.04007955466171409,
+          "compliance_Nmm": 669.8207521454557,
+          "solves_unconverged": 0,
+          "mnd_pct": 30.362807434417547,
+          "device": "cpu/numpy",
+          "wall_s": 2.2712178230285645
+        },
+        "skin": {
+          "status": "ok",
+          "message": "",
+          "field_h_mm": 2.0,
+          "upsample": 2,
+          "sigma_vox": 1.0,
+          "blend_mm": 5.0,
+          "clip_blend_mm": 2.0,
+          "taubin_iters": 5,
+          "iso": 0.5,
+          "clipped_to_domain": true,
+          "infill": null,
+          "faces": 10952,
+          "vertices": 5478,
+          "watertight": true,
+          "solids": 1,
+          "cavities": 0,
+          "cavity_volume_mm3": 0.0,
+          "islands_removed": 0,
+          "removed_volume_mm3": 0.0,
+          "euler": 2,
+          "genus": 0,
+          "mesh_volume_mm3": 113973.37052418363,
+          "area_mm2": 15786.625533215243,
+          "bbox_mm": [
+            8.364472732217862,
+            3.949843910069019,
+            -0.021531888649698062,
+            91.63148231102883,
+            96.05267446277622,
+            40.01971851929053
+          ],
+          "wall_s": 0.03456568717956543
+        },
+        "voxel": {
+          "h_mm": 4.0,
+          "cells": 6250,
+          "solid_cells": 1792,
+          "voxel_volume_mm3": 114688.0,
+          "mesh_volume_mm3": 113973.37016295547,
+          "volume_ratio_voxel_over_mesh": 1.006270147456575,
+          "mask_sha256": "34f4d984f8a1c3db85870006572532c9f4fa0db5b004ea0c1160164ad98fb7bd"
+        },
+        "checks": {
+          "load_coverage": {
+            "cup-down": 1.0
+          },
+          "support_coverage": {
+            "foot-1": 1.0,
+            "foot-2": 1.0,
+            "foot-3": 1.0,
+            "foot-4": 1.0,
+            "foot-5": 1.0,
+            "foot-6": 1.0
+          },
+          "load_path_connected": true,
+          "solid_components": 1
+        },
+        "stress": {
+          "measure": "vm_p99",
+          "exclude_mm": 8.0,
+          "exclude_boxes": [
+            [
+              76.0,
+              64.0,
+              0.0,
+              88.0,
+              76.0,
+              8.0
+            ],
+            [
+              44.0,
+              80.0,
+              0.0,
+              56.0,
+              92.0,
+              8.0
+            ],
+            [
+              12.0,
+              64.0,
+              0.0,
+              24.0,
+              76.0,
+              8.0
+            ],
+            [
+              12.0,
+              28.0,
+              0.0,
+              24.0,
+              40.0,
+              8.0
+            ],
+            [
+              44.0,
+              8.0,
+              0.0,
+              56.0,
+              20.0,
+              8.0
+            ],
+            [
+              76.0,
+              28.0,
+              0.0,
+              88.0,
+              40.0,
+              8.0
+            ],
+            [
+              40.0,
+              40.0,
+              32.0,
+              60.0,
+              60.0,
+              40.0
+            ]
+          ],
+          "n_elements": 1634
+        },
+        "wall_s_generate": 2.272008180618286,
+        "wall_s_skin": 0.3237285614013672,
+        "wall_s_voxel": 0.022086620330810547,
+        "wall_s_solve": 0.16259026527404785,
+        "wall_s_post": null,
+        "wall_s_total": 3.0808799266815186
+      },
+      "artifacts": [
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d003/fields.npz",
+          "sha256": "6e1becf5871fc8f97b57ae889b6637e518e7a54ec010e76371beb81afbdb31e3"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d003/generator/density.npy",
+          "sha256": "fecef33019a7efb804891017b949d9c094ba5ef397e3d3800b73435c03fe5c2f"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d003/generator/report.json",
+          "sha256": "f6b2126c86ec457de7140a35fed505d902daff13cef72ea48481185cec40552b"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d003/generator/slices.png",
+          "sha256": "5b1a0d7fcee33fb893c825cabe488a9d955dfbfb8888b12d37996114e9787592"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d003/mask.npy",
+          "sha256": "34f4d984f8a1c3db85870006572532c9f4fa0db5b004ea0c1160164ad98fb7bd"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d003/mesh.json",
+          "sha256": "60bdeb946b4f09377f711810f1642860a5e64abe9c7d6254e0f413e52c9e4aeb"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d003/part.stl",
+          "sha256": "5538adecbe3d5aab5a7f3e52ec72c936c82b300a0e1245d155b469e7a7f32bb0"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d003/skin.json",
+          "sha256": "45a055b48056cf106c4eb98df0ca694b1026255b28b49834c6e12a3e2ec23938"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d003/solve.json",
+          "sha256": "22d2e5daf4bd2fff13cf6b6dcb0313bbfba6ca7cdbee22615e60e202026d5ffd"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d003/thumb.png",
+          "sha256": "28c7c7b34ca22e9b2c1b58ee7a2a0fa9ac306d95ff130b0febbaa18c3c1065d9"
+        }
+      ],
+      "inputs_sha256": {
+        "spec.json": "b6c8bbefb1e9df1305ca900f598903a007b07b387751c93b4f90c30ba936ef94",
+        "spec.effective.json": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+        "domain.step": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+        "case.json": "35f04e5e10d2653e920f920574154451bd74fc1ceb7c6c668d7c464629eb5cd0",
+        "part.stl": "5538adecbe3d5aab5a7f3e52ec72c936c82b300a0e1245d155b469e7a7f32bb0"
+      },
+      "stages": [
+        {
+          "stage": "generate",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:12.498+00:00",
+          "finished_utc": "2026-10-10T10:22:14.770+00:00",
+          "wall_s": 2.272008180618286,
+          "device": "cpu"
+        },
+        {
+          "stage": "skin",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:14.770+00:00",
+          "finished_utc": "2026-10-10T10:22:15.094+00:00",
+          "wall_s": 0.3237285614013672,
+          "device": "cpu"
+        },
+        {
+          "stage": "voxel",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:15.095+00:00",
+          "finished_utc": "2026-10-10T10:22:15.117+00:00",
+          "wall_s": 0.022086620330810547,
+          "device": "cpu"
+        },
+        {
+          "stage": "solve",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:15.117+00:00",
+          "finished_utc": "2026-10-10T10:22:15.280+00:00",
+          "wall_s": 0.16259026527404785,
+          "device": "cpu"
+        },
+        {
+          "stage": "thumb",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:15.281+00:00",
+          "finished_utc": "2026-10-10T10:22:15.528+00:00",
+          "wall_s": 0.24717926979064941,
+          "device": "cpu"
+        }
+      ],
+      "mlflow_run_id": null,
+      "evidence_sha256": "85f83f122d08bc4229ad537974eaf3e7c0af507b8459d73a4424906036053e8c",
+      "error": null
+    },
+    {
+      "case_id": "d004",
+      "parameters": {
+        "role": "sweep",
+        "volfrac": 0.153482,
+        "rmin_mm": 6.688165,
+        "h_gen_mm": 4.0,
+        "h_fea_mm": 4.0,
+        "device": "cpu",
+        "backend": "adapter",
+        "source_case": null,
+        "reuse_mask": false,
+        "round": null,
+        "level": null,
+        "seed": 7,
+        "fea_solver": "pcg"
+      },
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T10:22:15.532000+00:00",
+      "finished_utc": "2026-10-10T10:22:17.913000+00:00",
+      "wall_s": 2.381,
+      "results": {
+        "schema": "aces-golden-case/1",
+        "case_id": "d004",
+        "role": "sweep",
+        "round": null,
+        "level": null,
+        "source_case": null,
+        "design": {
+          "volfrac": 0.153482,
+          "rmin_mm": 6.688165
+        },
+        "mass_kg": 0.11282886762689724,
+        "mass_voxel_kg": 0.11722368,
+        "mesh_volume_mm3": 42258.00285651582,
+        "voxel_volume_mm3": 43904.0,
+        "solid_fraction": 0.10976,
+        "compliance_Nmm": 1365.39638083824,
+        "umax_mm": 0.0509200721606507,
+        "vm_max_MPa": 83.38282726320496,
+        "vm_p99_MPa": 79.45272384643555,
+        "vm_p95_MPa": 71.47634086608886,
+        "pcg_iters": 288,
+        "pcg_relres": 9.119122828837814e-09,
+        "converged": true,
+        "elements": 6250,
+        "dof": 22308,
+        "elem_mm": 4.0,
+        "n_fixed_dofs": 288,
+        "device": "cpu/numpy",
+        "dtype": "float64",
+        "backend": "step-structures.stage_solve",
+        "lane": "desktop-cpu",
+        "grade": "preview-grade",
+        "fea_solver": "pcg",
+        "fea_solver_reason": "pcg requested",
+        "generator": {
+          "kind": "simp",
+          "h_mm": 4.0,
+          "elements": 6250,
+          "volfrac_design": 0.153482,
+          "volfrac_box": 0.12008431680000001,
+          "rmin_mm": 6.688165,
+          "penal": 3.0,
+          "iterations_run": 25,
+          "converged": false,
+          "stopped_at_cap": true,
+          "final_change": 0.053398136417622255,
+          "compliance_Nmm": 2066.2101109756613,
+          "solves_unconverged": 0,
+          "mnd_pct": 18.15383234317143,
+          "device": "cpu/numpy",
+          "wall_s": 1.9589323997497559
+        },
+        "skin": {
+          "status": "ok",
+          "message": "",
+          "field_h_mm": 2.0,
+          "upsample": 2,
+          "sigma_vox": 1.0,
+          "blend_mm": 5.0,
+          "clip_blend_mm": 2.0,
+          "taubin_iters": 5,
+          "iso": 0.5,
+          "clipped_to_domain": true,
+          "infill": null,
+          "faces": 9596,
+          "vertices": 4800,
+          "watertight": true,
+          "solids": 1,
+          "cavities": 0,
+          "cavity_volume_mm3": 0.0,
+          "islands_removed": 0,
+          "removed_volume_mm3": 0.0,
+          "euler": 2,
+          "genus": 0,
+          "mesh_volume_mm3": 42258.00256719975,
+          "area_mm2": 13357.333342798109,
+          "bbox_mm": [
+            7.693712235720442,
+            3.6504433643132224,
+            -0.02423963738000904,
+            92.30625947481187,
+            96.35066429297515,
+            40.02053202896165
+          ],
+          "wall_s": 0.02798008918762207
+        },
+        "voxel": {
+          "h_mm": 4.0,
+          "cells": 6250,
+          "solid_cells": 686,
+          "voxel_volume_mm3": 43904.0,
+          "mesh_volume_mm3": 42258.00285651582,
+          "volume_ratio_voxel_over_mesh": 1.0389511342756317,
+          "mask_sha256": "e935502c1a802a8988dcd0ac5b88fc9c1dc272a5566338cbc3196c47aa156437"
+        },
+        "checks": {
+          "load_coverage": {
+            "cup-down": 1.0
+          },
+          "support_coverage": {
+            "foot-1": 1.0,
+            "foot-2": 1.0,
+            "foot-3": 1.0,
+            "foot-4": 1.0,
+            "foot-5": 1.0,
+            "foot-6": 1.0
+          },
+          "load_path_connected": true,
+          "solid_components": 1
+        },
+        "stress": {
+          "measure": "vm_p99",
+          "exclude_mm": 8.0,
+          "exclude_boxes": [
+            [
+              76.0,
+              64.0,
+              0.0,
+              88.0,
+              76.0,
+              8.0
+            ],
+            [
+              44.0,
+              80.0,
+              0.0,
+              56.0,
+              92.0,
+              8.0
+            ],
+            [
+              12.0,
+              64.0,
+              0.0,
+              24.0,
+              76.0,
+              8.0
+            ],
+            [
+              12.0,
+              28.0,
+              0.0,
+              24.0,
+              40.0,
+              8.0
+            ],
+            [
+              44.0,
+              8.0,
+              0.0,
+              56.0,
+              20.0,
+              8.0
+            ],
+            [
+              76.0,
+              28.0,
+              0.0,
+              88.0,
+              40.0,
+              8.0
+            ],
+            [
+              40.0,
+              40.0,
+              32.0,
+              60.0,
+              60.0,
+              40.0
+            ]
+          ],
+          "n_elements": 528
+        },
+        "wall_s_generate": 1.9590084552764893,
+        "wall_s_skin": 0.028312206268310547,
+        "wall_s_voxel": 0.019625425338745117,
+        "wall_s_solve": 0.2081770896911621,
+        "wall_s_post": null,
+        "wall_s_total": 2.3803718090057373
+      },
+      "artifacts": [
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d004/fields.npz",
+          "sha256": "18f96015601d8d7e1c9bcaafc7a3dd216793636327f6418f5705dbea5345f4c8"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d004/generator/density.npy",
+          "sha256": "0dd75894521751b6f4604a04ad2925d06ab1fe6f7a7addbf6c0fee3b6d7d5edf"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d004/generator/report.json",
+          "sha256": "5a441d50bd9716f6b0a48a7bbeddaa59ce606201f818b124d93ef29766319072"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d004/generator/slices.png",
+          "sha256": "dd3887dad1f902aa71b171dc8875479e8c4d8e6ae80603acf652bb459b6eaaa5"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d004/mask.npy",
+          "sha256": "e935502c1a802a8988dcd0ac5b88fc9c1dc272a5566338cbc3196c47aa156437"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d004/mesh.json",
+          "sha256": "b67bf25497c6855b20341ec5d25d02e9eeb54d50e79bdb96f34f8a7b2efe7929"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d004/part.stl",
+          "sha256": "37420a3fecbf7a91f3ae42730336a4b03dd51abb4b9d76fb8d9de92c121d65f8"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d004/skin.json",
+          "sha256": "5ed4c8e3e393af0d290db121611291a088ae62f6236b40ccf0a47c9c2b70ef1d"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d004/solve.json",
+          "sha256": "7b774f3b55beb7c2e89e1362463cbd5afd94513e108f79601bbf656c42771c3c"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d004/thumb.png",
+          "sha256": "02b2587225a6038f1f6742ad8b2bfe1b6ee24457901d56018995d59cc37a2c5b"
+        }
+      ],
+      "inputs_sha256": {
+        "spec.json": "b6c8bbefb1e9df1305ca900f598903a007b07b387751c93b4f90c30ba936ef94",
+        "spec.effective.json": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+        "domain.step": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+        "case.json": "d17f711b3b525c5d39a4aaa46715c6122b7270b0a6154274ebc903333ce520fd",
+        "part.stl": "37420a3fecbf7a91f3ae42730336a4b03dd51abb4b9d76fb8d9de92c121d65f8"
+      },
+      "stages": [
+        {
+          "stage": "generate",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:15.532+00:00",
+          "finished_utc": "2026-10-10T10:22:17.491+00:00",
+          "wall_s": 1.9590084552764893,
+          "device": "cpu"
+        },
+        {
+          "stage": "skin",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:17.491+00:00",
+          "finished_utc": "2026-10-10T10:22:17.520+00:00",
+          "wall_s": 0.028312206268310547,
+          "device": "cpu"
+        },
+        {
+          "stage": "voxel",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:17.521+00:00",
+          "finished_utc": "2026-10-10T10:22:17.540+00:00",
+          "wall_s": 0.019625425338745117,
+          "device": "cpu"
+        },
+        {
+          "stage": "solve",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:17.540+00:00",
+          "finished_utc": "2026-10-10T10:22:17.749+00:00",
+          "wall_s": 0.2081770896911621,
+          "device": "cpu"
+        },
+        {
+          "stage": "thumb",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:17.749+00:00",
+          "finished_utc": "2026-10-10T10:22:17.912+00:00",
+          "wall_s": 0.16317129135131836,
+          "device": "cpu"
+        }
+      ],
+      "mlflow_run_id": null,
+      "evidence_sha256": "016ddfc485a4411bab3eb63519260de04e72649cb02a501b451a7ec2cadfb2c7",
+      "error": null
+    },
+    {
+      "case_id": "d005",
+      "parameters": {
+        "role": "sweep",
+        "volfrac": 0.227793,
+        "rmin_mm": 7.857916,
+        "h_gen_mm": 4.0,
+        "h_fea_mm": 4.0,
+        "device": "cpu",
+        "backend": "adapter",
+        "source_case": null,
+        "reuse_mask": false,
+        "round": null,
+        "level": null,
+        "seed": 7,
+        "fea_solver": "pcg"
+      },
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T10:22:15.604000+00:00",
+      "finished_utc": "2026-10-10T10:22:17.466000+00:00",
+      "wall_s": 1.862,
+      "results": {
+        "schema": "aces-golden-case/1",
+        "case_id": "d005",
+        "role": "sweep",
+        "round": null,
+        "level": null,
+        "source_case": null,
+        "design": {
+          "volfrac": 0.227793,
+          "rmin_mm": 7.857916
+        },
+        "mass_kg": 0.17952260209990445,
+        "mass_voxel_kg": 0.18010752,
+        "mesh_volume_mm3": 67236.92962543239,
+        "voxel_volume_mm3": 67456.0,
+        "solid_fraction": 0.16864,
+        "compliance_Nmm": 825.0726888577077,
+        "umax_mm": 0.0313004833106861,
+        "vm_max_MPa": 57.786927646596624,
+        "vm_p99_MPa": 53.09709568023681,
+        "vm_p95_MPa": 40.006089210510254,
+        "pcg_iters": 225,
+        "pcg_relres": 9.147939587126286e-09,
+        "converged": true,
+        "elements": 6250,
+        "dof": 22308,
+        "elem_mm": 4.0,
+        "n_fixed_dofs": 288,
+        "device": "cpu/numpy",
+        "dtype": "float64",
+        "backend": "step-structures.stage_solve",
+        "lane": "desktop-cpu",
+        "grade": "preview-grade",
+        "fea_solver": "pcg",
+        "fea_solver_reason": "pcg requested",
+        "generator": {
+          "kind": "simp",
+          "h_mm": 4.0,
+          "elements": 6250,
+          "volfrac_design": 0.227793,
+          "volfrac_box": 0.1782252432,
+          "rmin_mm": 7.857916,
+          "penal": 3.0,
+          "iterations_run": 25,
+          "converged": false,
+          "stopped_at_cap": true,
+          "final_change": 0.05370166888355865,
+          "compliance_Nmm": 1061.6597390855482,
+          "solves_unconverged": 0,
+          "mnd_pct": 23.649831133952958,
+          "device": "cpu/numpy",
+          "wall_s": 1.4620177745819092
+        },
+        "skin": {
+          "status": "ok",
+          "message": "",
+          "field_h_mm": 2.0,
+          "upsample": 2,
+          "sigma_vox": 1.0,
+          "blend_mm": 5.0,
+          "clip_blend_mm": 2.0,
+          "taubin_iters": 5,
+          "iso": 0.5,
+          "clipped_to_domain": true,
+          "infill": null,
+          "faces": 10660,
+          "vertices": 5332,
+          "watertight": true,
+          "solids": 1,
+          "cavities": 0,
+          "cavity_volume_mm3": 0.0,
+          "islands_removed": 0,
+          "removed_volume_mm3": 0.0,
+          "euler": 2,
+          "genus": 0,
+          "mesh_volume_mm3": 67236.92974492618,
+          "area_mm2": 14790.132135562657,
+          "bbox_mm": [
+            7.848456374322906,
+            3.814887826239253,
+            -0.022259502769372767,
+            92.14526604198511,
+            96.18782900081928,
+            40.02561297388365
+          ],
+          "wall_s": 0.031342267990112305
+        },
+        "voxel": {
+          "h_mm": 4.0,
+          "cells": 6250,
+          "solid_cells": 1054,
+          "voxel_volume_mm3": 67456.0,
+          "mesh_volume_mm3": 67236.92962543239,
+          "volume_ratio_voxel_over_mesh": 1.0032581852828204,
+          "mask_sha256": "29844735c33e533ada17f08109a317be0f5b952ca08849c99d9d18a6d5348c4b"
+        },
+        "checks": {
+          "load_coverage": {
+            "cup-down": 1.0
+          },
+          "support_coverage": {
+            "foot-1": 1.0,
+            "foot-2": 1.0,
+            "foot-3": 1.0,
+            "foot-4": 1.0,
+            "foot-5": 1.0,
+            "foot-6": 1.0
+          },
+          "load_path_connected": true,
+          "solid_components": 1
+        },
+        "stress": {
+          "measure": "vm_p99",
+          "exclude_mm": 8.0,
+          "exclude_boxes": [
+            [
+              76.0,
+              64.0,
+              0.0,
+              88.0,
+              76.0,
+              8.0
+            ],
+            [
+              44.0,
+              80.0,
+              0.0,
+              56.0,
+              92.0,
+              8.0
+            ],
+            [
+              12.0,
+              64.0,
+              0.0,
+              24.0,
+              76.0,
+              8.0
+            ],
+            [
+              12.0,
+              28.0,
+              0.0,
+              24.0,
+              40.0,
+              8.0
+            ],
+            [
+              44.0,
+              8.0,
+              0.0,
+              56.0,
+              20.0,
+              8.0
+            ],
+            [
+              76.0,
+              28.0,
+              0.0,
+              88.0,
+              40.0,
+              8.0
+            ],
+            [
+              40.0,
+              40.0,
+              32.0,
+              60.0,
+              60.0,
+              40.0
+            ]
+          ],
+          "n_elements": 896
+        },
+        "wall_s_generate": 1.4620914459228516,
+        "wall_s_skin": 0.03173255920410156,
+        "wall_s_voxel": 0.02268242835998535,
+        "wall_s_solve": 0.1736438274383545,
+        "wall_s_post": null,
+        "wall_s_total": 1.862640142440796
+      },
+      "artifacts": [
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d005/fields.npz",
+          "sha256": "c6d04719f75799043bcbe36cc4f767fecd85088a9f9412ad6be43bc46d78f7cb"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d005/generator/density.npy",
+          "sha256": "502d9078ba09fc4365a81c93bc3df3298daec43c81e60a3b508b1a08258fed28"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d005/generator/report.json",
+          "sha256": "cf91864d415cb1e2913bbd0da52dc52ba9855b78a30967d4719b967a3c5dbbf8"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d005/generator/slices.png",
+          "sha256": "52d59ff9a251c0ddabecaa369ea798e591d8214f85740f2881e69e915e79de6c"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d005/mask.npy",
+          "sha256": "29844735c33e533ada17f08109a317be0f5b952ca08849c99d9d18a6d5348c4b"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d005/mesh.json",
+          "sha256": "1787353b61606633b4022c2c7aed89ddfc4b9c17c301df0137df5f53b8d04876"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d005/part.stl",
+          "sha256": "2562428fb87f4d96d8a70a0f0f2421b92ecaf9c241189188d14b4ba69e4a6d08"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d005/skin.json",
+          "sha256": "99d5d1f3ce30ae41b7958ca73156e98c4ec001090f4f4cbf14a3bf97461b0176"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d005/solve.json",
+          "sha256": "2761383c11c67a68cbb5ea4d9dd7f49633f04f45598a820fc2a5f8b4fe5e297b"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d005/thumb.png",
+          "sha256": "6221c934d54cd43e96d7db42104a271ab51e6687a46e13d3340396660eeda6ea"
+        }
+      ],
+      "inputs_sha256": {
+        "spec.json": "b6c8bbefb1e9df1305ca900f598903a007b07b387751c93b4f90c30ba936ef94",
+        "spec.effective.json": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+        "domain.step": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+        "case.json": "360744a268c9df9bb87a670740829f979421abaf0ff39a580d42362288182032",
+        "part.stl": "2562428fb87f4d96d8a70a0f0f2421b92ecaf9c241189188d14b4ba69e4a6d08"
+      },
+      "stages": [
+        {
+          "stage": "generate",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:15.605+00:00",
+          "finished_utc": "2026-10-10T10:22:17.067+00:00",
+          "wall_s": 1.4620914459228516,
+          "device": "cpu"
+        },
+        {
+          "stage": "skin",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:17.067+00:00",
+          "finished_utc": "2026-10-10T10:22:17.099+00:00",
+          "wall_s": 0.03173255920410156,
+          "device": "cpu"
+        },
+        {
+          "stage": "voxel",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:17.100+00:00",
+          "finished_utc": "2026-10-10T10:22:17.122+00:00",
+          "wall_s": 0.02268242835998535,
+          "device": "cpu"
+        },
+        {
+          "stage": "solve",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:17.122+00:00",
+          "finished_utc": "2026-10-10T10:22:17.296+00:00",
+          "wall_s": 0.1736438274383545,
+          "device": "cpu"
+        },
+        {
+          "stage": "thumb",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:17.297+00:00",
+          "finished_utc": "2026-10-10T10:22:17.466+00:00",
+          "wall_s": 0.16940927505493164,
+          "device": "cpu"
+        }
+      ],
+      "mlflow_run_id": null,
+      "evidence_sha256": "573f5cdd359790a75ab8bbc8e15b72c2baad4c6077758c88653bc3ede54925ad",
+      "error": null
+    },
+    {
+      "case_id": "d006",
+      "parameters": {
+        "role": "sweep",
+        "volfrac": 0.160054,
+        "rmin_mm": 10.961384,
+        "h_gen_mm": 4.0,
+        "h_fea_mm": 4.0,
+        "device": "cpu",
+        "backend": "adapter",
+        "source_case": null,
+        "reuse_mask": false,
+        "round": null,
+        "level": null,
+        "seed": 7,
+        "fea_solver": "pcg"
+      },
+      "status": "FAILED",
+      "started_utc": "2026-10-10T10:22:15.967000+00:00",
+      "finished_utc": "2026-10-10T10:22:17.927000+00:00",
+      "wall_s": 1.96,
+      "results": {},
+      "artifacts": [],
+      "inputs_sha256": {
+        "spec.json": "b6c8bbefb1e9df1305ca900f598903a007b07b387751c93b4f90c30ba936ef94",
+        "spec.effective.json": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+        "domain.step": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+        "case.json": "99123c6960a988e4e84801f249f2b6ca0e9de8eb2ae3c6847a889165ef6c3138"
+      },
+      "stages": [
+        {
+          "stage": "generate",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:15.967+00:00",
+          "finished_utc": "2026-10-10T10:22:17.899+00:00",
+          "wall_s": 1.932692050933838,
+          "device": "cpu"
+        },
+        {
+          "stage": "skin",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:17.899+00:00",
+          "finished_utc": "2026-10-10T10:22:17.927+00:00",
+          "wall_s": 0.027607440948486328,
+          "device": "cpu"
+        }
+      ],
+      "mlflow_run_id": null,
+      "evidence_sha256": "59326493b6c1cfe82fb116a43ab80be27f29fee23a73d1923a38823e2e997c69",
+      "error": "the skin has 3 solid bodies; a part is one body"
+    },
+    {
+      "case_id": "d007",
+      "parameters": {
+        "role": "sweep",
+        "volfrac": 0.291534,
+        "rmin_mm": 11.632002,
+        "h_gen_mm": 4.0,
+        "h_fea_mm": 4.0,
+        "device": "cpu",
+        "backend": "adapter",
+        "source_case": null,
+        "reuse_mask": false,
+        "round": null,
+        "level": null,
+        "seed": 7,
+        "fea_solver": "pcg"
+      },
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T10:22:16.280000+00:00",
+      "finished_utc": "2026-10-10T10:22:18.089000+00:00",
+      "wall_s": 1.809,
+      "results": {
+        "schema": "aces-golden-case/1",
+        "case_id": "d007",
+        "role": "sweep",
+        "round": null,
+        "level": null,
+        "source_case": null,
+        "design": {
+          "volfrac": 0.291534,
+          "rmin_mm": 11.632002
+        },
+        "mass_kg": 0.2416999232783147,
+        "mass_voxel_kg": 0.24555455999999998,
+        "mesh_volume_mm3": 90524.3158345748,
+        "voxel_volume_mm3": 91968.0,
+        "solid_fraction": 0.22992,
+        "compliance_Nmm": 684.2886413774618,
+        "umax_mm": 0.026439725487716004,
+        "vm_max_MPa": 49.685382730872576,
+        "vm_p99_MPa": 40.65169860839844,
+        "vm_p95_MPa": 33.52222518920897,
+        "pcg_iters": 183,
+        "pcg_relres": 9.405403904688122e-09,
+        "converged": true,
+        "elements": 6250,
+        "dof": 22308,
+        "elem_mm": 4.0,
+        "n_fixed_dofs": 288,
+        "device": "cpu/numpy",
+        "dtype": "float64",
+        "backend": "step-structures.stage_solve",
+        "lane": "desktop-cpu",
+        "grade": "preview-grade",
+        "fea_solver": "pcg",
+        "fea_solver_reason": "pcg requested",
+        "generator": {
+          "kind": "simp",
+          "h_mm": 4.0,
+          "elements": 6250,
+          "volfrac_design": 0.291534,
+          "volfrac_box": 0.22809620160000002,
+          "rmin_mm": 11.632002,
+          "penal": 3.0,
+          "iterations_run": 25,
+          "converged": false,
+          "stopped_at_cap": true,
+          "final_change": 0.06258661994052162,
+          "compliance_Nmm": 937.2163451591247,
+          "solves_unconverged": 0,
+          "mnd_pct": 33.91209261085892,
+          "device": "cpu/numpy",
+          "wall_s": 1.4334135055541992
+        },
+        "skin": {
+          "status": "ok",
+          "message": "",
+          "field_h_mm": 2.0,
+          "upsample": 2,
+          "sigma_vox": 1.0,
+          "blend_mm": 5.0,
+          "clip_blend_mm": 2.0,
+          "taubin_iters": 5,
+          "iso": 0.5,
+          "clipped_to_domain": true,
+          "infill": null,
+          "faces": 10628,
+          "vertices": 5316,
+          "watertight": true,
+          "solids": 1,
+          "cavities": 0,
+          "cavity_volume_mm3": 0.0,
+          "islands_removed": 0,
+          "removed_volume_mm3": 0.0,
+          "euler": 2,
+          "genus": 0,
+          "mesh_volume_mm3": 90524.31584960036,
+          "area_mm2": 15062.603527280455,
+          "bbox_mm": [
+            8.655614209086636,
+            4.32381280462632,
+            -0.02041984533646072,
+            91.35155522758953,
+            95.67214205091685,
+            40.019107771533804
+          ],
+          "wall_s": 0.03165078163146973
+        },
+        "voxel": {
+          "h_mm": 4.0,
+          "cells": 6250,
+          "solid_cells": 1437,
+          "voxel_volume_mm3": 91968.0,
+          "mesh_volume_mm3": 90524.3158345748,
+          "volume_ratio_voxel_over_mesh": 1.0159480262525642,
+          "mask_sha256": "d44b87a1457972ab90f443e27780afc4883218bd19e31238a11deec7e121acfd"
+        },
+        "checks": {
+          "load_coverage": {
+            "cup-down": 1.0
+          },
+          "support_coverage": {
+            "foot-1": 1.0,
+            "foot-2": 1.0,
+            "foot-3": 1.0,
+            "foot-4": 1.0,
+            "foot-5": 1.0,
+            "foot-6": 1.0
+          },
+          "load_path_connected": true,
+          "solid_components": 1
+        },
+        "stress": {
+          "measure": "vm_p99",
+          "exclude_mm": 8.0,
+          "exclude_boxes": [
+            [
+              76.0,
+              64.0,
+              0.0,
+              88.0,
+              76.0,
+              8.0
+            ],
+            [
+              44.0,
+              80.0,
+              0.0,
+              56.0,
+              92.0,
+              8.0
+            ],
+            [
+              12.0,
+              64.0,
+              0.0,
+              24.0,
+              76.0,
+              8.0
+            ],
+            [
+              12.0,
+              28.0,
+              0.0,
+              24.0,
+              40.0,
+              8.0
+            ],
+            [
+              44.0,
+              8.0,
+              0.0,
+              56.0,
+              20.0,
+              8.0
+            ],
+            [
+              76.0,
+              28.0,
+              0.0,
+              88.0,
+              40.0,
+              8.0
+            ],
+            [
+              40.0,
+              40.0,
+              32.0,
+              60.0,
+              60.0,
+              40.0
+            ]
+          ],
+          "n_elements": 1279
+        },
+        "wall_s_generate": 1.433476209640503,
+        "wall_s_skin": 0.03201794624328613,
+        "wall_s_voxel": 0.025202035903930664,
+        "wall_s_solve": 0.14267277717590332,
+        "wall_s_post": null,
+        "wall_s_total": 1.8094756603240967
+      },
+      "artifacts": [
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d007/fields.npz",
+          "sha256": "49e9a81167f5532b5bc0256e50af37baabb83fee9c0a52c4b77c9c5526126d8d"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d007/generator/density.npy",
+          "sha256": "8ad3d587e26305b7417f6b61757b57e095fcad0868d2e3d4eb2903deeadd80b6"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d007/generator/report.json",
+          "sha256": "2be0a9c5f5ffe74272dd631446b9545560710202b8522813c2d6c6b1c7a4944e"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d007/generator/slices.png",
+          "sha256": "743472a0baef4519a90d8cc2590029e607726f65cb970c587b2281eaacbb1d19"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d007/mask.npy",
+          "sha256": "d44b87a1457972ab90f443e27780afc4883218bd19e31238a11deec7e121acfd"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d007/mesh.json",
+          "sha256": "5641eddafa614ddc13d2df97f2359ef3fe64bfc60925203de514b2e1d46d6b73"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d007/part.stl",
+          "sha256": "e79ea61a1a3d4b9c1c1120803efffe0b74b2261d17f3e381f1e5fac3b0dbe6a7"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d007/skin.json",
+          "sha256": "3573d698034deb2fff133ed89800536ffc3e7318f5b5ae94847041f30bfe120e"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d007/solve.json",
+          "sha256": "b8f265c04a09db67b544467816a9e3c2bf29f3628893123669b44170026530f3"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d007/thumb.png",
+          "sha256": "225b930ff0d2135d40887f2c1775a838cdbfd2e7cac4fcb98ffc8d97a1244119"
+        }
+      ],
+      "inputs_sha256": {
+        "spec.json": "b6c8bbefb1e9df1305ca900f598903a007b07b387751c93b4f90c30ba936ef94",
+        "spec.effective.json": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+        "domain.step": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+        "case.json": "06322464c127c460f631aca61bd20ac19934766914122a8a57a780a986a98836",
+        "part.stl": "e79ea61a1a3d4b9c1c1120803efffe0b74b2261d17f3e381f1e5fac3b0dbe6a7"
+      },
+      "stages": [
+        {
+          "stage": "generate",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:16.280+00:00",
+          "finished_utc": "2026-10-10T10:22:17.713+00:00",
+          "wall_s": 1.433476209640503,
+          "device": "cpu"
+        },
+        {
+          "stage": "skin",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:17.713+00:00",
+          "finished_utc": "2026-10-10T10:22:17.745+00:00",
+          "wall_s": 0.03201794624328613,
+          "device": "cpu"
+        },
+        {
+          "stage": "voxel",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:17.746+00:00",
+          "finished_utc": "2026-10-10T10:22:17.771+00:00",
+          "wall_s": 0.025202035903930664,
+          "device": "cpu"
+        },
+        {
+          "stage": "solve",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:17.771+00:00",
+          "finished_utc": "2026-10-10T10:22:17.914+00:00",
+          "wall_s": 0.14267277717590332,
+          "device": "cpu"
+        },
+        {
+          "stage": "thumb",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:17.915+00:00",
+          "finished_utc": "2026-10-10T10:22:18.089+00:00",
+          "wall_s": 0.17402267456054688,
+          "device": "cpu"
+        }
+      ],
+      "mlflow_run_id": null,
+      "evidence_sha256": "5f02f63aac44cd345b252fb3ba82718f48ce8b5313fef350c64d3b6d6c40ce80",
+      "error": null
+    },
+    {
+      "case_id": "d008",
+      "parameters": {
+        "role": "sweep",
+        "volfrac": 0.265513,
+        "rmin_mm": 6.232518,
+        "h_gen_mm": 4.0,
+        "h_fea_mm": 4.0,
+        "device": "cpu",
+        "backend": "adapter",
+        "source_case": null,
+        "reuse_mask": false,
+        "round": null,
+        "level": null,
+        "seed": 7,
+        "fea_solver": "pcg"
+      },
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T10:22:17.469000+00:00",
+      "finished_utc": "2026-10-10T10:22:19.272000+00:00",
+      "wall_s": 1.803,
+      "results": {
+        "schema": "aces-golden-case/1",
+        "case_id": "d008",
+        "role": "sweep",
+        "round": null,
+        "level": null,
+        "source_case": null,
+        "design": {
+          "volfrac": 0.265513,
+          "rmin_mm": 6.232518
+        },
+        "mass_kg": 0.2147839657852622,
+        "mass_voxel_kg": 0.22111872,
+        "mesh_volume_mm3": 80443.43287837536,
+        "voxel_volume_mm3": 82816.0,
+        "solid_fraction": 0.20704,
+        "compliance_Nmm": 707.9479357086913,
+        "umax_mm": 0.027364489952812737,
+        "vm_max_MPa": 50.37578528539723,
+        "vm_p99_MPa": 42.3959314346316,
+        "vm_p95_MPa": 34.973398208618164,
+        "pcg_iters": 218,
+        "pcg_relres": 9.236059968194214e-09,
+        "converged": true,
+        "elements": 6250,
+        "dof": 22308,
+        "elem_mm": 4.0,
+        "n_fixed_dofs": 288,
+        "device": "cpu/numpy",
+        "dtype": "float64",
+        "backend": "step-structures.stage_solve",
+        "lane": "desktop-cpu",
+        "grade": "preview-grade",
+        "fea_solver": "pcg",
+        "fea_solver_reason": "pcg requested",
+        "generator": {
+          "kind": "simp",
+          "h_mm": 4.0,
+          "elements": 6250,
+          "volfrac_design": 0.265513,
+          "volfrac_box": 0.2077373712,
+          "rmin_mm": 6.232518,
+          "penal": 3.0,
+          "iterations_run": 25,
+          "converged": false,
+          "stopped_at_cap": true,
+          "final_change": 0.04854300578913762,
+          "compliance_Nmm": 793.3313604379446,
+          "solves_unconverged": 0,
+          "mnd_pct": 19.849627410659,
+          "device": "cpu/numpy",
+          "wall_s": 1.4012598991394043
+        },
+        "skin": {
+          "status": "ok",
+          "message": "",
+          "field_h_mm": 2.0,
+          "upsample": 2,
+          "sigma_vox": 1.0,
+          "blend_mm": 5.0,
+          "clip_blend_mm": 2.0,
+          "taubin_iters": 5,
+          "iso": 0.5,
+          "clipped_to_domain": true,
+          "infill": null,
+          "faces": 10968,
+          "vertices": 5486,
+          "watertight": true,
+          "solids": 1,
+          "cavities": 0,
+          "cavity_volume_mm3": 0.0,
+          "islands_removed": 0,
+          "removed_volume_mm3": 0.0,
+          "euler": 2,
+          "genus": 0,
+          "mesh_volume_mm3": 80443.43299806752,
+          "area_mm2": 15398.079406708308,
+          "bbox_mm": [
+            7.611444418924149,
+            3.5646491719301814,
+            -0.022486063923968787,
+            92.38859652480463,
+            96.43534098660048,
+            40.018081732869156
+          ],
+          "wall_s": 0.030389785766601562
+        },
+        "voxel": {
+          "h_mm": 4.0,
+          "cells": 6250,
+          "solid_cells": 1294,
+          "voxel_volume_mm3": 82816.0,
+          "mesh_volume_mm3": 80443.43287837536,
+          "volume_ratio_voxel_over_mesh": 1.0294936085735151,
+          "mask_sha256": "44f6a514f54252c5a8b1a7635592a2778c5b4265f74e185639a7219877b267b0"
+        },
+        "checks": {
+          "load_coverage": {
+            "cup-down": 1.0
+          },
+          "support_coverage": {
+            "foot-1": 1.0,
+            "foot-2": 1.0,
+            "foot-3": 1.0,
+            "foot-4": 1.0,
+            "foot-5": 1.0,
+            "foot-6": 1.0
+          },
+          "load_path_connected": true,
+          "solid_components": 1
+        },
+        "stress": {
+          "measure": "vm_p99",
+          "exclude_mm": 8.0,
+          "exclude_boxes": [
+            [
+              76.0,
+              64.0,
+              0.0,
+              88.0,
+              76.0,
+              8.0
+            ],
+            [
+              44.0,
+              80.0,
+              0.0,
+              56.0,
+              92.0,
+              8.0
+            ],
+            [
+              12.0,
+              64.0,
+              0.0,
+              24.0,
+              76.0,
+              8.0
+            ],
+            [
+              12.0,
+              28.0,
+              0.0,
+              24.0,
+              40.0,
+              8.0
+            ],
+            [
+              44.0,
+              8.0,
+              0.0,
+              56.0,
+              20.0,
+              8.0
+            ],
+            [
+              76.0,
+              28.0,
+              0.0,
+              88.0,
+              40.0,
+              8.0
+            ],
+            [
+              40.0,
+              40.0,
+              32.0,
+              60.0,
+              60.0,
+              40.0
+            ]
+          ],
+          "n_elements": 1136
+        },
+        "wall_s_generate": 1.40132737159729,
+        "wall_s_skin": 0.030744075775146484,
+        "wall_s_voxel": 0.02143073081970215,
+        "wall_s_solve": 0.1694352626800537,
+        "wall_s_post": null,
+        "wall_s_total": 1.8030362129211426
+      },
+      "artifacts": [
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d008/fields.npz",
+          "sha256": "d3701dfddfcfd0df22d9ec3de1e49660dabcdc769f963f21c2aae06d56aa4ffa"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d008/generator/density.npy",
+          "sha256": "413104f30e8b5d14b8d29c793448a728ff205b63056a95be639d84b52e04ee33"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d008/generator/report.json",
+          "sha256": "3ebb049cbfe5a60a334625a556c9c01fedd746c177f56d91fbc3d17119b3b0e9"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d008/generator/slices.png",
+          "sha256": "eedfced0a79aa517132bc045337b63f6406c86563bcc2e090f91e2c810d314fb"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d008/mask.npy",
+          "sha256": "44f6a514f54252c5a8b1a7635592a2778c5b4265f74e185639a7219877b267b0"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d008/mesh.json",
+          "sha256": "3beea1e3aa5ebd92611683cbdf383e428dcc6087c8ff718dbe867ca32beec727"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d008/part.stl",
+          "sha256": "cc09f05fbe82628d5825a2ebe31b53d2e6e24b485c12000b431c2272e668ee19"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d008/skin.json",
+          "sha256": "100e31a08018cec8900bb313adb9a84f638e75156fd409b7c79847114b701432"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d008/solve.json",
+          "sha256": "3a97ab6961ee4a5e46780826186e7dfd6845177afa309066d54c158ecd512b12"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d008/thumb.png",
+          "sha256": "41857a7057c2067c668ee7b287d5fbff552d2a99975bc697e3548aa5cef5e435"
+        }
+      ],
+      "inputs_sha256": {
+        "spec.json": "b6c8bbefb1e9df1305ca900f598903a007b07b387751c93b4f90c30ba936ef94",
+        "spec.effective.json": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+        "domain.step": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+        "case.json": "50e611d4f35d62bddf176cca38a8b6b6faa974768410b9074da4873f01b7a5af",
+        "part.stl": "cc09f05fbe82628d5825a2ebe31b53d2e6e24b485c12000b431c2272e668ee19"
+      },
+      "stages": [
+        {
+          "stage": "generate",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:17.469+00:00",
+          "finished_utc": "2026-10-10T10:22:18.870+00:00",
+          "wall_s": 1.40132737159729,
+          "device": "cpu"
+        },
+        {
+          "stage": "skin",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:18.870+00:00",
+          "finished_utc": "2026-10-10T10:22:18.901+00:00",
+          "wall_s": 0.030744075775146484,
+          "device": "cpu"
+        },
+        {
+          "stage": "voxel",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:18.902+00:00",
+          "finished_utc": "2026-10-10T10:22:18.923+00:00",
+          "wall_s": 0.02143073081970215,
+          "device": "cpu"
+        },
+        {
+          "stage": "solve",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:18.923+00:00",
+          "finished_utc": "2026-10-10T10:22:19.093+00:00",
+          "wall_s": 0.1694352626800537,
+          "device": "cpu"
+        },
+        {
+          "stage": "thumb",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:19.093+00:00",
+          "finished_utc": "2026-10-10T10:22:19.272+00:00",
+          "wall_s": 0.17815208435058594,
+          "device": "cpu"
+        }
+      ],
+      "mlflow_run_id": null,
+      "evidence_sha256": "d5ed52b1af8935f6687f88dcfd93ee3cdf87a37a012ca4d03fc04578fbd430af",
+      "error": null
+    },
+    {
+      "case_id": "d009",
+      "parameters": {
+        "role": "sweep",
+        "volfrac": 0.312479,
+        "rmin_mm": 8.814415,
+        "h_gen_mm": 4.0,
+        "h_fea_mm": 4.0,
+        "device": "cpu",
+        "backend": "adapter",
+        "source_case": null,
+        "reuse_mask": false,
+        "round": null,
+        "level": null,
+        "seed": 7,
+        "fea_solver": "pcg"
+      },
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T10:22:17.917000+00:00",
+      "finished_utc": "2026-10-10T10:22:19.681000+00:00",
+      "wall_s": 1.764,
+      "results": {
+        "schema": "aces-golden-case/1",
+        "case_id": "d009",
+        "role": "sweep",
+        "round": null,
+        "level": null,
+        "source_case": null,
+        "design": {
+          "volfrac": 0.312479,
+          "rmin_mm": 8.814415
+        },
+        "mass_kg": 0.2577047887589702,
+        "mass_voxel_kg": 0.25905407999999996,
+        "mesh_volume_mm3": 96518.64747526974,
+        "voxel_volume_mm3": 97024.0,
+        "solid_fraction": 0.24256,
+        "compliance_Nmm": 653.5375084478961,
+        "umax_mm": 0.02547660226106646,
+        "vm_max_MPa": 45.957249886257756,
+        "vm_p99_MPa": 39.35591793060303,
+        "vm_p95_MPa": 32.281982994079584,
+        "pcg_iters": 208,
+        "pcg_relres": 9.599823312817673e-09,
+        "converged": true,
+        "elements": 6250,
+        "dof": 22308,
+        "elem_mm": 4.0,
+        "n_fixed_dofs": 288,
+        "device": "cpu/numpy",
+        "dtype": "float64",
+        "backend": "step-structures.stage_solve",
+        "lane": "desktop-cpu",
+        "grade": "preview-grade",
+        "fea_solver": "pcg",
+        "fea_solver_reason": "pcg requested",
+        "generator": {
+          "kind": "simp",
+          "h_mm": 4.0,
+          "elements": 6250,
+          "volfrac_design": 0.312479,
+          "volfrac_box": 0.2444835696,
+          "rmin_mm": 8.814415,
+          "penal": 3.0,
+          "iterations_run": 25,
+          "converged": false,
+          "stopped_at_cap": true,
+          "final_change": 0.05563310377567526,
+          "compliance_Nmm": 729.4391865827682,
+          "solves_unconverged": 0,
+          "mnd_pct": 26.51043180825839,
+          "device": "cpu/numpy",
+          "wall_s": 1.3695948123931885
+        },
+        "skin": {
+          "status": "ok",
+          "message": "",
+          "field_h_mm": 2.0,
+          "upsample": 2,
+          "sigma_vox": 1.0,
+          "blend_mm": 5.0,
+          "clip_blend_mm": 2.0,
+          "taubin_iters": 5,
+          "iso": 0.5,
+          "clipped_to_domain": true,
+          "infill": null,
+          "faces": 11100,
+          "vertices": 5552,
+          "watertight": true,
+          "solids": 1,
+          "cavities": 0,
+          "cavity_volume_mm3": 0.0,
+          "islands_removed": 0,
+          "removed_volume_mm3": 0.0,
+          "euler": 2,
+          "genus": 0,
+          "mesh_volume_mm3": 96518.64719479428,
+          "area_mm2": 15546.67407422982,
+          "bbox_mm": [
+            7.978402464669982,
+            3.831130840988017,
+            -0.023417487594918743,
+            92.01907886400738,
+            96.17194149992451,
+            40.017773151617114
+          ],
+          "wall_s": 0.03088855743408203
+        },
+        "voxel": {
+          "h_mm": 4.0,
+          "cells": 6250,
+          "solid_cells": 1516,
+          "voxel_volume_mm3": 97024.0,
+          "mesh_volume_mm3": 96518.64747526974,
+          "volume_ratio_voxel_over_mesh": 1.0052358019714247,
+          "mask_sha256": "41d0521ea2fb1fce5f81d28f51ee5ba10522830f977dcf9af5a78ca2629bdece"
+        },
+        "checks": {
+          "load_coverage": {
+            "cup-down": 1.0
+          },
+          "support_coverage": {
+            "foot-1": 1.0,
+            "foot-2": 1.0,
+            "foot-3": 1.0,
+            "foot-4": 1.0,
+            "foot-5": 1.0,
+            "foot-6": 1.0
+          },
+          "load_path_connected": true,
+          "solid_components": 1
+        },
+        "stress": {
+          "measure": "vm_p99",
+          "exclude_mm": 8.0,
+          "exclude_boxes": [
+            [
+              76.0,
+              64.0,
+              0.0,
+              88.0,
+              76.0,
+              8.0
+            ],
+            [
+              44.0,
+              80.0,
+              0.0,
+              56.0,
+              92.0,
+              8.0
+            ],
+            [
+              12.0,
+              64.0,
+              0.0,
+              24.0,
+              76.0,
+              8.0
+            ],
+            [
+              12.0,
+              28.0,
+              0.0,
+              24.0,
+              40.0,
+              8.0
+            ],
+            [
+              44.0,
+              8.0,
+              0.0,
+              56.0,
+              20.0,
+              8.0
+            ],
+            [
+              76.0,
+              28.0,
+              0.0,
+              88.0,
+              40.0,
+              8.0
+            ],
+            [
+              40.0,
+              40.0,
+              32.0,
+              60.0,
+              60.0,
+              40.0
+            ]
+          ],
+          "n_elements": 1358
+        },
+        "wall_s_generate": 1.3696672916412354,
+        "wall_s_skin": 0.031273603439331055,
+        "wall_s_voxel": 0.020390987396240234,
+        "wall_s_solve": 0.15984797477722168,
+        "wall_s_post": null,
+        "wall_s_total": 1.7643635272979736
+      },
+      "artifacts": [
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d009/fields.npz",
+          "sha256": "03b45c51819172466744e27071d99c55c383fd3089713db8784227e445523b93"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d009/generator/density.npy",
+          "sha256": "8776698881a8b286ff68807df033e386fb4af97a1ce997b6dc0f7595d49bf71e"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d009/generator/report.json",
+          "sha256": "1988881808d462229f6c680aef264a731de1238a4d60f7a96c9e855ac73d02ee"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d009/generator/slices.png",
+          "sha256": "70b0ce22ce42eca60b0fb307d0eb589ec553644ffcbf1628fd946d957b88293d"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d009/mask.npy",
+          "sha256": "41d0521ea2fb1fce5f81d28f51ee5ba10522830f977dcf9af5a78ca2629bdece"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d009/mesh.json",
+          "sha256": "ee8039af12e23b7e5617c98b7fb8a8a4bfe2b7685d73ff434e91d32beb0827df"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d009/part.stl",
+          "sha256": "ea78e0095fc6a072a1719e419f1ad5e93b374588fdd416fafb2349a6f2261f40"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d009/skin.json",
+          "sha256": "695860e1ea6a58332af515c4a66578eafecaacf8f842b9632d9fa8ecde0a456c"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d009/solve.json",
+          "sha256": "b8b856d287d465b9d6cbe00cda7dc750d65ba5fcb02e5167f90e4aac3e19a296"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/d009/thumb.png",
+          "sha256": "b481bb5c8f311b6b028b568cf3d7a7f572a0f181724ccca8ce1a9bc24464c66a"
+        }
+      ],
+      "inputs_sha256": {
+        "spec.json": "b6c8bbefb1e9df1305ca900f598903a007b07b387751c93b4f90c30ba936ef94",
+        "spec.effective.json": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+        "domain.step": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+        "case.json": "110c945a420e2a3015133510ce7d885d98e2563460bb8c57f813e8d142716033",
+        "part.stl": "ea78e0095fc6a072a1719e419f1ad5e93b374588fdd416fafb2349a6f2261f40"
+      },
+      "stages": [
+        {
+          "stage": "generate",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:17.917+00:00",
+          "finished_utc": "2026-10-10T10:22:19.286+00:00",
+          "wall_s": 1.3696672916412354,
+          "device": "cpu"
+        },
+        {
+          "stage": "skin",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:19.286+00:00",
+          "finished_utc": "2026-10-10T10:22:19.318+00:00",
+          "wall_s": 0.031273603439331055,
+          "device": "cpu"
+        },
+        {
+          "stage": "voxel",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:19.318+00:00",
+          "finished_utc": "2026-10-10T10:22:19.339+00:00",
+          "wall_s": 0.020390987396240234,
+          "device": "cpu"
+        },
+        {
+          "stage": "solve",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:19.339+00:00",
+          "finished_utc": "2026-10-10T10:22:19.499+00:00",
+          "wall_s": 0.15984797477722168,
+          "device": "cpu"
+        },
+        {
+          "stage": "thumb",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:19.499+00:00",
+          "finished_utc": "2026-10-10T10:22:19.681+00:00",
+          "wall_s": 0.18125677108764648,
+          "device": "cpu"
+        }
+      ],
+      "mlflow_run_id": null,
+      "evidence_sha256": "61af7c91879a78bce25b5ac236743ef4951380dd7483280cfd58d4c7ffb07200",
+      "error": null
+    },
+    {
+      "case_id": "v001",
+      "parameters": {
+        "role": "verify",
+        "volfrac": 0.23,
+        "rmin_mm": 11.55,
+        "h_gen_mm": 4.0,
+        "h_fea_mm": 4.0,
+        "device": "cpu",
+        "backend": "adapter",
+        "source_case": null,
+        "reuse_mask": false,
+        "round": 1,
+        "level": null,
+        "seed": 7,
+        "fea_solver": "pcg"
+      },
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T10:22:20.801000+00:00",
+      "finished_utc": "2026-10-10T10:22:22.824000+00:00",
+      "wall_s": 2.023,
+      "results": {
+        "schema": "aces-golden-case/1",
+        "case_id": "v001",
+        "role": "verify",
+        "round": 1,
+        "level": null,
+        "source_case": null,
+        "design": {
+          "volfrac": 0.23,
+          "rmin_mm": 11.55
+        },
+        "mass_kg": 0.17698581438899466,
+        "mass_voxel_kg": 0.18215808,
+        "mesh_volume_mm3": 66286.82186853733,
+        "voxel_volume_mm3": 68224.0,
+        "solid_fraction": 0.17056,
+        "compliance_Nmm": 828.0079936559462,
+        "umax_mm": 0.031198331261040144,
+        "vm_max_MPa": 64.49043111436654,
+        "vm_p99_MPa": 54.47464675903315,
+        "vm_p95_MPa": 40.70475196838378,
+        "pcg_iters": 221,
+        "pcg_relres": 9.903717352953755e-09,
+        "converged": true,
+        "elements": 6250,
+        "dof": 22308,
+        "elem_mm": 4.0,
+        "n_fixed_dofs": 288,
+        "device": "cpu/numpy",
+        "dtype": "float64",
+        "backend": "step-structures.stage_solve",
+        "lane": "desktop-cpu",
+        "grade": "preview-grade",
+        "fea_solver": "pcg",
+        "fea_solver_reason": "pcg requested",
+        "generator": {
+          "kind": "simp",
+          "h_mm": 4.0,
+          "elements": 6250,
+          "volfrac_design": 0.23,
+          "volfrac_box": 0.179952,
+          "rmin_mm": 11.55,
+          "penal": 3.0,
+          "iterations_run": 25,
+          "converged": false,
+          "stopped_at_cap": true,
+          "final_change": 0.04440126290131008,
+          "compliance_Nmm": 1428.905721073511,
+          "solves_unconverged": 0,
+          "mnd_pct": 32.92917107190775,
+          "device": "cpu/numpy",
+          "wall_s": 1.5549190044403076
+        },
+        "skin": {
+          "status": "ok",
+          "message": "",
+          "field_h_mm": 2.0,
+          "upsample": 2,
+          "sigma_vox": 1.0,
+          "blend_mm": 5.0,
+          "clip_blend_mm": 2.0,
+          "taubin_iters": 5,
+          "iso": 0.5,
+          "clipped_to_domain": true,
+          "infill": null,
+          "faces": 10380,
+          "vertices": 5192,
+          "watertight": true,
+          "solids": 1,
+          "cavities": 0,
+          "cavity_volume_mm3": 0.0,
+          "islands_removed": 0,
+          "removed_volume_mm3": 0.0,
+          "euler": 2,
+          "genus": 0,
+          "mesh_volume_mm3": 66286.82158001249,
+          "area_mm2": 14313.520679263096,
+          "bbox_mm": [
+            8.657236173387039,
+            4.323824442256578,
+            -0.021370211137457407,
+            91.34980264393772,
+            95.67213957989452,
+            40.027080115294865
+          ],
+          "wall_s": 0.02968764305114746
+        },
+        "voxel": {
+          "h_mm": 4.0,
+          "cells": 6250,
+          "solid_cells": 1066,
+          "voxel_volume_mm3": 68224.0,
+          "mesh_volume_mm3": 66286.82186853733,
+          "volume_ratio_voxel_over_mesh": 1.029224181773333,
+          "mask_sha256": "80d2a668dfeb70f15908b48efe1ac36fdf5dca41c4b476baf9d4fa8de9827934"
+        },
+        "checks": {
+          "load_coverage": {
+            "cup-down": 1.0
+          },
+          "support_coverage": {
+            "foot-1": 1.0,
+            "foot-2": 1.0,
+            "foot-3": 1.0,
+            "foot-4": 1.0,
+            "foot-5": 1.0,
+            "foot-6": 1.0
+          },
+          "load_path_connected": true,
+          "solid_components": 1
+        },
+        "stress": {
+          "measure": "vm_p99",
+          "exclude_mm": 8.0,
+          "exclude_boxes": [
+            [
+              76.0,
+              64.0,
+              0.0,
+              88.0,
+              76.0,
+              8.0
+            ],
+            [
+              44.0,
+              80.0,
+              0.0,
+              56.0,
+              92.0,
+              8.0
+            ],
+            [
+              12.0,
+              64.0,
+              0.0,
+              24.0,
+              76.0,
+              8.0
+            ],
+            [
+              12.0,
+              28.0,
+              0.0,
+              24.0,
+              40.0,
+              8.0
+            ],
+            [
+              44.0,
+              8.0,
+              0.0,
+              56.0,
+              20.0,
+              8.0
+            ],
+            [
+              76.0,
+              28.0,
+              0.0,
+              88.0,
+              40.0,
+              8.0
+            ],
+            [
+              40.0,
+              40.0,
+              32.0,
+              60.0,
+              60.0,
+              40.0
+            ]
+          ],
+          "n_elements": 908
+        },
+        "wall_s_generate": 1.5549890995025635,
+        "wall_s_skin": 0.030045509338378906,
+        "wall_s_voxel": 0.020522117614746094,
+        "wall_s_solve": 0.1657247543334961,
+        "wall_s_post": 0.24934124946594238,
+        "wall_s_total": 2.022434711456299
+      },
+      "artifacts": [
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/v001/case.md",
+          "sha256": "6cdf53b0dcab93c6eea6e4c5ae74f467bfeb1a611cfb1220c27265e80d3d98a7"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/v001/disp_slices.png",
+          "sha256": "5a04199a55fb9b17019aa5b7df796a15f5161b4c00b4fe53c8272a07b9aa83ce"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/v001/fields.npz",
+          "sha256": "aa2ff7c9e18a9f819370c08190056bdab0034888d1432126e02ea922b1432c1f"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/v001/fields.vtk",
+          "sha256": "08e8ad6569562873010369dd41cec4b6fd92c2e98d4893924431ec8f6bdcf227"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/v001/generator/density.npy",
+          "sha256": "8ea1b85e37ffec4198065ac64ba09b76f88c4ab9c668b02ca51096f5e1efab6d"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/v001/generator/report.json",
+          "sha256": "fd1f46c7b9d8134e1011c6c5e1af687c7ea428660996b92e5f698e4c676e9b50"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/v001/generator/slices.png",
+          "sha256": "00e57e935d2af41bdb304afef0e1f80e3056f73def33c63ef374d88871f84313"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/v001/mask.npy",
+          "sha256": "80d2a668dfeb70f15908b48efe1ac36fdf5dca41c4b476baf9d4fa8de9827934"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/v001/mesh.json",
+          "sha256": "5c7127b5c231d989f34aa35ac14ddb0383425ec2d16bb25afd701576485d388e"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/v001/part.stl",
+          "sha256": "de0f92f004ebe1675b4fa796d6707e0c00ca7afc339cd06af6d50dd7de3849ab"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/v001/skin.json",
+          "sha256": "3e038742b176a11d753ed5df1f7dba4294822838a42ed69ba2d2da3498fa8519"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/v001/solve.json",
+          "sha256": "a4f58946e6b021392705f879934e1daf3977dc05587cc048b3c126bf4943f75a"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/v001/vm_slices.png",
+          "sha256": "8ee545373a66fd02b9f2e0cba262b21a8a31bbd9abfbcb9698b8606752bf5ed2"
+        }
+      ],
+      "inputs_sha256": {
+        "spec.json": "b6c8bbefb1e9df1305ca900f598903a007b07b387751c93b4f90c30ba936ef94",
+        "spec.effective.json": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+        "domain.step": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+        "case.json": "41ba67824c6bb3f8820d13bd570e347e8c4cc531cdfc7d34c18b4dd5fc111151",
+        "part.stl": "de0f92f004ebe1675b4fa796d6707e0c00ca7afc339cd06af6d50dd7de3849ab"
+      },
+      "stages": [
+        {
+          "stage": "generate",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:20.802+00:00",
+          "finished_utc": "2026-10-10T10:22:22.357+00:00",
+          "wall_s": 1.5549890995025635,
+          "device": "cpu"
+        },
+        {
+          "stage": "skin",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:22.357+00:00",
+          "finished_utc": "2026-10-10T10:22:22.387+00:00",
+          "wall_s": 0.030045509338378906,
+          "device": "cpu"
+        },
+        {
+          "stage": "voxel",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:22.388+00:00",
+          "finished_utc": "2026-10-10T10:22:22.408+00:00",
+          "wall_s": 0.020522117614746094,
+          "device": "cpu"
+        },
+        {
+          "stage": "solve",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:22.408+00:00",
+          "finished_utc": "2026-10-10T10:22:22.574+00:00",
+          "wall_s": 0.1657247543334961,
+          "device": "cpu"
+        },
+        {
+          "stage": "post",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:22.574+00:00",
+          "finished_utc": "2026-10-10T10:22:22.824+00:00",
+          "wall_s": 0.24934124946594238,
+          "device": "cpu"
+        }
+      ],
+      "mlflow_run_id": null,
+      "evidence_sha256": "7d36076fe26580e393c0dd0e37e94be6aede5b88c268548e3ea22e70ac315fc9",
+      "error": null
+    },
+    {
+      "case_id": "m001",
+      "parameters": {
+        "role": "conforming",
+        "source_case": "v001",
+        "level": 1,
+        "h_mm": 2.0,
+        "device": "cpu",
+        "host": "desktop",
+        "lane": null,
+        "threads": 4,
+        "max_dof": 1500000,
+        "timeout_s": 900.0,
+        "seed": 7
+      },
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T10:22:22.829000+00:00",
+      "finished_utc": "2026-10-10T10:22:49.974000+00:00",
+      "wall_s": 27.145,
+      "results": {
+        "schema": "aces-golden-conforming-case/1",
+        "case_id": "m001",
+        "role": "conforming",
+        "source_case": "v001",
+        "h_mm": 2.0,
+        "status": "ok",
+        "mass_kg": 0.1769858143889947,
+        "mesh_volume_mm3": 66286.82186853734,
+        "compliance_Nmm": 844.9543317078405,
+        "umax_mm": 0.031756483004286275,
+        "vm_max_MPa": 144.52246998675278,
+        "vm_p99_MPa": 53.63380623106495,
+        "vm_p95_MPa": 41.16215030966936,
+        "vm_max_ip_MPa": 212.50385584118138,
+        "elements": 38618,
+        "nodes": 62337,
+        "dof": 187011,
+        "element": "C3D10",
+        "mesher": "gmsh 4.15.2",
+        "mesh_route": "discrete",
+        "solver": "CalculiX ccx 2.23",
+        "linear_solver": "Factoring the system of equations using the symmetric spooles solver",
+        "ccx_sha256": "31be21fc2f0902bd9a05acc2651dbac6dc2a2573dabbf235e39a38cb6f458862",
+        "threads": 4,
+        "lane": "desktop-cpu",
+        "host": "desktop",
+        "grade": "preview-grade",
+        "wall_s_mesh": 4.982531309127808,
+        "wall_s_solve": 19.940021514892578,
+        "wall_s_post": 2.043644905090332,
+        "wall_s_total": 27.14492440223694,
+        "record": "conforming.json"
+      },
+      "artifacts": [
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/m001/ccx.cvg",
+          "sha256": "65086dedb4572132b815ace04b294909c7f6f337111f9704fc310b02320f67f7"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/m001/ccx.dat.gz",
+          "sha256": "9beef68def8545640fa4c8c7aafa6817150e61d62534e424ac63942b7a273f2e"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/m001/ccx.inp.gz",
+          "sha256": "ca35cae20b2ec88aaae6039e9572e2ea1ecc0ad953b90ab0553b752ee871ec0f"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/m001/ccx.log",
+          "sha256": "c335ae6076e3f9173cd12546b82df0ff5e72d52d41cde7e385d487965b5e3b1d"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/m001/ccx.sta",
+          "sha256": "01e324ec0ea28f4d1fd7f5e2da1277af53812b873e218be1604c17a4c8e4990d"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/m001/conforming.json",
+          "sha256": "9b193a9a167c344a35681c9f13ffdb20e85bb9ac2155f0750ff55502f5789170"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/m001/mesh.log",
+          "sha256": "d97c896699ee9ad4b831a2bb0aefa3604d7604faf7ba60ede1e398e0eb9216a8"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/m001/mesh.npz",
+          "sha256": "0d40bef4eb18b001fbb4043190227655192be0a2553f132c222b5b99dfc76e17"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/m001/tetmesh.json",
+          "sha256": "23c52aa7c4cba49253ea09aef9e7290b318dcf674b64dfd91cdd53645137924f"
+        }
+      ],
+      "inputs_sha256": {
+        "spec.json": "b6c8bbefb1e9df1305ca900f598903a007b07b387751c93b4f90c30ba936ef94",
+        "spec.effective.json": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+        "domain.step": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+        "case.json": "d4ad0c9468fab24ccf137ed447a33c0056c20fbe0e7db76b23edee25db20ee6d",
+        "part.stl": "de0f92f004ebe1675b4fa796d6707e0c00ca7afc339cd06af6d50dd7de3849ab"
+      },
+      "stages": [],
+      "mlflow_run_id": null,
+      "evidence_sha256": "a9812775ae8aa9113a4f320a5c5c20cc59570a7ffe600ae78a21c9166fd3e20f",
+      "error": null
+    },
+    {
+      "case_id": "x001",
+      "parameters": {
+        "role": "check",
+        "h_gen_mm": null,
+        "h_fea_mm": 2.0,
+        "device": "cpu",
+        "backend": "adapter",
+        "source_case": "v001",
+        "reuse_mask": false,
+        "round": null,
+        "level": 1,
+        "seed": 7,
+        "host": "desktop",
+        "fea_solver": "auto"
+      },
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T10:22:49.984000+00:00",
+      "finished_utc": "2026-10-10T10:22:56.215000+00:00",
+      "wall_s": 6.231,
+      "results": {
+        "schema": "aces-golden-case/1",
+        "case_id": "x001",
+        "role": "check",
+        "round": null,
+        "level": 1,
+        "source_case": "v001",
+        "design": null,
+        "mass_kg": 0.17698581438899466,
+        "mass_voxel_kg": 0.17929583999999998,
+        "mesh_volume_mm3": 66286.82186853733,
+        "voxel_volume_mm3": 67152.0,
+        "solid_fraction": 0.16788,
+        "compliance_Nmm": 864.8460520128981,
+        "umax_mm": 0.03248296743203556,
+        "vm_max_MPa": 105.3919182769137,
+        "vm_p99_MPa": 56.87937175750742,
+        "vm_p95_MPa": 40.97390766143798,
+        "pcg_iters": 443,
+        "pcg_relres": 9.79135156480709e-09,
+        "converged": true,
+        "elements": 50000,
+        "dof": 163863,
+        "elem_mm": 2.0,
+        "n_fixed_dofs": 882,
+        "device": "cpu/numpy",
+        "dtype": "float64",
+        "backend": "step-structures.stage_solve",
+        "lane": "desktop-cpu",
+        "grade": "preview-grade",
+        "fea_solver": "pcg",
+        "fea_solver_reason": "auto: Jacobi-PCG (50,000 cells < 200,000)",
+        "generator": null,
+        "skin": null,
+        "voxel": {
+          "h_mm": 2.0,
+          "cells": 50000,
+          "solid_cells": 8394,
+          "voxel_volume_mm3": 67152.0,
+          "mesh_volume_mm3": 66286.82186853733,
+          "volume_ratio_voxel_over_mesh": 1.0130520382041928,
+          "mask_sha256": "85a14d58f387eeb092bcd139d6e9b823f4be9dc8889ce9763644393747fe8cc5"
+        },
+        "checks": {
+          "load_coverage": {
+            "cup-down": 1.0
+          },
+          "support_coverage": {
+            "foot-1": 1.0,
+            "foot-2": 1.0,
+            "foot-3": 1.0,
+            "foot-4": 1.0,
+            "foot-5": 1.0,
+            "foot-6": 1.0
+          },
+          "load_path_connected": true,
+          "solid_components": 1
+        },
+        "stress": {
+          "measure": "vm_p99",
+          "exclude_mm": 8.0,
+          "exclude_boxes": [
+            [
+              76.0,
+              64.0,
+              0.0,
+              88.0,
+              76.0,
+              8.0
+            ],
+            [
+              44.0,
+              80.0,
+              0.0,
+              56.0,
+              92.0,
+              8.0
+            ],
+            [
+              12.0,
+              64.0,
+              0.0,
+              24.0,
+              76.0,
+              8.0
+            ],
+            [
+              12.0,
+              28.0,
+              0.0,
+              24.0,
+              40.0,
+              8.0
+            ],
+            [
+              44.0,
+              8.0,
+              0.0,
+              56.0,
+              20.0,
+              8.0
+            ],
+            [
+              76.0,
+              28.0,
+              0.0,
+              88.0,
+              40.0,
+              8.0
+            ],
+            [
+              40.0,
+              40.0,
+              32.0,
+              60.0,
+              60.0,
+              40.0
+            ]
+          ],
+          "n_elements": 7158
+        },
+        "wall_s_generate": null,
+        "wall_s_skin": null,
+        "wall_s_voxel": 0.04844069480895996,
+        "wall_s_solve": 5.941673755645752,
+        "wall_s_post": 0.2386157512664795,
+        "wall_s_total": 6.230319976806641
+      },
+      "artifacts": [
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/x001/case.md",
+          "sha256": "b5f857998db91cb120355c0756733256add82f5afed644c0537b6a463d0eb9f2"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/x001/disp_slices.png",
+          "sha256": "5b05b77435fa38c1842227a84de83bcf2cf802ce457d177691c80d9aac03827b"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/x001/fields.npz",
+          "sha256": "d2dcfd4806ff569eaa446cbb9d2192d38a1f2eb76ac8c1b0544ffd2c701ef510"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/x001/fields.vtk",
+          "sha256": "0d661cce9fcdfdecef47af4809c6c3c9a4b356ddc258d66768acafc25e38fced"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/x001/mask.npy",
+          "sha256": "85a14d58f387eeb092bcd139d6e9b823f4be9dc8889ce9763644393747fe8cc5"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/x001/mesh.json",
+          "sha256": "86b34a8d06e52f7317eb3b020244d93f512783d80406fbd1ae8dd6ac893b5044"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/x001/solve.json",
+          "sha256": "6c2de8c0f1b141954b83b6707b108ed629a1c45c2f6358ca750d42b30d42db57"
+        },
+        {
+          "path": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391/x001/vm_slices.png",
+          "sha256": "d9bf9814948a7587c2c53afbd4758ba7605a0566a0d93208853b003ec2053e20"
+        }
+      ],
+      "inputs_sha256": {
+        "spec.json": "b6c8bbefb1e9df1305ca900f598903a007b07b387751c93b4f90c30ba936ef94",
+        "spec.effective.json": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+        "domain.step": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+        "case.json": "581e266632e65cdb6a51d41aa231b81751b39f992526e32b98af4a906f580258",
+        "part.stl": "de0f92f004ebe1675b4fa796d6707e0c00ca7afc339cd06af6d50dd7de3849ab"
+      },
+      "stages": [
+        {
+          "stage": "voxel",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:49.984+00:00",
+          "finished_utc": "2026-10-10T10:22:50.033+00:00",
+          "wall_s": 0.04844069480895996,
+          "device": "cpu"
+        },
+        {
+          "stage": "solve",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:50.033+00:00",
+          "finished_utc": "2026-10-10T10:22:55.975+00:00",
+          "wall_s": 5.941673755645752,
+          "device": "cpu"
+        },
+        {
+          "stage": "post",
+          "status": "FINISHED",
+          "started_utc": "2026-10-10T10:22:55.976+00:00",
+          "finished_utc": "2026-10-10T10:22:56.214+00:00",
+          "wall_s": 0.2386157512664795,
+          "device": "cpu"
+        }
+      ],
+      "mlflow_run_id": null,
+      "evidence_sha256": "49da181d5442d3bbbbd6da1e7839c228a62f009bdd8486000301a18656ed587a",
+      "error": null
+    }
+  ],
+  "summary": [
+    {
+      "case_id": "d000",
+      "volfrac": 0.18807,
+      "rmin_mm": 9.568144,
+      "mass_kg": 0.1390104949130709,
+      "vm_p99_MPa": 63.07597625732422,
+      "umax_mm": 0.03949597969109304,
+      "compliance_Nmm": 1061.9741222296054,
+      "vm_max_MPa": 74.6639825493752
+    },
+    {
+      "case_id": "d001",
+      "volfrac": 0.236767,
+      "rmin_mm": 10.654526,
+      "mass_kg": 0.18458650508360216,
+      "vm_p99_MPa": 51.56760787963858,
+      "umax_mm": 0.030312620300250486,
+      "compliance_Nmm": 800.5808178548717,
+      "vm_max_MPa": 60.51854151090643
+    },
+    {
+      "case_id": "d002",
+      "volfrac": 0.343311,
+      "rmin_mm": 7.278705,
+      "mass_kg": 0.28398063056729483,
+      "vm_p99_MPa": 38.99544914245605,
+      "umax_mm": 0.024385252890536235,
+      "compliance_Nmm": 620.9766472164354,
+      "vm_max_MPa": 41.77760935581193
+    },
+    {
+      "case_id": "d003",
+      "volfrac": 0.365216,
+      "rmin_mm": 10.098503,
+      "mass_kg": 0.3043088983350911,
+      "vm_p99_MPa": 38.26887306213383,
+      "umax_mm": 0.02408612451044269,
+      "compliance_Nmm": 612.7274007561978,
+      "vm_max_MPa": 41.03264728813841
+    },
+    {
+      "case_id": "d004",
+      "volfrac": 0.153482,
+      "rmin_mm": 6.688165,
+      "mass_kg": 0.11282886762689724,
+      "vm_p99_MPa": 79.45272384643555,
+      "umax_mm": 0.0509200721606507,
+      "compliance_Nmm": 1365.39638083824,
+      "vm_max_MPa": 83.38282726320496
+    },
+    {
+      "case_id": "d005",
+      "volfrac": 0.227793,
+      "rmin_mm": 7.857916,
+      "mass_kg": 0.17952260209990445,
+      "vm_p99_MPa": 53.09709568023681,
+      "umax_mm": 0.0313004833106861,
+      "compliance_Nmm": 825.0726888577077,
+      "vm_max_MPa": 57.786927646596624
+    },
+    {
+      "case_id": "d006",
+      "volfrac": 0.160054,
+      "rmin_mm": 10.961384,
+      "mass_kg": null,
+      "vm_p99_MPa": null,
+      "umax_mm": null,
+      "compliance_Nmm": null,
+      "vm_max_MPa": null
+    },
+    {
+      "case_id": "d007",
+      "volfrac": 0.291534,
+      "rmin_mm": 11.632002,
+      "mass_kg": 0.2416999232783147,
+      "vm_p99_MPa": 40.65169860839844,
+      "umax_mm": 0.026439725487716004,
+      "compliance_Nmm": 684.2886413774618,
+      "vm_max_MPa": 49.685382730872576
+    },
+    {
+      "case_id": "d008",
+      "volfrac": 0.265513,
+      "rmin_mm": 6.232518,
+      "mass_kg": 0.2147839657852622,
+      "vm_p99_MPa": 42.3959314346316,
+      "umax_mm": 0.027364489952812737,
+      "compliance_Nmm": 707.9479357086913,
+      "vm_max_MPa": 50.37578528539723
+    },
+    {
+      "case_id": "d009",
+      "volfrac": 0.312479,
+      "rmin_mm": 8.814415,
+      "mass_kg": 0.2577047887589702,
+      "vm_p99_MPa": 39.35591793060303,
+      "umax_mm": 0.02547660226106646,
+      "compliance_Nmm": 653.5375084478961,
+      "vm_max_MPa": 45.957249886257756
+    },
+    {
+      "case_id": "v001",
+      "volfrac": 0.23,
+      "rmin_mm": 11.55,
+      "mass_kg": 0.17698581438899466,
+      "vm_p99_MPa": 54.47464675903315,
+      "umax_mm": 0.031198331261040144,
+      "compliance_Nmm": 828.0079936559462,
+      "vm_max_MPa": 64.49043111436654
+    },
+    {
+      "case_id": "m001",
+      "volfrac": null,
+      "rmin_mm": null,
+      "mass_kg": 0.1769858143889947,
+      "vm_p99_MPa": 53.63380623106495,
+      "umax_mm": 0.031756483004286275,
+      "compliance_Nmm": 844.9543317078405,
+      "vm_max_MPa": 144.52246998675278
+    },
+    {
+      "case_id": "x001",
+      "volfrac": null,
+      "rmin_mm": null,
+      "mass_kg": 0.17698581438899466,
+      "vm_p99_MPa": 56.87937175750742,
+      "umax_mm": 0.03248296743203556,
+      "compliance_Nmm": 864.8460520128981,
+      "vm_max_MPa": 105.3919182769137
+    }
+  ],
+  "note": "PASS \u00b7 verified-desktop \u00b7 root-mount: volfrac 0.23 rmin_mm 11.55 \u00b7 mass 0.177 kg \u00b7 vm_p99_MPa 54.47 <= 60 \u00b7 umax_mm 0.0312 <= 0.035 \u00b7 predicted within 10 % (max 1.527 % on vm_p99_MPa) \u00b7 check 2 mm: max gap +4.414 % on vm_p99_MPa, constraints met \u00b7 conforming tet10 2 mm (ccx 2.23, desktop): max gap -5.706 % on vm_p99_MPa, constraints met \u00b7 stages 48.37 s",
+  "golden": {
+    "schema": "aces-golden-bundle/1",
+    "run_id": "20261010T102210Z-bc7391",
+    "project": "cad-gold",
+    "run_dir": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391",
+    "tool": {
+      "name": "aces-golden",
+      "version": "0.2.0",
+      "argv": [
+        "run",
+        "--spec",
+        "/tmp/rm.json",
+        "--step",
+        "/home/aces/Work/cad-vm/cad/local/20261010T102209Z-disc/part.step",
+        "--project",
+        "cad-gold",
+        "--new",
+        "--json",
+        "--progress",
+        "lines"
+      ]
+    },
+    "seed": 7,
+    "inputs": {
+      "spec": {
+        "path": "inputs/spec.json",
+        "sha256": "b6c8bbefb1e9df1305ca900f598903a007b07b387751c93b4f90c30ba936ef94"
+      },
+      "spec_effective_sha256": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+      "domain": {
+        "source": "step",
+        "ref": "/home/aces/Work/cad-vm/cad/local/20261010T102209Z-disc/part.step",
+        "step": "inputs/domain.step",
+        "step_sha256": "2a88ca85e746264aebf988afe530eb582b94402215d4ca64712a9719e5f77e92",
+        "mask_sha256": "b4689f1bfef6263a63956bfd2247db3c7ea7dbce0a668c8f99a0d3751bd20434"
+      }
+    },
+    "resolution": {
+      "gen_mm": 4.0,
+      "fea_mm": 4.0,
+      "field_h_mm": 2.0,
+      "check_factor": 0.5,
+      "check_levels": [
+        {
+          "level": 1,
+          "h_mm": 2.0,
+          "gpu_only": false
+        }
+      ],
+      "stress_exclude_mm": 6.0
+    },
+    "sweep": {
+      "n": 10,
+      "n_ok": 9,
+      "sampler": {
+        "kind": "lhs",
+        "optimization": "random-cd",
+        "seed": 7,
+        "n": 10
+      },
+      "variables": {
+        "volfrac": [
+          0.13,
+          0.38
+        ],
+        "rmin_mm": [
+          6.0,
+          12.0
+        ]
+      },
+      "csv_sha256": "9a5961e5d90936f3e0c6dec8178343e705e61ce3808ab8dfb1fd832aa2c53814",
+      "json_sha256": "333daffdfacb8026200efbf5bdbe04ecb4d59280b11b4d53c463e6aa75c4c4da"
+    },
+    "surrogate": [
+      {
+        "schema": "aces-golden-surrogate/1",
+        "round": 1,
+        "kind": "gp",
+        "folds": 5,
+        "n": 9,
+        "inputs": [
+          "volfrac",
+          "rmin_mm"
+        ],
+        "outputs": [
+          "mass_kg",
+          "vm_p99_MPa",
+          "umax_mm",
+          "compliance_Nmm",
+          "vm_max_MPa"
+        ],
+        "log_outputs": {
+          "policy": "auto-positive",
+          "applied": "always",
+          "per_output": {
+            "mass_kg": true,
+            "vm_p99_MPa": true,
+            "umax_mm": true,
+            "compliance_Nmm": true,
+            "vm_max_MPa": true
+          }
+        },
+        "training_cases": [
+          "d000",
+          "d001",
+          "d002",
+          "d003",
+          "d004",
+          "d005",
+          "d007",
+          "d008",
+          "d009"
+        ],
+        "skipped_cases": [
+          "d006"
+        ],
+        "data_sha256": "14b829b1bef8945e67315b769065e37899182ab3e934a8851b4b6ec85687c6ca",
+        "cv": {
+          "mass_kg": {
+            "rmse": 0.0027632243577762686,
+            "mae": 0.0023785258111402603,
+            "rel_rmse": 0.045198665217385886,
+            "mape_pct": 1.0925876509919477,
+            "r2": 0.9979570806625667,
+            "y_range": [
+              0.11282886762689724,
+              0.3043088983350911
+            ]
+          },
+          "vm_p99_MPa": {
+            "rmse": 5.46653401990623,
+            "mae": 3.135741540179131,
+            "rel_rmse": 0.4143338798017111,
+            "mape_pct": 4.957916556939834,
+            "r2": 0.8283274360484612,
+            "y_range": [
+              38.26887306213383,
+              79.45272384643555
+            ]
+          },
+          "umax_mm": {
+            "rmse": 0.0004734028159273442,
+            "mae": 0.00024596574734492825,
+            "rel_rmse": 0.05678275029685455,
+            "mape_pct": 0.6233459016019028,
+            "r2": 0.9967757192687251,
+            "y_range": [
+              0.02408612451044269,
+              0.0509200721606507
+            ]
+          },
+          "compliance_Nmm": {
+            "rmse": 3.6738205188788435,
+            "mae": 2.3086311828819186,
+            "rel_rmse": 0.01562713201291322,
+            "mape_pct": 0.25833183130101656,
+            "r2": 0.999755792745051,
+            "y_range": [
+              612.7274007561978,
+              1365.39638083824
+            ]
+          },
+          "vm_max_MPa": {
+            "rmse": 2.2407739174367682,
+            "mae": 1.5903004615971368,
+            "rel_rmse": 0.1620763838798352,
+            "mape_pct": 2.6675285815461374,
+            "r2": 0.9737312457884363,
+            "y_range": [
+              41.03264728813841,
+              83.38282726320496
+            ]
+          }
+        },
+        "status": "weak",
+        "flags": [
+          "vm_p99_MPa R2 0.828 < 0.9"
+        ],
+        "r2_flag": 0.9,
+        "gp_warnings": 31,
+        "gp_warning_kinds": {
+          "ConvergenceWarning": 31
+        },
+        "model_sha256": "9b5305e1bd561d9bb3ef64bd7fc447ca7352bc8e7298e4bac50ad0d2b23c1d0c",
+        "seed": 7,
+        "wall_s": 1.0987
+      }
+    ],
+    "optimise": [
+      {
+        "round": 1,
+        "method": "grid",
+        "n_candidates": 1681,
+        "n_feasible": 1022,
+        "from_feasible": true,
+        "winner": {
+          "params": {
+            "volfrac": 0.23,
+            "rmin_mm": 11.55
+          },
+          "pred": {
+            "mass_kg": 0.1794185186943987,
+            "vm_p99_MPa": 53.64268077824985,
+            "umax_mm": 0.03125823036655014,
+            "compliance_Nmm": 829.561281237644,
+            "vm_max_MPa": 62.55815522463984
+          },
+          "sd": {
+            "mass_kg": 0.0021137847015872957,
+            "vm_p99_MPa": 0.32583423292789604,
+            "umax_mm": 2.730350865370705e-05,
+            "compliance_Nmm": 0.7083041484674482,
+            "vm_max_MPa": 1.4571187613561207
+          }
+        }
+      }
+    ],
+    "validation": {
+      "schema": "aces-golden-validation/1",
+      "tol": 0.1,
+      "kappa": 1.0,
+      "cv_margin": true,
+      "check_objective": true,
+      "objective": {
+        "output": "mass_kg",
+        "sense": "min"
+      },
+      "constraints": [
+        {
+          "output": "vm_p99_MPa",
+          "op": "<=",
+          "limit": 60.0
+        },
+        {
+          "output": "umax_mm",
+          "op": "<=",
+          "limit": 0.035
+        }
+      ],
+      "resolution_mm": {
+        "generator": 4.0,
+        "field": 2.0,
+        "solve": 4.0,
+        "check": [
+          2.0,
+          1.0
+        ]
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "surrogate": "surrogate/round-1/cv.json",
+          "optimise": "optimise/round-1.json",
+          "case_id": "v001",
+          "params": {
+            "volfrac": 0.23,
+            "rmin_mm": 11.55
+          },
+          "from_feasible": true,
+          "h_fea_mm": 4.0,
+          "device": "cpu",
+          "solver": "step-structures stage_solve",
+          "rows": [
+            {
+              "output": "mass_kg",
+              "role": "objective",
+              "predicted": 0.1794185186943987,
+              "sd": 0.0021137847015872957,
+              "solved": 0.17698581438899466,
+              "abs_err": 0.002432704305404043,
+              "rel_err": 0.013745193725284877,
+              "tol": 0.1,
+              "agree": true,
+              "op": null,
+              "limit": null,
+              "meets": null
+            },
+            {
+              "output": "vm_p99_MPa",
+              "role": "constraint",
+              "predicted": 53.64268077824985,
+              "sd": 0.32583423292789604,
+              "solved": 54.47464675903315,
+              "abs_err": 0.831965980783302,
+              "rel_err": 0.015272535579046098,
+              "tol": 0.1,
+              "agree": true,
+              "op": "<=",
+              "limit": 60.0,
+              "meets": true
+            },
+            {
+              "output": "umax_mm",
+              "role": "constraint",
+              "predicted": 0.03125823036655014,
+              "sd": 2.730350865370705e-05,
+              "solved": 0.031198331261040144,
+              "abs_err": 5.989910550999872e-05,
+              "rel_err": 0.001919945814050623,
+              "tol": 0.1,
+              "agree": true,
+              "op": "<=",
+              "limit": 0.035,
+              "meets": true
+            },
+            {
+              "output": "compliance_Nmm",
+              "role": "reported",
+              "predicted": 829.561281237644,
+              "sd": 0.7083041484674482,
+              "solved": 828.0079936559462,
+              "abs_err": 1.553287581697873,
+              "rel_err": 0.0018759330750414169,
+              "tol": 0.1,
+              "agree": true,
+              "op": null,
+              "limit": null,
+              "meets": null
+            },
+            {
+              "output": "vm_max_MPa",
+              "role": "reported",
+              "predicted": 62.55815522463984,
+              "sd": 1.4571187613561207,
+              "solved": 64.49043111436654,
+              "abs_err": 1.9322758897267036,
+              "rel_err": 0.029962210770463436,
+              "tol": 0.1,
+              "agree": true,
+              "op": null,
+              "limit": null,
+              "meets": null
+            }
+          ],
+          "status": "FINISHED",
+          "design_status": "ok",
+          "converged": true,
+          "passed": true,
+          "reasons": [],
+          "wall_s": 3.141
+        }
+      ],
+      "outcome": "pass",
+      "passed": true,
+      "final_round": 1,
+      "final_case": "v001",
+      "winner_case": "v001",
+      "winner_params": {
+        "volfrac": 0.23,
+        "rmin_mm": 11.55
+      },
+      "independent_check": {
+        "ran": true,
+        "reason": "CPU estimate 2.7 s is within the 60 s budget",
+        "passed": true,
+        "levels": [
+          {
+            "level": 1,
+            "case_id": "x001",
+            "h_mm": 2.0,
+            "device": "cpu",
+            "gating": true,
+            "est_s": 2.7109642028808594,
+            "budget_s": 60.0,
+            "ran": true,
+            "reason": "CPU estimate 2.7 s is within the 60 s budget",
+            "rows": [
+              {
+                "output": "mass_kg",
+                "role": "objective",
+                "coarse": 0.17698581438899466,
+                "fine": 0.17698581438899466,
+                "rel_gap": 0.0,
+                "tol": 0.1,
+                "agree": true,
+                "op": null,
+                "limit": null,
+                "meets_fine": null
+              },
+              {
+                "output": "vm_p99_MPa",
+                "role": "constraint",
+                "coarse": 54.47464675903315,
+                "fine": 56.87937175750742,
+                "rel_gap": 0.044143930094884244,
+                "tol": 0.1,
+                "agree": true,
+                "op": "<=",
+                "limit": 60.0,
+                "meets_fine": true
+              },
+              {
+                "output": "umax_mm",
+                "role": "constraint",
+                "coarse": 0.031198331261040144,
+                "fine": 0.03248296743203556,
+                "rel_gap": 0.041176438580855956,
+                "tol": 0.1,
+                "agree": true,
+                "op": "<=",
+                "limit": 0.035,
+                "meets_fine": true
+              },
+              {
+                "output": "compliance_Nmm",
+                "role": "reported",
+                "coarse": 828.0079936559462,
+                "fine": 864.8460520128981,
+                "rel_gap": 0.04448997912966874,
+                "tol": 0.1,
+                "agree": true,
+                "op": null,
+                "limit": null,
+                "meets_fine": null
+              },
+              {
+                "output": "mass_voxel_kg",
+                "role": "reported",
+                "coarse": 0.18215808,
+                "fine": 0.17929583999999998,
+                "rel_gap": -0.015712945590994457,
+                "tol": 0.1,
+                "agree": true,
+                "op": null,
+                "limit": null,
+                "meets_fine": null
+              },
+              {
+                "output": "vm_max_MPa",
+                "role": "reported",
+                "coarse": 64.49043111436654,
+                "fine": 105.3919182769137,
+                "rel_gap": 0.6342256743486946,
+                "tol": 0.1,
+                "agree": false,
+                "op": null,
+                "limit": null,
+                "meets_fine": null
+              }
+            ],
+            "passed": true,
+            "host": "desktop",
+            "fea_solver": "pcg",
+            "rig": null,
+            "rig_attempt": null
+          },
+          {
+            "level": 2,
+            "case_id": null,
+            "h_mm": 1.0,
+            "device": null,
+            "gating": false,
+            "est_s": null,
+            "budget_s": 60.0,
+            "ran": false,
+            "reason": "GPU-only extra level: no usable GPU",
+            "rows": [],
+            "passed": null,
+            "host": null,
+            "fea_solver": null,
+            "rig": null,
+            "rig_attempt": null
+          }
+        ]
+      },
+      "device_parity": [],
+      "conforming": {
+        "ran": true,
+        "passed": true,
+        "status": "ok",
+        "case_id": "m001",
+        "host": "desktop",
+        "mode": "auto",
+        "reason": "agrees within its bands and meets every constraint",
+        "h_mm": 2.0,
+        "source_case": "v001",
+        "reference": {
+          "case_id": "x001",
+          "h_mm": 2.0,
+          "host": "desktop"
+        },
+        "record": "m001/conforming.json",
+        "mesh": {
+          "route": "discrete",
+          "elements": 38618,
+          "nodes": 62337,
+          "dof": 187011,
+          "min_sicn": 0.3383439805889851,
+          "volume_rel_err": 2.1952953570811996e-16
+        },
+        "solver": {
+          "name": "CalculiX ccx",
+          "version": "2.23",
+          "sha256": "31be21fc2f0902bd9a05acc2651dbac6dc2a2573dabbf235e39a38cb6f458862",
+          "threads": 4,
+          "linear_solver": "Factoring the system of equations using the symmetric spooles solver"
+        },
+        "bands": {
+          "mass": 0.01,
+          "stress": 0.15,
+          "other": 0.1
+        },
+        "rows": [
+          {
+            "output": "mass_kg",
+            "role": "objective",
+            "voxel": 0.17698581438899466,
+            "conforming": 0.1769858143889947,
+            "rel_gap": 1.5682373026024176e-16,
+            "band": 0.01,
+            "agree": true,
+            "op": null,
+            "limit": null,
+            "meets_conforming": null
+          },
+          {
+            "output": "vm_p99_MPa",
+            "role": "constraint",
+            "voxel": 56.87937175750742,
+            "conforming": 53.63380623106495,
+            "rel_gap": -0.057060502360666315,
+            "band": 0.15,
+            "agree": true,
+            "op": "<=",
+            "limit": 60.0,
+            "meets_conforming": true
+          },
+          {
+            "output": "umax_mm",
+            "role": "constraint",
+            "voxel": 0.03248296743203556,
+            "conforming": 0.031756483004286275,
+            "rel_gap": -0.022365088080986365,
+            "band": 0.1,
+            "agree": true,
+            "op": "<=",
+            "limit": 0.035,
+            "meets_conforming": true
+          },
+          {
+            "output": "compliance_Nmm",
+            "role": "gating",
+            "voxel": 864.8460520128981,
+            "conforming": 844.9543317078405,
+            "rel_gap": -0.02300030191357213,
+            "band": 0.1,
+            "agree": true,
+            "op": null,
+            "limit": null,
+            "meets_conforming": null
+          },
+          {
+            "output": "vm_max_MPa",
+            "role": "reported",
+            "voxel": 105.3919182769137,
+            "conforming": 144.52246998675278,
+            "rel_gap": 0.37128607534237,
+            "band": 0.15,
+            "agree": false,
+            "op": null,
+            "limit": null,
+            "meets_conforming": null
+          },
+          {
+            "output": "vm_p95_MPa",
+            "role": "reported",
+            "voxel": 40.97390766143798,
+            "conforming": 41.16215030966936,
+            "rel_gap": 0.004594207850195902,
+            "band": 0.15,
+            "agree": true,
+            "op": null,
+            "limit": null,
+            "meets_conforming": null
+          },
+          {
+            "output": "mesh_volume_mm3",
+            "role": "reported",
+            "voxel": 66286.82186853733,
+            "conforming": 66286.82186853734,
+            "rel_gap": 2.1952953570811996e-16,
+            "band": 0.01,
+            "agree": true,
+            "op": null,
+            "limit": null,
+            "meets_conforming": null
+          }
+        ],
+        "constraints_met": true,
+        "rig": null,
+        "rig_attempt": null
+      },
+      "rig": null,
+      "grade": "verified-desktop",
+      "grade_reasons": [
+        "the 2 mm check agrees with the 4 mm solve within 10 % and meets every constraint",
+        "not rig-verified: the level-1 check ran on this desktop (x001: no rig lane was used)"
+      ],
+      "verdict": "PASS",
+      "verdict_reasons": [],
+      "scope": "voxel FEA (H8, fictitious domain, Jacobi-PCG or multigrid-PCG, FP64, linear static) on this desktop or on a rig lane, with a conforming tet10 (C3D10, gmsh + CalculiX ccx) second discretisation when it can run. Grades: preview-grade (every solve on its own), verified-desktop (the finer-resolution level-1 check agrees within tol and meets every constraint), rig-verified (also: the level-1 check solved on the rig on an image the golden-check validation names, the conforming check ran on the rig on an image the ccx-check validation names and agrees within its bands and meets every constraint, the rig ran this desktop's golden code, and every pulled file verified). A conforming check that violates a constraint caps the grade at preview-grade. No grade is a sign-off."
+    },
+    "rig": null,
+    "conforming": {
+      "ran": true,
+      "passed": true,
+      "status": "ok",
+      "case_id": "m001",
+      "host": "desktop",
+      "mode": "auto",
+      "reason": "agrees within its bands and meets every constraint",
+      "h_mm": 2.0,
+      "source_case": "v001",
+      "reference": {
+        "case_id": "x001",
+        "h_mm": 2.0,
+        "host": "desktop"
+      },
+      "record": "m001/conforming.json",
+      "mesh": {
+        "route": "discrete",
+        "elements": 38618,
+        "nodes": 62337,
+        "dof": 187011,
+        "min_sicn": 0.3383439805889851,
+        "volume_rel_err": 2.1952953570811996e-16
+      },
+      "solver": {
+        "name": "CalculiX ccx",
+        "version": "2.23",
+        "sha256": "31be21fc2f0902bd9a05acc2651dbac6dc2a2573dabbf235e39a38cb6f458862",
+        "threads": 4,
+        "linear_solver": "Factoring the system of equations using the symmetric spooles solver"
+      },
+      "bands": {
+        "mass": 0.01,
+        "stress": 0.15,
+        "other": 0.1
+      },
+      "rows": [
+        {
+          "output": "mass_kg",
+          "role": "objective",
+          "voxel": 0.17698581438899466,
+          "conforming": 0.1769858143889947,
+          "rel_gap": 1.5682373026024176e-16,
+          "band": 0.01,
+          "agree": true,
+          "op": null,
+          "limit": null,
+          "meets_conforming": null
+        },
+        {
+          "output": "vm_p99_MPa",
+          "role": "constraint",
+          "voxel": 56.87937175750742,
+          "conforming": 53.63380623106495,
+          "rel_gap": -0.057060502360666315,
+          "band": 0.15,
+          "agree": true,
+          "op": "<=",
+          "limit": 60.0,
+          "meets_conforming": true
+        },
+        {
+          "output": "umax_mm",
+          "role": "constraint",
+          "voxel": 0.03248296743203556,
+          "conforming": 0.031756483004286275,
+          "rel_gap": -0.022365088080986365,
+          "band": 0.1,
+          "agree": true,
+          "op": "<=",
+          "limit": 0.035,
+          "meets_conforming": true
+        },
+        {
+          "output": "compliance_Nmm",
+          "role": "gating",
+          "voxel": 864.8460520128981,
+          "conforming": 844.9543317078405,
+          "rel_gap": -0.02300030191357213,
+          "band": 0.1,
+          "agree": true,
+          "op": null,
+          "limit": null,
+          "meets_conforming": null
+        },
+        {
+          "output": "vm_max_MPa",
+          "role": "reported",
+          "voxel": 105.3919182769137,
+          "conforming": 144.52246998675278,
+          "rel_gap": 0.37128607534237,
+          "band": 0.15,
+          "agree": false,
+          "op": null,
+          "limit": null,
+          "meets_conforming": null
+        },
+        {
+          "output": "vm_p95_MPa",
+          "role": "reported",
+          "voxel": 40.97390766143798,
+          "conforming": 41.16215030966936,
+          "rel_gap": 0.004594207850195902,
+          "band": 0.15,
+          "agree": true,
+          "op": null,
+          "limit": null,
+          "meets_conforming": null
+        },
+        {
+          "output": "mesh_volume_mm3",
+          "role": "reported",
+          "voxel": 66286.82186853733,
+          "conforming": 66286.82186853734,
+          "rel_gap": 2.1952953570811996e-16,
+          "band": 0.01,
+          "agree": true,
+          "op": null,
+          "limit": null,
+          "meets_conforming": null
+        }
+      ],
+      "constraints_met": true,
+      "rig": null,
+      "rig_attempt": null
+    },
+    "compute_detected": {
+      "schema": "aces-golden-compute/1",
+      "detected_utc": "2026-10-10T10:22:10.404+00:00",
+      "host": "aces-rehearsal",
+      "platform": "Linux-7.2.5-3-omarchy-x86_64-with-glibc2.44",
+      "python": "3.14.7",
+      "cpu": {
+        "logical": 4,
+        "usable": 4,
+        "model": "Intel(R) Core(TM) Ultra 9 285HX",
+        "mem_total_gb": 8.32,
+        "mem_available_gb": 6.88,
+        "numpy": "2.4.6",
+        "blas": [
+          {
+            "user_api": "blas",
+            "internal_api": "openblas",
+            "num_threads": 1,
+            "prefix": "libscipy_openblas",
+            "filepath": "/opt/aces/engineering/venv/lib/python3.14/site-packages/numpy.libs/libscipy_openblas64_-32a4b2a6.so",
+            "version": "0.3.31.188.0",
+            "threading_layer": "pthreads",
+            "architecture": "Haswell"
+          }
+        ],
+        "blas_threads_per_solve": 1
+      },
+      "kernel_selftest": {
+        "passed": true,
+        "wall_s": 0.0021,
+        "source": "gendesign.fea3d.self_test"
+      },
+      "gpu": {
+        "cupy": "not available (ModuleNotFoundError)",
+        "present": false,
+        "usable": false,
+        "reason": "CuPy is not importable here (an optional extra; the packaged venv does not ship it)",
+        "name": null,
+        "cuda_runtime": null,
+        "mem_free_mib": null,
+        "mem_total_mib": null,
+        "patch_test": null
+      },
+      "warp": {
+        "importable": null,
+        "usable": false,
+        "version": null,
+        "cuda_devices": null,
+        "reason": "not probed: Warp's apply_K runs on the CuPy device arrays and no usable CuPy GPU was found; warp-lang is not installed"
+      },
+      "torch": {
+        "installed": false,
+        "use": "not used",
+        "reason": "a field (FNO) surrogate needs O(100) solved fields; v0 fits a tabular GP"
+      },
+      "physicsnemo": {
+        "installed": false,
+        "use": "not used",
+        "reason": "a field (FNO) surrogate needs O(100) solved fields; v0 fits a tabular GP"
+      },
+      "conforming_mesh": {
+        "gmsh": "4.15.2",
+        "gmsh_reason": "gmsh 4.15.2",
+        "ccx": "/usr/bin/ccx",
+        "ccx_version": "2.23",
+        "ccx_sha256": "31be21fc2f0902bd9a05acc2651dbac6dc2a2573dabbf235e39a38cb6f458862",
+        "usable": true,
+        "reason": "gmsh 4.15.2 and CalculiX ccx 2.23 at /usr/bin/ccx",
+        "code_aster": null,
+        "use": "available"
+      },
+      "rig": {
+        "manifest": {
+          "path": "/home/aces/.config/aces/fabric.json",
+          "present": true,
+          "generated": "2026-10-10T08:49:18+00:00",
+          "age_s": 5571.3,
+          "stale": true,
+          "mode": "sim-lab-4"
+        },
+        "simlab_mcp": {
+          "url": "http://192.168.1.65:8022/mcp",
+          "health": "http 200"
+        },
+        "lanes": [
+          {
+            "id": "sim/pool",
+            "kind": "sim",
+            "gpus": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "endpoint": "http://192.168.1.65:8022/mcp",
+            "status": "stale-manifest",
+            "use": "not used",
+            "reason": "desktop only (run with --lane sim/pool to send the independent check and the conforming check to the rig)"
+          }
+        ],
+        "max_age_s": 900.0,
+        "probe": null
+      },
+      "plan": {
+        "sweep": {
+          "device": "cpu",
+          "jobs": 4,
+          "reason": "no usable GPU (CuPy is not importable here (an optional extra; the packaged venv does not ship it))"
+        },
+        "verify": {
+          "device": "cpu"
+        },
+        "check_mode": "auto",
+        "check_budget_s": 60.0,
+        "parity": [],
+        "rig": {
+          "submit": false,
+          "lane": null,
+          "url": null,
+          "sweep": false,
+          "check": false,
+          "conforming": false,
+          "budget_s": null,
+          "reason": "no rig lane: everything runs on this desktop (--lane LANE sends the independent check and the conforming check to a rig)"
+        },
+        "conforming": {
+          "mode": "auto",
+          "host": "desktop",
+          "fallback": null,
+          "h_mm": 2.0,
+          "threads": 4,
+          "max_dof": 1500000,
+          "timeout_s": 900.0,
+          "reason": "conforming tet10 at 2 mm on this desktop (gmsh 4.15.2, ccx 2.23, 4 threads)"
+        },
+        "cells": {
+          "gen": 6250,
+          "fea": 6250
+        },
+        "notes": [
+          "no device parity: no usable GPU (CuPy is not importable here (an optional extra; the packaged venv does not ship it))"
+        ]
+      }
+    },
+    "compute_used": [
+      {
+        "step": "kernel",
+        "computation": "element and patch tests",
+        "solver": "gendesign.fea3d.self_test",
+        "device": "cpu",
+        "resolution_mm": 1.0,
+        "size": "10x2x2 bar (40 elements)",
+        "count": 1,
+        "wall_s": 0.0021,
+        "wall_s_sum": 0.0021,
+        "grade": "-",
+        "role": null,
+        "source": "compute.json#kernel_selftest",
+        "note": "element checks and the uniaxial bar: passed"
+      },
+      {
+        "step": "domain",
+        "computation": "STEP -> voxel mask",
+        "solver": "step-structures stage_mesh (Embree containment)",
+        "device": "cpu",
+        "resolution_mm": 4.0,
+        "size": "6250 cells, 4890 solid",
+        "count": 1,
+        "wall_s": 0.48767518997192383,
+        "wall_s_sum": 0.018066883087158203,
+        "grade": "-",
+        "role": null,
+        "source": "domain/domain.json#wall_s, domain/mesh.json",
+        "note": "voxel/B-rep volume 0.9962; watertight tessellation True; wall_s is the whole domain step (passive boxes, design-space SDF), wall_s_sum the stage_mesh records"
+      },
+      {
+        "step": "generate",
+        "computation": "SIMP x 11",
+        "solver": "gendesign.topopt3d.run_case (OC, FFT filter)",
+        "device": "cpu/numpy x4",
+        "resolution_mm": 4.0,
+        "size": "6250 elements",
+        "count": 11,
+        "wall_s": null,
+        "wall_s_sum": 21.515231370925903,
+        "grade": "-",
+        "role": "sweep, verify",
+        "source": "d###/status.json#diagnostics.generator, v###/status.json#diagnostics.generator",
+        "note": "10 sweep and 1 verify designs; the 10 sweep designs ran concurrently in 4 workers, wall_s_sum is the sum over designs"
+      },
+      {
+        "step": "skin",
+        "computation": "organic skin x 11",
+        "solver": "golden.organic (EDT SDF, smooth unions, Taubin)",
+        "device": "cpu",
+        "resolution_mm": 2.0,
+        "size": "50000 field points",
+        "count": 11,
+        "wall_s": null,
+        "wall_s_sum": 0.34630680084228516,
+        "grade": "-",
+        "role": "sweep, verify",
+        "source": "d###/skin.json, v###/skin.json",
+        "note": "10 of 11 watertight single-body skins; median 10660 faces"
+      },
+      {
+        "step": "solve",
+        "computation": "real FEA x 9",
+        "solver": "step-structures stage_solve, Jacobi-PCG FP64",
+        "device": "cpu/numpy x4",
+        "resolution_mm": 4.0,
+        "size": "6250 elements, 22308 DOF",
+        "count": 9,
+        "wall_s": null,
+        "wall_s_sum": 1.5220756530761719,
+        "grade": "preview-grade",
+        "role": "sweep",
+        "source": "d###/solve.json",
+        "note": "9 of 9 converged; ran concurrently in 4 workers"
+      },
+      {
+        "step": "surrogate",
+        "computation": "GP K-fold per round",
+        "solver": "simlab.surrogate.tabular (gp)",
+        "device": "cpu",
+        "resolution_mm": null,
+        "size": "n=9",
+        "count": 1,
+        "wall_s": 1.0987,
+        "wall_s_sum": 1.0987,
+        "grade": "-",
+        "role": null,
+        "source": "surrogate/round-K/cv.json",
+        "note": "round 1: weak, max CV MAPE 4.96 % on vm_p99_MPa, 31 GP warnings"
+      },
+      {
+        "step": "optimise",
+        "computation": "grid per round",
+        "solver": "golden.optimise",
+        "device": "cpu",
+        "resolution_mm": null,
+        "size": "1681 candidates",
+        "count": 1,
+        "wall_s": 0.0056,
+        "wall_s_sum": 0.0056,
+        "grade": "-",
+        "role": null,
+        "source": "optimise/round-K.json",
+        "note": "round 1: 1022 predicted feasible"
+      },
+      {
+        "step": "verify",
+        "computation": "real FEA x 1",
+        "solver": "step-structures stage_solve, Jacobi-PCG FP64",
+        "device": "cpu/numpy",
+        "resolution_mm": 4.0,
+        "size": "6250 elements, 22308 DOF",
+        "count": 1,
+        "wall_s": 0.16553521156311035,
+        "wall_s_sum": 0.16553521156311035,
+        "grade": "preview-grade",
+        "role": "verify",
+        "source": "v###/solve.json",
+        "note": "round 1 v001: PASS"
+      },
+      {
+        "step": "check",
+        "computation": "finer real FEA, level 1",
+        "solver": "step-structures stage_solve",
+        "device": "cpu/numpy",
+        "resolution_mm": 2.0,
+        "size": "50000 elements, 163863 DOF",
+        "count": 1,
+        "wall_s": 5.941338300704956,
+        "wall_s_sum": 5.941338300704956,
+        "grade": "independent check -> verified-desktop",
+        "role": "check",
+        "source": "x001/solve.json",
+        "note": "estimate 2.71 s, budget 60 s"
+      },
+      {
+        "step": "check",
+        "computation": "finer real FEA, level 2",
+        "solver": "step-structures stage_solve",
+        "device": "-",
+        "resolution_mm": 1.0,
+        "size": null,
+        "count": 0,
+        "wall_s": null,
+        "wall_s_sum": null,
+        "grade": "-",
+        "role": "check",
+        "source": "validation.json#independent_check.levels",
+        "note": "not run: GPU-only extra level: no usable GPU"
+      },
+      {
+        "step": "parity",
+        "computation": "CuPy / Warp re-solve",
+        "solver": "step-structures stage_solve / WarpApplyK",
+        "device": "-",
+        "resolution_mm": null,
+        "size": null,
+        "count": 0,
+        "wall_s": null,
+        "wall_s_sum": null,
+        "grade": "-",
+        "role": "parity",
+        "source": "validation.json#device_parity",
+        "note": "not run: no device parity: no usable GPU (CuPy is not importable here (an optional extra; the packaged venv does not ship it))"
+      },
+      {
+        "step": "rig",
+        "computation": "sim lane sim/pool",
+        "solver": "simlab-mcp",
+        "device": "rig",
+        "resolution_mm": null,
+        "size": null,
+        "count": 0,
+        "wall_s": null,
+        "wall_s_sum": null,
+        "grade": "not used",
+        "role": null,
+        "source": "compute.json#rig.lanes",
+        "note": "stale-manifest: desktop only (run with --lane sim/pool to send the independent check and the conforming check to the rig)"
+      },
+      {
+        "step": "warp-lattice",
+        "computation": "rod-lattice generator",
+        "solver": "gendesign.lattice_opt",
+        "device": "-",
+        "resolution_mm": null,
+        "size": null,
+        "count": 0,
+        "wall_s": null,
+        "wall_s_sum": null,
+        "grade": "not used",
+        "role": null,
+        "source": "compute.json#warp",
+        "note": "not used: cantilever demonstrator, not wired into the golden path (v0)"
+      },
+      {
+        "step": "fno",
+        "computation": "field surrogate",
+        "solver": "simlab.surrogate.fno (torch, PhysicsNeMo)",
+        "device": "-",
+        "resolution_mm": null,
+        "size": null,
+        "count": 0,
+        "wall_s": null,
+        "wall_s_sum": null,
+        "grade": "not used",
+        "role": null,
+        "source": "compute.json#torch, compute.json#physicsnemo",
+        "note": "not installed (torch, PhysicsNeMo); a field (FNO) surrogate needs O(100) solved fields; v0 fits a tabular GP"
+      },
+      {
+        "step": "second-discretisation",
+        "computation": "conforming tet10 (C3D10) at 2 mm",
+        "solver": "gmsh 4.15.2 + CalculiX ccx 2.23",
+        "device": "cpu x4",
+        "resolution_mm": 2.0,
+        "size": "38618 C3D10, 187011 DOF",
+        "count": 1,
+        "wall_s": 27.14492440223694,
+        "wall_s_sum": 27.14492440223694,
+        "grade": "second discretisation -> agrees",
+        "role": "conforming",
+        "source": "m001/conforming.json",
+        "note": ""
+      }
+    ],
+    "solver_digest": {
+      "source_commit": "62de9811e555e2b46d23a7923fecbbb3124192ac",
+      "content_sha256": "da7c28a37dabbe8ba55e1817d668c734a4cf951da15740d1e9f837d611ed8ac9",
+      "snapshot_path": "/opt/aces/engineering/SNAPSHOT",
+      "snapshot_present": true,
+      "simlab_imported_from": "/opt/aces/engineering/lib/simlab",
+      "gendesign_imported_from": "/opt/aces/engineering/lib/gendesign",
+      "matches_snapshot": true,
+      "mismatches": [],
+      "modules_checked": 20,
+      "golden_code_sha256": "d3bd56049088529c1e9c5593eae9893fe66ed03c9ff4584063acbef51e54d8e7",
+      "golden_code_files": [
+        "golden/__init__.py",
+        "golden/acescli.py",
+        "golden/case.py",
+        "golden/compute.py",
+        "golden/conforming.py",
+        "golden/demo.py",
+        "golden/domain.py",
+        "golden/evidence.py",
+        "golden/export.py",
+        "golden/fea.py",
+        "golden/generator.py",
+        "golden/optimise.py",
+        "golden/organic.py",
+        "golden/pipeline.py",
+        "golden/progress.py",
+        "golden/render.py",
+        "golden/report.py",
+        "golden/rig.py",
+        "golden/rigside.py",
+        "golden/rundir.py",
+        "golden/spec.py",
+        "golden/surrogate.py",
+        "golden/sweep.py",
+        "golden/verify.py",
+        "golden_cli.py"
+      ]
+    },
+    "winner": {
+      "label": "winner",
+      "case_id": "v001",
+      "params": {
+        "volfrac": 0.23,
+        "rmin_mm": 11.55
+      },
+      "stl_sha256": "de0f92f004ebe1675b4fa796d6707e0c00ca7afc339cd06af6d50dd7de3849ab",
+      "metrics": {
+        "mass_kg": 0.17698581438899466,
+        "mass_voxel_kg": 0.18215808,
+        "mesh_volume_mm3": 66286.82186853733,
+        "voxel_volume_mm3": 68224.0,
+        "solid_fraction": 0.17056,
+        "compliance_Nmm": 828.0079936559462,
+        "umax_mm": 0.031198331261040144,
+        "vm_max_MPa": 64.49043111436654,
+        "vm_p99_MPa": 54.47464675903315,
+        "vm_p95_MPa": 40.70475196838378
+      }
+    },
+    "grade": "verified-desktop",
+    "preview_grade": true,
+    "verdict": "PASS",
+    "outcome": "pass",
+    "files_sha256": "d174b3cc138ed411177d7a2ddc4ad7cc6fd85a39eaf91e2f96411f123e579914"
+  },
+  "previous_sha256": "91aaf1ad18778878b7779b6c3719e45c538e14217997aa76695ed01a41a17e71",
+  "bundle_sha256": "a134a66fddc5ba3c31c5ea0870b57d42b4117328594005702001bd15aaa60f82"
+}

@@ -1,0 +1,85 @@
+{
+ "schema": "aces-golden-rig-case/1",
+ "case_id": "x002",
+ "lane": "sim/pool",
+ "url": "http://192.168.1.65:8022/mcp",
+ "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+ "rig_case_id": "c001",
+ "job_id": "golden-20261010T084920Z-b3ac99-check--c001--run--a53d84",
+ "job_status": "finished",
+ "state": "result",
+ "design_status": "ok",
+ "reason": null,
+ "queue": "sim",
+ "gpu": 2,
+ "owner": "daaeb15fe6ec:2570:golden-20261010T084920Z-b3ac99-check--c001--run--a53d84",
+ "gpu_name": "NVIDIA CMP 170HX",
+ "gpu_uuid": "GPU-73a17e95-caad-94ee-facf-5be93547c1e4",
+ "image": "aces-golden:0.1",
+ "image_id": "sha256:d45698807541b49195d75de749d193ef33c5dc2803f0ccb0980d0e489e5f1201",
+ "image_digest": "sha256:d45698807541b49195d75de749d193ef33c5dc2803f0ccb0980d0e489e5f1201 aces-golden@sha256:d45698807541b49195d75de749d193ef33c5dc2803f0ccb0980d0e489e5f1201",
+ "submitted_utc": "2026-10-10T08:49:33.340569+00:00",
+ "started_utc": "2026-10-10T08:49:35.106068+00:00",
+ "finished_utc": "2026-10-10T08:49:42.972931+00:00",
+ "wait_s": 1.765499,
+ "run_s": 7.866863,
+ "pulled_utc": "2026-10-10T08:49:51.934+00:00",
+ "files": [
+  {
+   "rig": "c001/golden/x002/fields.npz",
+   "local": "x002/fields.npz",
+   "bytes": 1122020,
+   "sha256": "fa4ede760bf5970a89310f5a9358b7f83d388c65e473d7f5d76d9300887b2ec4",
+   "chunks": 1
+  },
+  {
+   "rig": "c001/golden/x002/mask.npy",
+   "local": "x002/mask.npy",
+   "bytes": 400128,
+   "sha256": "1018043fe3179058a687b3b76f862f115f767b92400b13986b34d4ce462a6b41",
+   "chunks": 1
+  },
+  {
+   "rig": "c001/golden/x002/mesh.json",
+   "local": "x002/mesh.json",
+   "bytes": 465,
+   "sha256": "4d057d125ba87b3f585e9c98a1514ba0c67fe17e4c66031ba7c7799e35eec8ea",
+   "chunks": 1
+  },
+  {
+   "rig": "c001/golden/x002/solve.json",
+   "local": "x002/solve.json",
+   "bytes": 871,
+   "sha256": "59f14ce5d234ae9ef43c83ae893a063ef64e0aae7022d6a3770f223306612c12",
+   "chunks": 1
+  }
+ ],
+ "records": {
+  "outcome.json": "351f4c819caf44337ff5cf27d905c1d3e2294ae2a93d542bf13fcaa794cbeae2",
+  "files.json": "071bdb421a44b16ccf09d6b496fe7a72943c127fe1ad6508ba65be3c3c3d264d",
+  "results.json": "b7a81ddcc04cdf5225ec5e0fa958a1c23fcf565285c39fa36c8aef9b85063bb0",
+  "evidence.json": "eb821c1dea5a056d0365075bb5462f504e97b5df136535e7b32d07d609e12672",
+  "status.json": "5ff2b962b4c2803031020579028a383bd1e331e538cbfaad9f25420f7f75ee57",
+  "case.json": "7a3cc6dcf056929dbab57cd4e5c4431e108690ba53f816775e93d9def3d539df",
+  "worker.log": "43db01c2cc4b1ed9c0e0cc0d84cb267b900b74452c38711cb016463548f45775"
+ },
+ "code": {
+  "golden_compute_sha256": "1f1a56410bf48ebee4d22ab92920b2b6af2f81e491487dfbd1c68fddf0269714",
+  "modules": {
+   "gendesign/__init__.py": "1881e8c86cba8e50886ff40ee49387f5062a079bb416d1efa3d5ce2e2874f3b1",
+   "gendesign/evaluators.py": "9853e92028a6fcc4724ce7743a45b90297f0932db2d21e2432c9edbd31c44d13",
+   "gendesign/fea3d.py": "e80c35bfb56bd794ec9d36894bbd8d4e55eba78c7290757a6dc695474108a26c",
+   "gendesign/mg.py": "f3c807685afb63133201b35f84c377d7a02a2f5f8b83af164c47fb02381651c9",
+   "gendesign/progress.py": "24a80751fe6e6a20553018520349875b2f4a5c31f2303168a48ac043b1586956",
+   "simlab/__init__.py": "eba89800110ae56fcda4aa4b7e03b2214fbe2776554f92904827e4c307939443",
+   "simlab/evidence.py": "e0757360d60a609ca1528ad8a6348b2798a3fa87c817c32aa682db70b27ef7f5",
+   "simlab/registry.py": "c3bfd0826428e7f4570819d036f6c5839d150aecfbae8da6211b7bd3f1c84cce",
+   "simlab/solvers/__init__.py": "b6600c7d7c5061cfb7aeffa9d0ba8ae95f5f14314438b232f006d633e0f08c25",
+   "simlab/solvers/golden_check.py": "384487c3e41eb98e5e5f03bfcb78d6122ef61d2e4ec5908cc7f398427b4c74bb",
+   "simlab/solvers/step_structures.py": "103497387087a2d1ab406911d9ab12e5d416cb1471191b43737e5923f715dd3d",
+   "simlab/spec.py": "b2e335e305ef66ec9327158d28f16e4b1e92366ba12e3814689704939dea0aa2",
+   "simlab/tracking.py": "8e9b0b156fd1f6942b06536c4e9a3c700f7f00304a64337cc7b9474810b2862a"
+  }
+ },
+ "device_forced": null
+}

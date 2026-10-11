@@ -1,0 +1,38 @@
+{
+ "schema": "aces-golden-ledger/1",
+ "project": "cad-gold",
+ "run_id": "20261010T102210Z-bc7391",
+ "run_dir": "/home/aces/Work/cad-gold/golden/20261010T102210Z-bc7391",
+ "host": "aces-rehearsal",
+ "verdict": "PASS",
+ "outcome": "pass",
+ "grade": "verified-desktop",
+ "bundle_sha256": "a134a66fddc5ba3c31c5ea0870b57d42b4117328594005702001bd15aaa60f82",
+ "files_sha256": "d174b3cc138ed411177d7a2ddc4ad7cc6fd85a39eaf91e2f96411f123e579914",
+ "simlab_ledger": {
+  "path": "/home/aces/.local/share/aces/simlab/evidence/ledger.jsonl",
+  "entry": 4,
+  "sha256": "a134a66fddc5ba3c31c5ea0870b57d42b4117328594005702001bd15aaa60f82",
+  "previous": "91aaf1ad18778878b7779b6c3719e45c538e14217997aa76695ed01a41a17e71"
+ },
+ "spec_sha256": "dbc94cbb292d66e9bc840a2b04c337d05d31c5923a1a6605934cd9d1f676c5b7",
+ "solver_digest": "da7c28a37dabbe8ba55e1817d668c734a4cf951da15740d1e9f837d611ed8ac9",
+ "golden_code_sha256": "d3bd56049088529c1e9c5593eae9893fe66ed03c9ff4584063acbef51e54d8e7",
+ "winner": {
+  "params": {
+   "volfrac": 0.23,
+   "rmin_mm": 11.55
+  }
+ },
+ "compute": [
+  "cpu/numpy x4",
+  "ccx 2.23 (cpu x4)"
+ ],
+ "rig": null,
+ "conforming": {
+  "ran": true,
+  "passed": true,
+  "host": "desktop"
+ },
+ "tool": "aces-golden 0.2.0"
+}

@@ -1,0 +1,14 @@
+{
+ "case_id": "m001",
+ "role": "conforming",
+ "source_case": "v001",
+ "level": 1,
+ "h_mm": 2.0,
+ "device": "cpu",
+ "host": "desktop",
+ "lane": null,
+ "threads": 4,
+ "max_dof": 1500000,
+ "timeout_s": 900.0,
+ "seed": 7
+}

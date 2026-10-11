@@ -1,0 +1,5967 @@
+{
+ "audit": [
+  {
+   "ts": "2026-10-10T08:44:15.711774+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c005/files.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.0,
+   "error": null,
+   "note": "{'sha256': '1ea24af34779cb4e6636675eef7833e020d391bf0f20a8ab9a4d5310ac29622e', 'path': 'c005/files.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:15.751677+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c005/golden/d005/fields.npz",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.1,
+   "error": null,
+   "note": "{'sha256': 'ad665975ad316adcc9775c113a85d937ecb9b391a7e03f7f5904fc5a4c8ae799', 'path': 'c005/golden/d005/fields.npz'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:15.773542+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c005/golden/d005/generator/density.npy",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.9,
+   "error": null,
+   "note": "{'sha256': '0499e17fe1244abd2b4ae42c791171ccb8fec19ffa99f6feb5784547ddcc4601', 'path': 'c005/golden/d005/generator/density.npy'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:15.814101+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c005/golden/d005/generator/report.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.9,
+   "error": null,
+   "note": "{'sha256': 'b370b6eedbc885b3692f0020eca2e401b8ca1d1be75656cb659cd9c91f6219ec', 'path': 'c005/golden/d005/generator/report.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:15.834819+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c005/golden/d005/generator/slices.png",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.1,
+   "error": null,
+   "note": "{'sha256': '52d59ff9a251c0ddabecaa369ea798e591d8214f85740f2881e69e915e79de6c', 'path': 'c005/golden/d005/generator/slices.png'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:15.876331+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c005/golden/d005/mask.npy",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.5,
+   "error": null,
+   "note": "{'sha256': '29844735c33e533ada17f08109a317be0f5b952ca08849c99d9d18a6d5348c4b', 'path': 'c005/golden/d005/mask.npy'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:15.907021+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c005/golden/d005/mesh.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': '9d592c350df9b5c1290396cf389dae9f8fce50d7e6ce62cd9816320cd955bf55', 'path': 'c005/golden/d005/mesh.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:15.940273+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c005/golden/d005/part.stl",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 5.8,
+   "error": null,
+   "note": "{'sha256': '2562428fb87f4d96d8a70a0f0f2421b92ecaf9c241189188d14b4ba69e4a6d08', 'path': 'c005/golden/d005/part.stl'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:16.015078+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c005/golden/d005/skin.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.3,
+   "error": null,
+   "note": "{'sha256': '189697ca28b4c0eccc0370f0bf0cc6fd70b766f73fdc96e310935b5c9acc388b', 'path': 'c005/golden/d005/skin.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:16.044864+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c005/golden/d005/solve.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.5,
+   "error": null,
+   "note": "{'sha256': '9bc26af11b2c5e4d0dff73c2b7b73c29b15b1634d2477bddc95d3065e30bf214', 'path': 'c005/golden/d005/solve.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:16.076161+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c005/golden/d005/thumb.png",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.7,
+   "error": null,
+   "note": "{'sha256': '6221c934d54cd43e96d7db42104a271ab51e6687a46e13d3340396660eeda6ea', 'path': 'c005/golden/d005/thumb.png'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:16.122521+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c005/results.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': '3dc05952c414ae3bbbb09714cb4d50a31ad2f4450ea405007fe7d9c2a21b0526', 'path': 'c005/results.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:16.153732+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c005/evidence.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': 'b715a9a8c04505869a75a6b0f189e1f784b156cf842e5dad82af91a7ffaf9fc0', 'path': 'c005/evidence.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:16.171335+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c005/status.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.8,
+   "error": null,
+   "note": "{'sha256': '87a457d06630b2152028b49f2fa2f6c838ded79ef462afd1fcfdd0c961c691fe', 'path': 'c005/status.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:16.199618+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c005/case.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.4,
+   "error": null,
+   "note": "{'sha256': '012f70f445229fa7d7b3f43ca72a934d82e072bc36cfd6948c6e0fa8a2fadbc3', 'path': 'c005/case.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:16.213211+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c005/worker.log",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.4,
+   "error": null,
+   "note": "{'sha256': '171d4388bf0ea9d1b356ff77d20615ca165cd603dac258077e9347b6452aa22c', 'path': 'c005/worker.log'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:18.408026+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 24.0,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:44:20.448880+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 11.7,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:44:22.503468+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 27.1,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:44:24.553234+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 24.1,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:44:26.607460+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 19.9,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:44:28.647438+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 23.9,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:44:30.706975+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 21.1,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:44:32.767140+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 23.5,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:44:34.833292+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 23.1,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:44:36.874150+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 22.2,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:44:38.941772+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 22.9,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:44:41.003908+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 21.6,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:44:43.068903+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 21.6,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:44:43.111971+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c007/golden/d007/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 3.0,
+   "error": "FileError: c007/golden/d007/progress.json is not a file in experiment golden-20261010T084243Z-b3ac99-sweep",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:44:45.168827+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 19.7,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:44:47.222621+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 14.0,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:44:47.259234+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c007/golden/d007/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.6,
+   "error": null,
+   "note": "{'sha256': 'd230ac1c04ca915c59eeb14de573b0f09af852507e446af329a6f591081ead95', 'path': 'c007/golden/d007/progress.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:49.321762+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 23.9,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:44:51.358561+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 20.3,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:44:51.393066+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c007/golden/d007/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.8,
+   "error": null,
+   "note": "{'sha256': '7425a4f22e9cbc9ae550b9e39badd2db1b2c32236114e4caa44885e165740bff', 'path': 'c007/golden/d007/progress.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:53.456783+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 20.8,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:44:55.495499+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 21.4,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:44:55.542843+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c007/outcome.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.7,
+   "error": null,
+   "note": "{'sha256': 'c57883adbe2a66c0cc6dc1ba61918e2d6e37062310a262f85221cc76f7b4499b', 'path': 'c007/outcome.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:55.574617+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c007/files.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': '4564fa19f6821625d9ffb7fa5e7c56207fcfa09f30fa2a949dedd16cf1dd38b7', 'path': 'c007/files.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:55.606383+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c007/golden/d007/fields.npz",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.0,
+   "error": null,
+   "note": "{'sha256': '98e4b7d9ec99507f78a949ee27d842032570114c9a15e36cee8c45ff218e8d0e', 'path': 'c007/golden/d007/fields.npz'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:55.652152+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c007/golden/d007/generator/density.npy",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.2,
+   "error": null,
+   "note": "{'sha256': 'e443252382777c5a7df330edac013840888935d3d28ef3ba39b44f4dd98c5695', 'path': 'c007/golden/d007/generator/density.npy'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:55.682516+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c007/golden/d007/generator/report.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.7,
+   "error": null,
+   "note": "{'sha256': 'fb24663ebd87bc08b4590390208c8c8e1747eab7ae604e32ae5aff5216f7e711', 'path': 'c007/golden/d007/generator/report.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:55.713784+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c007/golden/d007/generator/slices.png",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.9,
+   "error": null,
+   "note": "{'sha256': '84efc51735431d185aaaaaa2a84617ccff5766aec269586db3b95e4fd599c6ff', 'path': 'c007/golden/d007/generator/slices.png'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:55.760652+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c007/golden/d007/mask.npy",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.7,
+   "error": null,
+   "note": "{'sha256': 'd44b87a1457972ab90f443e27780afc4883218bd19e31238a11deec7e121acfd', 'path': 'c007/golden/d007/mask.npy'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:55.791059+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c007/golden/d007/mesh.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.7,
+   "error": null,
+   "note": "{'sha256': 'ef782e2d9090ac30b56cdd4be8b673fefcd72468af2928de571741980851e037', 'path': 'c007/golden/d007/mesh.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:55.825351+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c007/golden/d007/part.stl",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 5.5,
+   "error": null,
+   "note": "{'sha256': 'e79ea61a1a3d4b9c1c1120803efffe0b74b2261d17f3e381f1e5fac3b0dbe6a7', 'path': 'c007/golden/d007/part.stl'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:55.886333+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c007/golden/d007/skin.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.2,
+   "error": null,
+   "note": "{'sha256': '647c9064d50dbe850aa0ff9c8dabfcaf2a1d24a82c3f64a0d67f847a213f6461', 'path': 'c007/golden/d007/skin.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:55.914261+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c007/golden/d007/solve.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.3,
+   "error": null,
+   "note": "{'sha256': 'c4b9790fadbf77a35ca04f84fbc626dc06be70679f985e4c69ccdd4cc12f919f', 'path': 'c007/golden/d007/solve.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:55.930722+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c007/golden/d007/thumb.png",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.2,
+   "error": null,
+   "note": "{'sha256': '225b930ff0d2135d40887f2c1775a838cdbfd2e7cac4fcb98ffc8d97a1244119', 'path': 'c007/golden/d007/thumb.png'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:55.953228+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c007/results.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 1.9,
+   "error": null,
+   "note": "{'sha256': '3b4a9b3438e4d6dfd24973ad79be721e693545f188b05ce4a8b84d73390f260c', 'path': 'c007/results.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:55.992700+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c007/evidence.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.3,
+   "error": null,
+   "note": "{'sha256': 'ff9bc0696b8e37e3e52f4cf90106f92399626b27fb83b21b9416a65e514fab94', 'path': 'c007/evidence.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:56.023241+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c007/status.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.2,
+   "error": null,
+   "note": "{'sha256': '2ccaa48d4eb43f66b64634aa169532153d9bae5417124ed1a2a855eef8b4a07f', 'path': 'c007/status.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:56.054279+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c007/case.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.1,
+   "error": null,
+   "note": "{'sha256': '8190088fc41aa5adab2c894b5c7e52019bde74db17419e42cf930482fd4f5f80', 'path': 'c007/case.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:56.086819+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c007/worker.log",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.1,
+   "error": null,
+   "note": "{'sha256': 'f30ce503c74d29970eb60c3ce557a1bad5faa2397df06d3a1c72000282a12bfc', 'path': 'c007/worker.log'}"
+  },
+  {
+   "ts": "2026-10-10T08:44:58.304031+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 12.2,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:00.336717+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 12.6,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:02.386425+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 14.8,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:04.438048+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 15.6,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:06.480413+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 13.7,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:08.525185+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 20.5,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:10.580166+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 22.4,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:12.633903+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 20.3,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:14.690680+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 20.1,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:16.720531+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 14.8,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:18.755705+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 16.8,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:20.785915+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 12.5,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:22.836558+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 13.6,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:24.887175+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 14.3,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:26.933449+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 22.0,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:28.986601+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 21.4,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:31.023126+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 21.8,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:33.086246+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 25.4,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:35.148284+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 22.1,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:37.206847+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 23.3,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:39.258470+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 21.4,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:41.442749+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 22.1,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:41.487053+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c001/golden/d001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 4.1,
+   "error": "FileError: c001/golden/d001/progress.json is not a file in experiment golden-20261010T084243Z-b3ac99-sweep",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:45:43.548031+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 23.7,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:45.576822+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 13.1,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:45.613341+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c001/golden/d001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.7,
+   "error": null,
+   "note": "{'sha256': 'f4778901457ec9b0d9388ffdcc8758de9782426d0acb86c0611fb6535d71aa00', 'path': 'c001/golden/d001/progress.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:45:47.667379+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 21.7,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:49.693210+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 12.0,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:49.724523+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c001/golden/d001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.8,
+   "error": null,
+   "note": "{'sha256': '2e0acc3692620cee5b858466a342c8de1a834cbe3f524d42dc4a591c1861998f', 'path': 'c001/golden/d001/progress.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:45:51.775828+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 12.2,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:53.814307+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 12.6,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:53.851435+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c001/outcome.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.7,
+   "error": null,
+   "note": "{'sha256': '11f39d1fbc765015ffba137892141739eefdfaf62d6f9406a2d0a3dd239de5c4', 'path': 'c001/outcome.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:45:53.882225+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c001/files.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.5,
+   "error": null,
+   "note": "{'sha256': 'a2aa927f746f6c8f4cdc3c018ff0f5d909f2d4c82ce5214a6a8ae88ed0e562b8', 'path': 'c001/files.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:45:53.913388+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c001/golden/d001/fields.npz",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.9,
+   "error": null,
+   "note": "{'sha256': '52a392674d90b555a9b4979c88c2eab208b460e83930d8ff68f86bae4c1192c1', 'path': 'c001/golden/d001/fields.npz'}"
+  },
+  {
+   "ts": "2026-10-10T08:45:53.957805+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c001/golden/d001/generator/density.npy",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.7,
+   "error": null,
+   "note": "{'sha256': '3202504ab4e2ea93ee0a479be6b3c7e9ab5ff19f49f4561aa2277cb09eaf1b71', 'path': 'c001/golden/d001/generator/density.npy'}"
+  },
+  {
+   "ts": "2026-10-10T08:45:53.983457+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c001/golden/d001/generator/report.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.4,
+   "error": null,
+   "note": "{'sha256': '5902838b2672c0f9e8bcc27d7702bf4b7e597c5ea2f143f55a559f4dde43bf17', 'path': 'c001/golden/d001/generator/report.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:45:54.002369+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c001/golden/d001/generator/slices.png",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.4,
+   "error": null,
+   "note": "{'sha256': '7c6aab6d78a0f9f64a73ca5877a99f67d1acc3c6a7c405e6da135b06326d78ee', 'path': 'c001/golden/d001/generator/slices.png'}"
+  },
+  {
+   "ts": "2026-10-10T08:45:54.023672+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c001/golden/d001/mask.npy",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.2,
+   "error": null,
+   "note": "{'sha256': '875c830ed7ceeaef23bb2d3aca472ce982196dbecd9af67ab78d7fc876136fab', 'path': 'c001/golden/d001/mask.npy'}"
+  },
+  {
+   "ts": "2026-10-10T08:45:54.039669+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c001/golden/d001/mesh.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.2,
+   "error": null,
+   "note": "{'sha256': '85da0d514f66122677d768e42cce74a16a95544c714a2813d0ceb98880dfd9c8', 'path': 'c001/golden/d001/mesh.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:45:54.057023+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c001/golden/d001/part.stl",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.8,
+   "error": null,
+   "note": "{'sha256': '307fb0a3d9fb6a77dcbeb499e51f785b78f682ba140c8c0e4e90392dd52994de', 'path': 'c001/golden/d001/part.stl'}"
+  },
+  {
+   "ts": "2026-10-10T08:45:54.132653+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c001/golden/d001/skin.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.9,
+   "error": null,
+   "note": "{'sha256': '07aa2446f92af4d1573f7bec58b1b7f566cdde13b8184f5fd6c2d7e7a94494fc', 'path': 'c001/golden/d001/skin.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:45:54.164133+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c001/golden/d001/solve.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.5,
+   "error": null,
+   "note": "{'sha256': '9ebb1d28281dd7e64605fd25024fc25ffab73d694a47d0e937d247361f1312cb', 'path': 'c001/golden/d001/solve.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:45:54.194078+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c001/golden/d001/thumb.png",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.5,
+   "error": null,
+   "note": "{'sha256': '890bdb9b9112b105fcc3ea0b93efc9681a2667832436a280e34233767b6a6971', 'path': 'c001/golden/d001/thumb.png'}"
+  },
+  {
+   "ts": "2026-10-10T08:45:54.240657+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c001/results.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': '0a0802cc19355d1b95ecbac5ec313cfec19289b75ca183dfe77ea18ffac6ad27', 'path': 'c001/results.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:45:54.272419+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c001/evidence.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.0,
+   "error": null,
+   "note": "{'sha256': '7ae0e9dc600a3d0f9224c15aa7d3ecb5e090367837a91fe6fc6d185d3803c63d', 'path': 'c001/evidence.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:45:54.303251+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c001/status.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.3,
+   "error": null,
+   "note": "{'sha256': 'c81c3abecc320810d81c98f94eb7bc6e5bf9ac97849e66b3f48f775d253867fd', 'path': 'c001/status.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:45:54.334890+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c001/case.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.8,
+   "error": null,
+   "note": "{'sha256': '177c2dea757dea89e0e834d24f6a70400b7495c8955815faea100d7700884676', 'path': 'c001/case.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:45:54.365570+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c001/worker.log",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.7,
+   "error": null,
+   "note": "{'sha256': '0280ef20a333371dedaa3379b680de18d8afd018ba0bbac0a9eb505d2154c88e', 'path': 'c001/worker.log'}"
+  },
+  {
+   "ts": "2026-10-10T08:45:56.600221+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 27.7,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:45:58.656794+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 26.9,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:00.712261+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 26.7,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:02.770673+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 16.4,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:04.812741+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 27.3,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:06.844004+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 15.8,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:08.909451+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 16.3,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:10.964590+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 15.8,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:13.018859+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 17.2,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:15.057947+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 24.3,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:17.087846+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 13.7,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:19.113138+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 11.4,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:21.161643+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 15.6,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:23.202663+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 14.3,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:25.253867+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 13.6,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:27.292626+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 21.2,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:29.342524+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 15.1,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:31.396395+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 14.6,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:33.452023+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 16.5,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:35.515257+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 25.0,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:37.558075+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 14.2,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:39.598198+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 24.5,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:41.655686+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 27.0,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:43.740259+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 24.9,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:43.783022+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c003/golden/d003/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 5.1,
+   "error": null,
+   "note": "{'sha256': '5c6b255d672dec36bd375d008d9af045e84d93ab1e66012792736435e72d6558', 'path': 'c003/golden/d003/progress.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:43.828389+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c004/golden/d004/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.8,
+   "error": null,
+   "note": "{'sha256': 'bf0902ea2fe581332af5347a037fd78df4b4d5f4009b2f25b20fb0037b6c878c', 'path': 'c004/golden/d004/progress.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:43.877215+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c006/golden/d006/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 5.7,
+   "error": null,
+   "note": "{'sha256': '89ec1e7f1833bf7f6818de5042822fde92a6b97a3daa196a09441b27deb4019c', 'path': 'c006/golden/d006/progress.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:45.938002+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 22.1,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:47.987660+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 22.8,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:48.031892+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c003/golden/d003/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.6,
+   "error": null,
+   "note": "{'sha256': '3e800075dc38b0a96ee451525c32f34949ae556cb17edff7d64930e9788395b9', 'path': 'c003/golden/d003/progress.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:48.080735+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c004/golden/d004/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 6.4,
+   "error": null,
+   "note": "{'sha256': 'c19fbfb75ed5a49ab77faeb8884949601f3372ff39f9164b1269fd94b8ac0ebe', 'path': 'c004/golden/d004/progress.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:48.125855+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c006/golden/d006/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.6,
+   "error": null,
+   "note": "{'sha256': '77c1cfbed2cbebb5ffbc32ed4f4d2cf3168690e43504d500daac1a16c9aee154', 'path': 'c006/golden/d006/progress.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:50.195298+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 24.4,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:52.246964+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 18.7,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:52.279008+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c003/golden/d003/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.5,
+   "error": null,
+   "note": "{'sha256': '3e800075dc38b0a96ee451525c32f34949ae556cb17edff7d64930e9788395b9', 'path': 'c003/golden/d003/progress.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:52.326507+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c004/golden/d004/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.1,
+   "error": null,
+   "note": "{'sha256': 'c19fbfb75ed5a49ab77faeb8884949601f3372ff39f9164b1269fd94b8ac0ebe', 'path': 'c004/golden/d004/progress.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:52.376012+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c006/golden/d006/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 5.5,
+   "error": null,
+   "note": "{'sha256': '77c1cfbed2cbebb5ffbc32ed4f4d2cf3168690e43504d500daac1a16c9aee154', 'path': 'c006/golden/d006/progress.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:54.444490+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 25.7,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:54.485833+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c003/outcome.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.4,
+   "error": null,
+   "note": "{'sha256': 'eb5751a45f275469c176369eb1814022eb78080a7c5d485edff95586f867ca20', 'path': 'c003/outcome.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:54.515705+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c003/files.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 1.9,
+   "error": null,
+   "note": "{'sha256': 'e4d8cf518ead27b3fbf8b9335114986b4d1a032c5aebad7d18f811367356f872', 'path': 'c003/files.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:54.549031+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c003/golden/d003/fields.npz",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.1,
+   "error": null,
+   "note": "{'sha256': '53fc37dccbccaa990c93a8e57645fea55d3d56c519ea71733e3694cfd2fb6c75', 'path': 'c003/golden/d003/fields.npz'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:54.643873+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c003/golden/d003/generator/density.npy",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 75.0,
+   "error": null,
+   "note": "{'sha256': '72900b9e3c20c795b1ce08578bc026e1b32ab2a3ddfa10e4bc7251b1e25c5be2', 'path': 'c003/golden/d003/generator/density.npy'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:54.689256+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c003/golden/d003/generator/report.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.4,
+   "error": null,
+   "note": "{'sha256': '9a065e5bed70e7cdcd2fcf656aa7bbfbdba786ce9413bdea8fec5625ac9d7144', 'path': 'c003/golden/d003/generator/report.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:54.733562+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c003/golden/d003/generator/slices.png",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.9,
+   "error": null,
+   "note": "{'sha256': '5b1a0d7fcee33fb893c825cabe488a9d955dfbfb8888b12d37996114e9787592', 'path': 'c003/golden/d003/generator/slices.png'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:54.763856+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c003/golden/d003/mask.npy",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': '34f4d984f8a1c3db85870006572532c9f4fa0db5b004ea0c1160164ad98fb7bd', 'path': 'c003/golden/d003/mask.npy'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:54.795055+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c003/golden/d003/mesh.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.5,
+   "error": null,
+   "note": "{'sha256': 'cd5689b722b173d7137dc3837f92b26950c1b8c4dcfab5b1c6ad837cb5eadf8c', 'path': 'c003/golden/d003/mesh.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:54.828467+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c003/golden/d003/part.stl",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 5.2,
+   "error": null,
+   "note": "{'sha256': '5538adecbe3d5aab5a7f3e52ec72c936c82b300a0e1245d155b469e7a7f32bb0', 'path': 'c003/golden/d003/part.stl'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:54.889711+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c003/golden/d003/skin.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.9,
+   "error": null,
+   "note": "{'sha256': '62c7cea44f6a21de9b393c0a14112785dd11be2d8dd1a66bfe3be8bfa7f1c4ca', 'path': 'c003/golden/d003/skin.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:54.919586+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c003/golden/d003/solve.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.5,
+   "error": null,
+   "note": "{'sha256': '632d3567a1fd02163bf16dea815b7af867ec9c2b8c179ac62a083452ae56862f', 'path': 'c003/golden/d003/solve.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:54.952139+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c003/golden/d003/thumb.png",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.0,
+   "error": null,
+   "note": "{'sha256': '28c7c7b34ca22e9b2c1b58ee7a2a0fa9ac306d95ff130b0febbaa18c3c1065d9', 'path': 'c003/golden/d003/thumb.png'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:54.998837+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c003/results.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.5,
+   "error": null,
+   "note": "{'sha256': '88104a56d5a0ff87035dcc79bbd8bde26006b007552f45d7cc5e940e313d7778', 'path': 'c003/results.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:55.031222+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c003/evidence.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.0,
+   "error": null,
+   "note": "{'sha256': '0405ede20b0ac583070b952c161bc19b22ef3761539edd68558696f5ebb228a6', 'path': 'c003/evidence.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:55.060083+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c003/status.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.4,
+   "error": null,
+   "note": "{'sha256': '47b85bc7933ccb9391bf794e40624a94be73466f0e214619650750b7ce19e2ba', 'path': 'c003/status.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:55.091537+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c003/case.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.3,
+   "error": null,
+   "note": "{'sha256': '9d24b8964277d866ab671521f8ec7be847434a37bcd7476e2c0b246310fcda76', 'path': 'c003/case.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:55.124054+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c003/worker.log",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.4,
+   "error": null,
+   "note": "{'sha256': '0f862c05d4b249e55b8cb7b828749d311b1290d1fb4fb20eb48b3ba452adbfa6', 'path': 'c003/worker.log'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:55.343012+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c006/outcome.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.4,
+   "error": null,
+   "note": "{'sha256': 'd99b0e5d45286bef94b14245d3e912f51355f1304af0315d3fa2e5c49c0e0f14', 'path': 'c006/outcome.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:55.358358+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c006/files.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.3,
+   "error": null,
+   "note": "{'sha256': '0f74f5c208bc91a29195c9d1bb291c258b3b94b364ce75d6e7e0c720a761862a', 'path': 'c006/files.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:55.384563+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c006/golden/d006/generator/density.npy",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.0,
+   "error": null,
+   "note": "{'sha256': '65611adfc921742dba0197d6556b6362ba6b6342375e59c79f5c151d369ab166', 'path': 'c006/golden/d006/generator/density.npy'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:55.431866+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c006/golden/d006/generator/report.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.7,
+   "error": null,
+   "note": "{'sha256': '89b489e90da160b6a6212990f424604bb0161d983b1fe0c3ca52792172cbd512', 'path': 'c006/golden/d006/generator/report.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:55.456768+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c006/golden/d006/generator/slices.png",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.4,
+   "error": null,
+   "note": "{'sha256': '16b233ec339e1a32cae192486a5e1141b2f6fcffd1ff3b1cd285d8ce8196e32d', 'path': 'c006/golden/d006/generator/slices.png'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:55.480696+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c006/golden/d006/skin.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.1,
+   "error": null,
+   "note": "{'sha256': '4ce6f65bed1f45fce48e24d5955cb3c02e5cd71f29cb2023695afd377c6f34e6', 'path': 'c006/golden/d006/skin.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:55.498536+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c006/evidence.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.0,
+   "error": null,
+   "note": "{'sha256': '966e20d7585ef103668400a54a2e0493f446c2e598efb91afb07fd90abd37275', 'path': 'c006/evidence.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:55.542590+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c006/status.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.2,
+   "error": null,
+   "note": "{'sha256': 'a9e7161752ee7c4e419c416c2e7c14150132e838e7a09f1e7b9742b160eea863', 'path': 'c006/status.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:55.572624+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c006/case.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.7,
+   "error": null,
+   "note": "{'sha256': 'acdd421121e06919309182a0c60dac3e599259ec3a0ca6beee9b5c53f27bc1ed', 'path': 'c006/case.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:55.588880+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c006/worker.log",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': '7deea215ec7bd30afa9d61bd60d40de70259f1c07ea85259c552e568701bf45b', 'path': 'c006/worker.log'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:57.771592+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep"
+   },
+   "ok": true,
+   "ms": 28.2,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-sweep', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-sweep--c000--run--6f811b', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:46:57.825784+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c004/outcome.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.1,
+   "error": null,
+   "note": "{'sha256': '789219fdb5bf2435577db59870a9fb29f9e2a5ec0974c728bb08bea2eeefbfc1', 'path': 'c004/outcome.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:57.873040+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c004/files.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': 'b9527ee1b5f6f774a7483278006a8743c3636d6cd62c920f87b3d748ac42f433', 'path': 'c004/files.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:57.902650+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c004/golden/d004/fields.npz",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.9,
+   "error": null,
+   "note": "{'sha256': '1b2284a6ca86ca320adff5e041752db1f3d3218210bf804b4f88ca79a421e6a3', 'path': 'c004/golden/d004/fields.npz'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:57.948358+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c004/golden/d004/generator/density.npy",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.7,
+   "error": null,
+   "note": "{'sha256': '508b69bc04f708c8e032095f5d1afb62b8a39c9755cdb49c9dfed6b6e7415280', 'path': 'c004/golden/d004/generator/density.npy'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:57.981167+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c004/golden/d004/generator/report.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.7,
+   "error": null,
+   "note": "{'sha256': 'f45a23412df7309195f195e92830f92f44aed57720798ce37129ea24ade18d27', 'path': 'c004/golden/d004/generator/report.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:58.029156+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c004/golden/d004/generator/slices.png",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.8,
+   "error": null,
+   "note": "{'sha256': 'dd3887dad1f902aa71b171dc8875479e8c4d8e6ae80603acf652bb459b6eaaa5', 'path': 'c004/golden/d004/generator/slices.png'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:58.073877+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c004/golden/d004/mask.npy",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': 'e935502c1a802a8988dcd0ac5b88fc9c1dc272a5566338cbc3196c47aa156437', 'path': 'c004/golden/d004/mask.npy'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:58.121935+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c004/golden/d004/mesh.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.5,
+   "error": null,
+   "note": "{'sha256': '9a4be65d6066f11b79bd7555a199c68b42afac6c3578cbe7e5b8a83972bfc74a', 'path': 'c004/golden/d004/mesh.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:58.144125+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c004/golden/d004/part.stl",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 5.7,
+   "error": null,
+   "note": "{'sha256': '37420a3fecbf7a91f3ae42730336a4b03dd51abb4b9d76fb8d9de92c121d65f8', 'path': 'c004/golden/d004/part.stl'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:58.218521+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c004/golden/d004/skin.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 5.1,
+   "error": null,
+   "note": "{'sha256': '07b4ac143b900e4b4e2ae3af5aee17d42b7c78168acaa9fdfe47f140ef8a6efd', 'path': 'c004/golden/d004/skin.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:58.261775+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c004/golden/d004/solve.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': '97110c42965241f00d8e8ca8e9220669b10171c09a20adc928d5a435bc204eae', 'path': 'c004/golden/d004/solve.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:58.292890+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c004/golden/d004/thumb.png",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.7,
+   "error": null,
+   "note": "{'sha256': '02b2587225a6038f1f6742ad8b2bfe1b6ee24457901d56018995d59cc37a2c5b', 'path': 'c004/golden/d004/thumb.png'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:58.319839+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c004/results.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': '494a31154ffdbf0aa846ed7053f9fa786b0f371bfbfbc894235bc49cb8dec6e7', 'path': 'c004/results.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:58.335414+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c004/evidence.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.5,
+   "error": null,
+   "note": "{'sha256': '2c737f80f2693869d48dbafb5815080c9d10fd7483ace5da0a65b621177048c5', 'path': 'c004/evidence.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:58.421747+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c004/status.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 73.0,
+   "error": null,
+   "note": "{'sha256': '119dce812db1a69be618c88586ae4054df4ddebb3785603b125d597112397bd0', 'path': 'c004/status.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:58.463110+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c004/case.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': '054d03be05eac77a2d5460e256e0d1cd3f8402c397474d14972a5a5f6c9cb3a5', 'path': 'c004/case.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:58.493031+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "path": "c004/worker.log",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': 'bad0cbcb5f05622937e7f8bde3c3fd62ade6773175d8af0d27258c09056c407e', 'path': 'c004/worker.log'}"
+  },
+  {
+   "ts": "2026-10-10T08:46:58.861319+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_evidence",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-sweep",
+    "company": null,
+    "note": "aces golden 20261010T084243Z-b3ac99 sweep from Darkness",
+    "push": null
+   },
+   "ok": true,
+   "ms": 137.2,
+   "error": null,
+   "note": "{'bundle_sha256': '1127a190d03320840162883d9f4fa3a0d83f9da940e52068b7b79e7222d14d20'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:09.049168+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_put_file",
+   "args": {
+    "name": "golden/20261010T084243Z-b3ac99/v001.part.stl",
+    "content_b64": "<692112 base64 chars>",
+    "total_bytes": 519084,
+    "sha256": "de0f92f004ebe1675b4fa796d6707e0c00ca7afc339cd06af6d50dd7de3849ab",
+    "offset": 0,
+    "overwrite": false
+   },
+   "ok": true,
+   "ms": 6.1,
+   "error": null,
+   "note": "{'sha256': 'de0f92f004ebe1675b4fa796d6707e0c00ca7afc339cd06af6d50dd7de3849ab', 'replaced': False, 'name': 'golden/20261010T084243Z-b3ac99/v001.part.stl', 'complete': True, 'existed': False, 'path': 'c"
+  },
+  {
+   "ts": "2026-10-10T08:47:09.130502+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_put_spec",
+   "args": {
+    "content": "id: golden-20261010T084243Z-b3ac99-check\nproject: golden-demo\nowner: shedm\nphysics: structures\nsolver: golden-check\ndescription: 'aces golden root-mount run 20261010T084243Z-b3ac99: finer-resolution independent check of v001/part.stl on the rig (2 mm, 1 mm)'\ngeometry:\n  source: mesh\n  ref: golden/20",
+    "name": "golden-20261010T084243Z-b3ac99-check.yaml",
+    "overwrite": false
+   },
+   "ok": true,
+   "ms": 32.2,
+   "error": null,
+   "note": "{'spec_path': 'cases/uploaded/anonymous/golden-20261010T084243Z-b3ac99-check.yaml', 'sha256': '1a260f643f0d6cb9a8c347bed94f86f033ebdbae2869583d218f36ebd42c9520', 'replaced': False, 'bytes': 2414}"
+  },
+  {
+   "ts": "2026-10-10T08:47:09.185326+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_submit",
+   "args": {
+    "spec_path": "cases/uploaded/anonymous/golden-20261010T084243Z-b3ac99-check.yaml",
+    "docker": true,
+    "out_root": null,
+    "mlflow_uri": null,
+    "lease_wait_s": 1800
+   },
+   "ok": true,
+   "ms": 26.0,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-check', 'jobs': ['golden-20261010T084243Z-b3ac99-check--c000--run--6ac262', 'golden-20261010T084243Z-b3ac99-check--c001--run--46a6fa']}"
+  },
+  {
+   "ts": "2026-10-10T08:47:09.313519+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_put_spec",
+   "args": {
+    "content": "id: golden-20261010T084243Z-b3ac99-conf\nproject: golden-demo\nowner: shedm\nphysics: structures\nsolver: ccx-check\ndescription: 'aces golden root-mount run 20261010T084243Z-b3ac99: conforming tet10 second discretisation of v001/part.stl on the rig CPU (2 mm)'\ngeometry:\n  source: mesh\n  ref: golden/2026",
+    "name": "golden-20261010T084243Z-b3ac99-conf.yaml",
+    "overwrite": false
+   },
+   "ok": true,
+   "ms": 27.2,
+   "error": null,
+   "note": "{'spec_path': 'cases/uploaded/anonymous/golden-20261010T084243Z-b3ac99-conf.yaml', 'sha256': 'b4fde467a0c6c06f1f39b7b00c0a094248d3a5d2206b06c79e5da92501b02829', 'replaced': False, 'bytes': 2146}"
+  },
+  {
+   "ts": "2026-10-10T08:47:09.370299+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_submit",
+   "args": {
+    "spec_path": "cases/uploaded/anonymous/golden-20261010T084243Z-b3ac99-conf.yaml",
+    "docker": true,
+    "out_root": null,
+    "mlflow_uri": null,
+    "lease_wait_s": 1800
+   },
+   "ok": true,
+   "ms": 22.4,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': ['golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e']}"
+  },
+  {
+   "ts": "2026-10-10T08:47:10.801257+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check"
+   },
+   "ok": true,
+   "ms": 6.4,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-check', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-check--c000--run--6ac262', 'status': 'started', 'meta': {'experiment': 'golden-20261010T08424"
+  },
+  {
+   "ts": "2026-10-10T08:47:12.846223+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check"
+   },
+   "ok": true,
+   "ms": 6.5,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-check', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-check--c000--run--6ac262', 'status': 'started', 'meta': {'experiment': 'golden-20261010T08424"
+  },
+  {
+   "ts": "2026-10-10T08:47:14.885416+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check"
+   },
+   "ok": true,
+   "ms": 6.5,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-check', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-check--c000--run--6ac262', 'status': 'started', 'meta': {'experiment': 'golden-20261010T08424"
+  },
+  {
+   "ts": "2026-10-10T08:47:14.915054+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c000/golden/x001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.9,
+   "error": null,
+   "note": "{'sha256': '0aa4fa64fa738ce54504548240b721f055e15289a5a93b0e30d118c9f7ea035b', 'path': 'c000/golden/x001/progress.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:14.961265+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c001/golden/x002/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 3.9,
+   "error": "FileError: c001/golden/x002/progress.json is not a file in experiment golden-20261010T084243Z-b3ac99-check",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:47:17.000635+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check"
+   },
+   "ok": true,
+   "ms": 6.1,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-check', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-check--c000--run--6ac262', 'status': 'started', 'meta': {'experiment': 'golden-20261010T08424"
+  },
+  {
+   "ts": "2026-10-10T08:47:19.038297+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check"
+   },
+   "ok": true,
+   "ms": 7.0,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-check', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-check--c000--run--6ac262', 'status': 'started', 'meta': {'experiment': 'golden-20261010T08424"
+  },
+  {
+   "ts": "2026-10-10T08:47:19.067149+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c000/golden/x001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.1,
+   "error": null,
+   "note": "{'sha256': '0aa4fa64fa738ce54504548240b721f055e15289a5a93b0e30d118c9f7ea035b', 'path': 'c000/golden/x001/progress.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:19.112099+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c001/golden/x002/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 3.3,
+   "error": "FileError: c001/golden/x002/progress.json is not a file in experiment golden-20261010T084243Z-b3ac99-check",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:47:21.133394+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check"
+   },
+   "ok": true,
+   "ms": 6.2,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-check', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-check--c000--run--6ac262', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:47:21.182217+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c000/outcome.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.4,
+   "error": null,
+   "note": "{'sha256': '02a952b2b8da6c10fe90b8ccc5471fbd168b86aa979908882314af53362cdd50', 'path': 'c000/outcome.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:21.211370+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c000/files.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.3,
+   "error": null,
+   "note": "{'sha256': 'c4a09e0f5b9459c6e683f709000e34d194bab7d037f083d1a50a0ffaf2da2b70', 'path': 'c000/files.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:21.242115+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c000/golden/x001/case.md",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.2,
+   "error": null,
+   "note": "{'sha256': '849410e8084315f84510c3b1e3660bfff2d6c9f66775babfb239ba3cafca02e8', 'path': 'c000/golden/x001/case.md'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:21.273769+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c000/golden/x001/disp_slices.png",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.2,
+   "error": null,
+   "note": "{'sha256': '5b05b77435fa38c1842227a84de83bcf2cf802ce457d177691c80d9aac03827b', 'path': 'c000/golden/x001/disp_slices.png'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:21.320915+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c000/golden/x001/fields.npz",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.2,
+   "error": null,
+   "note": "{'sha256': 'dea45d0474a0c071919770537f6493d622847b83a7d0d491e4b42dbf70464119', 'path': 'c000/golden/x001/fields.npz'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:21.405365+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c000/golden/x001/fields.vtk",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 10.5,
+   "error": null,
+   "note": "{'sha256': 'f30e2827a47b2616198bf4a8976afb7a59304506e11b2179148d5fe24376d35d', 'path': 'c000/golden/x001/fields.vtk'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:21.507762+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c000/golden/x001/mask.npy",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.9,
+   "error": null,
+   "note": "{'sha256': '85a14d58f387eeb092bcd139d6e9b823f4be9dc8889ce9763644393747fe8cc5', 'path': 'c000/golden/x001/mask.npy'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:21.553020+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c000/golden/x001/mesh.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.7,
+   "error": null,
+   "note": "{'sha256': '75422ca48dce42941163c0af3910f9195e77a01e59bfcb8330405ff3b9435884', 'path': 'c000/golden/x001/mesh.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:21.584049+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c000/golden/x001/solve.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': 'b6afc24ac9dc21f780a831e3dd1da89eefb6cf939a8a3c19fe6b9957cdca857b', 'path': 'c000/golden/x001/solve.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:21.616911+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c000/golden/x001/vm_slices.png",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.9,
+   "error": null,
+   "note": "{'sha256': 'd9bf9814948a7587c2c53afbd4758ba7605a0566a0d93208853b003ec2053e20', 'path': 'c000/golden/x001/vm_slices.png'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:21.660130+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c000/results.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.0,
+   "error": null,
+   "note": "{'sha256': '9a24b9677c65c2164ca05273c9b7026d2abbb4610577b0548f54e974b8d3e97b', 'path': 'c000/results.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:21.694027+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c000/evidence.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.8,
+   "error": null,
+   "note": "{'sha256': 'c9abd4f246ed11a9a6dc528e69a1abadb5543652a7903c8a73c3980453cf1130', 'path': 'c000/evidence.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:21.741030+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c000/status.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.8,
+   "error": null,
+   "note": "{'sha256': '4d7d9609d51c1bba13c1b465960f6cb7c73c2e9ee497dee5c2d0a9ff36030fc6', 'path': 'c000/status.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:21.772868+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c000/case.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.7,
+   "error": null,
+   "note": "{'sha256': '53e4a1f4f42b8dfbb18407f50af807dfcaace4ec61cd5b1e4a3f4ab41b7ef411', 'path': 'c000/case.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:21.819493+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c000/worker.log",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.7,
+   "error": null,
+   "note": "{'sha256': '4c85239bdba2da9c377c3cd81e23f5e2b7de8ea9d93485f294721185d5cf7330', 'path': 'c000/worker.log'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:24.002277+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check"
+   },
+   "ok": true,
+   "ms": 7.1,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-check', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-check--c000--run--6ac262', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:47:24.055529+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c001/golden/x002/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 14.4,
+   "error": null,
+   "note": "{'sha256': '321a8e61599889b50b2fd66154d9600645887d4ee3b2a67233060a1de3ab5fae', 'path': 'c001/golden/x002/progress.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:26.108724+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check"
+   },
+   "ok": true,
+   "ms": 8.0,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-check', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-check--c000--run--6ac262', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0842"
+  },
+  {
+   "ts": "2026-10-10T08:47:26.150542+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c001/outcome.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.0,
+   "error": null,
+   "note": "{'sha256': 'f935dd4e741de38fa34c077625f4cd096dde0a88054e9ad0ad228724de148977', 'path': 'c001/outcome.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:26.196047+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c001/files.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': '55fb053409eb411ff7e0d88a4b96486b09571b2dd46771053c4f544576176555', 'path': 'c001/files.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:26.232197+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c001/golden/x002/fields.npz",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 9.0,
+   "error": null,
+   "note": "{'sha256': '6d9d634972a0c93518c673c8709d9d42b144a60d2428fce73b3d331157765bf0', 'path': 'c001/golden/x002/fields.npz'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:26.324448+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c001/golden/x002/mask.npy",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 7.2,
+   "error": null,
+   "note": "{'sha256': '1018043fe3179058a687b3b76f862f115f767b92400b13986b34d4ce462a6b41', 'path': 'c001/golden/x002/mask.npy'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:26.400234+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c001/golden/x002/mesh.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.5,
+   "error": null,
+   "note": "{'sha256': 'ac581101d721f18ac012f91c43cbb0eea221ead6c698bc1336476a26fa927a84', 'path': 'c001/golden/x002/mesh.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:26.430497+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c001/golden/x002/solve.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.4,
+   "error": null,
+   "note": "{'sha256': '67fb78498b57fa86f3f92e6dc9a592b9a4e2fdf5eee2efda647371cffca9656e', 'path': 'c001/golden/x002/solve.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:26.460483+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c001/results.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.4,
+   "error": null,
+   "note": "{'sha256': '67fe7b79461e02f1c25b7aa647b85e7763b5814232a5db2bb091ba5aad70c279', 'path': 'c001/results.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:26.491678+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c001/evidence.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.4,
+   "error": null,
+   "note": "{'sha256': '49678b702ab0a000b598534327fcf78f99c28a386865fb37049e63b2cefad87b', 'path': 'c001/evidence.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:26.523158+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c001/status.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.3,
+   "error": null,
+   "note": "{'sha256': '2c61683526d5f678fd364e78598c886ef41f5ca5c1bda61b52cce3c4c5b32ce0', 'path': 'c001/status.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:26.554065+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c001/case.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.3,
+   "error": null,
+   "note": "{'sha256': '8e6572d85004d24b22b2ce6bbae0029558ef6ce20f785803a9cb1f00aa425a36', 'path': 'c001/case.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:26.586746+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "path": "c001/worker.log",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.2,
+   "error": null,
+   "note": "{'sha256': '0bf94522c086767676e30988112b38536e2bda1c8fcfef273e1168c85ab8efb8', 'path': 'c001/worker.log'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:26.748024+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_evidence",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-check",
+    "company": null,
+    "note": "aces golden 20261010T084243Z-b3ac99 check from Darkness",
+    "push": null
+   },
+   "ok": true,
+   "ms": 16.0,
+   "error": null,
+   "note": "{'bundle_sha256': '32ed3e5508f7fd96e2032697e07efe91031a51aab247388cdfcefc78f50dd668'}"
+  },
+  {
+   "ts": "2026-10-10T08:47:26.791108+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 4.5,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:47:28.845476+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 4.9,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:47:30.886974+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 5.0,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:47:30.901371+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 2.2,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084243Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:47:32.945528+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 3.9,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:47:34.982185+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 5.8,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:47:35.026490+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 3.7,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084243Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:47:37.053897+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 3.3,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:47:39.088662+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 4.4,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:47:39.115728+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 2.0,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084243Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:47:41.134044+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 4.6,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:47:43.182523+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 6.2,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:47:43.224290+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 3.6,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084243Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:47:45.256420+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 4.7,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:47:47.292379+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 6.2,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:47:47.312496+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 3.5,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084243Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:47:49.344766+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 5.4,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:47:51.381868+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 5.6,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:47:51.397784+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 3.4,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084243Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:47:53.415875+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 4.6,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:47:55.456776+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 5.8,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:47:55.485557+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 3.4,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084243Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:47:57.514237+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 5.1,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:47:59.537707+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 6.4,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:47:59.560240+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 4.2,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084243Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:48:01.580514+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 4.9,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:48:03.602384+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 6.7,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:48:03.630822+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 3.8,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084243Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:48:05.677645+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 6.1,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:48:07.712100+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 5.9,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:48:07.757797+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 5.1,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084243Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:48:09.803571+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 5.2,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084243Z"
+  },
+  {
+   "ts": "2026-10-10T08:48:11.845324+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 7.8,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084243Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084243Z-b3ac99-conf--c000--run--f0210e', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T084243"
+  },
+  {
+   "ts": "2026-10-10T08:48:11.873495+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/outcome.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.1,
+   "error": null,
+   "note": "{'sha256': 'fcd7e88d3a2883808e910c891304db2987d74a0e930b02cd01bfdd827d4b1562', 'path': 'c000/outcome.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:11.917929+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/files.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.8,
+   "error": null,
+   "note": "{'sha256': 'eab5f361cb6c60727175cf6fccca3c61246b931d7cd2da0cb0a65fca595f4f2a', 'path': 'c000/files.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:11.949428+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/ccx.cvg",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.9,
+   "error": null,
+   "note": "{'sha256': '65086dedb4572132b815ace04b294909c7f6f337111f9704fc310b02320f67f7', 'path': 'c000/golden/m001/ccx.cvg'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:12.000312+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/ccx.dat.gz",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 24.6,
+   "error": null,
+   "note": "{'sha256': '62d53a376c8014f813fa4a52ccb210a94d61b5256b410911ef607a9eb16387f3', 'path': 'c000/golden/m001/ccx.dat.gz'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:12.152287+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/ccx.dat.gz",
+    "offset": 2097152,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 20.6,
+   "error": null,
+   "note": "{'sha256': '62d53a376c8014f813fa4a52ccb210a94d61b5256b410911ef607a9eb16387f3', 'path': 'c000/golden/m001/ccx.dat.gz'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:12.308268+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/ccx.dat.gz",
+    "offset": 4194304,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 20.3,
+   "error": null,
+   "note": "{'sha256': '62d53a376c8014f813fa4a52ccb210a94d61b5256b410911ef607a9eb16387f3', 'path': 'c000/golden/m001/ccx.dat.gz'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:12.444108+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/ccx.inp.gz",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 15.2,
+   "error": null,
+   "note": "{'sha256': 'ca35cae20b2ec88aaae6039e9572e2ea1ecc0ad953b90ab0553b752ee871ec0f', 'path': 'c000/golden/m001/ccx.inp.gz'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:12.580468+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/ccx.inp.gz",
+    "offset": 2097152,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 11.3,
+   "error": null,
+   "note": "{'sha256': 'ca35cae20b2ec88aaae6039e9572e2ea1ecc0ad953b90ab0553b752ee871ec0f', 'path': 'c000/golden/m001/ccx.inp.gz'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:12.667096+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/ccx.log",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.4,
+   "error": null,
+   "note": "{'sha256': '822551df7ffde415add211d372929097715d99f4fa1960ace1cb14a7551f2200', 'path': 'c000/golden/m001/ccx.log'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:12.698903+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/ccx.sta",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.1,
+   "error": null,
+   "note": "{'sha256': '01e324ec0ea28f4d1fd7f5e2da1277af53812b873e218be1604c17a4c8e4990d', 'path': 'c000/golden/m001/ccx.sta'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:12.718019+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/conforming.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': 'b58bc38c3d42585f5b76fd3f8b3b7738b9c406bac6f97eb613edfb021ccadb4a', 'path': 'c000/golden/m001/conforming.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:12.762005+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/mesh.log",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': '529f09ddd106ff5cd2cbedea20e92b760be0750e765ed7912e11efcb74b592e1', 'path': 'c000/golden/m001/mesh.log'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:12.820905+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/mesh.npz",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 16.6,
+   "error": null,
+   "note": "{'sha256': '0d40bef4eb18b001fbb4043190227655192be0a2553f132c222b5b99dfc76e17', 'path': 'c000/golden/m001/mesh.npz'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:12.950819+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/mesh.npz",
+    "offset": 2097152,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 17.9,
+   "error": null,
+   "note": "{'sha256': '0d40bef4eb18b001fbb4043190227655192be0a2553f132c222b5b99dfc76e17', 'path': 'c000/golden/m001/mesh.npz'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:13.098783+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/mesh.npz",
+    "offset": 4194304,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 13.3,
+   "error": null,
+   "note": "{'sha256': '0d40bef4eb18b001fbb4043190227655192be0a2553f132c222b5b99dfc76e17', 'path': 'c000/golden/m001/mesh.npz'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:13.167841+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/golden/m001/tetmesh.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.2,
+   "error": null,
+   "note": "{'sha256': '28257a4dc5ae8f3b4ddc84d673c38b0aff58a4db95adbf7896ab98bb34b749e1', 'path': 'c000/golden/m001/tetmesh.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:13.198665+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/results.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': 'b614b3f2e39c42f9e4af229d83702650a57f18f319e42b4377462dfa0065b2b6', 'path': 'c000/results.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:13.227872+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/evidence.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.5,
+   "error": null,
+   "note": "{'sha256': 'f3b82fffd3b344f775aa0440d5f9e8f06f2b7a9ebb0a0ae662451e49370b317a', 'path': 'c000/evidence.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:13.243603+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/status.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.5,
+   "error": null,
+   "note": "{'sha256': 'fdcafc0c0fb0b4c1420c38801fcd816c6737db7645819d2fccf8415e47075742', 'path': 'c000/status.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:13.273458+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/case.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.8,
+   "error": null,
+   "note": "{'sha256': 'e36080871cfbc45d97b21bf94f78b8f76e21818d7c3abf928b30c50d52c50537', 'path': 'c000/case.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:13.304313+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "path": "c000/worker.log",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.5,
+   "error": null,
+   "note": "{'sha256': '39665114d500ba1164c50c9106c3541ca30889e88d243026ce2f456a7044bb3a', 'path': 'c000/worker.log'}"
+  },
+  {
+   "ts": "2026-10-10T08:48:13.542082+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_evidence",
+   "args": {
+    "experiment_id": "golden-20261010T084243Z-b3ac99-conf",
+    "company": null,
+    "note": "aces golden 20261010T084243Z-b3ac99 conf from Darkness",
+    "push": null
+   },
+   "ok": true,
+   "ms": 10.7,
+   "error": null,
+   "note": "{'bundle_sha256': 'f14b5d51b33ff9e4c9a8a504623b8ee4daa04f7a6d6264cfb18acf3f71dedbd7'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:19.395216+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_whoami",
+   "args": {},
+   "ok": true,
+   "ms": 0.0,
+   "error": null,
+   "note": "{'policy': 'full'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:19.399086+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_list_solvers",
+   "args": {},
+   "ok": true,
+   "ms": 0.6,
+   "error": null,
+   "note": "{}"
+  },
+  {
+   "ts": "2026-10-10T08:49:19.911799+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "rig_capacity",
+   "args": {
+    "mode": null,
+    "pool": null
+   },
+   "ok": true,
+   "ms": 505.0,
+   "error": null,
+   "note": "{'available': [0, 2, 3]}"
+  },
+  {
+   "ts": "2026-10-10T08:49:33.219893+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_put_file",
+   "args": {
+    "name": "golden/20261010T084920Z-b3ac99/spec.effective.json",
+    "content_b64": "<8500 base64 chars>",
+    "total_bytes": 6374,
+    "sha256": "acc99c6a2671265e41521b81d1ce216ba0c61d4f3759665286e456c317045b52",
+    "offset": 0,
+    "overwrite": false
+   },
+   "ok": true,
+   "ms": 1.9,
+   "error": null,
+   "note": "{'sha256': 'acc99c6a2671265e41521b81d1ce216ba0c61d4f3759665286e456c317045b52', 'replaced': False, 'name': 'golden/20261010T084920Z-b3ac99/spec.effective.json', 'complete': True, 'existed': False, 'pat"
+  },
+  {
+   "ts": "2026-10-10T08:49:33.224871+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_put_file",
+   "args": {
+    "name": "golden/20261010T084920Z-b3ac99/domain.json",
+    "content_b64": "<26868 base64 chars>",
+    "total_bytes": 20149,
+    "sha256": "a2320df10bb6642484aafb5bc2927fd7c05690eb138e3dc1555be4550333265a",
+    "offset": 0,
+    "overwrite": false
+   },
+   "ok": true,
+   "ms": 1.5,
+   "error": null,
+   "note": "{'sha256': 'a2320df10bb6642484aafb5bc2927fd7c05690eb138e3dc1555be4550333265a', 'replaced': False, 'name': 'golden/20261010T084920Z-b3ac99/domain.json', 'complete': True, 'existed': False, 'path': 'cas"
+  },
+  {
+   "ts": "2026-10-10T08:49:33.243402+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_put_file",
+   "args": {
+    "name": "golden/20261010T084920Z-b3ac99/v001.part.stl",
+    "content_b64": "<692112 base64 chars>",
+    "total_bytes": 519084,
+    "sha256": "de0f92f004ebe1675b4fa796d6707e0c00ca7afc339cd06af6d50dd7de3849ab",
+    "offset": 0,
+    "overwrite": false
+   },
+   "ok": true,
+   "ms": 6.5,
+   "error": null,
+   "note": "{'sha256': 'de0f92f004ebe1675b4fa796d6707e0c00ca7afc339cd06af6d50dd7de3849ab', 'replaced': False, 'name': 'golden/20261010T084920Z-b3ac99/v001.part.stl', 'complete': True, 'existed': False, 'path': 'c"
+  },
+  {
+   "ts": "2026-10-10T08:49:33.282201+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_put_spec",
+   "args": {
+    "content": "id: golden-20261010T084920Z-b3ac99-check\nproject: golden-demo\nowner: aces\nphysics: structures\nsolver: golden-check\ndescription: 'aces golden root-mount run 20261010T084920Z-b3ac99: finer-resolution independent check of v001/part.stl on the rig (2 mm, 1 mm)'\ngeometry:\n  source: mesh\n  ref: golden/202",
+    "name": "golden-20261010T084920Z-b3ac99-check.yaml",
+    "overwrite": false
+   },
+   "ok": true,
+   "ms": 32.7,
+   "error": null,
+   "note": "{'spec_path': 'cases/uploaded/anonymous/golden-20261010T084920Z-b3ac99-check.yaml', 'sha256': '212d143f485566b7a688bc6de1dfd601ae862c77d3a5a6cb52c3fc670ea9e19a', 'replaced': False, 'bytes': 2425}"
+  },
+  {
+   "ts": "2026-10-10T08:49:33.341513+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_submit",
+   "args": {
+    "spec_path": "cases/uploaded/anonymous/golden-20261010T084920Z-b3ac99-check.yaml",
+    "docker": true,
+    "out_root": null,
+    "mlflow_uri": null,
+    "lease_wait_s": 1800
+   },
+   "ok": true,
+   "ms": 55.2,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-check', 'jobs': ['golden-20261010T084920Z-b3ac99-check--c000--run--5b7df8', 'golden-20261010T084920Z-b3ac99-check--c001--run--a53d84']}"
+  },
+  {
+   "ts": "2026-10-10T08:49:33.372233+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_put_spec",
+   "args": {
+    "content": "id: golden-20261010T084920Z-b3ac99-conf\nproject: golden-demo\nowner: aces\nphysics: structures\nsolver: ccx-check\ndescription: 'aces golden root-mount run 20261010T084920Z-b3ac99: conforming tet10 second discretisation of v001/part.stl on the rig CPU (2 mm)'\ngeometry:\n  source: mesh\n  ref: golden/20261",
+    "name": "golden-20261010T084920Z-b3ac99-conf.yaml",
+    "overwrite": false
+   },
+   "ok": true,
+   "ms": 21.4,
+   "error": null,
+   "note": "{'spec_path': 'cases/uploaded/anonymous/golden-20261010T084920Z-b3ac99-conf.yaml', 'sha256': 'd1b55760ea489a7ad353c9f87bb5eddc4db9a64c1e9b283a17445e89626c78e3', 'replaced': False, 'bytes': 2157}"
+  },
+  {
+   "ts": "2026-10-10T08:49:33.395017+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_submit",
+   "args": {
+    "spec_path": "cases/uploaded/anonymous/golden-20261010T084920Z-b3ac99-conf.yaml",
+    "docker": true,
+    "out_root": null,
+    "mlflow_uri": null,
+    "lease_wait_s": 1800
+   },
+   "ok": true,
+   "ms": 17.1,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': ['golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c']}"
+  },
+  {
+   "ts": "2026-10-10T08:49:33.405146+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check"
+   },
+   "ok": true,
+   "ms": 4.5,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-check', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-check--c000--run--5b7df8', 'status': 'started', 'meta': {'experiment': 'golden-20261010T08492"
+  },
+  {
+   "ts": "2026-10-10T08:49:35.415719+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check"
+   },
+   "ok": true,
+   "ms": 4.6,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-check', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-check--c000--run--5b7df8', 'status': 'started', 'meta': {'experiment': 'golden-20261010T08492"
+  },
+  {
+   "ts": "2026-10-10T08:49:37.424682+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check"
+   },
+   "ok": true,
+   "ms": 4.0,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-check', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-check--c000--run--5b7df8', 'status': 'started', 'meta': {'experiment': 'golden-20261010T08492"
+  },
+  {
+   "ts": "2026-10-10T08:49:37.430455+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c000/golden/x001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.5,
+   "error": null,
+   "note": "{'sha256': '004933cf9d4ca7358ef37adf3e6d2f98af98f51eacc3a54f35e093e5f7026ef5', 'path': 'c000/golden/x001/progress.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:37.437433+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c001/golden/x002/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 2.3,
+   "error": "FileError: c001/golden/x002/progress.json is not a file in experiment golden-20261010T084920Z-b3ac99-check",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:49:39.450711+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check"
+   },
+   "ok": true,
+   "ms": 6.0,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-check', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-check--c000--run--5b7df8', 'status': 'started', 'meta': {'experiment': 'golden-20261010T08492"
+  },
+  {
+   "ts": "2026-10-10T08:49:41.462520+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check"
+   },
+   "ok": true,
+   "ms": 5.6,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-check', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-check--c000--run--5b7df8', 'status': 'started', 'meta': {'experiment': 'golden-20261010T08492"
+  },
+  {
+   "ts": "2026-10-10T08:49:41.470828+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c000/golden/x001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.0,
+   "error": null,
+   "note": "{'sha256': 'ba465651679bc41d1f8b9afc057e8a10488f94b56aa21edc9c6949393da02c67', 'path': 'c000/golden/x001/progress.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:41.477222+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c001/golden/x002/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 2.3,
+   "error": "FileError: c001/golden/x002/progress.json is not a file in experiment golden-20261010T084920Z-b3ac99-check",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:49:43.491170+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check"
+   },
+   "ok": true,
+   "ms": 4.3,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-check', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-check--c000--run--5b7df8', 'status': 'started', 'meta': {'experiment': 'golden-20261010T08492"
+  },
+  {
+   "ts": "2026-10-10T08:49:45.502679+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check"
+   },
+   "ok": true,
+   "ms": 5.6,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-check', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-check--c000--run--5b7df8', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0849"
+  },
+  {
+   "ts": "2026-10-10T08:49:45.511342+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c000/outcome.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.8,
+   "error": null,
+   "note": "{'sha256': 'f596fe4c24e6b6eb10fbf2a3d47464d0a09a5a3021372a1baa4f880ea47bb838', 'path': 'c000/outcome.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:45.518838+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c000/files.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.5,
+   "error": null,
+   "note": "{'sha256': '73da1f6bf4b5a4264502192e27ed5ac341200a2f75a2328fe0d9c05f5202b99e', 'path': 'c000/files.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:45.530666+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c000/golden/x001/case.md",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.3,
+   "error": null,
+   "note": "{'sha256': '893b3f41eb77f634e0e62493de50b0e096b1645c946774f25ddcdfb4eb8c8493', 'path': 'c000/golden/x001/case.md'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:45.537192+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c000/golden/x001/disp_slices.png",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.7,
+   "error": null,
+   "note": "{'sha256': '5b05b77435fa38c1842227a84de83bcf2cf802ce457d177691c80d9aac03827b', 'path': 'c000/golden/x001/disp_slices.png'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:45.549050+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c000/golden/x001/fields.npz",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 6.6,
+   "error": null,
+   "note": "{'sha256': '09c49acfb61a9abb13bcad9ad4de1c06897e7c5d9085e8f8bdb81711b1624192', 'path': 'c000/golden/x001/fields.npz'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:45.586248+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c000/golden/x001/fields.vtk",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 9.6,
+   "error": null,
+   "note": "{'sha256': 'e9123828afb075f8b317f59be48839ed2f58bbcfc82586bf36742edd651ca5f9', 'path': 'c000/golden/x001/fields.vtk'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:45.645715+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c000/golden/x001/mask.npy",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.6,
+   "error": null,
+   "note": "{'sha256': '85a14d58f387eeb092bcd139d6e9b823f4be9dc8889ce9763644393747fe8cc5', 'path': 'c000/golden/x001/mask.npy'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:45.655864+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c000/golden/x001/mesh.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.0,
+   "error": null,
+   "note": "{'sha256': '628b313955466b45e947e105a4510eb1f7b821d8e11289f7833f6d2d4112ac93', 'path': 'c000/golden/x001/mesh.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:45.664853+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c000/golden/x001/solve.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.5,
+   "error": null,
+   "note": "{'sha256': 'f44089b2b64b5fae8394971ec4965739eae565c20a6345c46e0b67ad66d27caf', 'path': 'c000/golden/x001/solve.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:45.673841+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c000/golden/x001/vm_slices.png",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.2,
+   "error": null,
+   "note": "{'sha256': 'd9bf9814948a7587c2c53afbd4758ba7605a0566a0d93208853b003ec2053e20', 'path': 'c000/golden/x001/vm_slices.png'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:45.683530+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c000/results.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.4,
+   "error": null,
+   "note": "{'sha256': '3eb0da028f9412d0c1c3b239bba7da1883911701f034a96540cf0dcb39e4e3a1', 'path': 'c000/results.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:45.692428+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c000/evidence.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.7,
+   "error": null,
+   "note": "{'sha256': '04aac08a68e3ebf3828a78be1624e52dd35cb7fe43d8ad52dc506ae1b263c709', 'path': 'c000/evidence.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:45.701135+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c000/status.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.1,
+   "error": null,
+   "note": "{'sha256': 'e36fa86976030c9a6f16a6ba6a798de01c9c8189975b169d9fe854d58c71b021', 'path': 'c000/status.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:45.708774+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c000/case.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.9,
+   "error": null,
+   "note": "{'sha256': '0929e8d78257e55a1faca031d3b62f7b387bfe155a51302a87a94d53638ad083', 'path': 'c000/case.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:45.716130+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c000/worker.log",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': '93d72a6381b53d0393557559ef6f1e50af2b8b49ce9d13007f608ec5fbe8f562', 'path': 'c000/worker.log'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:45.726005+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c001/golden/x002/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.7,
+   "error": null,
+   "note": "{'sha256': '0c23cfdc4f21719d9dc6a7045300391dfd4f3952a5d29f276e4577800eb7cc33', 'path': 'c001/golden/x002/progress.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:47.739961+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check"
+   },
+   "ok": true,
+   "ms": 8.3,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-check', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-check--c000--run--5b7df8', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0849"
+  },
+  {
+   "ts": "2026-10-10T08:49:49.754909+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check"
+   },
+   "ok": true,
+   "ms": 9.1,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-check', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-check--c000--run--5b7df8', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0849"
+  },
+  {
+   "ts": "2026-10-10T08:49:49.766196+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c001/golden/x002/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 5.3,
+   "error": null,
+   "note": "{'sha256': '0c23cfdc4f21719d9dc6a7045300391dfd4f3952a5d29f276e4577800eb7cc33', 'path': 'c001/golden/x002/progress.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:51.781408+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check"
+   },
+   "ok": true,
+   "ms": 9.8,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-check', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-check--c000--run--5b7df8', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T0849"
+  },
+  {
+   "ts": "2026-10-10T08:49:51.790836+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c001/outcome.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.7,
+   "error": null,
+   "note": "{'sha256': '351f4c819caf44337ff5cf27d905c1d3e2294ae2a93d542bf13fcaa794cbeae2', 'path': 'c001/outcome.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:51.800411+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c001/files.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.9,
+   "error": null,
+   "note": "{'sha256': '071bdb421a44b16ccf09d6b496fe7a72943c127fe1ad6508ba65be3c3c3d264d', 'path': 'c001/files.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:51.814991+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c001/golden/x002/fields.npz",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 9.8,
+   "error": null,
+   "note": "{'sha256': 'fa4ede760bf5970a89310f5a9358b7f83d388c65e473d7f5d76d9300887b2ec4', 'path': 'c001/golden/x002/fields.npz'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:51.867595+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c001/golden/x002/mask.npy",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 7.5,
+   "error": null,
+   "note": "{'sha256': '1018043fe3179058a687b3b76f862f115f767b92400b13986b34d4ce462a6b41', 'path': 'c001/golden/x002/mask.npy'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:51.889998+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c001/golden/x002/mesh.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.3,
+   "error": null,
+   "note": "{'sha256': '4d057d125ba87b3f585e9c98a1514ba0c67fe17e4c66031ba7c7799e35eec8ea', 'path': 'c001/golden/x002/mesh.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:51.897255+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c001/golden/x002/solve.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': '59f14ce5d234ae9ef43c83ae893a063ef64e0aae7022d6a3770f223306612c12', 'path': 'c001/golden/x002/solve.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:51.905271+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c001/results.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': 'b7a81ddcc04cdf5225ec5e0fa958a1c23fcf565285c39fa36c8aef9b85063bb0', 'path': 'c001/results.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:51.913396+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c001/evidence.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.8,
+   "error": null,
+   "note": "{'sha256': 'eb821c1dea5a056d0365075bb5462f504e97b5df136535e7b32d07d609e12672', 'path': 'c001/evidence.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:51.920825+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c001/status.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.4,
+   "error": null,
+   "note": "{'sha256': '5ff2b962b4c2803031020579028a383bd1e331e538cbfaad9f25420f7f75ee57', 'path': 'c001/status.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:51.928142+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c001/case.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': '7a3cc6dcf056929dbab57cd4e5c4431e108690ba53f816775e93d9def3d539df', 'path': 'c001/case.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:51.935048+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "path": "c001/worker.log",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.6,
+   "error": null,
+   "note": "{'sha256': '43db01c2cc4b1ed9c0e0cc0d84cb267b900b74452c38711cb016463548f45775', 'path': 'c001/worker.log'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:51.958233+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_evidence",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-check",
+    "company": null,
+    "note": "aces golden 20261010T084920Z-b3ac99 check from aces-rehearsal",
+    "push": null
+   },
+   "ok": true,
+   "ms": 15.8,
+   "error": null,
+   "note": "{'bundle_sha256': 'ca739f1306f7cf1746973ddd1b474f046304956b06162e4976953ba6ea61d8b7'}"
+  },
+  {
+   "ts": "2026-10-10T08:49:51.967051+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 4.2,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:49:53.977838+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 5.5,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:49:55.989241+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 6.0,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:49:55.999144+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 4.6,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084920Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:49:58.012991+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 5.4,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:50:00.024782+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 5.1,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:50:00.033836+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 3.6,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084920Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:50:02.046731+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 5.5,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:50:04.061776+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 6.3,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:50:04.070924+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 3.7,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084920Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:50:06.087199+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 7.4,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:50:08.100754+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 6.4,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:50:08.109049+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 3.9,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084920Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:50:10.119971+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 5.4,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:50:12.131979+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 5.5,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:50:12.141911+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 4.1,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084920Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:50:14.154976+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 5.8,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:50:16.166584+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 6.2,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:50:16.176037+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 4.1,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084920Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:50:18.189553+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 5.8,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:50:20.200355+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 4.9,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:50:20.209014+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 3.5,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084920Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:50:22.224574+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 7.2,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:50:24.240407+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 5.9,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:50:24.251008+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 4.5,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084920Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:50:26.263717+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 5.3,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:50:28.273475+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 4.0,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:50:28.279207+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 1.8,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084920Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:50:30.288800+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 4.3,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:50:32.297945+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 4.1,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:50:32.303245+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 2.2,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084920Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:50:34.314463+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 5.8,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:50:36.324104+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 4.4,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'started', 'meta': {'experiment': 'golden-20261010T084920Z"
+  },
+  {
+   "ts": "2026-10-10T08:50:36.331505+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/progress.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": false,
+   "ms": 2.6,
+   "error": "FileError: c000/golden/m001/progress.json is not a file in experiment golden-20261010T084920Z-b3ac99-conf",
+   "note": null
+  },
+  {
+   "ts": "2026-10-10T08:50:38.346529+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_status",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf"
+   },
+   "ok": true,
+   "ms": 6.6,
+   "error": null,
+   "note": "{'experiment': 'golden-20261010T084920Z-b3ac99-conf', 'jobs': [{'job_id': 'golden-20261010T084920Z-b3ac99-conf--c000--run--279f0c', 'status': 'finished', 'meta': {'experiment': 'golden-20261010T084920"
+  },
+  {
+   "ts": "2026-10-10T08:50:38.356964+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/outcome.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.9,
+   "error": null,
+   "note": "{'sha256': '25efc743b2ab108b7599bfce321bcf0bb9b80f6793378d24706ddce1f024c9db', 'path': 'c000/outcome.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:38.364486+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/files.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.7,
+   "error": null,
+   "note": "{'sha256': '805f6237ec40c366c18b04b84e7177b6c58ddc36a4c9d69f020498c76e0227f9', 'path': 'c000/files.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:38.371762+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/ccx.cvg",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.7,
+   "error": null,
+   "note": "{'sha256': '65086dedb4572132b815ace04b294909c7f6f337111f9704fc310b02320f67f7', 'path': 'c000/golden/m001/ccx.cvg'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:38.394792+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/ccx.dat.gz",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 19.6,
+   "error": null,
+   "note": "{'sha256': '62d53a376c8014f813fa4a52ccb210a94d61b5256b410911ef607a9eb16387f3', 'path': 'c000/golden/m001/ccx.dat.gz'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:38.497501+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/ccx.dat.gz",
+    "offset": 2097152,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 20.7,
+   "error": null,
+   "note": "{'sha256': '62d53a376c8014f813fa4a52ccb210a94d61b5256b410911ef607a9eb16387f3', 'path': 'c000/golden/m001/ccx.dat.gz'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:38.595454+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/ccx.dat.gz",
+    "offset": 4194304,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 11.4,
+   "error": null,
+   "note": "{'sha256': '62d53a376c8014f813fa4a52ccb210a94d61b5256b410911ef607a9eb16387f3', 'path': 'c000/golden/m001/ccx.dat.gz'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:38.694853+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/ccx.inp.gz",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 15.2,
+   "error": null,
+   "note": "{'sha256': 'ca35cae20b2ec88aaae6039e9572e2ea1ecc0ad953b90ab0553b752ee871ec0f', 'path': 'c000/golden/m001/ccx.inp.gz'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:38.789427+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/ccx.inp.gz",
+    "offset": 2097152,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 11.3,
+   "error": null,
+   "note": "{'sha256': 'ca35cae20b2ec88aaae6039e9572e2ea1ecc0ad953b90ab0553b752ee871ec0f', 'path': 'c000/golden/m001/ccx.inp.gz'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:38.827882+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/ccx.log",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.6,
+   "error": null,
+   "note": "{'sha256': '40c2b49ce149e73c6ccfdc8e5c6cadafd4a4ae5e2656c6cb64a59231dfc95208', 'path': 'c000/golden/m001/ccx.log'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:38.834972+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/ccx.sta",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.9,
+   "error": null,
+   "note": "{'sha256': '01e324ec0ea28f4d1fd7f5e2da1277af53812b873e218be1604c17a4c8e4990d', 'path': 'c000/golden/m001/ccx.sta'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:38.842342+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/conforming.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 5.2,
+   "error": null,
+   "note": "{'sha256': 'da8fff3ab4a51efa7608696c36ea77acd238ff261d461f1488b358da5cc4f5c9', 'path': 'c000/golden/m001/conforming.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:38.850743+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/mesh.log",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.8,
+   "error": null,
+   "note": "{'sha256': '83c1a9f209636bcdaf77a7d6218c37efd7c7c70b6c1efb3f5f93b6e776c5a9f3', 'path': 'c000/golden/m001/mesh.log'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:38.864739+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/mesh.npz",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 8.8,
+   "error": null,
+   "note": "{'sha256': '0d40bef4eb18b001fbb4043190227655192be0a2553f132c222b5b99dfc76e17', 'path': 'c000/golden/m001/mesh.npz'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:38.960033+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/mesh.npz",
+    "offset": 2097152,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 18.4,
+   "error": null,
+   "note": "{'sha256': '0d40bef4eb18b001fbb4043190227655192be0a2553f132c222b5b99dfc76e17', 'path': 'c000/golden/m001/mesh.npz'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:39.051829+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/mesh.npz",
+    "offset": 4194304,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 13.1,
+   "error": null,
+   "note": "{'sha256': '0d40bef4eb18b001fbb4043190227655192be0a2553f132c222b5b99dfc76e17', 'path': 'c000/golden/m001/mesh.npz'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:39.081793+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/golden/m001/tetmesh.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.9,
+   "error": null,
+   "note": "{'sha256': '28ad5b8daf02464c8f45afd5ca986b457e048a2ba2ba44dcfea126c37207c2d8', 'path': 'c000/golden/m001/tetmesh.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:39.089526+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/results.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.4,
+   "error": null,
+   "note": "{'sha256': '2d7cebde89e957074e484cc011a874d4081f15c4402aa814dbb6b7d670101140', 'path': 'c000/results.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:39.096200+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/evidence.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.1,
+   "error": null,
+   "note": "{'sha256': '95db6726d376ca8545086699128538efc6ac7288cb113627a06f7a04765ce3cb', 'path': 'c000/evidence.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:39.105113+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/status.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 2.4,
+   "error": null,
+   "note": "{'sha256': 'a64d81e985e2559f78f9d92a59a68c18b7a0a28ae1c7e7b246d04973949acee0', 'path': 'c000/status.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:39.114601+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/case.json",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 4.4,
+   "error": null,
+   "note": "{'sha256': '0878814b4b4724bebb76db0200390b73fe1daa697ac7cc96d2f43bbea1e111ce', 'path': 'c000/case.json'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:39.123809+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_get_file",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "path": "c000/worker.log",
+    "offset": 0,
+    "max_bytes": 2097152
+   },
+   "ok": true,
+   "ms": 3.8,
+   "error": null,
+   "note": "{'sha256': 'adddb52b6df24167d590d6e574e6e6b43f1233770bbbac145f3238435eb22d13', 'path': 'c000/worker.log'}"
+  },
+  {
+   "ts": "2026-10-10T08:50:39.148190+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_evidence",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "company": null,
+    "note": "aces golden 20261010T084920Z-b3ac99 conf from aces-rehearsal",
+    "push": null
+   },
+   "ok": true,
+   "ms": 8.4,
+   "error": null,
+   "note": "{'bundle_sha256': '99c016909836f4b8f276020bb8e53f0bf5052efac499371849eafc44d9ae394d'}"
+  },
+  {
+   "ts": "2026-10-10T08:52:00.218127+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "rig_capacity",
+   "args": {
+    "mode": null,
+    "pool": null
+   },
+   "ok": true,
+   "ms": 523.1,
+   "error": null,
+   "note": "{'available': [0]}"
+  },
+  {
+   "ts": "2026-10-10T08:52:00.268213+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_evidence",
+   "args": {
+    "experiment_id": "golden-20261010T084920Z-b3ac99-conf",
+    "company": null,
+    "note": null,
+    "push": null
+   },
+   "ok": true,
+   "ms": 11.6,
+   "error": null,
+   "note": "{'bundle_sha256': '132b2ca0723654b5af0f1443e97ed82abc6ad069fc61bd2c0ac68a768d5aaddf'}"
+  },
+  {
+   "ts": "2026-10-10T22:55:17.145843+00:00",
+   "principal": "anonymous",
+   "policy": "full",
+   "tool": "sim_whoami",
+   "args": {},
+   "ok": true,
+   "ms": 0.1,
+   "error": null,
+   "note": "{'policy': 'full'}"
+  }
+ ]
+}

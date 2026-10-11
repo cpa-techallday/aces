@@ -1,0 +1,385 @@
+{
+ "schema": "aces-golden-validation/1",
+ "tol": 0.1,
+ "kappa": 1.0,
+ "cv_margin": true,
+ "check_objective": true,
+ "objective": {
+  "output": "mass_kg",
+  "sense": "min"
+ },
+ "constraints": [
+  {
+   "output": "vm_p99_MPa",
+   "op": "<=",
+   "limit": 60.0
+  },
+  {
+   "output": "umax_mm",
+   "op": "<=",
+   "limit": 0.035
+  }
+ ],
+ "resolution_mm": {
+  "generator": 4.0,
+  "field": 2.0,
+  "solve": 4.0,
+  "check": [
+   2.0,
+   1.0
+  ]
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "surrogate": "surrogate/round-1/cv.json",
+   "optimise": "optimise/round-1.json",
+   "case_id": "v001",
+   "params": {
+    "volfrac": 0.23,
+    "rmin_mm": 11.55
+   },
+   "from_feasible": true,
+   "h_fea_mm": 4.0,
+   "device": "cpu",
+   "solver": "step-structures stage_solve",
+   "rows": [
+    {
+     "output": "mass_kg",
+     "role": "objective",
+     "predicted": 0.1794185186943987,
+     "sd": 0.0021137847015872957,
+     "solved": 0.17698581438899466,
+     "abs_err": 0.002432704305404043,
+     "rel_err": 0.013745193725284877,
+     "tol": 0.1,
+     "agree": true,
+     "op": null,
+     "limit": null,
+     "meets": null
+    },
+    {
+     "output": "vm_p99_MPa",
+     "role": "constraint",
+     "predicted": 53.64268077824985,
+     "sd": 0.32583423292789604,
+     "solved": 54.47464675903315,
+     "abs_err": 0.831965980783302,
+     "rel_err": 0.015272535579046098,
+     "tol": 0.1,
+     "agree": true,
+     "op": "<=",
+     "limit": 60.0,
+     "meets": true
+    },
+    {
+     "output": "umax_mm",
+     "role": "constraint",
+     "predicted": 0.03125823036655014,
+     "sd": 2.730350865370705e-05,
+     "solved": 0.031198331261040144,
+     "abs_err": 5.989910550999872e-05,
+     "rel_err": 0.001919945814050623,
+     "tol": 0.1,
+     "agree": true,
+     "op": "<=",
+     "limit": 0.035,
+     "meets": true
+    },
+    {
+     "output": "compliance_Nmm",
+     "role": "reported",
+     "predicted": 829.561281237644,
+     "sd": 0.7083041484674482,
+     "solved": 828.0079936559462,
+     "abs_err": 1.553287581697873,
+     "rel_err": 0.0018759330750414169,
+     "tol": 0.1,
+     "agree": true,
+     "op": null,
+     "limit": null,
+     "meets": null
+    },
+    {
+     "output": "vm_max_MPa",
+     "role": "reported",
+     "predicted": 62.55815522463984,
+     "sd": 1.4571187613561207,
+     "solved": 64.49043111436654,
+     "abs_err": 1.9322758897267036,
+     "rel_err": 0.029962210770463436,
+     "tol": 0.1,
+     "agree": true,
+     "op": null,
+     "limit": null,
+     "meets": null
+    }
+   ],
+   "status": "FINISHED",
+   "design_status": "ok",
+   "converged": true,
+   "passed": true,
+   "reasons": [],
+   "wall_s": 3.141
+  }
+ ],
+ "outcome": "pass",
+ "passed": true,
+ "final_round": 1,
+ "final_case": "v001",
+ "winner_case": "v001",
+ "winner_params": {
+  "volfrac": 0.23,
+  "rmin_mm": 11.55
+ },
+ "independent_check": {
+  "ran": true,
+  "reason": "CPU estimate 2.7 s is within the 60 s budget",
+  "passed": true,
+  "levels": [
+   {
+    "level": 1,
+    "case_id": "x001",
+    "h_mm": 2.0,
+    "device": "cpu",
+    "gating": true,
+    "est_s": 2.7109642028808594,
+    "budget_s": 60.0,
+    "ran": true,
+    "reason": "CPU estimate 2.7 s is within the 60 s budget",
+    "rows": [
+     {
+      "output": "mass_kg",
+      "role": "objective",
+      "coarse": 0.17698581438899466,
+      "fine": 0.17698581438899466,
+      "rel_gap": 0.0,
+      "tol": 0.1,
+      "agree": true,
+      "op": null,
+      "limit": null,
+      "meets_fine": null
+     },
+     {
+      "output": "vm_p99_MPa",
+      "role": "constraint",
+      "coarse": 54.47464675903315,
+      "fine": 56.87937175750742,
+      "rel_gap": 0.044143930094884244,
+      "tol": 0.1,
+      "agree": true,
+      "op": "<=",
+      "limit": 60.0,
+      "meets_fine": true
+     },
+     {
+      "output": "umax_mm",
+      "role": "constraint",
+      "coarse": 0.031198331261040144,
+      "fine": 0.03248296743203556,
+      "rel_gap": 0.041176438580855956,
+      "tol": 0.1,
+      "agree": true,
+      "op": "<=",
+      "limit": 0.035,
+      "meets_fine": true
+     },
+     {
+      "output": "compliance_Nmm",
+      "role": "reported",
+      "coarse": 828.0079936559462,
+      "fine": 864.8460520128981,
+      "rel_gap": 0.04448997912966874,
+      "tol": 0.1,
+      "agree": true,
+      "op": null,
+      "limit": null,
+      "meets_fine": null
+     },
+     {
+      "output": "mass_voxel_kg",
+      "role": "reported",
+      "coarse": 0.18215808,
+      "fine": 0.17929583999999998,
+      "rel_gap": -0.015712945590994457,
+      "tol": 0.1,
+      "agree": true,
+      "op": null,
+      "limit": null,
+      "meets_fine": null
+     },
+     {
+      "output": "vm_max_MPa",
+      "role": "reported",
+      "coarse": 64.49043111436654,
+      "fine": 105.3919182769137,
+      "rel_gap": 0.6342256743486946,
+      "tol": 0.1,
+      "agree": false,
+      "op": null,
+      "limit": null,
+      "meets_fine": null
+     }
+    ],
+    "passed": true,
+    "host": "desktop",
+    "fea_solver": "pcg",
+    "rig": null,
+    "rig_attempt": null
+   },
+   {
+    "level": 2,
+    "case_id": null,
+    "h_mm": 1.0,
+    "device": null,
+    "gating": false,
+    "est_s": null,
+    "budget_s": 60.0,
+    "ran": false,
+    "reason": "GPU-only extra level: no usable GPU",
+    "rows": [],
+    "passed": null,
+    "host": null,
+    "fea_solver": null,
+    "rig": null,
+    "rig_attempt": null
+   }
+  ]
+ },
+ "device_parity": [],
+ "conforming": {
+  "ran": true,
+  "passed": true,
+  "status": "ok",
+  "case_id": "m001",
+  "host": "desktop",
+  "mode": "auto",
+  "reason": "agrees within its bands and meets every constraint",
+  "h_mm": 2.0,
+  "source_case": "v001",
+  "reference": {
+   "case_id": "x001",
+   "h_mm": 2.0,
+   "host": "desktop"
+  },
+  "record": "m001/conforming.json",
+  "mesh": {
+   "route": "discrete",
+   "elements": 38618,
+   "nodes": 62337,
+   "dof": 187011,
+   "min_sicn": 0.3383439805889851,
+   "volume_rel_err": 2.1952953570811996e-16
+  },
+  "solver": {
+   "name": "CalculiX ccx",
+   "version": "2.23",
+   "sha256": "31be21fc2f0902bd9a05acc2651dbac6dc2a2573dabbf235e39a38cb6f458862",
+   "threads": 4,
+   "linear_solver": "Factoring the system of equations using the symmetric spooles solver"
+  },
+  "bands": {
+   "mass": 0.01,
+   "stress": 0.15,
+   "other": 0.1
+  },
+  "rows": [
+   {
+    "output": "mass_kg",
+    "role": "objective",
+    "voxel": 0.17698581438899466,
+    "conforming": 0.1769858143889947,
+    "rel_gap": 1.5682373026024176e-16,
+    "band": 0.01,
+    "agree": true,
+    "op": null,
+    "limit": null,
+    "meets_conforming": null
+   },
+   {
+    "output": "vm_p99_MPa",
+    "role": "constraint",
+    "voxel": 56.87937175750742,
+    "conforming": 53.63380623106495,
+    "rel_gap": -0.057060502360666315,
+    "band": 0.15,
+    "agree": true,
+    "op": "<=",
+    "limit": 60.0,
+    "meets_conforming": true
+   },
+   {
+    "output": "umax_mm",
+    "role": "constraint",
+    "voxel": 0.03248296743203556,
+    "conforming": 0.031756483004286275,
+    "rel_gap": -0.022365088080986365,
+    "band": 0.1,
+    "agree": true,
+    "op": "<=",
+    "limit": 0.035,
+    "meets_conforming": true
+   },
+   {
+    "output": "compliance_Nmm",
+    "role": "gating",
+    "voxel": 864.8460520128981,
+    "conforming": 844.9543317078405,
+    "rel_gap": -0.02300030191357213,
+    "band": 0.1,
+    "agree": true,
+    "op": null,
+    "limit": null,
+    "meets_conforming": null
+   },
+   {
+    "output": "vm_max_MPa",
+    "role": "reported",
+    "voxel": 105.3919182769137,
+    "conforming": 144.52246998675278,
+    "rel_gap": 0.37128607534237,
+    "band": 0.15,
+    "agree": false,
+    "op": null,
+    "limit": null,
+    "meets_conforming": null
+   },
+   {
+    "output": "vm_p95_MPa",
+    "role": "reported",
+    "voxel": 40.97390766143798,
+    "conforming": 41.16215030966936,
+    "rel_gap": 0.004594207850195902,
+    "band": 0.15,
+    "agree": true,
+    "op": null,
+    "limit": null,
+    "meets_conforming": null
+   },
+   {
+    "output": "mesh_volume_mm3",
+    "role": "reported",
+    "voxel": 66286.82186853733,
+    "conforming": 66286.82186853734,
+    "rel_gap": 2.1952953570811996e-16,
+    "band": 0.01,
+    "agree": true,
+    "op": null,
+    "limit": null,
+    "meets_conforming": null
+   }
+  ],
+  "constraints_met": true,
+  "rig": null,
+  "rig_attempt": null
+ },
+ "rig": null,
+ "grade": "verified-desktop",
+ "grade_reasons": [
+  "the 2 mm check agrees with the 4 mm solve within 10 % and meets every constraint",
+  "not rig-verified: the level-1 check ran on this desktop (x001: no rig lane was used)"
+ ],
+ "verdict": "PASS",
+ "verdict_reasons": [],
+ "scope": "voxel FEA (H8, fictitious domain, Jacobi-PCG or multigrid-PCG, FP64, linear static) on this desktop or on a rig lane, with a conforming tet10 (C3D10, gmsh + CalculiX ccx) second discretisation when it can run. Grades: preview-grade (every solve on its own), verified-desktop (the finer-resolution level-1 check agrees within tol and meets every constraint), rig-verified (also: the level-1 check solved on the rig on an image the golden-check validation names, the conforming check ran on the rig on an image the ccx-check validation names and agrees within its bands and meets every constraint, the rig ran this desktop's golden code, and every pulled file verified). A conforming check that violates a constraint caps the grade at preview-grade. No grade is a sign-off."
+}

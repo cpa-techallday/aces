@@ -1,0 +1,31 @@
+{
+ "status": "FINISHED",
+ "design_status": "ok",
+ "mlflow_run_id": null,
+ "wall_s": 6.230319976806641,
+ "error": null,
+ "stages": [
+  "voxel",
+  "solve",
+  "post"
+ ],
+ "diagnostics": {
+  "generator": null,
+  "skin": null,
+  "checks": {
+   "load_coverage": {
+    "cup-down": 1.0
+   },
+   "support_coverage": {
+    "foot-1": 1.0,
+    "foot-2": 1.0,
+    "foot-3": 1.0,
+    "foot-4": 1.0,
+    "foot-5": 1.0,
+    "foot-6": 1.0
+   },
+   "load_path_connected": true,
+   "solid_components": 1
+  }
+ }
+}

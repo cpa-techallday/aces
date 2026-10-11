@@ -1,0 +1,66 @@
+{
+ "status": "FAILED",
+ "design_status": "multi-body",
+ "mlflow_run_id": null,
+ "wall_s": 1.9605374336242676,
+ "error": "the skin has 3 solid bodies; a part is one body",
+ "stages": [
+  "generate",
+  "skin"
+ ],
+ "diagnostics": {
+  "generator": {
+   "kind": "simp",
+   "h_mm": 4.0,
+   "elements": 6250,
+   "volfrac_design": 0.160054,
+   "volfrac_box": 0.1252262496,
+   "rmin_mm": 10.961384,
+   "penal": 3.0,
+   "iterations_run": 25,
+   "converged": false,
+   "stopped_at_cap": true,
+   "final_change": 0.1696004501330347,
+   "compliance_Nmm": 3156.7661698212682,
+   "solves_unconverged": 0,
+   "mnd_pct": 27.15784681805421,
+   "device": "cpu/numpy",
+   "wall_s": 1.9326257705688477
+  },
+  "skin": {
+   "status": "multi-body",
+   "message": "the skin has 3 solid bodies; a part is one body",
+   "field_h_mm": 2.0,
+   "upsample": 2,
+   "sigma_vox": 1.0,
+   "blend_mm": 5.0,
+   "clip_blend_mm": 2.0,
+   "taubin_iters": 5,
+   "iso": 0.5,
+   "clipped_to_domain": true,
+   "infill": null,
+   "faces": 8364,
+   "vertices": 4188,
+   "watertight": true,
+   "solids": 3,
+   "cavities": 0,
+   "cavity_volume_mm3": 0.0,
+   "islands_removed": 0,
+   "removed_volume_mm3": 0.0,
+   "euler": 6,
+   "genus": 0,
+   "mesh_volume_mm3": 38433.993971347525,
+   "area_mm2": 11503.018323683045,
+   "bbox_mm": [
+    8.657248656565923,
+    4.3230546855065,
+    -0.02313672987630844,
+    91.34980111021072,
+    95.73641543921597,
+    40.01921919140078
+   ],
+   "wall_s": 0.02726125717163086
+  },
+  "checks": null
+ }
+}

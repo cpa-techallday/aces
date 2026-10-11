@@ -1,0 +1,312 @@
+{
+  "schema": "simlab-evidence/1",
+  "experiment": {
+    "id": "golden-golden-demo-20261010T084920Z-b3ac99",
+    "project": "golden-demo",
+    "owner": "aces",
+    "physics": "structures",
+    "solver": "step-structures",
+    "description": "aces golden root-mount: Six-foot root mount computed inside a disc design space 100 mm across and 40 mm tall: six bolted feet on a 36 mm ring and a 30 kN load on a top cup. The disc is only the input domain; the part is computed (SIMP topology optimisation, organic implicit skin) and solved on the real voxel FEA. Demo inputs.",
+    "spec_sha256": "acc99c6a2671265e41521b81d1ce216ba0c61d4f3759665286e456c317045b52",
+    "hypothesis": "A SIMP-generated organic root mount meets vm_p99 <= 60 MPa and umax <= 0.035 mm at minimum mass, and a GP surrogate fitted to a 10-design sweep predicts the verified winner within 10 %.",
+    "expected": "the surrogate's winner meets every constraint on the real solver and agrees within tol",
+    "rd_activity": null,
+    "company": null,
+    "tags": {
+      "golden": "0.2.0",
+      "generator": "simp-organic",
+      "domain_source": "build123d",
+      "sampler": "lhs-random-cd",
+      "grade": "preview-grade",
+      "vendored_snapshot": "62de9811e555"
+    }
+  },
+  "case": {
+    "case_id": "d001",
+    "role": "sweep",
+    "volfrac": 0.236767,
+    "rmin_mm": 10.654526,
+    "h_gen_mm": 4.0,
+    "h_fea_mm": 4.0,
+    "device": "cpu",
+    "backend": "adapter",
+    "source_case": null,
+    "reuse_mask": false,
+    "round": null,
+    "level": null,
+    "seed": 7,
+    "fea_solver": "pcg"
+  },
+  "inputs_sha256": {
+    "spec.json": "b6c8bbefb1e9df1305ca900f598903a007b07b387751c93b4f90c30ba936ef94",
+    "spec.effective.json": "acc99c6a2671265e41521b81d1ce216ba0c61d4f3759665286e456c317045b52",
+    "domain.step": "2494aed7db9a36629d6d498482afe4eb3569b47876c718eb97d8b3d45899bcef",
+    "case.json": "6a23f236112100585f1e977bfaf8c6a9d7b39f5e23e50a8f2f63d7416e117e14",
+    "part.stl": "307fb0a3d9fb6a77dcbeb499e51f785b78f682ba140c8c0e4e90392dd52994de"
+  },
+  "geometry": {
+    "source": "step",
+    "ref": "domain.step",
+    "sha256": "2494aed7db9a36629d6d498482afe4eb3569b47876c718eb97d8b3d45899bcef"
+  },
+  "environment": {
+    "host": "aces-rehearsal",
+    "platform": "Linux-7.2.5-3-omarchy-x86_64-with-glibc2.44",
+    "in_container": false,
+    "image": null,
+    "image_digest": null,
+    "cuda_visible_devices": null,
+    "gpus": [],
+    "packages": {
+      "python": "3.14.7",
+      "numpy": "2.4.6",
+      "scipy": "1.17.1",
+      "optuna": "5.0.0",
+      "build123d": "0.11.1",
+      "trimesh": "5.1.0",
+      "skimage": "0.26.0"
+    }
+  },
+  "git_rev": null,
+  "started_utc": "2026-10-10T08:49:22.036000+00:00",
+  "finished_utc": "2026-10-10T08:49:25.818000+00:00",
+  "wall_s": 3.782,
+  "status": "FINISHED",
+  "error": null,
+  "results": {
+    "schema": "aces-golden-case/1",
+    "case_id": "d001",
+    "role": "sweep",
+    "round": null,
+    "level": null,
+    "source_case": null,
+    "design": {
+      "volfrac": 0.236767,
+      "rmin_mm": 10.654526
+    },
+    "mass_kg": 0.18458650508360216,
+    "mass_voxel_kg": 0.18899327999999999,
+    "mesh_volume_mm3": 69133.52250322179,
+    "voxel_volume_mm3": 70784.0,
+    "solid_fraction": 0.17696,
+    "compliance_Nmm": 800.5808178548717,
+    "umax_mm": 0.030312620300250486,
+    "vm_max_MPa": 60.51854151090643,
+    "vm_p99_MPa": 51.56760787963858,
+    "vm_p95_MPa": 39.45483264923096,
+    "pcg_iters": 218,
+    "pcg_relres": 9.80530478077694e-09,
+    "converged": true,
+    "elements": 6250,
+    "dof": 22308,
+    "elem_mm": 4.0,
+    "n_fixed_dofs": 288,
+    "device": "cpu/numpy",
+    "dtype": "float64",
+    "backend": "step-structures.stage_solve",
+    "lane": "desktop-cpu",
+    "grade": "preview-grade",
+    "fea_solver": "pcg",
+    "fea_solver_reason": "pcg requested",
+    "generator": {
+      "kind": "simp",
+      "h_mm": 4.0,
+      "elements": 6250,
+      "volfrac_design": 0.236767,
+      "volfrac_box": 0.1852465008,
+      "rmin_mm": 10.654526,
+      "penal": 3.0,
+      "iterations_run": 25,
+      "converged": false,
+      "stopped_at_cap": true,
+      "final_change": 0.047088184375091324,
+      "compliance_Nmm": 1271.2665371264125,
+      "solves_unconverged": 0,
+      "mnd_pct": 31.637190062652408,
+      "device": "cpu/numpy",
+      "wall_s": 2.9767966270446777
+    },
+    "skin": {
+      "status": "ok",
+      "message": "",
+      "field_h_mm": 2.0,
+      "upsample": 2,
+      "sigma_vox": 1.0,
+      "blend_mm": 5.0,
+      "clip_blend_mm": 2.0,
+      "taubin_iters": 5,
+      "iso": 0.5,
+      "clipped_to_domain": true,
+      "infill": null,
+      "faces": 10472,
+      "vertices": 5238,
+      "watertight": true,
+      "solids": 1,
+      "cavities": 0,
+      "cavity_volume_mm3": 0.0,
+      "islands_removed": 0,
+      "removed_volume_mm3": 0.0,
+      "euler": 2,
+      "genus": 0,
+      "mesh_volume_mm3": 69133.52248637169,
+      "area_mm2": 14534.1773049948,
+      "bbox_mm": [
+        8.6152869967983,
+        4.257105868180632,
+        -0.021495613288075335,
+        91.38625761306439,
+        95.73982762207454,
+        40.01791157347339
+      ],
+      "wall_s": 0.036742210388183594
+    },
+    "voxel": {
+      "h_mm": 4.0,
+      "cells": 6250,
+      "solid_cells": 1106,
+      "voxel_volume_mm3": 70784.0,
+      "mesh_volume_mm3": 69133.52250322179,
+      "volume_ratio_voxel_over_mesh": 1.023873765389306,
+      "mask_sha256": "875c830ed7ceeaef23bb2d3aca472ce982196dbecd9af67ab78d7fc876136fab"
+    },
+    "checks": {
+      "load_coverage": {
+        "cup-down": 1.0
+      },
+      "support_coverage": {
+        "foot-1": 1.0,
+        "foot-2": 1.0,
+        "foot-3": 1.0,
+        "foot-4": 1.0,
+        "foot-5": 1.0,
+        "foot-6": 1.0
+      },
+      "load_path_connected": true,
+      "solid_components": 1
+    },
+    "stress": {
+      "measure": "vm_p99",
+      "exclude_mm": 8.0,
+      "exclude_boxes": [
+        [
+          76.0,
+          64.0,
+          0.0,
+          88.0,
+          76.0,
+          8.0
+        ],
+        [
+          44.0,
+          80.0,
+          0.0,
+          56.0,
+          92.0,
+          8.0
+        ],
+        [
+          12.0,
+          64.0,
+          0.0,
+          24.0,
+          76.0,
+          8.0
+        ],
+        [
+          12.0,
+          28.0,
+          0.0,
+          24.0,
+          40.0,
+          8.0
+        ],
+        [
+          44.0,
+          8.0,
+          0.0,
+          56.0,
+          20.0,
+          8.0
+        ],
+        [
+          76.0,
+          28.0,
+          0.0,
+          88.0,
+          40.0,
+          8.0
+        ],
+        [
+          40.0,
+          40.0,
+          32.0,
+          60.0,
+          60.0,
+          40.0
+        ]
+      ],
+      "n_elements": 948
+    },
+    "wall_s_generate": 2.977647304534912,
+    "wall_s_skin": 0.28101468086242676,
+    "wall_s_voxel": 0.023320674896240234,
+    "wall_s_solve": 0.19486260414123535,
+    "wall_s_post": null,
+    "wall_s_total": 3.782302141189575,
+    "artifacts": [
+      "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d001/fields.npz",
+      "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d001/generator/density.npy",
+      "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d001/generator/report.json",
+      "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d001/generator/slices.png",
+      "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d001/mask.npy",
+      "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d001/mesh.json",
+      "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d001/part.stl",
+      "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d001/skin.json",
+      "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d001/solve.json",
+      "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d001/thumb.png"
+    ]
+  },
+  "run_dir": "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/d001",
+  "stages": [
+    {
+      "stage": "generate",
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T08:49:22.091+00:00",
+      "finished_utc": "2026-10-10T08:49:25.069+00:00",
+      "wall_s": 2.977647304534912,
+      "device": "cpu"
+    },
+    {
+      "stage": "skin",
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T08:49:25.069+00:00",
+      "finished_utc": "2026-10-10T08:49:25.350+00:00",
+      "wall_s": 0.28101468086242676,
+      "device": "cpu"
+    },
+    {
+      "stage": "voxel",
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T08:49:25.351+00:00",
+      "finished_utc": "2026-10-10T08:49:25.374+00:00",
+      "wall_s": 0.023320674896240234,
+      "device": "cpu"
+    },
+    {
+      "stage": "solve",
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T08:49:25.374+00:00",
+      "finished_utc": "2026-10-10T08:49:25.569+00:00",
+      "wall_s": 0.19486260414123535,
+      "device": "cpu"
+    },
+    {
+      "stage": "thumb",
+      "status": "FINISHED",
+      "started_utc": "2026-10-10T08:49:25.571+00:00",
+      "finished_utc": "2026-10-10T08:49:25.818+00:00",
+      "wall_s": 0.24727416038513184,
+      "device": "cpu"
+    }
+  ]
+}

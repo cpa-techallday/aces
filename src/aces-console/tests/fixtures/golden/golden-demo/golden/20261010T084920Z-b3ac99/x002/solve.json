@@ -1,0 +1,48 @@
+{
+  "compliance_Nmm": 888.9595369183585,
+  "umax_mm": 0.03314561571095866,
+  "vm_max_MPa": 178.3709330109838,
+  "volume_mm3": 66459.0,
+  "mass_kg": 0.17744553,
+  "solid_fraction": 0.1661475,
+  "pcg_iters": 20.0,
+  "pcg_relres": 3.819943926356135e-09,
+  "converged": 1.0,
+  "solver": "mg",
+  "mg_levels": [
+    {
+      "nx": 100,
+      "ny": 100,
+      "nz": 40,
+      "h": 1.0,
+      "active_dof": 230853
+    },
+    {
+      "nx": 50,
+      "ny": 50,
+      "nz": 20,
+      "h": 2.0,
+      "active_dof": 36852
+    },
+    {
+      "nx": 25,
+      "ny": 25,
+      "nz": 10,
+      "h": 4.0,
+      "active_dof": 6618
+    },
+    {
+      "nx": 13,
+      "ny": 13,
+      "nz": 5,
+      "h": 8.0,
+      "active_dof": 1392
+    }
+  ],
+  "device": "NVIDIA CMP 170HX",
+  "dtype": "float64",
+  "elements": 400000,
+  "dof": 1254723,
+  "n_fixed_dofs": 3042,
+  "wall_s": 6.336171865463257
+}

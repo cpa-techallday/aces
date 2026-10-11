@@ -1,0 +1,257 @@
+{
+ "id": "golden-golden-demo-20261010T084920Z-b3ac99",
+ "project": "golden-demo",
+ "owner": "aces",
+ "physics": "structures",
+ "solver": "step-structures",
+ "description": "aces golden root-mount: Six-foot root mount computed inside a disc design space 100 mm across and 40 mm tall: six bolted feet on a 36 mm ring and a 30 kN load on a top cup. The disc is only the input domain; the part is computed (SIMP topology optimisation, organic implicit skin) and solved on the real voxel FEA. Demo inputs.",
+ "geometry": {
+  "source": "step",
+  "ref": "domain.step",
+  "sha256": "2494aed7db9a36629d6d498482afe4eb3569b47876c718eb97d8b3d45899bcef"
+ },
+ "params": {
+  "generator": {
+   "kind": "simp-organic",
+   "fixed": {
+    "penal": 3.0
+   },
+   "iterations": 25,
+   "change_tol": 0.01,
+   "move": 0.2,
+   "solver_tol": 0.0001,
+   "skin": {
+    "upsample": 2,
+    "sigma_vox": 1.0,
+    "blend_mm": 5.0,
+    "clip_blend_mm": 2.0,
+    "taubin_iters": 5,
+    "iso": 0.5
+   },
+   "infill": null
+  },
+  "material": {
+   "name": "AlSi10Mg (LPBF), nominal",
+   "E_MPa": 70000.0,
+   "nu": 0.33,
+   "rho_kg_mm3": 2.67e-06,
+   "allowable_vm_MPa": 60.0,
+   "source": "Nominal handbook values for AlSi10Mg: E 70 GPa, Poisson 0.33, density 2.67 g/cm3. The 60 MPa allowable is a demo design limit chosen so the stress constraint is active; it is not a material strength. Demo inputs, not a qualified material card."
+  },
+  "resolution": {
+   "gen_mm": 4.0,
+   "fea_mm": 4.0,
+   "field_h_mm": 2.0,
+   "check_factor": 0.5,
+   "check_levels": [
+    {
+     "level": 1,
+     "h_mm": 2.0,
+     "gpu_only": false
+    }
+   ],
+   "stress_exclude_mm": 6.0,
+   "patch_keep_in_mm": 0.0
+  },
+  "grid": {
+   "origin_mm": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "envelope_mm": [
+    100.0,
+    100.0,
+    40.0
+   ],
+   "derived_from": "spec"
+  },
+  "supports": [
+   {
+    "name": "foot-1",
+    "box": [
+     76.0,
+     64.0,
+     0.0,
+     88.0,
+     76.0,
+     0.0
+    ],
+    "dofs": [
+     0,
+     1,
+     2
+    ]
+   },
+   {
+    "name": "foot-2",
+    "box": [
+     44.0,
+     80.0,
+     0.0,
+     56.0,
+     92.0,
+     0.0
+    ],
+    "dofs": [
+     0,
+     1,
+     2
+    ]
+   },
+   {
+    "name": "foot-3",
+    "box": [
+     12.0,
+     64.0,
+     0.0,
+     24.0,
+     76.0,
+     0.0
+    ],
+    "dofs": [
+     0,
+     1,
+     2
+    ]
+   },
+   {
+    "name": "foot-4",
+    "box": [
+     12.0,
+     28.0,
+     0.0,
+     24.0,
+     40.0,
+     0.0
+    ],
+    "dofs": [
+     0,
+     1,
+     2
+    ]
+   },
+   {
+    "name": "foot-5",
+    "box": [
+     44.0,
+     8.0,
+     0.0,
+     56.0,
+     20.0,
+     0.0
+    ],
+    "dofs": [
+     0,
+     1,
+     2
+    ]
+   },
+   {
+    "name": "foot-6",
+    "box": [
+     76.0,
+     28.0,
+     0.0,
+     88.0,
+     40.0,
+     0.0
+    ],
+    "dofs": [
+     0,
+     1,
+     2
+    ]
+   }
+  ],
+  "loads": [
+   {
+    "name": "cup-down",
+    "box": [
+     40.0,
+     40.0,
+     40.0,
+     60.0,
+     60.0,
+     40.0
+    ],
+    "force": [
+     0.0,
+     0.0,
+     -30000.0
+    ],
+    "axis": "z",
+    "case": "down"
+   }
+  ],
+  "constraints": [
+   {
+    "output": "vm_p99_MPa",
+    "op": "<=",
+    "limit": 60.0
+   },
+   {
+    "output": "umax_mm",
+    "op": "<=",
+    "limit": 0.035
+   }
+  ],
+  "objective": {
+   "output": "mass_kg",
+   "sense": "min"
+  },
+  "tol": 0.1,
+  "sweep": {
+   "n": 10,
+   "seed": 7,
+   "sampler": "lhs-random-cd"
+  },
+  "solver": {
+   "dtype": "float64",
+   "tol": 1e-08,
+   "maxiter": 20000
+  }
+ },
+ "sweep": {
+  "volfrac": [
+   0.13,
+   0.38
+  ],
+  "rmin_mm": [
+   6.0,
+   12.0
+  ]
+ },
+ "outputs": [
+  "mass_kg",
+  "vm_p99_MPa",
+  "umax_mm",
+  "compliance_Nmm",
+  "vm_max_MPa"
+ ],
+ "resources": {
+  "vram_gb": 0.0,
+  "cpu_threads": 4,
+  "wall_h": 0.05,
+  "precision": "float64"
+ },
+ "tracking": {
+  "uri": null,
+  "experiment": null
+ },
+ "evidence": true,
+ "hypothesis": "A SIMP-generated organic root mount meets vm_p99 <= 60 MPa and umax <= 0.035 mm at minimum mass, and a GP surrogate fitted to a 10-design sweep predicts the verified winner within 10 %.",
+ "expected": "the surrogate's winner meets every constraint on the real solver and agrees within tol",
+ "rd_activity": null,
+ "company": null,
+ "tags": {
+  "golden": "0.2.0",
+  "generator": "simp-organic",
+  "domain_source": "build123d",
+  "sampler": "lhs-random-cd",
+  "grade": "preview-grade",
+  "vendored_snapshot": "62de9811e555"
+ },
+ "spec_path": "/home/aces/Work/golden-demo/golden/20261010T084920Z-b3ac99/inputs/spec.effective.json",
+ "spec_sha256": "acc99c6a2671265e41521b81d1ce216ba0c61d4f3759665286e456c317045b52"
+}
