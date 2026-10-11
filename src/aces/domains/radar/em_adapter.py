@@ -851,8 +851,11 @@ class Adapter:
         (GCPW effect) — ``{"polygon_mm": [...], "clearance_m": g}``, or
         ``"auto"`` to take the GND zone polygon on the net's layer from the
         parsed pcb (requires case["pcb"]).  The pour is clipped to the deck
-        domain and is not via-stitched to the bottom plane inside the window
-        (documented limitations).  With pour present there is no closed-form
+        domain.  job33: ``case["stitch"] = True`` (with pcb) ties the pour to
+        the bottom plane with the board's real GND stitching vias
+        (``pour_stitch_vias``), or an explicit ``pour["fence_mm"]`` list
+        places the fence by hand; without them the pour floats (the job28
+        documented limitation).  With pour present there is no closed-form
         reference, so the er_eff / Z0 model bars become informational deltas
         vs the pure-microstrip model; reciprocity / residual / loss bars
         still gate.
@@ -901,7 +904,26 @@ class Adapter:
                     "clearance_m": zones[0].clearance_mm * 1e-3}
         elif pour is not None:
             pour = {"polygon_mm": [tuple(p) for p in pour["polygon_mm"]],
-                    "clearance_m": float(pour["clearance_m"])}
+                    "clearance_m": float(pour["clearance_m"]),
+                    **({"fence_mm": [tuple(v) for v in pour["fence_mm"]]}
+                       if pour.get("fence_mm") else {})}
+        # job33: stitch the pour to the bottom plane with the board's real
+        # GND stitching vias (pour_stitch_vias), or an explicit fence_mm list
+        if pour is not None and case.get("stitch") and not pour.get("fence_mm"):
+            if pcb is None:
+                raise ValueError('stitch=True needs case["pcb"] (stitching vias '
+                                 "come from the board file)")
+            # clip to the coupon window (net bbox + margins): distant vias
+            # cannot be represented in the deck (job28) and would only pad
+            # the skipped list
+            xs = [p[0] for p in poly["points_mm"]]
+            ys = [p[1] for p in poly["points_mm"]]
+            m_mm = (margins["margin_cells"] + 2) * cell * 1e3
+            window_mm = ((min(xs) - m_mm, min(ys) - m_mm),
+                         (max(xs) + m_mm, max(ys) + m_mm))
+            pour["fence_mm"] = ki.pour_stitch_vias(
+                pcb, pour["polygon_mm"], net=case.get("stitch_net", "GND"),
+                window_mm=window_mm)
 
         runs = {}
         for stem, feed_end in (("case_p1", 1), ("case_p2", 2)):
@@ -1082,7 +1104,9 @@ class Adapter:
         pour = case.get("pour")
         if pour is not None:
             pour = {"polygon_mm": [tuple(p) for p in pour["polygon_mm"]],
-                    "clearance_m": float(pour["clearance_m"])}
+                    "clearance_m": float(pour["clearance_m"]),
+                    **({"fence_mm": [tuple(v) for v in pour["fence_mm"]]}
+                       if pour.get("fence_mm") else {})}
         n_ports = len(graph["branches"])
 
         runs = {}

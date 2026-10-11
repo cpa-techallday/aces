@@ -1106,6 +1106,62 @@ def rasterize_pour_cells(polygon_m: list[tuple[float, float]], cell: float,
     return cells
 
 
+def pour_stitch_vias(pcb: "Pcb", polygon_mm: list[tuple[float, float]],
+                     net: str = "GND",
+                     window_mm: tuple | None = None) -> list[tuple[float, float, float]]:
+    """Stitching vias of ``net`` whose centres lie inside the pour polygon
+    (job33).  Returns [(x_mm, y_mm, size_mm), ...] sorted by (y, x) —
+    deterministic.  ``window_mm`` ((x0, y0), (x1, y1)) further clips to a
+    coupon window.  These are the vias that tie the F.Cu pour to the ground
+    plane(s) below on the real board; the deck models them as vertical PEC
+    columns (fence)."""
+    out = []
+    for v in pcb.vias:
+        if v["net"] != net:
+            continue
+        x, y = v["at"][0], v["at"][1]
+        if not point_in_polygon(x, y, polygon_mm):
+            continue
+        if window_mm is not None:
+            (x0, y0), (x1, y1) = window_mm
+            if not (min(x0, x1) <= x <= max(x0, x1)
+                    and min(y0, y1) <= y <= max(y0, y1)):
+                continue
+        out.append((x, y, float(v["size"])))
+    out.sort(key=lambda t: (t[1], t[0]))
+    return out
+
+
+def emit_pour_fence(lines: list, fence_mm, pour_cells: set[tuple[int, int]],
+                    rel, cell: float, z_bot: float, z_top: float) -> dict:
+    """Emit via-fence columns tying the pour to the ground plane (job33).
+
+    ``fence_mm``: [(x_mm, y_mm, size_mm), ...] in board coordinates; ``rel``
+    is the deck builder's board-frame->deck-frame snap (metres in).
+    A column is emitted only when its whole snapped footprint lies inside
+    the pour cells (face-connected contact, no free-standing pegs and no
+    shorts into the trace keepout); otherwise it is counted as skipped.
+    Columns span z_bot (top of the ground plane box) to z_top (top of the
+    pour box)."""
+    fenced, skipped = 0, []
+    for (vx, vy, vsize) in fence_mm:
+        fx, fy = rel(vx * 1e-3, vy * 1e-3)
+        w_cells = max(1, round(vsize * 1e-3 / cell))
+        ic, jc = round(fx / cell), round(fy / cell)
+        half = w_cells // 2
+        foot = {(i, j) for i in range(ic - half, ic - half + w_cells)
+                for j in range(jc - half, jc - half + w_cells)}
+        if not foot or not foot <= pour_cells:
+            skipped.append((vx, vy))
+            continue
+        lines.append(f"#box: {(ic - half) * cell:.7f} {(jc - half) * cell:.7f} "
+                     f"{z_bot:.7f} {(ic - half + w_cells) * cell:.7f} "
+                     f"{(jc - half + w_cells) * cell:.7f} {z_top:.7f} pec")
+        fenced += 1
+    return {"count": fenced, "skipped_mm": skipped,
+            "note": "vertical PEC columns, pour cells to ground plane"}
+
+
 # ------------------------------------------------------------------ deck
 def deck_kicad_net(polyline: dict, cell: float, window_s: float, f0: float,
                    er: float, h: float, tand: float,
@@ -1120,9 +1176,10 @@ def deck_kicad_net(polyline: dict, cell: float, window_s: float, f0: float,
     ``pour`` (job28, GCPW): ``{"polygon_mm": [(x, y), ...], "clearance_m": g}``
     lays a GND pour on the trace layer — PEC cells inside the polygon minus
     a clearance halo around the trace and pads.  The pour is clipped to the
-    deck domain (sized from the trace bbox + margins) and is NOT tied to the
-    bottom plane inside the window (via-fence stitching is out of scope);
-    both are documented limitations.
+    deck domain (sized from the trace bbox + margins).  Optional
+    ``"fence_mm": [(x, y, size_mm), ...]`` (job33) stitches the pour to the
+    bottom plane with vertical PEC via columns; without it the pour floats
+    (the job28 documented limitation).
     """
     n_sub = n_sub or max(2, round(h / cell))
     if abs(n_sub * cell - h) > 1e-9:
@@ -1270,6 +1327,13 @@ def deck_kicad_net(polyline: dict, cell: float, window_s: float, f0: float,
                          f"{(i1 + 1) * cell:.7f} {(j + 1) * cell:.7f} {z_trace + cell:.7f} pec")
         pour_geom = {"clearance_m": g_clear, "cells": len(pour_cells),
                      "clipped_to_domain": True, "stitched_to_plane": False}
+        # job33: via-fence stitching of the pour to the ground plane
+        fence_mm = pour.get("fence_mm") or []
+        if fence_mm:
+            fence = emit_pour_fence(lines, fence_mm, pour_cells, rel, cell,
+                                    z_gnd + cell, z_trace + cell)
+            pour_geom["fence"] = fence
+            pour_geom["stitched_to_plane"] = fence["count"] > 0
 
     # end geometries: feed point (stacked sources) and load column
     ends = []
@@ -1464,6 +1528,13 @@ def deck_kicad_nport(graph: dict, cell: float, window_s: float, f0: float,
                          f"{(i1 + 1) * cell:.7f} {(j + 1) * cell:.7f} {z_trace + cell:.7f} pec")
         pour_geom = {"clearance_m": g_clear, "cells": len(pour_cells),
                      "clipped_to_domain": True, "stitched_to_plane": False}
+        # job33: via-fence stitching of the pour to the ground plane
+        fence_mm = pour.get("fence_mm") or []
+        if fence_mm:
+            fence = emit_pour_fence(lines, fence_mm, pour_cells, rel, cell,
+                                    z_gnd + cell, z_trace + cell)
+            pour_geom["fence"] = fence
+            pour_geom["stitched_to_plane"] = fence["count"] > 0
 
     # ports: end geometries, feed/termination strings, probe triads
     ports = []
