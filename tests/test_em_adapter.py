@@ -188,6 +188,19 @@ def test_unknown_structure_raises(tmp_path):
         ad.run({"solver": "gprmax", "structure": "warp_drive"}, None, str(tmp_path))
 
 
+def test_validation_case_names_accepted_in_structure(tmp_path, monkeypatch):
+    """em-campaign --validation sweeps `structure`; the adapter must treat a
+    validation-case name there the same as `validate` (rig smoke 2026-10-12)."""
+    ad = em.Adapter()
+    seen = {}
+    def fake_wr90(case, rd):
+        seen["wr90"] = True
+        return {"kind": "wr90"}
+    monkeypatch.setattr(ad, "_run_wr90", fake_wr90)
+    out = ad.run({"solver": "gprmax", "structure": "wr90_through"}, None, str(tmp_path))
+    assert seen.get("wr90") and out["kind"] == "wr90"
+
+
 # ------------------------------------------------------------------ wave split
 
 def test_wave_split_recovers_synthetic_waves():

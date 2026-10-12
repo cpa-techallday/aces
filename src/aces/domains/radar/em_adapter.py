@@ -592,6 +592,11 @@ class Adapter:
         window = float(case.get("time_window_s", 10e-9))
 
         validate = case.get("validate")
+        # em-campaign --validation sweeps the structure name; em-sample sets `validate`.
+        # Treat a validation-case name in `structure` as the same request (rig smoke
+        # 2026-10-12 hit this: structure=wr90_through raised "unknown structure").
+        if validate is None and case.get("structure") in VALIDATION_CASES:
+            validate = case["structure"]
         if case.get("structure") == "tile_multiport":
             return self._run_multiport(case, rd)
         if case.get("structure") == "kicad_net":
