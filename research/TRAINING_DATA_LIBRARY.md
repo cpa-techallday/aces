@@ -23,8 +23,8 @@ commercial use); **ACES use** = concrete role in this project.
 
 | Data | What | Size | ACES use |
 |---|---|---|---|
-| `research/hx-corpus-v2.jsonl` | TPMS HX CFD calibration rows (gyroid/diamond/primitive, air) | 40 rows | Tier-0 surrogate training + registry fits |
-| `research/tier0-dataset-v2/` | Voxelized 32³ cells + 7-dim conditioning | 40 samples | Tier-0 generative model dataset |
+| `research/hx-corpus-v3.jsonl` | TPMS HX CFD calibration rows (gyroid/diamond/primitive, air) | 51 rows | Tier-0 surrogate training + registry fits |
+| `research/tier0-dataset-v4/` | Voxelized 32³ cells + 7-dim conditioning | 51 samples | Tier-0 generative model dataset |
 | `data/calibration/hx.json` | Fitted Nu/f factors + scatter + validity envelopes | 9 factors | Inference-time engine, refusal thresholds |
 | Rig run archive (`research/rig-runs/`) | Raw simlab outputs, evidence manifests | campaigns 01–02 | Audit trail, D28 evidence schema |
 | XCube stress-test grids (`research/xcube-env/`) | Car/plane samples, voxelized, measured | 4 grids | RESEARCH ONLY stress tests |
