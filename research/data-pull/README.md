@@ -41,8 +41,40 @@ the simlab queue on the same disk).
 
 ```
 ssh pi@192.168.1.65
-tail -20 /mnt/nvme2/data-library/pull.log   # ends with verify report
+cat /mnt/nvme2/data-library/VERIFY-REPORT.txt   # authoritative (see below)
 du -sh /mnt/nvme2/data-library/*
 ```
 
 `pull.sh` re-run is idempotent: files matching expected size are skipped.
+
+## Status: COMPLETE (2026-10-13)
+
+**301/301 files, 464 GB, verified.** Authoritative report:
+`/mnt/nvme2/data-library/VERIFY-REPORT.txt` (clean-manifest, size-checked —
+do NOT trust `pull.log`'s built-in verify: the seed `manifest.tsv` was written
+with CRLF line endings, so its size comparisons always failed and the log's
+"SIZE MISMATCH" warnings are false alarms; `manifest.clean.tsv` on the rig is
+the LF-fixed copy used for the real verify).
+
+Verification performed (all on the rig, 2026-10-13):
+
+- **Size check:** 301/301 exact against the clean manifest
+- **AM Bench sha256:** 25/25 sidecar checksums match
+- **HDF5:** all 150 (The Well + AM Bench h5) open cleanly in h5py
+- **Parquet:** all 8 ABC shards readable (schema: id, label, mesh.vertices, mesh.faces)
+- **Archives:** every .zip passes `unzip -t`; both MCB tarballs pass `gzip -t`;
+  both AirfRANS zips (71 + 10 GB) have valid central directories
+  (OF_dataset.zip = 136,490 entries)
+- **One casualty found and repaired:** `kab-lattice/tough-structures/ADTS10001-14999.zip`
+  arrived truncated (403 KB — BU server closed early and curl accepted it);
+  re-downloaded 2026-10-13 (`repair-adts.log` on the rig)
+- **Smoke-load script:** `research/data-pull/smoke_load.py` (this repo) — opens one
+  file of every kind in the `simlab-pyfr:0.3` image and dumps structures/schemas;
+  re-run it after any future pull
+
+Known caveats:
+
+- The Well train splits are the L-subsets per the original plan (full trains
+  remain on-demand — disk budget)
+- AM Bench 2715 raw camera files deliberately excluded (up to 119 GB each)
+- abc-tactile is the 8-shard dev subset, not full ABC

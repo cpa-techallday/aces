@@ -29,9 +29,9 @@ commercial use); **ACES use** = concrete role in this project.
 | Rig run archive (`research/rig-runs/`) | Raw simlab outputs, evidence manifests | campaigns 01–02 | Audit trail, D28 evidence schema |
 | XCube stress-test grids (`research/xcube-env/`) | Car/plane samples, voxelized, measured | 4 grids | RESEARCH ONLY stress tests |
 
-Gap note: 40 rows is thin. Next campaigns: diamond Re spread at wr 0.24/0.28
-(scatter 0.143 near the 0.15 refusal line), primitive Re≈5 probe to pin its Mach
-boundary (Mach/Re ≈ 0.023 measured).
+Gap note: resolved by campaign 3 (D33, 2026-10-11) — diamond Nu's 0.143 scatter
+was a hidden Re trend, now a power law at 0.067; primitive's Mach boundary pinned
+at Re ~6 (over-Mach 0.164–0.201). Corpus is now v3 (51 rows), tier-0 run v2.
 
 ---
 
@@ -188,25 +188,44 @@ Ordered by value-per-byte for the current tier-0 → tier-1 path:
 Everything above the line is open and downloadable on the rig's schedule without
 license risk at research stage.
 
-## §10. Pull status (2026-10-10)
+## §10. Pull status (2026-10-13): COMPLETE
 
 Shortlist executed against the rig's `/mnt/nvme2/data-library/` — **301 files,
-~494 GB queued** in a resumable background pull (`research/data-pull/` has the
-driver + manifests; see `research/data-pull/README.md` for live status):
+464 GB, all verified**. Driver + manifests + smoke-load script in
+`research/data-pull/`; authoritative verify report on the rig at
+`/mnt/nvme2/data-library/VERIFY-REPORT.txt`; full verification detail in
+`research/data-pull/README.md`:
 
-1. AirfRANS — **queued** (preprocessed 10 GB + raw OpenFOAM 71 GB)
-2. The Well shear_flow + rayleigh_benard — **queued** (full valid+test splits;
-   L-shaped train subsets ~230 + ~168 GB; full trains were 376 + 294 GB — over
-   the disk budget, on-demand per-combo later)
-3. MCB — **queued** (A + B via working direct Box links, ~5 GB)
-4. KAB lattice tests — **queued** (Drive folder was 401; got the *entire* 5-dataset
-   KABlab collection from open.bu.edu instead, incl. quasi-static + impact raw test
-   data, ~4.6 GB, plus both code repos)
-5. NIST AM Bench IN718 — **queued** (challenge description + residual stress +
-   thermography derived data; raw camera files up to 119 GB each excluded on
-   disk budget, documented for on-demand fetch)
+1. AirfRANS — **done + verified** (Dataset.zip 10 GB preprocessed + OF_dataset.zip
+   71 GB raw OpenFOAM, 136,490 entries, valid central directories)
+2. The Well shear_flow + rayleigh_benard — **done + verified** (all 150 HDF5 open
+   in h5py; L-subset trains per plan, full trains on-demand)
+3. MCB — **done + verified** (MCB_A.tar.gz 2.5 GB + MCB_B.tar.gz 1.8 GB, gzip-clean;
+   OBJ meshes in class dirs, e.g. Grooved pins, bearing)
+4. KAB lattice tests — **done + verified** (all 5 datasets from open.bu.edu incl.
+   RawTestData_Quasistatic.zip + RawTestData_Impact.zip; every zip passes
+   `unzip -t`. One file, ADTS10001-14999.zip, arrived truncated and was
+   re-downloaded 2026-10-13)
+5. NIST AM Bench IN718 — **done + verified** (2607 + 2711 + 2715 sets;
+   25/25 sha256 sidecars match; raw camera files excluded per plan)
 6. JHTDB — **pulled** (2026-10-10, public testing token via `giverny`): channel
    Re_τ 1000 + 5200 mean profiles and wall-gradient-derived cf/Re_b; pipeline
    validated by Blasius Re^(−1/4) check within 1.1%. See `research/jhtdb/`.
-7. ABC subset — **queued** (8 parquet shards of the processed ABC HF mirror, ~6 GB;
-   full chunks are 50–100 GB each — for when tier-1 training actually starts)
+7. ABC subset — **done + verified** (8 parquet shards, schema id/label/
+   mesh.vertices/mesh.faces; dev subset for tier-1 pipeline)
+
+### Loader notes per dataset (what works today)
+
+| Dataset | Format | How to load | Verified |
+|---|---|---|---|
+| The Well | HDF5 per (split, physics-combo) | `h5py.File` — groups per field; also the `the_well` PyTorch package | ✔ h5py open, structure dumped |
+| AirfRANS | 2 zips: preprocessed ML pack + raw OpenFOAM dirs | stream-extract entries from the zip (`zipfile`), or extract on demand — 71 GB raw stays zipped until needed | ✔ 136,490 entries listed |
+| MCB A/B | tar.gz of OBJ meshes in class dirs | `tarfile` stream → `trimesh`/OBJ parser | ✔ gzip -t + listing |
+| ABC subset | parquet shards | `pyarrow.parquet` — cols id, label, mesh.vertices, mesh.faces | ✔ schema read |
+| KABlab | zips (shells, STLs, raw test data) + CSVs | `zipfile`; CampaignData.csv indexes the ADTS shells | ✔ unzip -t all |
+| AM Bench | mixed (h5, STEP, STL, pdf, csv) + sha256 sidecars | h5py / pandas; sidecars verified | ✔ 25/25 sha256 |
+| JHTDB | json profiles (already extracted) | `research/jhtdb/` loaders | ✔ Blasius check |
+
+Smoke-load harness: `research/data-pull/smoke_load.py` runs in the rig's
+`simlab-pyfr:0.3` image (has h5py/pyarrow/pandas; mount
+`/mnt/nvme2/data-library:/data:ro`). Re-run after any future pull.
