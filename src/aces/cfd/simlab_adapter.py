@@ -81,6 +81,7 @@ class Adapter:
             tpms=case["tpms"], wall_ratio=float(case["wall_ratio"]), cell_m=float(case["cell_m"]),
             fluid=case["fluid"], T_K=float(case["T_K"]), p_Pa=float(case["p_Pa"]), re_target=float(case["re"]),
             n=int(case.get("n", 64)), thermal=bool(case.get("thermal", True)),
+            u_lattice=float(case.get("u_lattice", 0.025)),
             source=f"simlab:{exp_id}:{case.get('case_id', 'c000')}")
         r = periodic.run(s, xp=xp, max_steps=int(case.get("max_steps", 2_000_000)))
         os.makedirs(run_dir, exist_ok=True)
@@ -96,6 +97,7 @@ class Adapter:
         return {
             "converged": int(r.measurement is not None),
             "re_achieved": d.get("re_achieved"),
+            "u_lattice": s.u_lattice,
             "dpdx_Pa_m": m.get("dpdx_Pa_m"),
             "mass_flux_kg_m2s": m.get("mass_flux_kg_m2s"),
             "h_W_m2K": m.get("h_W_m2K"),

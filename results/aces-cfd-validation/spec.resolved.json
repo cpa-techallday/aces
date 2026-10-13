@@ -1,0 +1,48 @@
+{
+  "id": "aces-cfd-validation",
+  "project": "ACES-calibration",
+  "owner": "aaron",
+  "physics": "cfd",
+  "solver": "aces-tpms-periodic",
+  "description": "Registry validation of aces-tpms-periodic against exact fully developed duct results.",
+  "geometry": {
+    "source": "parametric",
+    "ref": null,
+    "sha256": null
+  },
+  "params": {
+    "n": 24
+  },
+  "sweep": {
+    "validate": [
+      "square_duct",
+      "plane_channel"
+    ]
+  },
+  "outputs": [
+    "fRe_err_pct",
+    "Nu_err_pct"
+  ],
+  "resources": {
+    "vram_gb": 0.6,
+    "cpu_threads": 8,
+    "wall_h": 2.0,
+    "precision": "float64"
+  },
+  "tracking": {
+    "uri": null,
+    "experiment": null
+  },
+  "evidence": true,
+  "hypothesis": "The periodic LBM solver reproduces exact laminar fRe and Nu_H1 within 1 % at this resolution.",
+  "expected": "square duct fRe 56.91 / Nu 3.608; plane channel fRe 96 / Nu 8.235",
+  "rd_activity": "ACES fast-tier calibration of TPMS heat-exchanger cores",
+  "company": "carbon",
+  "tags": {
+    "kind": "validation",
+    "system": "hx",
+    "origin": "aces"
+  },
+  "spec_path": "/work/cases/aces/aces-cfd-validation.yaml",
+  "spec_sha256": "9eb446a26faaec2c36ca6a2e351c4d1e6ff673fc438daae4ef9779391b58c424"
+}

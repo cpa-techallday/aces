@@ -1,0 +1,47 @@
+id: aces-cal-air-04d-machfix
+project: ACES-calibration
+owner: aaron
+physics: cfd
+solver: aces-tpms-periodic
+description: 'Mach-fix rerun: periodic diamond unit cells, t/a 0.28, Re [3, 10], Air at 320 K,
+  96 voxels per cell, u_lattice 0.02 (was 0.025).'
+hypothesis: At u_lattice 0.02 the thickest diamond cells stay below the Mach 0.15 gate
+  (were 0.151 and 0.156 at 0.025), converging with usable dpdx and H1 h.
+expected: dpdx and H1 h per case; supersedes the Mach-flagged diamond rows of aces-cal-air-02r
+  (c015) and aces-cal-air-03d (c007).
+rd_activity: ACES fast-tier calibration of TPMS heat-exchanger cores
+company: carbon
+params:
+  cell_m: 0.004
+  fluid: Air
+  T_K: 320.0
+  p_Pa: 200000.0
+  n: 96
+  thermal: true
+  u_lattice: 0.02
+outputs:
+- re_achieved
+- dpdx_Pa_m
+- mass_flux_kg_m2s
+- h_W_m2K
+- nusselt_h1
+- mach
+- u_lattice
+resources:
+  precision: float64
+  vram_gb: 4.0
+tags:
+  kind: calibration
+  system: hx
+  origin: aces
+  fix: mach
+sweep:
+  tpms:
+  - diamond
+  wall_ratio:
+  - 0.28
+  re:
+  - 3.0
+  - 10.0
+geometry:
+  source: parametric

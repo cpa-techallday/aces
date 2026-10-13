@@ -1,0 +1,66 @@
+{
+  "id": "aces-cal-air-02p",
+  "project": "ACES-calibration",
+  "owner": "aaron",
+  "physics": "cfd",
+  "solver": "aces-tpms-periodic",
+  "description": "ACES calibration samples: periodic primitive unit cells, t/a [0.08, 0.12, 0.16], Re [1.0, 3.0, 10.0], Air at 320 K, 96 voxels per cell.",
+  "geometry": {
+    "source": "parametric",
+    "ref": null,
+    "sha256": null
+  },
+  "params": {
+    "cell_m": 0.004,
+    "fluid": "Air",
+    "T_K": 320.0,
+    "p_Pa": 200000.0,
+    "n": 96,
+    "thermal": true
+  },
+  "sweep": {
+    "tpms": [
+      "primitive"
+    ],
+    "wall_ratio": [
+      0.08,
+      0.12,
+      0.16
+    ],
+    "re": [
+      1.0,
+      3.0,
+      10.0
+    ]
+  },
+  "outputs": [
+    "re_achieved",
+    "dpdx_Pa_m",
+    "mass_flux_kg_m2s",
+    "h_W_m2K",
+    "nusselt_h1",
+    "mach"
+  ],
+  "resources": {
+    "vram_gb": 4.0,
+    "cpu_threads": 8,
+    "wall_h": 2.0,
+    "precision": "float64"
+  },
+  "tracking": {
+    "uri": null,
+    "experiment": null
+  },
+  "evidence": true,
+  "hypothesis": "Pressure drop and H1 heat transfer of TPMS cores differ from the straight-duct baselines by a factor that is constant enough over this range to calibrate the fast tier.",
+  "expected": "dpdx and H1 h per case (rows carry boundary uniform_heat_flux); fitted with `aces calibrate`, which takes the boundary from the rows.",
+  "rd_activity": "ACES fast-tier calibration of TPMS heat-exchanger cores",
+  "company": "carbon",
+  "tags": {
+    "kind": "calibration",
+    "system": "hx",
+    "origin": "aces"
+  },
+  "spec_path": "/work/cases/aces/aces-cal-air-02p.yaml",
+  "spec_sha256": "dcbe46c6c7f1f2a99d7efddc6b77e4c2d1dd77741e089d5435e1ea6266ec861c"
+}

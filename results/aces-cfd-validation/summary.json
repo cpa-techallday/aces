@@ -1,0 +1,44 @@
+{
+  "experiment": "aces-cfd-validation",
+  "solver": "aces-tpms-periodic",
+  "n_cases": 2,
+  "n_failed": 0,
+  "rows": [
+    {
+      "case_id": "c000",
+      "gpu": 0,
+      "rc": 0,
+      "wall_s_total": 38.8,
+      "n": 24,
+      "validate": "square_duct",
+      "validation_case": "square_duct",
+      "fRe": 56.81398532858585,
+      "fRe_exact": 56.91,
+      "fRe_err_pct": -0.1687131811880968,
+      "Nu_H1": 3.6251014625346403,
+      "Nu_H1_exact": 3.608,
+      "Nu_err_pct": 0.47398732080488293,
+      "converged": 1,
+      "wall_s": 28.9895498752594,
+      "device": "cuda"
+    },
+    {
+      "case_id": "c001",
+      "gpu": 1,
+      "rc": 0,
+      "wall_s_total": 48.0,
+      "n": 24,
+      "validate": "plane_channel",
+      "validation_case": "plane_channel",
+      "fRe": 95.91674062622857,
+      "fRe_exact": 96.0,
+      "fRe_err_pct": -0.08672851434523565,
+      "Nu_H1": 8.246622189710967,
+      "Nu_H1_exact": 8.235,
+      "Nu_err_pct": 0.14113162976281537,
+      "converged": 1,
+      "wall_s": 38.717923402786255,
+      "device": "cuda"
+    }
+  ]
+}
