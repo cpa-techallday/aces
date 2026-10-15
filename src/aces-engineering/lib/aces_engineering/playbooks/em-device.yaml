@@ -1,0 +1,123 @@
+# aces-playbook/1 — em-device: antennas, radomes, waveguides, phased arrays.
+# EM is the first and dominant physics (the radiation IS the product; research §2.5):
+# envelope/interfaces -> EM solve DOE -> surrogate -> MOO on gain/S-params/losses -> EM
+# verification with S-parameter and eigen gates -> score. Thermal-from-losses and structural
+# detuning are downstream constraints, gated when power is high.
+schema: aces-playbook/1
+class: em-device
+version: 1
+title: EM device (antenna, radome, waveguide)
+description: >
+  The EM performance is the product, so the EM solve leads; S-parameter and eigen gates are
+  hard gates, and the verification re-solve of the chosen candidate closes the loop.
+spec:
+  metrics: [s11_max_dB, gain_dBi, bandwidth_Hz, loss_W, mass_kg]
+  targets:
+    frequency_Hz: null       # operating frequency / band from the brief, when given
+    gain_dBi: null           # gain target from the brief, when given
+  defaults:
+    envelope_mm:
+      value: [200.0, 200.0, 50.0]
+      note: "assumed envelope; give dimensions in the brief to replace it"
+    band_Hz:
+      value: [2.4e9, 2.5e9]
+      note: "assumed operating band; give the frequency in the brief (e.g. '5.8 GHz') to replace it"
+    doe_samples:
+      value: 24
+      note: "EM DOE size when the brief gives no budget"
+stages:
+  - id: envelope-interfaces
+    name: Envelope and interface definition
+    solver: none
+    purpose: >
+      Freeze the envelope, feed locations and mounting interfaces; the EM design space is what
+      remains (constraint physics before objective physics).
+    inputs: [brief, envelope_mm]
+    outputs: [design_space, feeds, feasibility]
+    entry: ["brief parsed"]
+    exit: ["the envelope fits at least one wavelength-scale feature of the band"]
+    gate:
+      metric: feasibility
+      op: "=="
+      limit: 1
+      note: "an envelope far below the band's wavelength cannot host the antenna; killed cheaply here"
+    evidence: [design-space.json]
+  - id: em-solve-doe
+    name: EM solve DOE
+    solver: aces-tile-em
+    purpose: >
+      Frequency-domain EM solve (Palace/gprMax tier) of the DOE variants over the band;
+      S-parameters and near/far fields per variant.
+    inputs: [design_space, band_Hz, doe_samples]
+    outputs: [s11_max_dB, gain_dBi, bandwidth_Hz, loss_W, convergence]
+    entry: ["envelope-interfaces passed"]
+    exit: ["every variant solved or is marked failed with its reason"]
+    gate:
+      metric: convergence
+      op: ">="
+      limit: 0.9
+      note: ">=90 % of the DOE must solve; less means the mesh/excitation setup is wrong"
+    evidence: [em-sweep.json, s-params.png]
+  - id: surrogate-fit
+    name: EM surrogate with uncertainty
+    solver: surrogate-bracket-gp
+    purpose: >
+      GP surrogate of S11 / gain / bandwidth over the geometry parameters, with uncertainty.
+    inputs: [em-sweep.json, doe_table]
+    outputs: [surrogate_model, cv_error_rel, feature_importance]
+    entry: ["em-solve-doe passed"]
+    exit: ["cross-validated error is within the acceptance band"]
+    gate:
+      metric: cv_error_rel
+      op: "<="
+      limit: 0.15
+      note: "a surrogate that cannot cross-validate to 15 % may not be optimised on"
+    evidence: [surrogate-model.joblib, surrogate-cv.json]
+  - id: pareto-search
+    name: NSGA-II Pareto search on the surrogate
+    solver: pymoo-nsga2
+    purpose: >
+      Multi-objective search: gain / bandwidth vs losses and mass; emits the Pareto front and
+      the knee candidate.
+    inputs: [surrogate_model, spec]
+    outputs: [pareto_front, knee_candidate, predicted_metrics]
+    entry: ["surrogate-fit passed"]
+    exit: ["the Pareto front is non-dominated and spans the trade"]
+    gate:
+      metric: pareto_front
+      op: "!="
+      limit: 0
+      note: "an empty front means the targets are mutually infeasible; relax one"
+    evidence: [pareto-front.json, pareto-dashboard.html]
+  - id: em-verify
+    name: EM verification with S-parameter and eigen gates
+    solver: aces-tile-em
+    purpose: >
+      Re-solve the knee candidate on a refined mesh; the S-parameter gate (in-band match) and
+      the eigen gate (no spurious cavity mode in band) are hard gates.
+    inputs: [knee_candidate, band_Hz]
+    outputs: [s11_max_dB, gain_dBi, eigen_margin, verification_delta_rel]
+    entry: ["pareto-search passed"]
+    exit: ["the verification converged", "both hard gates hold"]
+    gate:
+      metric: s11_max_dB
+      op: "<="
+      limit: -10.0
+      note: "in-band S11 must stay below -10 dB; the eigen gate (eigen_margin > 0) holds alongside"
+    evidence: [em-verify.json, verification-delta.json, s-params-verify.png]
+  - id: score
+    name: Score and spec sheet
+    solver: none
+    purpose: >
+      Score verified gain/bandwidth/match per unit mass; emit the spec sheet with the
+      verification delta and the gate evidence.
+    inputs: [em-verify.json, pareto-front.json, spec]
+    outputs: [score, s11_max_dB, gain_dBi, bandwidth_Hz]
+    entry: ["em-verify passed"]
+    exit: ["spec sheet emitted"]
+    gate:
+      metric: score
+      op: ">"
+      limit: 0
+      note: "score from verified metrics only"
+    evidence: [spec-sheet.json, report.md]

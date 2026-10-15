@@ -1,0 +1,144 @@
+# aces-playbook/1 — flow-device: ducts, intakes, manifolds, nozzles, aero surfaces.
+# Parametrise -> LHS DOE -> CFD sweep -> surrogate -> NSGA-II Pareto -> solver re-check of the
+# Pareto knee -> score (research §6.2 flow-device variant and the canonical loop of §6.1;
+# the F1 gated loop of §2.1: iterate cheap, gate expensive).
+schema: aces-playbook/1
+class: flow-device
+version: 1
+title: Flow device (duct, intake, manifold, nozzle, aero surface)
+description: >
+  Packaging and geometry parameters first, then a Latin-hypercube CFD campaign, a surrogate,
+  multi-objective Pareto search on the surrogate, and a high-fidelity re-check of the knee
+  candidate before scoring.
+spec:
+  metrics: [pressure_drop_Pa, massflow_uniformity, drag_N, mass_kg]
+  targets:
+    pressure_drop_Pa: null   # max pressure loss from the brief, when given
+    massflow_kg_s: null      # duty mass flow from the brief, when given
+  defaults:
+    envelope_mm:
+      value: [400.0, 200.0, 200.0]
+      note: "assumed packaging envelope; give dimensions in the brief to replace it"
+    fluid:
+      value: "air, 288.15 K, 101325 Pa"
+      note: "assumed working fluid; name the fluid/state in the brief to change it"
+    doe_samples:
+      value: 40
+      note: "LHS samples for the CFD sweep when the brief gives no budget"
+    inlet_velocity_m_s:
+      value: 20.0
+      note: "assumed inlet condition; give a flow rate or speed in the brief to replace it"
+stages:
+  - id: param-geometry
+    name: Parametric geometry model
+    solver: gendesign-parametric
+    purpose: >
+      Build the parametric geometry family (parameters with bounds) that the DOE will sample;
+      freeze interfaces (ports, mounting faces) as preserved regions.
+    inputs: [envelope_mm, interfaces, parameters]
+    outputs: [parameter_space, baseline_geometry]
+    entry: ["envelope and interfaces resolved from the brief"]
+    exit: ["every parameter has bounds", "baseline geometry generates and is watertight"]
+    gate:
+      metric: parameter_space
+      op: "!="
+      limit: 0
+      note: "no bounded parameters, nothing to optimise; re-scope the brief"
+    evidence: [parameter-space.json, baseline-geometry.step]
+  - id: doe-lhs
+    name: Latin-hypercube design of experiments
+    solver: mdao-run
+    purpose: >
+      Optimal LHS over the parameter space (the table-stakes industrial space-filling design),
+      emitting the run table for the CFD sweep.
+    inputs: [parameter_space, doe_samples]
+    outputs: [doe_table, n_samples]
+    entry: ["param-geometry passed"]
+    exit: ["the DOE table covers the space (no degenerate columns)"]
+    gate:
+      metric: n_samples
+      op: ">="
+      limit: 20
+      note: "fewer than ~20 samples starves the surrogate; raise the budget or shrink the space"
+    evidence: [doe-table.csv]
+  - id: cfd-sweep
+    name: CFD sweep at mid fidelity
+    solver: su2-rans
+    purpose: >
+      Batch RANS solve of every DOE point at mid fidelity (SU2; OpenFOAM where the case needs
+      it), recording the objective metrics per design.
+    inputs: [doe_table, fluid, inlet_velocity_m_s]
+    outputs: [pressure_drop_Pa, massflow_uniformity, drag_N, convergence]
+    entry: ["doe-lhs passed"]
+    exit: ["every sample converged or is marked failed with its residual"]
+    gate:
+      metric: convergence
+      op: ">="
+      limit: 0.9
+      note: ">=90 % of the sweep must converge; less means the mesh/settings are wrong, not the designs"
+    evidence: [sweep-results.json, sweep-residuals.png]
+  - id: surrogate-fit
+    name: Surrogate with uncertainty
+    solver: surrogate-bracket-gp
+    purpose: >
+      Fit a Gaussian-process surrogate of the KPIs over the parameter space with uncertainty
+      (the trust ledger starts here); a flow-specific surrogate row replaces this tabular GP
+      when the cfd image lands.
+    inputs: [sweep-results.json, doe_table]
+    outputs: [surrogate_model, cv_error_rel, feature_importance]
+    entry: ["cfd-sweep passed"]
+    exit: ["cross-validated error is within the acceptance band"]
+    gate:
+      metric: cv_error_rel
+      op: "<="
+      limit: 0.15
+      note: "a surrogate that cannot cross-validate to 15 % may not be optimised on"
+    evidence: [surrogate-model.joblib, surrogate-cv.json]
+  - id: pareto-search
+    name: NSGA-II Pareto search on the surrogate
+    solver: pymoo-nsga2
+    purpose: >
+      Multi-objective NSGA-II on the surrogate (pressure loss / uniformity / drag vs mass),
+      producing the Pareto front and the knee candidate.
+    inputs: [surrogate_model, spec]
+    outputs: [pareto_front, knee_candidate, predicted_metrics]
+    entry: ["surrogate-fit passed"]
+    exit: ["the Pareto front is non-dominated and spans the trade"]
+    gate:
+      metric: pareto_front
+      op: "!="
+      limit: 0
+      note: "an empty front means the constraints are mutually infeasible; relax a target"
+    evidence: [pareto-front.json, pareto-dashboard.html]
+  - id: knee-recheck
+    name: High-fidelity re-check of the Pareto knee
+    solver: su2-rans
+    purpose: >
+      Re-solve the knee candidate at full fidelity and record the surrogate-vs-solver delta —
+      no candidate leaves the loop without a verification delta.
+    inputs: [knee_candidate, fluid]
+    outputs: [pressure_drop_Pa, massflow_uniformity, drag_N, verification_delta_rel]
+    entry: ["pareto-search passed"]
+    exit: ["the re-check converged", "the delta is within the trust tolerance"]
+    gate:
+      metric: verification_delta_rel
+      op: "<="
+      limit: 0.10
+      note: "surrogate-vs-solver delta beyond 10 %: enrich the DOE at the knee and refit"
+    evidence: [knee-recheck.json, verification-delta.json]
+  - id: score
+    name: Score and spec sheet
+    solver: none
+    purpose: >
+      Compose verified metrics into the class score (performance per unit pressure loss per
+      unit mass) and emit the spec sheet, Pareto dashboard and feature-importance panel.
+    inputs: [knee-recheck.json, pareto-front.json, spec]
+    outputs: [score, pressure_drop_Pa, massflow_uniformity, mass_kg]
+    entry: ["knee-recheck passed"]
+    exit: ["spec sheet emitted with the verification delta"]
+    gate:
+      metric: score
+      op: ">"
+      limit: 0
+      note: "score from verified metrics only"
+    evidence: [spec-sheet.json, report.md]

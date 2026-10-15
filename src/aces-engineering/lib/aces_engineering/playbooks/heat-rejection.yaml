@@ -1,0 +1,143 @@
+# aces-playbook/1 — heat-rejection: heatsinks, cold plates, heat exchangers, battery cooling.
+# CHT is intrinsically coupled (research §6.2): never a one-shot flow-then-thermal sequence.
+# Heat-load definition -> flow fields -> CHT DOE -> surrogate -> MOO -> CHT verification ->
+# score (thermal resistance / heat rejection per unit pumping power and mass).
+schema: aces-playbook/1
+class: heat-rejection
+version: 1
+title: Heat-rejection part (heatsink, cold plate, heat exchanger)
+description: >
+  The heat load is defined first (it is the boundary condition), flow fields feed conjugate
+  heat transfer as one coupled solve, and thermal resistance / rejection is scored only after
+  a CHT verification of the chosen candidate.
+spec:
+  metrics: [thermal_resistance_K_W, tmax_K, temp_uniformity_K, pumping_power_W, mass_kg]
+  targets:
+    heat_load_W: null        # heat load from the brief, when given
+    tmax_K: null             # max allowable temperature from the brief, when given
+  defaults:
+    envelope_mm:
+      value: [200.0, 200.0, 50.0]
+      note: "assumed envelope; give dimensions in the brief to replace it"
+    material:
+      value: "Al 6061-T6"
+      note: "assumed base material; copper is common for heat spreading"
+    coolant:
+      value: "air, 298.15 K inlet"
+      note: "assumed coolant; name the coolant and inlet state in the brief to change it"
+    doe_samples:
+      value: 32
+      note: "CHT DOE size when the brief gives no budget"
+stages:
+  - id: heat-load-spec
+    name: Heat-load definition
+    solver: none
+    purpose: >
+      Freeze the heat load and its distribution (from the electrical/power source) — this is
+      the boundary condition the whole chain consumes; kill infeasible envelopes here.
+    inputs: [brief, envelope_mm]
+    outputs: [heat_load_W, load_distribution, feasibility]
+    entry: ["brief parsed"]
+    exit: ["a heat load is known (from the brief or a stated assumption)"]
+    gate:
+      metric: feasibility
+      op: "=="
+      limit: 1
+      note: "an envelope that cannot reject the load with the stated coolant is killed here, cheaply"
+    evidence: [heat-load.json]
+  - id: flow-fields
+    name: Flow fields for the CHT boundary conditions
+    solver: su2-rans
+    purpose: >
+      RANS solve of the coolant passage at the duty point; its fields are the boundary
+      conditions the coupled CHT solve consumes.
+    inputs: [baseline_geometry, coolant, heat_load_W]
+    outputs: [flow_field, pressure_drop_Pa, convergence]
+    entry: ["heat-load-spec passed"]
+    exit: ["the flow solve converged at the duty point"]
+    gate:
+      metric: convergence
+      op: "=="
+      limit: 1
+      note: "no thermal number is meaningful on top of a non-converged flow field"
+    evidence: [flow-field.vtu, flow-summary.json]
+  - id: cht-doe
+    name: Conjugate heat-transfer DOE
+    solver: openfoam-cht
+    purpose: >
+      chtMultiRegionFoam coupled flow+thermal solves over an LHS of the geometry parameters —
+      the coupled pair iterates as a unit (research §2.6 principle 4).
+    inputs: [flow_field, parameter_space, doe_samples]
+    outputs: [tmax_K, temp_uniformity_K, thermal_resistance_K_W, pumping_power_W, convergence]
+    entry: ["flow-fields passed"]
+    exit: ["the CHT sweep converged on enough samples to fit a surrogate"]
+    gate:
+      metric: convergence
+      op: ">="
+      limit: 0.9
+      note: ">=90 % of the CHT sweep must converge; less means the coupling setup, not the designs"
+    evidence: [cht-sweep.json, cht-fields.png]
+  - id: surrogate-fit
+    name: Thermal surrogate with uncertainty
+    solver: surrogate-bracket-gp
+    purpose: >
+      GP surrogate of thermal resistance, tmax and uniformity over the parameters, with
+      uncertainty for the search and the trust ledger.
+    inputs: [cht-sweep.json, doe_table]
+    outputs: [surrogate_model, cv_error_rel, feature_importance]
+    entry: ["cht-doe passed"]
+    exit: ["cross-validated error is within the acceptance band"]
+    gate:
+      metric: cv_error_rel
+      op: "<="
+      limit: 0.15
+      note: "a surrogate that cannot cross-validate to 15 % may not be optimised on"
+    evidence: [surrogate-model.joblib, surrogate-cv.json]
+  - id: pareto-search
+    name: NSGA-II Pareto search on the surrogate
+    solver: pymoo-nsga2
+    purpose: >
+      Multi-objective search: thermal resistance / tmax / uniformity vs pumping power and mass;
+      emits the Pareto front and the knee candidate.
+    inputs: [surrogate_model, spec]
+    outputs: [pareto_front, knee_candidate, predicted_metrics]
+    entry: ["surrogate-fit passed"]
+    exit: ["the Pareto front is non-dominated and spans the trade"]
+    gate:
+      metric: pareto_front
+      op: "!="
+      limit: 0
+      note: "an empty front means the targets are mutually infeasible; relax one"
+    evidence: [pareto-front.json, pareto-dashboard.html]
+  - id: cht-verify
+    name: CHT verification of the knee candidate
+    solver: openfoam-cht
+    purpose: >
+      Full-fidelity coupled re-solve of the knee candidate; records the surrogate-vs-solver
+      delta as the trust ledger entry.
+    inputs: [knee_candidate, coolant, heat_load_W]
+    outputs: [tmax_K, thermal_resistance_K_W, verification_delta_rel]
+    entry: ["pareto-search passed"]
+    exit: ["the verification converged", "the delta is within the trust tolerance"]
+    gate:
+      metric: verification_delta_rel
+      op: "<="
+      limit: 0.10
+      note: "delta beyond 10 %: enrich the DOE at the knee and refit before scoring"
+    evidence: [cht-verify.json, verification-delta.json]
+  - id: score
+    name: Score and spec sheet
+    solver: none
+    purpose: >
+      Score heat rejected per unit thermal resistance per unit pumping power and mass from
+      verified metrics; emit the spec sheet with the verification delta.
+    inputs: [cht-verify.json, pareto-front.json, spec]
+    outputs: [score, thermal_resistance_K_W, tmax_K, mass_kg]
+    entry: ["cht-verify passed"]
+    exit: ["spec sheet emitted"]
+    gate:
+      metric: score
+      op: ">"
+      limit: 0
+      note: "score from verified metrics only"
+    evidence: [spec-sheet.json, report.md]

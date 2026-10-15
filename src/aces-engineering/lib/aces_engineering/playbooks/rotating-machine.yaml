@@ -1,0 +1,175 @@
+# aces-playbook/1 — rotating-machine: pumps, compressors, turbines, fans, propellers.
+# A pure fidelity ladder (research §2.4): duty point -> meanline/1-D sizing -> 2-D throughflow
+# -> 3-D blade CFD DOE -> surrogate -> MOO (efficiency, pressure ratio, surge margin) ->
+# structural/rotordynamics gate -> full-annulus verification -> score.
+# Surge/stall margins are hard gates, not objectives; no stage jumps two fidelity levels.
+schema: aces-playbook/1
+class: rotating-machine
+version: 1
+title: Rotating machine (pump, compressor, turbine, fan)
+description: >
+  The turbomachinery fidelity ladder: meanline first, 3-D CFD last, with the
+  structural/rotordynamics gate before the full-annulus verification.
+spec:
+  metrics: [efficiency, pressure_ratio, surge_margin, tip_stress_MPa, mass_kg]
+  targets:
+    duty_flow_kg_s: null     # duty mass flow from the brief, when given
+    speed_rpm: null          # shaft speed from the brief, when given
+  defaults:
+    envelope_mm:
+      value: [300.0, 300.0, 300.0]
+      note: "assumed envelope; give dimensions in the brief to replace it"
+    fluid:
+      value: "air, 288.15 K, 101325 Pa inlet"
+      note: "assumed working fluid; name the fluid and inlet state in the brief to change it"
+    speed_rpm:
+      value: 20000.0
+      note: "assumed shaft speed; give rpm in the brief to replace it"
+    doe_samples:
+      value: 32
+      note: "3-D CFD DOE size when the brief gives no budget"
+stages:
+  - id: duty-point-spec
+    name: Duty point specification
+    solver: none
+    purpose: >
+      Freeze the duty point (mass flow, pressure ratio/head, speed) — the hard constraints that
+      kill infeasible sizings before any blade is drawn.
+    inputs: [brief, fluid]
+    outputs: [duty_flow_kg_s, pressure_ratio, speed_rpm, feasibility]
+    entry: ["brief parsed"]
+    exit: ["a duty point is known (from the brief or stated assumptions)"]
+    gate:
+      metric: feasibility
+      op: "=="
+      limit: 1
+      note: "a duty point beyond the envelope's tip-speed limit is killed here, cheaply"
+    evidence: [duty-point.json]
+  - id: meanline-sizing
+    name: Meanline (1-D) preliminary sizing
+    solver: mdao-run
+    purpose: >
+      Meanline sizing of the stage(s): radii, blade angles, velocity triangles, estimated
+      efficiency — the first rung of the fidelity ladder.
+    inputs: [duty_flow_kg_s, pressure_ratio, speed_rpm, fluid]
+    outputs: [meanline_geometry, efficiency_est, tip_speed_m_s]
+    entry: ["duty-point-spec passed"]
+    exit: ["a meanline design closes at the duty point"]
+    gate:
+      metric: efficiency_est
+      op: ">"
+      limit: 0
+      note: "a meanline that cannot close with positive efficiency ends the ladder at rung one"
+    evidence: [meanline.json, velocity-triangles.png]
+  - id: throughflow-2d
+    name: 2-D throughflow refinement
+    solver: mdao-run
+    purpose: >
+      Throughflow (meridional) refinement of the meanline design: spanwise work distribution
+      and incidence checks before any 3-D blade is generated.
+    inputs: [meanline_geometry, duty-point.json]
+    outputs: [throughflow_field, incidence_margin]
+    entry: ["meanline-sizing passed"]
+    exit: ["incidence within range across the span"]
+    gate:
+      metric: incidence_margin
+      op: ">"
+      limit: 0
+      note: "negative incidence margin: re-size the meanline; do not push it into 3-D"
+    evidence: [throughflow.json, meridional.png]
+  - id: blade-cfd-doe
+    name: 3-D blade CFD DOE
+    solver: su2-rans
+    purpose: >
+      3-D RANS DOE over the blade parameterisation (single passage, mixing plane per stage);
+      efficiency, pressure ratio and surge margin per variant.
+    inputs: [throughflow_field, parameter_space, doe_samples]
+    outputs: [efficiency, pressure_ratio, surge_margin, convergence]
+    entry: ["throughflow-2d passed"]
+    exit: ["the DOE converged on enough variants to fit a surrogate"]
+    gate:
+      metric: convergence
+      op: ">="
+      limit: 0.9
+      note: ">=90 % of the DOE must converge; less means the mesh/mixing-plane setup is wrong"
+    evidence: [cfd-doe.json, performance-map.png]
+  - id: surrogate-fit
+    name: Performance surrogate with uncertainty
+    solver: surrogate-bracket-gp
+    purpose: >
+      GP surrogate of efficiency / pressure ratio / surge margin over the blade parameters,
+      with uncertainty.
+    inputs: [cfd-doe.json, doe_table]
+    outputs: [surrogate_model, cv_error_rel, feature_importance]
+    entry: ["blade-cfd-doe passed"]
+    exit: ["cross-validated error is within the acceptance band"]
+    gate:
+      metric: cv_error_rel
+      op: "<="
+      limit: 0.15
+      note: "a surrogate that cannot cross-validate to 15 % may not be optimised on"
+    evidence: [surrogate-model.joblib, surrogate-cv.json]
+  - id: pareto-search
+    name: NSGA-II Pareto search on the surrogate
+    solver: pymoo-nsga2
+    purpose: >
+      Multi-objective search: efficiency and pressure ratio vs surge margin and mass; emits
+      the Pareto front and the knee candidate.
+    inputs: [surrogate_model, spec]
+    outputs: [pareto_front, knee_candidate, predicted_metrics]
+    entry: ["surrogate-fit passed"]
+    exit: ["the Pareto front is non-dominated and spans the trade"]
+    gate:
+      metric: pareto_front
+      op: "!="
+      limit: 0
+      note: "an empty front means the targets are mutually infeasible; relax one"
+    evidence: [pareto-front.json, pareto-dashboard.html]
+  - id: rotordynamics-gate
+    name: Structural and rotordynamics gate
+    solver: ccx-check
+    purpose: >
+      CalculiX check of the knee candidate: blade stress under centrifugal load and the first
+      critical speeds. Blade stress and aero are coupled at high load — this is a hard gate.
+    inputs: [knee_candidate, speed_rpm, material]
+    outputs: [tip_stress_MPa, critical_speed_rpm, frequency_margin]
+    entry: ["pareto-search passed"]
+    exit: ["stress within the material allowable", "critical speeds clear of the running range"]
+    gate:
+      metric: frequency_margin
+      op: ">"
+      limit: 0.15
+      note: "critical speed must sit at least 15 % clear of the running range (Campbell margin)"
+    evidence: [rotordynamics.json, campbell.png]
+  - id: full-annulus-verify
+    name: Full-annulus verification
+    solver: su2-rans
+    purpose: >
+      Full-annulus unsteady RANS of the knee candidate — the top rung of the ladder and the
+      verification gate; records the surrogate-vs-solver delta.
+    inputs: [knee_candidate, fluid, duty_flow_kg_s]
+    outputs: [efficiency, pressure_ratio, surge_margin, verification_delta_rel]
+    entry: ["rotordynamics-gate passed"]
+    exit: ["the verification converged", "surge margin holds", "the delta is within tolerance"]
+    gate:
+      metric: surge_margin
+      op: ">"
+      limit: 0.1
+      note: "surge margin is a hard gate, not an objective; below 10 % the design is rejected"
+    evidence: [full-annulus.json, verification-delta.json]
+  - id: score
+    name: Score and spec sheet
+    solver: none
+    purpose: >
+      Score verified efficiency and pressure ratio per unit mass at the duty point; emit the
+      spec sheet with the verification delta and the Campbell/stress gate evidence.
+    inputs: [full-annulus.json, rotordynamics.json, pareto-front.json, spec]
+    outputs: [score, efficiency, pressure_ratio, surge_margin]
+    entry: ["full-annulus-verify passed"]
+    exit: ["spec sheet emitted"]
+    gate:
+      metric: score
+      op: ">"
+      limit: 0
+      note: "score from verified metrics only"
+    evidence: [spec-sheet.json, report.md]

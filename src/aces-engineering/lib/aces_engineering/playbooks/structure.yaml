@@ -1,0 +1,145 @@
+# aces-playbook/1 — structure: load-bearing parts (chassis, bracket, frame).
+# Stage skeleton per docs/superpowers/specs/2026-10-15-brief-driven-playbooks-design.md and
+# docs/research/2026-10-15-generative-topopt-processes.md (the nine-phase vendor skeleton):
+# baseline FEA -> SIMP topopt (multi-load-case) -> density threshold sweep -> implicit
+# reconstruction -> voxel FEA re-check -> CalculiX conforming check -> score.
+# The optimiser's own numbers are never the answer: two independent re-checks gate the score.
+schema: aces-playbook/1
+class: structure
+version: 1
+title: Load-bearing structure (chassis, bracket, frame)
+description: >
+  Mass/packaging first, then SIMP topology optimisation against every credible load case,
+  then reconstruction and two independent verification discretisations before scoring.
+spec:
+  metrics: [mass_kg, vm_p99_MPa, umax_mm, compliance_Nmm, freq1_Hz]
+  targets:
+    mass_kg: null          # system/part mass from the brief, when given
+    vm_p99_MPa: null       # stress cap from the brief / material, when given
+  defaults:
+    envelope_mm:
+      value: [500.0, 500.0, 300.0]
+      note: "assumed design-space envelope; give dimensions in the brief (e.g. '1200 x 800 x 400 mm') to replace it"
+    material:
+      value: "Al 6061-T6"
+      note: "assumed; name a material in the brief to change it"
+    safety_factor:
+      value: 2.0
+      note: "default FoS target on the p99 von Mises stress"
+    volfrac:
+      value: [0.13, 0.38]
+      note: "SIMP volume-fraction sweep range when the brief gives no mass target"
+stages:
+  - id: baseline-fea
+    name: Baseline FEA of the un-optimised design space
+    solver: golden-case
+    purpose: >
+      Validate the boundary conditions before any optimisation: solve the full design space
+      under all declared load cases and confirm reactions balance and fields are sane.
+    inputs: [geometry, material, load_cases, constraints]
+    outputs: [reaction_balance_rel, vm_p99_MPa, umax_mm, compliance_Nmm]
+    entry: ["design space and load cases resolved from the brief"]
+    exit: ["solve converged", "reaction balance within tolerance on every load case"]
+    gate:
+      metric: reaction_balance_rel
+      op: "<="
+      limit: 1.0e-6
+      note: "an unbalanced baseline means the BCs are wrong; fix them before optimising"
+    evidence: [baseline-case.json, baseline-fields.png]
+  - id: simp-topopt
+    name: SIMP topology optimisation, multi-load-case
+    solver: gendesign-topopt
+    purpose: >
+      Density-based topology optimisation over all load cases simultaneously
+      (min compliance at the volume-fraction constraint, penal=3, matrix-free PCG, float64).
+    inputs: [baseline-case.json, load_cases, volfrac, constraints]
+    outputs: [density_field, compliance_Nmm, volume_fraction]
+    entry: ["baseline-fea passed"]
+    exit: ["volume fraction held", "compliance decreased monotonically over the final iterations"]
+    gate:
+      metric: volume_fraction
+      op: "<="
+      limit: 0.38
+      note: "volume must be held by construction; a violated volume constraint means the run is invalid"
+    evidence: [density-field.vti, topopt-history.json]
+  - id: threshold-sweep
+    name: Density threshold sweep
+    solver: gendesign-topopt
+    purpose: >
+      Sweep the density threshold (0.3-0.5 band first) to find the threshold whose extracted
+      geometry keeps a continuous load path and the best compliance/mass trade.
+    inputs: [density_field]
+    outputs: [threshold, compliance_Nmm, mass_kg]
+    entry: ["simp-topopt passed"]
+    exit: ["a threshold with a continuous load path exists in the band"]
+    gate:
+      metric: threshold
+      op: ">="
+      limit: 0.3
+      note: "thresholds below 0.3 scatter the load path; re-run with adjusted setup instead of accepting one"
+    evidence: [threshold-sweep.json, threshold-candidates.png]
+  - id: implicit-reconstruction
+    name: Implicit reconstruction to watertight CAD
+    solver: geom-reconstruct
+    purpose: >
+      Density field -> signed distance field -> watertight mesh -> sewn STEP
+      (OpenVDB/scikit-image, OpenCascade/pythonocc/CadQuery): the semi-automatic topopt-to-CAD
+      path, with interfaces (mounts, bolt holes) restored verbatim from the design space.
+    inputs: [density_field, threshold, design_space]
+    outputs: [reconstructed_step, watertight, mass_kg]
+    entry: ["threshold-sweep passed"]
+    exit: ["reconstructed solid is watertight", "interface regions match the design space"]
+    gate:
+      metric: watertight
+      op: "=="
+      limit: 1
+      note: "a non-watertight reconstruction cannot be verified or manufactured; repair or re-threshold"
+    evidence: [reconstructed.step, reconstruction-report.json]
+  - id: voxel-fea-recheck
+    name: Voxel FEA re-check of the reconstructed part
+    solver: golden-check
+    purpose: >
+      Independent re-solve of the reconstructed geometry on the voxel FEA at a finer
+      resolution — the first 'the optimiser's numbers are not the answer' gate.
+    inputs: [reconstructed_step, load_cases, material]
+    outputs: [vm_p99_MPa, umax_mm, compliance_Nmm, agreement_rel]
+    entry: ["implicit-reconstruction passed"]
+    exit: ["re-check converged", "agrees with the optimisation loop within tolerance"]
+    gate:
+      metric: agreement_rel
+      op: "<="
+      limit: 0.10
+      note: "the re-check must agree with the sweep prediction within 10 % (golden verify.tol)"
+    evidence: [recheck-case.json, recheck-fields.png]
+  - id: conforming-check
+    name: CalculiX conforming second discretisation
+    solver: ccx-check
+    purpose: >
+      Conforming tet10 (C3D10) mesh of the verified part solved with CalculiX ccx — a second
+      discretisation and a second solver, the final independent verification.
+    inputs: [reconstructed_step, load_cases, material]
+    outputs: [vm_p99_MPa, umax_mm, agreement_rel]
+    entry: ["voxel-fea-recheck passed"]
+    exit: ["ccx solve converged", "agrees with the voxel re-check within tolerance"]
+    gate:
+      metric: agreement_rel
+      op: "<="
+      limit: 0.15
+      note: "voxel vs conforming agreement; beyond 15 % the geometry or mesh needs rework"
+    evidence: [conforming-case.json, conforming-fields.png]
+  - id: score
+    name: Score and spec sheet
+    solver: none
+    purpose: >
+      Compose the verified metrics into the class score (stiffness and stress headroom per
+      unit mass) and emit the auto spec sheet with the verification deltas.
+    inputs: [recheck-case.json, conforming-case.json, spec]
+    outputs: [score, mass_kg, vm_p99_MPa, umax_mm, freq1_Hz]
+    entry: ["conforming-check passed"]
+    exit: ["spec sheet emitted with predicted-vs-verified deltas"]
+    gate:
+      metric: score
+      op: ">"
+      limit: 0
+      note: "the score is a composition of verified metrics only, never the optimiser's own numbers"
+    evidence: [spec-sheet.json, report.md]
