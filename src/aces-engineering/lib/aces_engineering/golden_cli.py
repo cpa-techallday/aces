@@ -13,6 +13,7 @@
   aces golden spec    [--demo NAME] [--schema] [--out FILE]
   aces golden init    NAME [--step FILE] [--demo NAME] [--class CLS] [--hypothesis TEXT]
   aces golden report  RUN [--project NAME]
+  aces golden plan    BRIEF... [--attach FILE] [--json]      brief -> class -> playbook -> plan JSON (computes nothing)
 
 The part is computed, not drawn: a disc, a box or a user STEP is only the design space. Each design is a SIMP
 topology optimisation smoothed into an organic implicit skin (gyroid-cored in the bone variant), solved on the real
@@ -88,7 +89,14 @@ def build_parser() -> argparse.ArgumentParser:
                        "130 interrupted. verify runs 13 checks. Details: aces golden <command> --help and the "
                        "aces-engineering skill.")
     p.add_argument("--version", action="version", version=f"aces-golden {VERSION}")
-    sub = p.add_subparsers(dest="cmd", metavar="{run,show,verify,compute,spec,init,report}")
+    sub = p.add_subparsers(dest="cmd", metavar="{run,show,verify,compute,spec,init,report,plan}")
+
+    pl = sub.add_parser("plan", help="plan from a natural-language brief: classify the part, load its playbook, "
+                                     "resolve stages and parameters, print the plan JSON (computes nothing)")
+    pl.add_argument("brief", nargs="+", metavar="BRIEF", help="the brief, e.g. \"optimise this chassis, 1500 kg\"")
+    pl.add_argument("--attach", action="append", default=[], metavar="FILE",
+                    help="an uploaded file the plan should carry (repeatable)")
+    pl.add_argument("--json", action="store_true", help="print exactly one JSON document (default for plan)")
 
     r = sub.add_parser("run", help="run the loop end to end (exit 0 only when verification passed and both ledgers verify)")
     r.add_argument("--demo", nargs="?", const=DEFAULT_DEMO, choices=DEMOS, metavar="NAME",
@@ -515,6 +523,47 @@ def cmd_spec(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+# ---- plan -----------------------------------------------------------------------------------------------------------
+def cmd_plan(args: argparse.Namespace) -> int:
+    """Brief -> class -> playbook -> plan JSON. Computes nothing; the plan's stage graph is
+    what `aces golden run` will execute once its solvers exist."""
+    from .playbooks.plan import plan_from_brief
+
+    brief = " ".join(args.brief).strip()
+    if not brief:
+        _err("plan needs a brief, e.g. aces golden plan \"optimise this chassis, 1500 kg\"")
+        return EXIT_USAGE
+    try:
+        plan = plan_from_brief(brief, attachments=list(args.attach or []))
+    except ValueError as e:
+        _err(str(e))
+        return EXIT_USAGE
+    if args.json:
+        _print_json(plan)
+        return EXIT_OK
+    print(f"plan     {plan['plan_id']} ({plan['schema']})")
+    print(f"class    {plan['class']} · confidence {plan['confidence']}"
+          + (" · LOW CONFIDENCE — confirm before launch" if plan["low_confidence"] else ""))
+    print(f"brief    {brief}")
+    if plan["attachments"]:
+        print(f"files    {', '.join(plan['attachments'])}")
+    print("stages")
+    for i, s in enumerate(plan["stages"], 1):
+        flag = {"available": "", "incoming": " [incoming solver]", "missing": " [BLOCKED: solver missing]"}[s["solver_status"]]
+        print(f"  {i:>2}. {s['id']:<24} {s['solver']:<22}{flag}")
+        gate = s.get("gate") or {}
+        if gate:
+            print(f"      gate: {gate.get('metric')} {gate.get('op')} {gate.get('limit')}")
+    if plan["blocked"]:
+        print("blocked  " + ", ".join(f"{b['stage']} (solver {b['solver']})" for b in plan["blocked"]))
+    if plan["warnings"]:
+        print("warnings")
+        for w in plan["warnings"]:
+            print(f"  - {w}")
+    print("hint     --json prints the full plan document (stages, parameters, spec)")
+    return EXIT_OK
+
+
 # ---- init ---------------------------------------------------------------------------------------------------------
 def cmd_init(args: argparse.Namespace) -> int:
     from .golden import demo
@@ -627,6 +676,8 @@ def main(argv: list[str] | None = None) -> int:
             return cmd_init(args)
         if args.cmd == "report":
             return cmd_report(args)
+        if args.cmd == "plan":
+            return cmd_plan(args)
     except KeyboardInterrupt:
         return 130
     except GoldenError as e:

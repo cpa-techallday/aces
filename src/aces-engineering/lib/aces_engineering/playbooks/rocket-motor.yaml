@@ -1,0 +1,98 @@
+# aces-playbook/1 — rocket-motor: rocket motors, thrusters, combustion chambers.
+# RocketCEA design point -> Cantera chemistry check -> (PeleC 3-D combustion when its image
+# is ready — pending, so plans carrying this stage are marked blocked) -> score
+# (design doc sections 2 and 4; aces-rocket:0.1).
+schema: aces-playbook/1
+class: rocket-motor
+version: 1
+title: Rocket motor (thruster, combustion chamber)
+description: >
+  The design point comes first (RocketCEA: chamber pressure, mixture ratio, Isp, thrust),
+  the chemistry is checked independently (Cantera), and a 3-D combustion verification
+  (PeleC) gates the score once its image lands.
+spec:
+  metrics: [isp_s, thrust_N, chamber_pressure_Pa, mixture_ratio, mass_kg]
+  targets:
+    thrust_N: null           # thrust from the brief, when given
+    chamber_pressure_Pa: null
+  defaults:
+    propellants:
+      value: "LOX / RP-1"
+      note: "assumed propellant combination; name propellants in the brief to change it"
+    mixture_ratio:
+      value: 2.6
+      note: "assumed O/F for LOX/RP-1; give a mixture ratio in the brief to replace it"
+    chamber_pressure_Pa:
+      value: 1.0e7
+      note: "assumed 100 bar chamber pressure; give one in the brief to replace it"
+    expansion_ratio:
+      value: 40.0
+      note: "assumed nozzle expansion ratio for a vacuum-leaning design point"
+stages:
+  - id: design-point
+    name: RocketCEA design point
+    solver: rocket-cea
+    purpose: >
+      CEA equilibrium design point: chamber pressure, mixture ratio, expansion ratio -> Isp,
+      c*, thrust coefficient; the whole motor is sized from this point.
+    inputs: [propellants, chamber_pressure_Pa, mixture_ratio, expansion_ratio]
+    outputs: [isp_s, cstar_m_s, thrust_coefficient, chamber_temperature_K]
+    entry: ["propellants and chamber pressure known (brief or defaults)"]
+    exit: ["the CEA equilibrium converged at the design point"]
+    gate:
+      metric: isp_s
+      op: ">"
+      limit: 0
+      note: "a non-physical design point (no positive Isp) ends the chain here"
+    evidence: [design-point.json, cea-output.txt]
+  - id: chemistry-check
+    name: Cantera chemistry check
+    solver: cantera-check
+    purpose: >
+      Independent finite-rate chemistry check of the CEA equilibrium result (Cantera):
+      ignition/flame behaviour of the propellant pair at the chamber conditions — the second
+      tool on the same physics, per the verification rule.
+    inputs: [design-point.json, propellants]
+    outputs: [flame_temperature_K, ignition_delay_s, agreement_rel]
+    entry: ["design-point passed"]
+    exit: ["the finite-rate check agrees with equilibrium within tolerance"]
+    gate:
+      metric: agreement_rel
+      op: "<="
+      limit: 0.10
+      note: "equilibrium vs finite-rate disagreement beyond 10 %: the design point needs re-examination"
+    evidence: [chemistry-check.json]
+  - id: combustion-verify
+    name: 3-D combustion verification (PeleC)
+    solver: pelec-combustion
+    pending: true
+    purpose: >
+      3-D reacting-flow verification of the chamber and nozzle (PeleC). The image is pending
+      (aces-rocket:0.1 builds it; documented if infeasible in-session): until it lands this
+      stage is blocked, and the plan says so rather than skipping it.
+    inputs: [design-point.json, chamber_geometry]
+    outputs: [chamber_pressure_Pa, wall_heatflux_W_m2, verification_delta_rel]
+    entry: ["chemistry-check passed", "the pelec-combustion solver row exists in the registry"]
+    exit: ["the 3-D verification converged", "the delta vs the design point is within tolerance"]
+    gate:
+      metric: verification_delta_rel
+      op: "<="
+      limit: 0.15
+      note: "pending solver: plans mark this stage blocked until the PeleC image is validated"
+    evidence: [pelec-verify.json, verification-delta.json]
+  - id: score
+    name: Score and spec sheet
+    solver: none
+    purpose: >
+      Score verified Isp and thrust per unit engine mass; emit the spec sheet with the
+      verification deltas and the blocked/pending state of the 3-D stage.
+    inputs: [chemistry-check.json, design-point.json, spec]
+    outputs: [score, isp_s, thrust_N, chamber_pressure_Pa]
+    entry: ["chemistry-check passed (combustion-verify when its solver lands)"]
+    exit: ["spec sheet emitted"]
+    gate:
+      metric: score
+      op: ">"
+      limit: 0
+      note: "score from verified metrics only"
+    evidence: [spec-sheet.json, report.md]
