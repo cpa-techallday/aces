@@ -7,8 +7,8 @@ import { vocab } from "./lib/vocab.js";
 import { format } from "./lib/format.js";
 import { dom, el, clear } from "./lib/dom.js";
 
-const PLATES = ["fabric", "projects", "pipeline", "solvers", "objects", "evidence", "ops"];
-const NAMES = { fabric: "Fabric", projects: "Projects", pipeline: "Pipeline", solvers: "Solvers", objects: "Objects", evidence: "Evidence", ops: "Ops" };
+const PLATES = ["plan", "fabric", "projects", "pipeline", "solvers", "objects", "evidence", "ops"];
+const NAMES = { plan: "Plan", fabric: "Fabric", projects: "Projects", pipeline: "Pipeline", solvers: "Solvers", objects: "Objects", evidence: "Evidence", ops: "Ops" };
 const STRIP_TOPICS = new Set(["rig.status", "rig.switch", "fabric.manifest", "console.health"]);
 const $ = (id) => document.getElementById(id);
 

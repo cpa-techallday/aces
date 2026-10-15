@@ -116,18 +116,18 @@ class TestStaticTree(unittest.TestCase):
     def test_index_shell(self):
         with open(os.path.join(STATIC, "index.html"), encoding="utf-8") as fh:
             html = fh.read()
-        for pid, sprite in (("fabric", "i-fleet"), ("projects", "i-projects"), ("pipeline", "i-pipeline"), ("solvers", "i-solvers"), ("objects", "i-objects"), ("evidence", "i-evidence"), ("ops", "i-ops")):
+        for pid, sprite in (("plan", "i-plan"), ("fabric", "i-fleet"), ("projects", "i-projects"), ("pipeline", "i-pipeline"), ("solvers", "i-solvers"), ("objects", "i-objects"), ("evidence", "i-evidence"), ("ops", "i-ops")):
             self.assertIn(f'data-plate="{pid}"', html)
             self.assertIn(f'<symbol id="{sprite}"', html)
             self.assertIn(f'id="plate-{pid}"', html)
-        self.assertEqual(len(re.findall(r'role="tab"', html)), 7)
-        self.assertEqual(len(re.findall(r'role="tabpanel"', html)), 7)
+        self.assertEqual(len(re.findall(r'role="tab"', html)), 8)
+        self.assertEqual(len(re.findall(r'role="tabpanel"', html)), 8)
         scripts = re.findall(r"<script[^>]*>", html)
         self.assertEqual(sorted(scripts), sorted(['<script type="importmap">', '<script type="module" src="/static/app.js">']), "only the importmap is inline")
         self.assertIn('aria-live="polite"', html)
         self.assertIn('role="tablist"', html)
         self.assertIn('class="skip"', html)
-        for plate in ("fabric", "projects", "pipeline", "solvers", "objects", "evidence", "ops"):
+        for plate in ("plan", "fabric", "projects", "pipeline", "solvers", "objects", "evidence", "ops"):
             self.assertTrue(os.path.isfile(os.path.join(STATIC, "plates", plate + ".js")))
 
     def test_vocab_json_matches_spec_4_4(self):
@@ -381,7 +381,7 @@ class TestVerifyUI(unittest.TestCase):
                 self.assertEqual(vp["requests_failed"], [])
                 self.assertTrue(vp["fixture_stamped"], vp.get("stamp"))
                 self.assertTrue(vp["tabs"]["all_seven"], vp["tabs"])
-                self.assertEqual(sorted(k for k in vp["plates"] if ":" not in k), sorted(["fabric", "projects", "pipeline", "solvers", "objects", "evidence", "ops"]))
+                self.assertEqual(sorted(k for k in vp["plates"] if ":" not in k), sorted(["plan", "fabric", "projects", "pipeline", "solvers", "objects", "evidence", "ops"]))
                 for plate, d in vp["plates"].items():
                     self.assertTrue(d["overflow"]["ok"], (vp["viewport"], plate, d["overflow"]))
                     self.assertEqual(d["vocab"]["unknown"], [], (vp["viewport"], plate))

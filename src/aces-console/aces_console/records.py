@@ -1018,7 +1018,7 @@ def install(register) -> None:
     _state(app)
     hub = app.hub
     hub.register("projects", lambda: fetch_projects(app), 10.0, ("projects",), inline=False, source=str(work_root()))
-    hub.register("golden.runs", lambda: fetch_golden_runs(app), 10.0, ("evidence", "projects"), inline=False,
+    hub.register("golden.runs", lambda: fetch_golden_runs(app), 10.0, ("evidence", "projects", "plan"), inline=False,
                  source=str(work_root() / "*" / "golden"))
     hub.register("cad.runs", lambda: fetch_cad_runs_all(app), 10.0, ("objects", "projects"), inline=False,
                  source=str(work_root() / "*" / "cad" / "local" / "runs"))

@@ -62,7 +62,7 @@ export const SOURCES = {
   "sim.whoami": { path: "/api/sim/whoami", ttl: 300, plates: ["pipeline", "ops"], inline: false },
   "mlflow.experiments": { path: "/api/mlflow/experiments", ttl: 60, plates: ["pipeline"], inline: false },
   "projects": { path: "/api/projects", ttl: 10, plates: ["projects"], inline: false },
-  "golden.runs": { path: "/api/golden/runs", ttl: 10, plates: ["evidence"], inline: false },
+  "golden.runs": { path: "/api/golden/runs", ttl: 10, plates: ["evidence", "plan"], inline: false },
   "ledger.simlab": { path: "/api/ledger/simlab", ttl: 30, plates: ["evidence"], inline: false },
   "doctor": { path: "/api/doctor", ttl: 300, plates: ["ops"], inline: false },
   "system.packages": { path: "/api/system/packages", ttl: 300, plates: ["ops"], inline: false },

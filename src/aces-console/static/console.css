@@ -126,6 +126,27 @@ select.sel { max-width: 100%; min-width: 0; }
 .sel option { background: var(--plate-2); }
 code.mono { white-space: pre-wrap; overflow-wrap: anywhere; }
 
+/* ---------- the Plan plate: the brief composer, the stage cards, the spec sheet (design 2026-10-15 §3) ---------- */
+textarea.brief { width: 100%; box-sizing: border-box; background: var(--sky); border: 1px solid var(--line-3); border-radius: var(--r); color: var(--chalk); font-family: var(--f-body); font-size: var(--t-body); line-height: 1.5; padding: 10px 12px; resize: vertical; min-height: 96px; }
+textarea.brief:focus-visible { border-color: var(--act); outline: none; }
+.chips { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line-2); border-radius: var(--r); padding: 2px 4px 2px 8px; background: var(--plate-2); font-family: var(--f-mono); font-size: var(--t-label); color: var(--chalk-2); max-width: 100%; }
+.chip .mono { overflow-wrap: anywhere; }
+.chip .x { border: 1px solid var(--line-3); background: none; color: var(--chalk-3); border-radius: var(--r); min-width: 22px; min-height: 22px; cursor: pointer; font: inherit; }
+.chip .x:hover { color: var(--fault); border-color: var(--fault); }
+.badge { font-family: var(--f-mono); font-size: var(--t-label); border: 1px solid var(--line-2); border-radius: var(--r); padding: 1px 7px; }
+.stagecards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--s2); }
+.stagecard { background: var(--plate-2); border: 1px solid var(--line-2); border-radius: var(--r); padding: var(--s3) var(--s3) var(--s2); display: grid; gap: 4px; text-align: left; color: var(--chalk-2); cursor: pointer; min-width: 0; transition: border-color var(--fast) var(--ease), background var(--fast) var(--ease); }
+.stagecard:hover, .stagecard:focus-visible { background: var(--plate-3); outline: none; }
+.stagecard.blocked { border-color: var(--fault); cursor: default; }
+.stagecard .nm { font-family: var(--f-mono); font-size: var(--t-data); font-weight: 500; color: var(--chalk); display: flex; justify-content: space-between; gap: var(--s2); }
+.stagecard .val { font-family: var(--f-mono); font-size: var(--t-label); color: var(--chalk-3); display: flex; justify-content: space-between; gap: var(--s2); }
+.stagecard .val > span { white-space: nowrap; }
+.stagecard .val b { font-weight: 500; color: var(--chalk-2); text-align: right; overflow-wrap: anywhere; }
+.stagecard .tag { font-family: var(--f-mono); font-size: var(--t-label); color: var(--chalk-3); overflow-wrap: anywhere; }
+.stagecard.blocked .tag { color: var(--fault); }
+.spec-val input.out { border-color: var(--fault); color: var(--fault); }
+
 /* ---------- long unbreakable tokens (paths, hashes, URLs, raw JSON) wrap inside their box instead of widening the page.
    Table cells keep whole words at the desktop widths (a too-wide table scrolls inside its wrap); they break anywhere only
    in the stacked 390 px layout, where a cell has the whole row's width ---------- */
