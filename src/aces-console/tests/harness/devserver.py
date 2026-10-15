@@ -76,7 +76,7 @@ TOPICS = {
     "sim.whoami": ("/api/sim/whoami", 300, ["pipeline", "ops"], False, None),
     "mlflow.experiments": ("/api/mlflow/experiments", 60, ["pipeline"], False, None),
     "projects": ("/api/projects", 10, ["projects"], False, None),
-    "golden.runs": ("/api/golden/runs", 10, ["evidence"], False, None),
+    "golden.runs": ("/api/golden/runs", 10, ["evidence", "plan"], False, None),
     "ledger.simlab": ("/api/ledger/simlab", 30, ["evidence"], False, None),
     "doctor": ("/api/doctor", 300, ["ops"], False, None),
     "system.packages": ("/api/system/packages", 300, ["ops"], False, None),
@@ -523,6 +523,12 @@ class Handler(BaseHTTPRequestHandler):
                 "platform": {"os": f"{platform.system()} {platform.release()}", "python": sys.version.split()[0]},
                 "note": "fixture devserver: no token file is read; the real backend reports the token source names, never a value",
             }, "devserver configuration", 60, None if A.ok() else A.error)
+        if path == "/api/plan/status":
+            return local_envelope({"planner": {"available": False, "mode": None,
+                                               "detail": "the fixture devserver has no planner (the real backend answers planner-unavailable the same way when neither aces_engineering.playbooks.plan nor the aces golden plan CLI exists)"},
+                                   "launch": {"available": False, "reason": "job submit is deferred in this console (spec 1)"},
+                                   "plans_stored": 0, "storage": "in memory; a console restart forgets them"},
+                                  "console (fixture)", 30)
         if path == "/api/rig/status":
             st, info = S.get("gc-status")
             if st is None:
