@@ -1,0 +1,49 @@
+id: aces-cal-air-03d
+project: ACES-calibration
+owner: aaron
+physics: cfd
+solver: aces-tpms-periodic
+description: 'ACES calibration samples: periodic diamond unit cells, t/a [0.20, 0.24, 0.28], Re [1.0, 3.0, 60.0],
+  Air at 320 K, 96 voxels per cell. Campaign 3: firm up diamond Nu (D30 scatter 0.143 sits just under the 0.15
+  refusal line) by adding low-Re anchors and an intermediate Re point at the thick walls where campaign 2 only
+  had Re 10/30/100. All Re kept under the Mach ceiling observed in 02r (Re 100, wr 0.28 -> Mach 0.151).'
+hypothesis: Diamond Nu scatter at thick wall ratios (0.20-0.28) tightens below 0.12 once the Re spread is
+  filled in; if it does not, diamond Nu at thick walls is genuinely broad and the refusal policy stays honest.
+expected: dpdx and H1 h per case (rows carry boundary uniform_heat_flux); fitted with `aces calibrate`, which takes
+  the boundary from the rows.
+rd_activity: ACES fast-tier calibration of TPMS heat-exchanger cores
+company: carbon
+params:
+  cell_m: 0.004
+  fluid: Air
+  T_K: 320.0
+  p_Pa: 200000.0
+  n: 96
+  thermal: true
+outputs:
+- re_achieved
+- dpdx_Pa_m
+- mass_flux_kg_m2s
+- h_W_m2K
+- nusselt_h1
+- mach
+resources:
+  precision: float64
+  vram_gb: 4.0
+tags:
+  kind: calibration
+  system: hx
+  origin: aces
+sweep:
+  tpms:
+  - diamond
+  wall_ratio:
+  - 0.2
+  - 0.24
+  - 0.28
+  re:
+  - 1.0
+  - 3.0
+  - 60.0
+geometry:
+  source: parametric

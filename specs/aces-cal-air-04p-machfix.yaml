@@ -1,0 +1,53 @@
+id: aces-cal-air-04p-machfix
+project: ACES-calibration
+owner: aaron
+physics: cfd
+solver: aces-tpms-periodic
+description: 'Mach-fix rerun: periodic primitive unit cells, t/a [0.08, 0.12, 0.16], Re [5, 6,
+  10, 30, 100, 300], Air at 320 K, 96 voxels per cell, u_lattice 0.01 (was 0.025).'
+hypothesis: At u_lattice 0.01 the primitive lattice stays below the Mach 0.15 incompressibility
+  gate (worst case was 0.273 at 0.025), so all cases converge with usable dpdx and H1 h.
+expected: dpdx and H1 h per case; supersedes the Mach-flagged primitive rows of aces-cal-air-01,
+  -02p and -03p, and fills the full 03p Re matrix at one consistent u_lattice.
+rd_activity: ACES fast-tier calibration of TPMS heat-exchanger cores
+company: carbon
+params:
+  cell_m: 0.004
+  fluid: Air
+  T_K: 320.0
+  p_Pa: 200000.0
+  n: 96
+  thermal: true
+  u_lattice: 0.01
+outputs:
+- re_achieved
+- dpdx_Pa_m
+- mass_flux_kg_m2s
+- h_W_m2K
+- nusselt_h1
+- mach
+- u_lattice
+resources:
+  precision: float64
+  vram_gb: 4.0
+tags:
+  kind: calibration
+  system: hx
+  origin: aces
+  fix: mach
+sweep:
+  tpms:
+  - primitive
+  wall_ratio:
+  - 0.08
+  - 0.12
+  - 0.16
+  re:
+  - 5.0
+  - 6.0
+  - 10.0
+  - 30.0
+  - 100.0
+  - 300.0
+geometry:
+  source: parametric

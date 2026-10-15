@@ -1,0 +1,35 @@
+# ACES spec template: large-format lattice form via formgen (domain form.lattice).
+# Routes: robotic_lattice_extrusion (the lattice is the product) or printed_formwork
+# (the lattice is foam-filled and finished with sprayed concrete, render or coatings).
+# Fill every null, then:  aces check <file>  and  aces form <file> --out <dir>
+
+aces: 1
+domain: form.lattice
+project: null
+owner: null
+company: CPA
+rd_activity: null
+hypothesis: null
+
+requirements:
+  process: null              # robotic_lattice_extrusion | printed_formwork
+  source: null               # geometry file relative to this spec (STEP/STL/OBJ/PLY/3MF/GLB), or "fusion"
+  fusion_body: null          # with source: fusion, e.g. "wing:1/Body3"; null = current selection
+  body_name: null            # sub-body name for multi-body files
+  unit_scale: null           # override units (formgen normalises to mm)
+  mode: null                 # skin | panel | infill
+  strut_mm: null             # target strut length
+  thickness_mm: null         # panel depth (panel mode) / cell size (infill)
+  bead_mm: null              # printed bead diameter
+  material:
+    name: null
+    density_g_cm3: null
+    source: null             # datasheet the density comes from
+  robot:
+    print_speed_mm_s: null
+    jbi: true                # write Yaskawa INFORM jobs (verify in MotoSim before running)
+    tool: 0
+    user_frame: 1
+    dout: 1
+  scale_model: null          # or {printer: x1c, ratio: null, base_mm: 3}
+  max_stitch_mm: null

@@ -1,0 +1,69 @@
+{
+  "id": "aces-cal-air-01",
+  "project": "ACES-calibration",
+  "owner": "aaron",
+  "physics": "cfd",
+  "solver": "aces-tpms-periodic",
+  "description": "ACES calibration samples: periodic gyroid, diamond, primitive unit cells, t/a [0.08, 0.12, 0.16], Re [10, 30, 100, 300], Air at 320 K, 96 voxels per cell.",
+  "geometry": {
+    "source": "parametric",
+    "ref": null,
+    "sha256": null
+  },
+  "params": {
+    "cell_m": 0.004,
+    "fluid": "Air",
+    "T_K": 320.0,
+    "p_Pa": 200000.0,
+    "n": 96,
+    "thermal": true
+  },
+  "sweep": {
+    "tpms": [
+      "gyroid",
+      "diamond",
+      "primitive"
+    ],
+    "wall_ratio": [
+      0.08,
+      0.12,
+      0.16
+    ],
+    "re": [
+      10,
+      30,
+      100,
+      300
+    ]
+  },
+  "outputs": [
+    "re_achieved",
+    "dpdx_Pa_m",
+    "mass_flux_kg_m2s",
+    "h_W_m2K",
+    "nusselt_h1",
+    "mach"
+  ],
+  "resources": {
+    "vram_gb": 4.0,
+    "cpu_threads": 8,
+    "wall_h": 2.0,
+    "precision": "float64"
+  },
+  "tracking": {
+    "uri": null,
+    "experiment": null
+  },
+  "evidence": true,
+  "hypothesis": "Pressure drop and H1 heat transfer of TPMS cores differ from the straight-duct baselines by a factor that is constant enough over this range to calibrate the fast tier.",
+  "expected": "dpdx and h per case; fitted with `aces calibrate --boundary uniform_heat_flux`.",
+  "rd_activity": "ACES fast-tier calibration of TPMS heat-exchanger cores",
+  "company": "carbon",
+  "tags": {
+    "kind": "calibration",
+    "system": "hx",
+    "origin": "aces"
+  },
+  "spec_path": "/work/cases/aces/aces-cal-air-01.yaml",
+  "spec_sha256": "e029688e62b0a7c90d3de799a27bcf2624d6ffd6a3a3adc57478f0385bde8d95"
+}

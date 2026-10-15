@@ -1,0 +1,44 @@
+id: aces-cfd-resolution
+project: ACES-calibration
+owner: aaron
+physics: cfd
+solver: aces-tpms-periodic
+description: 'Resolution check and rig timing: gyroid t/a 0.10, Re 20 and 100, air at 320 K, n = 64 / 96 / 128 voxels
+  per cell.'
+hypothesis: The friction ratio and Nu_H1 change by less than 1 % between n = 96 and n = 128.
+expected: Per-case dpdx, h, Nu_H1 and wall time; sets n and max_steps for the campaigns.
+rd_activity: ACES fast-tier calibration of TPMS heat-exchanger cores
+company: carbon
+params:
+  tpms: gyroid
+  wall_ratio: 0.1
+  cell_m: 0.004
+  fluid: Air
+  T_K: 320.0
+  p_Pa: 200000.0
+  thermal: true
+outputs:
+- re_achieved
+- dpdx_Pa_m
+- h_W_m2K
+- nusselt_h1
+- mach
+- flow_steps
+- wall_s
+resources:
+  precision: float64
+  vram_gb: 8.8
+tags:
+  kind: calibration
+  system: hx
+  origin: aces
+sweep:
+  n:
+  - 64
+  - 96
+  - 128
+  re:
+  - 20.0
+  - 100.0
+geometry:
+  source: parametric

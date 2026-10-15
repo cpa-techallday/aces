@@ -1,0 +1,317 @@
+{
+  "kind": "tier0_training_dataset",
+  "resolution": 32,
+  "n": 40,
+  "kinds": [
+    "gyroid",
+    "diamond",
+    "primitive"
+  ],
+  "numeric_fields": [
+    "wall_ratio",
+    "cell_m",
+    "reynolds",
+    "T_K"
+  ],
+  "reynolds_log10": true,
+  "normalisation": {
+    "wall_ratio": {
+      "mean": 0.17099998891353607,
+      "std": 0.06571909785270691
+    },
+    "cell_m": {
+      "mean": 0.004000000189989805,
+      "std": 1.0
+    },
+    "reynolds": {
+      "mean": 1.3001717329025269,
+      "std": 0.5886849164962769
+    },
+    "T_K": {
+      "mean": 320.0,
+      "std": 1.0
+    }
+  },
+  "rows": [
+    {
+      "source": "simlab:aces-cal-air-01:c000",
+      "licence": "internal-verified",
+      "tpms": "gyroid",
+      "wall_ratio": 0.08,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-01:c001",
+      "licence": "internal-verified",
+      "tpms": "gyroid",
+      "wall_ratio": 0.08,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-01:c004",
+      "licence": "internal-verified",
+      "tpms": "gyroid",
+      "wall_ratio": 0.12,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-01:c005",
+      "licence": "internal-verified",
+      "tpms": "gyroid",
+      "wall_ratio": 0.12,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-01:c006",
+      "licence": "internal-verified",
+      "tpms": "gyroid",
+      "wall_ratio": 0.12,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-01:c008",
+      "licence": "internal-verified",
+      "tpms": "gyroid",
+      "wall_ratio": 0.16,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-01:c009",
+      "licence": "internal-verified",
+      "tpms": "gyroid",
+      "wall_ratio": 0.16,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-01:c010",
+      "licence": "internal-verified",
+      "tpms": "gyroid",
+      "wall_ratio": 0.16,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-01:c012",
+      "licence": "internal-verified",
+      "tpms": "diamond",
+      "wall_ratio": 0.08,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-01:c013",
+      "licence": "internal-verified",
+      "tpms": "diamond",
+      "wall_ratio": 0.08,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-01:c014",
+      "licence": "internal-verified",
+      "tpms": "diamond",
+      "wall_ratio": 0.08,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-01:c016",
+      "licence": "internal-verified",
+      "tpms": "diamond",
+      "wall_ratio": 0.12,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-01:c017",
+      "licence": "internal-verified",
+      "tpms": "diamond",
+      "wall_ratio": 0.12,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-01:c018",
+      "licence": "internal-verified",
+      "tpms": "diamond",
+      "wall_ratio": 0.12,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-01:c020",
+      "licence": "internal-verified",
+      "tpms": "diamond",
+      "wall_ratio": 0.16,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-01:c021",
+      "licence": "internal-verified",
+      "tpms": "diamond",
+      "wall_ratio": 0.16,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-01:c022",
+      "licence": "internal-verified",
+      "tpms": "diamond",
+      "wall_ratio": 0.16,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02p:c000",
+      "licence": "internal-verified",
+      "tpms": "primitive",
+      "wall_ratio": 0.08,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02p:c001",
+      "licence": "internal-verified",
+      "tpms": "primitive",
+      "wall_ratio": 0.08,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02p:c003",
+      "licence": "internal-verified",
+      "tpms": "primitive",
+      "wall_ratio": 0.12,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02p:c004",
+      "licence": "internal-verified",
+      "tpms": "primitive",
+      "wall_ratio": 0.12,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02p:c006",
+      "licence": "internal-verified",
+      "tpms": "primitive",
+      "wall_ratio": 0.16,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02p:c007",
+      "licence": "internal-verified",
+      "tpms": "primitive",
+      "wall_ratio": 0.16,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02r:c000",
+      "licence": "internal-verified",
+      "tpms": "gyroid",
+      "wall_ratio": 0.2,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02r:c001",
+      "licence": "internal-verified",
+      "tpms": "gyroid",
+      "wall_ratio": 0.2,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02r:c002",
+      "licence": "internal-verified",
+      "tpms": "gyroid",
+      "wall_ratio": 0.2,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02r:c003",
+      "licence": "internal-verified",
+      "tpms": "gyroid",
+      "wall_ratio": 0.24,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02r:c004",
+      "licence": "internal-verified",
+      "tpms": "gyroid",
+      "wall_ratio": 0.24,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02r:c005",
+      "licence": "internal-verified",
+      "tpms": "gyroid",
+      "wall_ratio": 0.24,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02r:c006",
+      "licence": "internal-verified",
+      "tpms": "gyroid",
+      "wall_ratio": 0.28,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02r:c007",
+      "licence": "internal-verified",
+      "tpms": "gyroid",
+      "wall_ratio": 0.28,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02r:c008",
+      "licence": "internal-verified",
+      "tpms": "gyroid",
+      "wall_ratio": 0.28,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02r:c009",
+      "licence": "internal-verified",
+      "tpms": "diamond",
+      "wall_ratio": 0.2,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02r:c010",
+      "licence": "internal-verified",
+      "tpms": "diamond",
+      "wall_ratio": 0.2,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02r:c011",
+      "licence": "internal-verified",
+      "tpms": "diamond",
+      "wall_ratio": 0.2,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02r:c012",
+      "licence": "internal-verified",
+      "tpms": "diamond",
+      "wall_ratio": 0.24,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02r:c013",
+      "licence": "internal-verified",
+      "tpms": "diamond",
+      "wall_ratio": 0.24,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02r:c014",
+      "licence": "internal-verified",
+      "tpms": "diamond",
+      "wall_ratio": 0.24,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02r:c016",
+      "licence": "internal-verified",
+      "tpms": "diamond",
+      "wall_ratio": 0.28,
+      "cell_m": 0.004
+    },
+    {
+      "source": "simlab:aces-cal-air-02r:c017",
+      "licence": "internal-verified",
+      "tpms": "diamond",
+      "wall_ratio": 0.28,
+      "cell_m": 0.004
+    }
+  ]
+}

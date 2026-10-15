@@ -1,0 +1,11 @@
+# formgen runtime -- versions verified working on Windows 11 / Python 3.11
+trimesh==5.0.0
+cascadio==0.1.1          # STEP -> mesh via OpenCASCADE
+manifold3d==3.5.2        # boolean union (--union / --model-union)
+fast_simplification==0.2.0    # quadric decimation in the remesher
+networkx==3.6.1
+shapely==2.1.2
+scipy==1.17.1
+numpy==2.4.6
+pillow==12.3.0
+PyNiteFEA==3.2.0        # structural check (aces.structures); version on DARKNESS 2026-10-07

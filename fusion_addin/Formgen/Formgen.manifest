@@ -1,0 +1,13 @@
+{
+    "autodeskProduct": "Fusion",
+    "type": "addin",
+    "id": "com.carbonproject.formgen",
+    "author": "Carbon Project AU",
+    "description": {
+        "": "Tessellate a Fusion form into a printable lattice: robot job, 3D viewer, and a desktop-printable scale model."
+    },
+    "version": "0.2.0",
+    "runOnStartup": true,
+    "supportedOS": "windows|mac",
+    "editEnabled": true
+}

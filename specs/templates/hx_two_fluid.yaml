@@ -1,0 +1,47 @@
+# ACES spec template: two-fluid TPMS heat-exchanger core (domain hx.two_fluid).
+# Copy this file, fill every null, then run:  aces check <file>  and  aces design <file> --out <dir>
+# Every value must come from the customer requirement or a datasheet. ACES ships no default
+# material or duty values on purpose; `aces check` lists anything still missing.
+
+aces: 1
+domain: hx.two_fluid
+project: null          # short slug, e.g. the job or customer reference
+owner: null            # person accountable for the run
+company: CPA           # Carbon Project Australia Pty Ltd (fixed)
+rd_activity: null      # RDTI core R&D activity this run belongs to
+hypothesis: null       # what this run is expected to show
+
+requirements:
+  duty_W: null                     # required heat duty, W
+  hot:
+    fluid: null                    # CoolProp name: Water, Air, Nitrogen, INCOMP::MEG[0.5], ...
+    mass_flow_kg_s: null
+    inlet_temperature_K: null
+    inlet_pressure_Pa: null
+    max_pressure_drop_Pa: null     # core allowance, excluding headers
+  cold:
+    fluid: null
+    mass_flow_kg_s: null
+    inlet_temperature_K: null
+    inlet_pressure_Pa: null
+    max_pressure_drop_Pa: null
+  material:
+    name: null                     # e.g. the alloy as printed
+    thermal_conductivity_W_mK: null
+    density_kg_m3: null
+    source: null                   # datasheet or standard these values come from
+  manufacturing:
+    process: null                  # lpbf or polymer_extrusion (aces processes lists routes)
+    min_wall_m: null               # printer/bureau minimum reliable wall
+    min_channel_m: null            # smallest open channel for powder removal
+    envelope_length_m: null        # flow direction
+    envelope_width_m: null
+    envelope_height_m: null
+  tpms_types: [gyroid, diamond, primitive]
+  calibration_file: null           # path to a calibration registry; null = all factors at 1.0
+
+search:
+  trials: 400
+  seed: 0
+  population: 40
+  bounds: {}                       # optional overrides, e.g. {cell_m: [0.002, 0.01]}

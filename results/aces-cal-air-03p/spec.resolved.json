@@ -1,0 +1,65 @@
+{
+  "id": "aces-cal-air-03p",
+  "project": "ACES-calibration",
+  "owner": "aaron",
+  "physics": "cfd",
+  "solver": "aces-tpms-periodic",
+  "description": "ACES calibration samples: periodic primitive unit cells, t/a [0.08, 0.12, 0.16], Re [5.0, 6.0], Air at 320 K, 96 voxels per cell. Campaign 3: pin the primitive Mach boundary (Mach/Re ~ 0.023 measured in campaign 2 -> Re 5 ~ Mach 0.115 safe, Re 6 ~ Mach 0.138 borderline). Cases over Mach 0.15 are expected to be honestly rejected by cfd-collect; that IS the boundary measurement.",
+  "geometry": {
+    "source": "parametric",
+    "ref": null,
+    "sha256": null
+  },
+  "params": {
+    "cell_m": 0.004,
+    "fluid": "Air",
+    "T_K": 320.0,
+    "p_Pa": 200000.0,
+    "n": 96,
+    "thermal": true
+  },
+  "sweep": {
+    "tpms": [
+      "primitive"
+    ],
+    "wall_ratio": [
+      0.08,
+      0.12,
+      0.16
+    ],
+    "re": [
+      5.0,
+      6.0
+    ]
+  },
+  "outputs": [
+    "re_achieved",
+    "dpdx_Pa_m",
+    "mass_flux_kg_m2s",
+    "h_W_m2K",
+    "nusselt_h1",
+    "mach"
+  ],
+  "resources": {
+    "vram_gb": 4.0,
+    "cpu_threads": 8,
+    "wall_h": 2.0,
+    "precision": "float64"
+  },
+  "tracking": {
+    "uri": null,
+    "experiment": null
+  },
+  "evidence": true,
+  "hypothesis": "Primitive Mach ceiling sits between Re 5 and Re 6.5 (Mach/Re ~ 0.023 from campaign 2); the fitted primitive factors (D30, constant 0.8694/3.9413) then hold over the full citable range Re <= ~6.",
+  "expected": "dpdx and H1 h per case (rows carry boundary uniform_heat_flux); fitted with `aces calibrate`, which takes the boundary from the rows.",
+  "rd_activity": "ACES fast-tier calibration of TPMS heat-exchanger cores",
+  "company": "carbon",
+  "tags": {
+    "kind": "calibration",
+    "system": "hx",
+    "origin": "aces"
+  },
+  "spec_path": "/work/cases/aces/aces-cal-air-03p.yaml",
+  "spec_sha256": "7b215558b72195909fb73abb690cb5d86ff1d492aa38138579f4a010768dc208"
+}

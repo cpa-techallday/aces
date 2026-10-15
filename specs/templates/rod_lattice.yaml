@@ -1,0 +1,19 @@
+# ACES spec template: rod lattice built from robot-placed rods with welded nodes (domain rod.lattice).
+# Runs the study scripts (default: the ARC-1 chassis) on a copy, then checks the outputs.
+# Fill every null, then:  aces check <file>  and  aces rod <file> --out <dir>
+
+aces: 1
+domain: rod.lattice
+project: null
+owner: null
+company: CPA
+rd_activity: null
+hypothesis: null
+
+requirements:
+  process: arc_lattice_rod_welding
+  study_dir: null            # e.g. ../../studies/arc1_chassis (relative to this spec)
+  params: params.json        # file in the study's cad/ folder (params_rotary.json for the rotary variant)
+  material_source: null      # where the params' material values (E, yield, density) come from
+  stages: [process.py, boom.py, frame.py --dump, micro.py --mesh, buildplan.py, budget.py]
+  max_utilisation: 1.0

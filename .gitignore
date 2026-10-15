@@ -16,3 +16,37 @@ keys/*.sec.asc
 keys/gen.params
 # Omarchy rehearsal VM downloads
 rehearsal/iso/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Run outputs, geometry and evidence live outside git (rig NVMe / workstation).
+out/
+runs/
+*.stl
+!examples/**/*.stl
+*.step
+*.vtk
+*.vtu
+*.npz
+*.h5
+optuna.db
+
+# formgen run outputs and machine-specific add-in config
+out_*/
+formgen-out/
+*.JBI
+*.glb
+fusion_addin/Formgen/formgen_path.txt
+_import_*/
+!studies/*/cad/*.stl
+!studies/*/cad/*.step
+.coverage
