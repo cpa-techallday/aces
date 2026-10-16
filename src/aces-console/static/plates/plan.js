@@ -156,9 +156,11 @@ function classChip(p) {
 function confidenceBadge(p) {
   const { dom, format } = R.ctx; const { el } = dom;
   if (p.confidence === null || p.confidence === undefined) return el("span.dim", { text: "confidence not reported" });
+  // planner reports 0..1; format.pct expects 0..100
+  const pctVal = p.confidence <= 1 ? p.confidence * 100 : p.confidence;
   const low = p.low_confidence || p.confidence < 0.5;
   return el("span.badge" + (low ? ".ink-amber" : ".ink-cyan"), {
-    text: `${format.pct(p.confidence)} confidence${low ? " · confirm the class before launch" : ""}`,
+    text: `${format.pct(pctVal)} confidence${low ? " · confirm the class before launch" : ""}`,
     title: "classifier confidence; low confidence asks for a human confirmation of the class (design §6)",
   });
 }
