@@ -77,8 +77,9 @@ class SolverReferences(unittest.TestCase):
         referenced = {st["solver"] for pb in library.load_all().values() for st in pb["stages"]}
         known = SOLVERS_AVAILABLE | SOLVERS_INCOMING | {"none"}
         unknown = {s for s in referenced if solver_status(s) == "missing"}
-        self.assertEqual(unknown, {"pelec-combustion"})  # the one declared-pending gap
-        self.assertTrue(referenced <= known | unknown)
+        self.assertEqual(unknown, set())  # pelec-combustion landed 2026-10-15 (aces-pelec:0.1)
+        self.assertTrue(referenced <= known)
+        self.assertIn("pelec-combustion", SOLVERS_AVAILABLE)
 
     def test_incoming_rows_are_used_and_named(self):
         used = {st["solver"] for pb in library.load_all().values() for st in pb["stages"]}
@@ -93,11 +94,25 @@ class Validation(unittest.TestCase):
         self.assertTrue(validate.ok(report),
                         "; ".join(f"{c}: {r['errors']}" for c, r in report.items() if r["errors"]))
 
-    def test_incoming_and_pending_are_notes_not_errors(self):
+    def test_incoming_is_a_note_not_an_error(self):
         report = validate.validate_all()
         notes = [n for r in report.values() for n in r["notes"]]
         self.assertTrue(any("incoming" in n for n in notes))
-        self.assertTrue(any("pelec-combustion" in n and "pending" in n for n in notes))
+
+    def test_missing_solver_is_an_error_unless_declared_pending(self):
+        pb = library.load("rocket-motor")
+        stage = dict(pb["stages"][0])
+        stage["solver"] = "no-such-solver"
+        bad = dict(pb, stages=[stage, *pb["stages"][1:]])
+        errors, notes = validate.validate_playbook(bad, name="bad")
+        self.assertTrue(any("missing from the registry vocabulary" in e for e in errors))
+        # the declared-pending escape hatch (used by PeleC before its image landed):
+        # a note, never an error, and never skipped silently
+        stage["pending"] = True
+        pending = dict(pb, stages=[stage, *pb["stages"][1:]])
+        errors, notes = validate.validate_playbook(pending, name="pending")
+        self.assertFalse(any("no-such-solver" in e for e in errors))
+        self.assertTrue(any("no-such-solver" in n and "pending" in n for n in notes))
 
     def test_schema_errors_are_caught(self):
         pb = library.load("structure")

@@ -17,7 +17,7 @@ for _p in (_HERE.parent / "lib", _HERE.parent / "vendor"):
         sys.path.append(str(_p))
 
 from aces_engineering import golden_cli  # noqa: E402
-from aces_engineering.playbooks import PLAN_SCHEMA  # noqa: E402
+from aces_engineering.playbooks import PLAN_SCHEMA, solver_status  # noqa: E402
 from aces_engineering.playbooks.plan import extract_parameters, plan_from_brief  # noqa: E402
 
 CANONICAL = "optimise this chassis, 1500 kg, six-wheeled off-roader, electric drive, 50 kWh battery"
@@ -103,20 +103,23 @@ class ParameterExtraction(unittest.TestCase):
 
 
 class BlockedStages(unittest.TestCase):
-    def test_missing_solver_blocks_the_stage_and_names_the_gap(self):
-        # rocket-motor's PeleC verification is a declared-pending gap: blocked, never skipped
+    def test_combustion_verify_is_available_since_the_pelec_image_landed(self):
+        # pelec-combustion is registered in cudax-sim-runtime (simlab/solvers.d/pelec.json,
+        # aces-pelec:0.1 Sod GPU-validated 2026-10-15): the stage runs, nothing is blocked
         p = plan_from_brief("design a rocket motor, 5 kN thrust, LOX/RP-1")
-        blocked = p["blocked"]
-        self.assertEqual(len(blocked), 1)
-        self.assertEqual(blocked[0]["stage"], "combustion-verify")
-        self.assertEqual(blocked[0]["solver"], "pelec-combustion")
-        self.assertIn("missing", blocked[0]["reason"])
+        self.assertEqual(p["blocked"], [])
         stage = next(s for s in p["stages"] if s["id"] == "combustion-verify")
-        self.assertEqual(stage["solver_status"], "missing")
-        self.assertTrue(stage["pending"])
-        self.assertTrue(any("blocked" in w for w in p["warnings"]))
-        # the stages before it are unaffected
+        self.assertEqual((stage["solver"], stage["solver_status"]), ("pelec-combustion", "available"))
+        self.assertFalse(stage["pending"])
+        self.assertFalse(any("blocked" in w for w in p["warnings"]))
+        # the design-point and chemistry stages are still incoming rows, named as such
         self.assertEqual([s["solver_status"] for s in p["stages"][:2]], ["incoming", "incoming"])
+
+    def test_missing_solver_still_blocks(self):
+        # the blocked path itself: a solver outside the vocabulary is missing, and a plan
+        # stage referencing one is named in blocked, never skipped (pinned via solver_status)
+        self.assertEqual(solver_status("no-such-solver"), "missing")
+        self.assertEqual(solver_status("pelec-combustion"), "available")
 
     def test_low_confidence_warns(self):
         p = plan_from_brief("optimise this thing please")
@@ -153,11 +156,12 @@ class GoldenPlanCli(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("needs a brief", err)
 
-    def test_blocked_stage_shown(self):
+    def test_combustion_verify_shown_unblocked(self):
         code, out, _ = self.run_cli(["plan", "design a rocket motor, 5 kN thrust"])
         self.assertEqual(code, 0)
-        self.assertIn("[BLOCKED: solver missing]", out)
+        self.assertIn("combustion-verify", out)
         self.assertIn("pelec-combustion", out)
+        self.assertNotIn("[BLOCKED: solver missing]", out)
 
     def test_help_lists_plan(self):
         code, out, _ = self.run_cli([])

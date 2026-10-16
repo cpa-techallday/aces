@@ -1,7 +1,7 @@
 # aces-playbook/1 — rocket-motor: rocket motors, thrusters, combustion chambers.
-# RocketCEA design point -> Cantera chemistry check -> (PeleC 3-D combustion when its image
-# is ready — pending, so plans carrying this stage are marked blocked) -> score
-# (design doc sections 2 and 4; aces-rocket:0.1).
+# RocketCEA design point -> Cantera chemistry check -> PeleC 3-D combustion verification
+# (aces-pelec:0.1, Sod GPU-validated 2026-10-15 in cudax-sim-runtime; a reacting reference
+# case is still future work) -> score (design doc sections 2 and 4).
 schema: aces-playbook/1
 class: rocket-motor
 version: 1
@@ -9,7 +9,7 @@ title: Rocket motor (thruster, combustion chamber)
 description: >
   The design point comes first (RocketCEA: chamber pressure, mixture ratio, Isp, thrust),
   the chemistry is checked independently (Cantera), and a 3-D combustion verification
-  (PeleC) gates the score once its image lands.
+  (PeleC) gates the score.
 spec:
   metrics: [isp_s, thrust_N, chamber_pressure_Pa, mixture_ratio, mass_kg]
   targets:
@@ -65,30 +65,31 @@ stages:
   - id: combustion-verify
     name: 3-D combustion verification (PeleC)
     solver: pelec-combustion
-    pending: true
     purpose: >
-      3-D reacting-flow verification of the chamber and nozzle (PeleC). The image is pending
-      (aces-rocket:0.1 builds it; documented if infeasible in-session): until it lands this
-      stage is blocked, and the plan says so rather than skipping it.
+      3-D reacting-flow verification of the chamber and nozzle (PeleC, aces-pelec:0.1).
+      The image is built and GPU-validated on the Sod shock tube (cudax-sim-runtime
+      docs/validation/pelec-20261015/, 2026-10-15); a reacting reference case is still
+      future work in the runtime registry, so this verification is anchored on the
+      design point and the chemistry check until that case lands.
     inputs: [design-point.json, chamber_geometry]
     outputs: [chamber_pressure_Pa, wall_heatflux_W_m2, verification_delta_rel]
-    entry: ["chemistry-check passed", "the pelec-combustion solver row exists in the registry"]
+    entry: ["chemistry-check passed"]
     exit: ["the 3-D verification converged", "the delta vs the design point is within tolerance"]
     gate:
       metric: verification_delta_rel
       op: "<="
       limit: 0.15
-      note: "pending solver: plans mark this stage blocked until the PeleC image is validated"
+      note: "solver row validated on non-reacting Sod only; reacting reference case pending in the runtime registry"
     evidence: [pelec-verify.json, verification-delta.json]
   - id: score
     name: Score and spec sheet
     solver: none
     purpose: >
       Score verified Isp and thrust per unit engine mass; emit the spec sheet with the
-      verification deltas and the blocked/pending state of the 3-D stage.
+      verification deltas of the chemistry and 3-D stages.
     inputs: [chemistry-check.json, design-point.json, spec]
     outputs: [score, isp_s, thrust_N, chamber_pressure_Pa]
-    entry: ["chemistry-check passed (combustion-verify when its solver lands)"]
+    entry: ["chemistry-check passed"]
     exit: ["spec sheet emitted"]
     gate:
       metric: score

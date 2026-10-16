@@ -24,12 +24,16 @@ DEFAULT_CLASS = "structure"
 # the aces-cfd / aces-geom / aces-opt / aces-rocket images are landing this cycle (design doc
 # section 4). A reference to anything else is `missing` and blocks the stage that needs it.
 # `surrogate-bracket-*` is a family: any row with that prefix is available.
+# pelec-combustion: row in cudax-sim-runtime simlab/solvers.d/pelec.json — aces-pelec:0.1 built
+# and Sod GPU-validated 2026-10-15 (docs/validation/pelec-20261015/); a reacting reference
+# case is still future work there, which the playbook's gate note says.
 SOLVERS_AVAILABLE = frozenset({
     "golden-case", "golden-check", "ccx-check",
     "gendesign-topopt", "gendesign-parametric", "step-structures",
     "pyfr", "aces-tile-em", "aces-tpms-periodic",
     "surrogate-bracket-gp", "surrogate-bracket-gp-lhs", "surrogate-bracket-et", "surrogate-bracket-fno",
     "nozzle-angelino",
+    "pelec-combustion",
 })
 SOLVERS_INCOMING = frozenset({
     "su2-rans", "openfoam-cht", "geom-reconstruct", "topopt-step",
