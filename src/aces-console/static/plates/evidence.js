@@ -108,7 +108,7 @@ function renderRuns() {
   const rows = Array.isArray(d.runs) ? d.runs : [];
   if (d.reason) box.append(note("no golden runs", d.reason, { act: true, detail: d.root || null }));
   box.append(table([
-    { th: "run", render: (r) => button(r.run_id, { title: `open run ${r.run_id} of ${r.project}`, onclick: () => selectRun(r.project, r.run_id) }), cls: "nm" },
+    { th: "run", render: (r) => button(r.run_id, { cls: "rowbtn", title: `open run ${r.run_id} of ${r.project}`, onclick: () => selectRun(r.project, r.run_id) }), cls: "nm" },
     { th: "project", key: "project" },
     { th: "created", render: (r) => format.utcShort(r.created_utc) }, { th: "finished", render: (r) => (r.finished_utc ? format.utcShort(r.finished_utc) : "not finished") },
     { th: "status", render: (r) => (r.unreadable ? el("span.ink-fault", { text: r.unreadable }) : chip("run", r.status)) },

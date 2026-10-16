@@ -169,7 +169,7 @@ function renderExperiments() {
   const jobs = Array.isArray(d.queue) ? d.queue.length : null;
   box.append(el("div.line", [el("span.k", { text: "experiments" }), el("b", { text: String(rows.length) }), el("span.k", { text: "queue jobs listed" }), el("b", { text: jobs === null ? "not reported" : `${jobs}${jobs >= 300 ? " (the console's cap: older jobs are not listed)" : ""}` }), el("span.k", { text: "listed" }), el("b", { text: d.ts ? format.utc(d.ts) : "not reported" })]));
   box.append(table([
-    { th: "experiment", render: (e) => button(e.id || "(no id)", { cls: "btn", title: `open ${e.id}: cases, jobs and files`, onclick: () => select(e.id, e.root || "queue") }), cls: "nm" },
+    { th: "experiment", render: (e) => button(e.id || "(no id)", { cls: "rowbtn", title: `open ${e.id}: cases, jobs and files`, onclick: () => select(e.id, e.root || "queue") }), cls: "nm" },
     { th: "project", key: "project" }, { th: "physics", key: "physics" }, { th: "solver", key: "solver" }, { th: "image", key: "image" },
     { th: "cases", render: (e) => `${format.or(e.n_done, "?")} of ${format.or(e.n_cases, "?")} done${e.n_failed ? ` · ${e.n_failed} failed` : ""}${e.n_running ? ` · ${e.n_running} running` : ""}`, cls: "body" },
     { th: "stages", render: (e) => (Array.isArray(e.stages) ? (e.stages.length ? String(e.stages.length) : "none") : "not recorded"), num: true },
@@ -220,7 +220,7 @@ function renderExp() {
   // cases
   box.append(el("div.cap", { text: `cases · ${cases.length}` }));
   box.append(table([
-    { th: "case", render: (c) => button(c.case_id, { title: `open case ${c.case_id}`, onclick: () => select(e.id, e.root || R.eroot, c.case_id) }), cls: "nm" },
+    { th: "case", render: (c) => button(c.case_id, { cls: "rowbtn", title: `open case ${c.case_id}`, onclick: () => select(e.id, e.root || R.eroot, c.case_id) }), cls: "nm" },
     { th: "status", render: (c) => chip("console", c.status) },
     { th: "stage", render: (c) => c.current_stage || (names.length ? "none" : "single stage") },
     { th: "progress", render: (c) => (c.progress ? `${c.progress.phase || "phase not recorded"} · ${c.progress.step ?? "?"} of ${c.progress.total ?? "?"}${Number.isFinite(c.progress.fraction) ? ` (${Math.round(c.progress.fraction * 100)} %)` : ""}` : "not recorded"), cls: "body" },

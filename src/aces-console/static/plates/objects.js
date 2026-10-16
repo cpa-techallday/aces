@@ -131,7 +131,7 @@ function renderRuns() {
   const counts = d.counts || {};
   box.append(el("div.line", [el("span.k", { text: "runs" }), el("b", { text: String(counts.total ?? rows.length) }), el("span.k", { text: "unreadable" }), el("b" + (counts.unreadable ? ".ink-fault" : ""), { text: String(counts.unreadable ?? rows.filter((r) => r.unreadable).length) })]));
   box.append(table([
-    { th: "run", render: (r) => button(r.run_id, { title: `open run ${r.run_id}`, onclick: () => selectRun(r.run_id) }), cls: "nm" },
+    { th: "run", render: (r) => button(r.run_id, { cls: "rowbtn", title: `open run ${r.run_id}`, onclick: () => selectRun(r.run_id) }), cls: "nm" },
     { th: "name", render: (r) => r.name || (r.unreadable ? format.DASH : "unnamed") },
     { th: "status", render: (r) => (r.unreadable ? chip("cad", "unreadable", r.unreadable) : chip("cad", r.status)) },
     { th: "started", render: (r) => format.utcShort(r.started) }, { th: "finished", render: (r) => (r.finished ? format.utcShort(r.finished) : (r.unreadable ? format.DASH : "not finished")) },
@@ -317,7 +317,7 @@ function renderNotes() {
   const tl = el("div.timeline");
   for (const e of entries.slice().reverse()) {
     tl.append(el("div.row", [el("span.t", { text: e.ts ? format.utc(e.ts) : "time not recorded" }), el("span", [
-      el("div.line", [el("span.k", { text: "tags" }), el("b", { text: Array.isArray(e.tags) && e.tags.length ? e.tags.join(", ") : "none" }), el("span.k", { text: "run" }), e.run_id ? button(e.run_id, { title: "open this run", onclick: () => selectRun(e.run_id) }) : el("b", { text: "none" })]),
+      el("div.line", [el("span.k", { text: "tags" }), el("b", { text: Array.isArray(e.tags) && e.tags.length ? e.tags.join(", ") : "none" }), el("span.k", { text: "run" }), e.run_id ? button(e.run_id, { cls: "rowbtn", title: "open this run", onclick: () => selectRun(e.run_id) }) : el("b", { text: "none" })]),
       el("div.prose", { text: e.body ? `“${e.body}”` : "(empty entry)" }),
     ])]));
   }

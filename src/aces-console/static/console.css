@@ -22,11 +22,25 @@
 .plate-body > .span2 { grid-column: 1 / -1; }
 /* an explicit column keeps a block's track at the width of the block: an auto track would take the min-content of a
    table (a nowrap chip) and overflow the plate */
-.blk { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s2); align-content: start; }
+/* a block is a panel of the instrument board: raised surface, hairline, its cap as a header strip (polish 2026-10-16) */
+.blk { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s2); align-content: start; background: var(--plate-2); border: 1px solid var(--line-2); border-radius: var(--r); padding: var(--s2) var(--s3) var(--s3); }
 .blk > * { min-width: 0; }
-.blk > .cap { display: flex; align-items: baseline; gap: var(--s2); flex-wrap: wrap; }
+.blk > .cap { display: flex; align-items: baseline; gap: var(--s2); flex-wrap: wrap; color: var(--chalk-2); padding-bottom: var(--s2); margin-bottom: var(--s1); border-bottom: 1px solid var(--line); }
 .blk > .cap .coord { font-family: var(--f-mono); font-size: var(--t-label); letter-spacing: 0; text-transform: none; color: var(--chalk-3); font-weight: 400; }
-.blk .table-wrap { padding: 0; }
+/* inside a panel the inset elements (cards, chips, notes) sit one tier down so the panel reads as their frame */
+.blk .card, .blk .stagecard, .blk .chip, .blk .note-inline { background: var(--plate); }
+/* a long table scrolls inside its panel instead of stretching the plate into a document; its header stays put */
+.blk .table-wrap { padding: 0; max-height: 480px; overflow: auto; }
+.table thead th { position: sticky; top: 0; background: var(--plate-2); z-index: 1; }
+/* the inspector column is itself a plate-2 surface: its panels step down one tier, their insets step back up */
+.column-body .blk { background: var(--plate); }
+.column-body .blk .note-inline, .column-body .blk .card, .column-body .blk .chip { background: var(--plate-2); }
+
+/* ---------- a row name that opens a record is a quiet text control, not an action button: the amber .btn is
+   reserved for things that act (polish 2026-10-16) ---------- */
+.rowbtn { display: inline; background: none; border: 0; border-radius: var(--r); padding: 0; font: inherit; color: var(--chalk); cursor: pointer; text-align: left; text-decoration: underline; text-decoration-color: var(--line-3); text-underline-offset: 3px; transition: color var(--fast) var(--ease), text-decoration-color var(--fast) var(--ease); }
+.rowbtn:hover { color: var(--act); text-decoration-color: var(--act); }
+.table tr.eye .rowbtn { color: var(--act); text-decoration-color: var(--act-2); }
 .line { font-family: var(--f-mono); font-size: var(--t-data); color: var(--chalk-2); display: flex; flex-wrap: wrap; gap: var(--s2) var(--s4); align-items: baseline; }
 .line b { font-weight: 500; color: var(--chalk); }
 .line .k { color: var(--chalk-3); }
@@ -176,6 +190,7 @@ textarea.brief:focus-visible { border-color: var(--act); outline: none; }
 }
 @media (max-width: 420px) {
   .plate-body { padding: var(--s3) 0 var(--s4); gap: var(--s3); }
+  .blk { border-left: 0; border-right: 0; border-radius: 0; }   /* the plate body is full-bleed on a phone; panels meet the edges */
   .table td { overflow-wrap: anywhere; }
   .table td .state { white-space: normal; text-align: right; }   /* a stacked cell lets its status chip wrap instead of scrolling */
   /* the 48 px strip holds three stacked stamp parts: the mode, the stream state and FIXTURE; detected_mode and the

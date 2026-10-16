@@ -78,7 +78,7 @@ function renderRegistry() {
   box.append(el("div.line", [el("span.k", { text: "solvers" }), el("b", { text: String(rs.length) }), el("span.k", { text: "pass" }), el("b", { text: String(nPass) }), el("span.k", { text: "fail" }), el("b" + (nFail ? ".ink-fault" : ""), { text: String(nFail) }),
     el("span.k", { text: "image id recorded" }), el("b", { text: `${nImage} of ${rs.length}` }), el("span.k", { text: "lane recorded" }), el("b", { text: nLane ? `${nLane} of ${rs.length}` : `none of ${rs.length}: every lane reads "not recorded"` })]));
   box.append(table([
-    { th: "solver", render: (r) => button(r.name, { title: `${r.name}: validation cases and notes in the inspector`, onclick: () => select(r.name) }), cls: "nm" },
+    { th: "solver", render: (r) => button(r.name, { cls: "rowbtn", title: `${r.name}: validation cases and notes in the inspector`, onclick: () => select(r.name) }), cls: "nm" },
     { th: "physics", render: (r) => (Array.isArray(r.physics) ? r.physics.join(", ") : r.physics || "not recorded") },
     { th: "precision", render: (r) => (Array.isArray(r.precision) ? r.precision.join(", ") : r.precision || "not recorded") },
     { th: "image", render: (r) => r.image || "not recorded" },

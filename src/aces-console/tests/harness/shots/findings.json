@@ -1,7 +1,7 @@
 {
  "harness": "playwright",
- "url": "http://127.0.0.1:58461",
- "ran_utc": "2026-10-11T01:52:50Z",
+ "url": "http://127.0.0.1:65417",
+ "ran_utc": "2026-10-16T00:51:31Z",
  "viewports": [
   {
    "viewport": "1440x900",
@@ -9,13 +9,14 @@
    "page_errors": [],
    "requests_failed": [],
    "streams_closed_by_page": [
-    "http://127.0.0.1:58461/api/events?plate=fabric net::ERR_ABORTED",
-    "http://127.0.0.1:58461/api/events?plate=projects net::ERR_ABORTED",
-    "http://127.0.0.1:58461/api/events?plate=pipeline net::ERR_ABORTED",
-    "http://127.0.0.1:58461/api/events?plate=solvers net::ERR_ABORTED",
-    "http://127.0.0.1:58461/api/events?plate=objects net::ERR_ABORTED",
-    "http://127.0.0.1:58461/api/events?plate=evidence net::ERR_ABORTED",
-    "http://127.0.0.1:58461/api/events?plate=ops net::ERR_ABORTED"
+    "http://127.0.0.1:65417/api/events?plate=fabric net::ERR_ABORTED",
+    "http://127.0.0.1:65417/api/events?plate=projects net::ERR_ABORTED",
+    "http://127.0.0.1:65417/api/events?plate=pipeline net::ERR_ABORTED",
+    "http://127.0.0.1:65417/api/events?plate=solvers net::ERR_ABORTED",
+    "http://127.0.0.1:65417/api/events?plate=objects net::ERR_ABORTED",
+    "http://127.0.0.1:65417/api/events?plate=evidence net::ERR_ABORTED",
+    "http://127.0.0.1:65417/api/events?plate=ops net::ERR_ABORTED",
+    "http://127.0.0.1:65417/api/events?plate=plan net::ERR_ABORTED"
    ],
    "plates": {
     "fabric": {
@@ -44,13 +45,13 @@
        "245,158,11",
        "255,77,46"
       ],
-      "checked": 5387,
+      "checked": 5201,
       "unparsed": 1,
       "offenders": [],
       "n_offenders": 0
      },
      "text": {
-      "checked": 6468,
+      "checked": 5692,
       "hits": []
      },
      "placeholder": false,
@@ -58,7 +59,8 @@
       "endpoint:stopped by mode sim-lab-4 (by design)",
       "endpoint:transition",
       "endpoint:reachable"
-     ]
+     ],
+     "full_page": "C:\\Users\\shedm\\aces-wt-uipolish\\src\\aces-console\\tests\\harness\\shots\\fabric-1440x900-full.png"
     },
     "projects": {
      "overflow": {
@@ -86,17 +88,18 @@
        "245,158,11",
        "255,77,46"
       ],
-      "checked": 1051,
+      "checked": 1364,
       "unparsed": 0,
       "offenders": [],
       "n_offenders": 0
      },
      "text": {
-      "checked": 879,
+      "checked": 1073,
       "hits": []
      },
      "placeholder": false,
-     "status_words": []
+     "status_words": [],
+     "full_page": "C:\\Users\\shedm\\aces-wt-uipolish\\src\\aces-console\\tests\\harness\\shots\\projects-1440x900-full.png"
     },
     "pipeline": {
      "overflow": {
@@ -107,7 +110,7 @@
       "clipped_offenders": 0
      },
      "vocab": {
-      "checked": 0,
+      "checked": 9,
       "unknown": [],
       "labels_wrong": []
      },
@@ -124,17 +127,28 @@
        "245,158,11",
        "255,77,46"
       ],
-      "checked": 544,
+      "checked": 9402,
       "unparsed": 0,
       "offenders": [],
       "n_offenders": 0
      },
      "text": {
-      "checked": 554,
+      "checked": 11397,
       "hits": []
      },
-     "placeholder": true,
-     "status_words": []
+     "placeholder": false,
+     "status_words": [
+      "rq:finished",
+      "rq:failed",
+      "rq:queued",
+      "rq:deferred",
+      "meta:finished",
+      "meta:failed",
+      "meta:running",
+      "meta:waiting_for_gpu",
+      "meta:queued"
+     ],
+     "full_page": "C:\\Users\\shedm\\aces-wt-uipolish\\src\\aces-console\\tests\\harness\\shots\\pipeline-1440x900-full.png"
     },
     "solvers": {
      "overflow": {
@@ -145,7 +159,7 @@
       "clipped_offenders": 0
      },
      "vocab": {
-      "checked": 0,
+      "checked": 28,
       "unknown": [],
       "labels_wrong": []
      },
@@ -162,17 +176,22 @@
        "245,158,11",
        "255,77,46"
       ],
-      "checked": 544,
+      "checked": 6233,
       "unparsed": 0,
       "offenders": [],
       "n_offenders": 0
      },
      "text": {
-      "checked": 563,
+      "checked": 8323,
       "hits": []
      },
-     "placeholder": true,
-     "status_words": []
+     "placeholder": false,
+     "status_words": [
+      "registry:pass",
+      "registry:not recorded",
+      "registry:fail"
+     ],
+     "full_page": "C:\\Users\\shedm\\aces-wt-uipolish\\src\\aces-console\\tests\\harness\\shots\\solvers-1440x900-full.png"
     },
     "objects": {
      "overflow": {
@@ -200,17 +219,18 @@
        "245,158,11",
        "255,77,46"
       ],
-      "checked": 544,
+      "checked": 1529,
       "unparsed": 0,
       "offenders": [],
       "n_offenders": 0
      },
      "text": {
-      "checked": 587,
+      "checked": 2019,
       "hits": []
      },
-     "placeholder": true,
-     "status_words": []
+     "placeholder": false,
+     "status_words": [],
+     "full_page": "C:\\Users\\shedm\\aces-wt-uipolish\\src\\aces-console\\tests\\harness\\shots\\objects-1440x900-full.png"
     },
     "evidence": {
      "overflow": {
@@ -221,7 +241,7 @@
       "clipped_offenders": 0
      },
      "vocab": {
-      "checked": 0,
+      "checked": 19,
       "unknown": [],
       "labels_wrong": []
      },
@@ -238,21 +258,26 @@
        "245,158,11",
        "255,77,46"
       ],
-      "checked": 544,
+      "checked": 8527,
       "unparsed": 0,
       "offenders": [],
       "n_offenders": 0
      },
      "text": {
-      "checked": 597,
+      "checked": 17544,
       "hits": []
      },
-     "placeholder": true,
-     "status_words": [],
+     "placeholder": false,
+     "status_words": [
+      "run:done",
+      "run:running",
+      "run:error"
+     ],
      "grade_sentence": {
-      "present": false,
-      "note": "not checked: the Evidence plate is Builder D's placeholder"
-     }
+      "present": true,
+      "note": null
+     },
+     "full_page": "C:\\Users\\shedm\\aces-wt-uipolish\\src\\aces-console\\tests\\harness\\shots\\evidence-1440x900-full.png"
     },
     "ops": {
      "overflow": {
@@ -280,20 +305,60 @@
        "245,158,11",
        "255,77,46"
       ],
-      "checked": 3093,
+      "checked": 3131,
       "unparsed": 0,
       "offenders": [],
       "n_offenders": 0
      },
      "text": {
-      "checked": 8671,
+      "checked": 8068,
       "hits": []
      },
      "placeholder": false,
-     "status_words": []
+     "status_words": [],
+     "full_page": "C:\\Users\\shedm\\aces-wt-uipolish\\src\\aces-console\\tests\\harness\\shots\\ops-1440x900-full.png"
     },
-    "projects:cad-gold": {
-     "project": "cad-gold",
+    "plan": {
+     "overflow": {
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "ok": true,
+      "offenders": [],
+      "clipped_offenders": 0
+     },
+     "vocab": {
+      "checked": 0,
+      "unknown": [],
+      "labels_wrong": []
+     },
+     "colours": {
+      "tokens": [
+       "6,18,37",
+       "10,20,40",
+       "13,26,51",
+       "18,34,64",
+       "219,231,243",
+       "169,187,208",
+       "125,144,168",
+       "34,211,238",
+       "245,158,11",
+       "255,77,46"
+      ],
+      "checked": 902,
+      "unparsed": 0,
+      "offenders": [],
+      "n_offenders": 0
+     },
+     "text": {
+      "checked": 1151,
+      "hits": []
+     },
+     "placeholder": false,
+     "status_words": [],
+     "full_page": "C:\\Users\\shedm\\aces-wt-uipolish\\src\\aces-console\\tests\\harness\\shots\\plan-1440x900-full.png"
+    },
+    "projects:golden-demo": {
+     "project": "golden-demo",
      "overflow": {
       "scrollWidth": 1440,
       "innerWidth": 1440,
@@ -319,13 +384,13 @@
        "245,158,11",
        "255,77,46"
       ],
-      "checked": 2290,
+      "checked": 2613,
       "unparsed": 0,
       "offenders": [],
       "n_offenders": 0
      },
      "text": {
-      "checked": 2663,
+      "checked": 2711,
       "hits": []
      },
      "status_words": [
@@ -334,7 +399,8 @@
      "grade_sentence": {
       "present": true,
       "note": "the Projects plate prints the sentence under its golden-runs table"
-     }
+     },
+     "full_page": "C:\\Users\\shedm\\aces-wt-uipolish\\src\\aces-console\\tests\\harness\\shots\\projects-golden-demo-1440x900-full.png"
     }
    },
    "tabs": {
@@ -373,14 +439,19 @@
       "focused": "ops",
       "selected": "ops",
       "panel_visible": true
+     },
+     {
+      "focused": "plan",
+      "selected": "plan",
+      "panel_visible": true
      }
     ],
     "all_seven": true
    },
-   "stamp": "MODE SIM-LAB-4 \u00b7 DETECTED TRANSITION \u00b7 MANIFEST 17.1 H STALE \u00b7 LIVE \u00b7 FIXTURE 2026-10-11",
+   "stamp": "MODE SIM-LAB-4 \u00b7 DETECTED TRANSITION \u00b7 MANIFEST 12.0 H STALE \u00b7 LIVE \u00b7 FIXTURE 2026-10-11",
    "fixture_stamped": true,
-   "stream_state": "MODE SIM-LAB-4 \u00b7 DETECTED TRANSITION \u00b7 MANIFEST 17.1 H STALE \u00b7 LIVE \u00b7 FIXTURE 2026-10-11",
-   "screenshot": "tests/harness/shots\\fabric-1440x900.png"
+   "stream_state": "MODE SIM-LAB-4 \u00b7 DETECTED TRANSITION \u00b7 MANIFEST 12.0 H STALE \u00b7 LIVE \u00b7 FIXTURE 2026-10-11",
+   "screenshot": "C:\\Users\\shedm\\aces-wt-uipolish\\src\\aces-console\\tests\\harness\\shots\\fabric-1440x900.png"
   },
   {
    "viewport": "390x844",
@@ -388,13 +459,14 @@
    "page_errors": [],
    "requests_failed": [],
    "streams_closed_by_page": [
-    "http://127.0.0.1:58461/api/events?plate=fabric net::ERR_ABORTED",
-    "http://127.0.0.1:58461/api/events?plate=projects net::ERR_ABORTED",
-    "http://127.0.0.1:58461/api/events?plate=pipeline net::ERR_ABORTED",
-    "http://127.0.0.1:58461/api/events?plate=solvers net::ERR_ABORTED",
-    "http://127.0.0.1:58461/api/events?plate=objects net::ERR_ABORTED",
-    "http://127.0.0.1:58461/api/events?plate=evidence net::ERR_ABORTED",
-    "http://127.0.0.1:58461/api/events?plate=ops net::ERR_ABORTED"
+    "http://127.0.0.1:65417/api/events?plate=fabric net::ERR_ABORTED",
+    "http://127.0.0.1:65417/api/events?plate=projects net::ERR_ABORTED",
+    "http://127.0.0.1:65417/api/events?plate=pipeline net::ERR_ABORTED",
+    "http://127.0.0.1:65417/api/events?plate=solvers net::ERR_ABORTED",
+    "http://127.0.0.1:65417/api/events?plate=objects net::ERR_ABORTED",
+    "http://127.0.0.1:65417/api/events?plate=evidence net::ERR_ABORTED",
+    "http://127.0.0.1:65417/api/events?plate=ops net::ERR_ABORTED",
+    "http://127.0.0.1:65417/api/events?plate=plan net::ERR_ABORTED"
    ],
    "plates": {
     "fabric": {
@@ -423,13 +495,13 @@
        "245,158,11",
        "255,77,46"
       ],
-      "checked": 4995,
+      "checked": 4776,
       "unparsed": 1,
       "offenders": [],
       "n_offenders": 0
      },
      "text": {
-      "checked": 6073,
+      "checked": 5292,
       "hits": []
      },
      "placeholder": false,
@@ -437,7 +509,8 @@
       "endpoint:stopped by mode sim-lab-4 (by design)",
       "endpoint:transition",
       "endpoint:reachable"
-     ]
+     ],
+     "full_page": "C:\\Users\\shedm\\aces-wt-uipolish\\src\\aces-console\\tests\\harness\\shots\\fabric-390x844-full.png"
     },
     "projects": {
      "overflow": {
@@ -465,17 +538,18 @@
        "245,158,11",
        "255,77,46"
       ],
-      "checked": 923,
+      "checked": 1228,
       "unparsed": 0,
       "offenders": [],
       "n_offenders": 0
      },
      "text": {
-      "checked": 742,
+      "checked": 931,
       "hits": []
      },
      "placeholder": false,
-     "status_words": []
+     "status_words": [],
+     "full_page": "C:\\Users\\shedm\\aces-wt-uipolish\\src\\aces-console\\tests\\harness\\shots\\projects-390x844-full.png"
     },
     "pipeline": {
      "overflow": {
@@ -486,7 +560,7 @@
       "clipped_offenders": 0
      },
      "vocab": {
-      "checked": 0,
+      "checked": 9,
       "unknown": [],
       "labels_wrong": []
      },
@@ -503,17 +577,28 @@
        "245,158,11",
        "255,77,46"
       ],
-      "checked": 416,
+      "checked": 9047,
       "unparsed": 0,
       "offenders": [],
       "n_offenders": 0
      },
      "text": {
-      "checked": 417,
+      "checked": 11094,
       "hits": []
      },
-     "placeholder": true,
-     "status_words": []
+     "placeholder": false,
+     "status_words": [
+      "rq:finished",
+      "rq:failed",
+      "rq:queued",
+      "rq:deferred",
+      "meta:finished",
+      "meta:failed",
+      "meta:running",
+      "meta:waiting_for_gpu",
+      "meta:queued"
+     ],
+     "full_page": "C:\\Users\\shedm\\aces-wt-uipolish\\src\\aces-console\\tests\\harness\\shots\\pipeline-390x844-full.png"
     },
     "solvers": {
      "overflow": {
@@ -524,7 +609,7 @@
       "clipped_offenders": 0
      },
      "vocab": {
-      "checked": 0,
+      "checked": 28,
       "unknown": [],
       "labels_wrong": []
      },
@@ -541,17 +626,22 @@
        "245,158,11",
        "255,77,46"
       ],
-      "checked": 416,
+      "checked": 5752,
       "unparsed": 0,
       "offenders": [],
       "n_offenders": 0
      },
      "text": {
-      "checked": 426,
+      "checked": 7841,
       "hits": []
      },
-     "placeholder": true,
-     "status_words": []
+     "placeholder": false,
+     "status_words": [
+      "registry:pass",
+      "registry:not recorded",
+      "registry:fail"
+     ],
+     "full_page": "C:\\Users\\shedm\\aces-wt-uipolish\\src\\aces-console\\tests\\harness\\shots\\solvers-390x844-full.png"
     },
     "objects": {
      "overflow": {
@@ -579,17 +669,18 @@
        "245,158,11",
        "255,77,46"
       ],
-      "checked": 416,
+      "checked": 1314,
       "unparsed": 0,
       "offenders": [],
       "n_offenders": 0
      },
      "text": {
-      "checked": 450,
+      "checked": 1825,
       "hits": []
      },
-     "placeholder": true,
-     "status_words": []
+     "placeholder": false,
+     "status_words": [],
+     "full_page": "C:\\Users\\shedm\\aces-wt-uipolish\\src\\aces-console\\tests\\harness\\shots\\objects-390x844-full.png"
     },
     "evidence": {
      "overflow": {
@@ -600,7 +691,7 @@
       "clipped_offenders": 0
      },
      "vocab": {
-      "checked": 0,
+      "checked": 19,
       "unknown": [],
       "labels_wrong": []
      },
@@ -617,21 +708,26 @@
        "245,158,11",
        "255,77,46"
       ],
-      "checked": 416,
+      "checked": 8127,
       "unparsed": 0,
       "offenders": [],
       "n_offenders": 0
      },
      "text": {
-      "checked": 460,
+      "checked": 17174,
       "hits": []
      },
-     "placeholder": true,
-     "status_words": [],
+     "placeholder": false,
+     "status_words": [
+      "run:done",
+      "run:running",
+      "run:error"
+     ],
      "grade_sentence": {
-      "present": false,
-      "note": "not checked: the Evidence plate is Builder D's placeholder"
-     }
+      "present": true,
+      "note": null
+     },
+     "full_page": "C:\\Users\\shedm\\aces-wt-uipolish\\src\\aces-console\\tests\\harness\\shots\\evidence-390x844-full.png"
     },
     "ops": {
      "overflow": {
@@ -659,20 +755,60 @@
        "245,158,11",
        "255,77,46"
       ],
-      "checked": 2917,
+      "checked": 2943,
       "unparsed": 0,
       "offenders": [],
       "n_offenders": 0
      },
      "text": {
-      "checked": 8499,
+      "checked": 7891,
       "hits": []
      },
      "placeholder": false,
-     "status_words": []
+     "status_words": [],
+     "full_page": "C:\\Users\\shedm\\aces-wt-uipolish\\src\\aces-console\\tests\\harness\\shots\\ops-390x844-full.png"
     },
-    "projects:cad-gold": {
-     "project": "cad-gold",
+    "plan": {
+     "overflow": {
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "ok": true,
+      "offenders": [],
+      "clipped_offenders": 0
+     },
+     "vocab": {
+      "checked": 0,
+      "unknown": [],
+      "labels_wrong": []
+     },
+     "colours": {
+      "tokens": [
+       "6,18,37",
+       "10,20,40",
+       "13,26,51",
+       "18,34,64",
+       "219,231,243",
+       "169,187,208",
+       "125,144,168",
+       "34,211,238",
+       "245,158,11",
+       "255,77,46"
+      ],
+      "checked": 766,
+      "unparsed": 0,
+      "offenders": [],
+      "n_offenders": 0
+     },
+     "text": {
+      "checked": 1009,
+      "hits": []
+     },
+     "placeholder": false,
+     "status_words": [],
+     "full_page": "C:\\Users\\shedm\\aces-wt-uipolish\\src\\aces-console\\tests\\harness\\shots\\plan-390x844-full.png"
+    },
+    "projects:golden-demo": {
+     "project": "golden-demo",
      "overflow": {
       "scrollWidth": 390,
       "innerWidth": 390,
@@ -698,13 +834,13 @@
        "245,158,11",
        "255,77,46"
       ],
-      "checked": 1914,
+      "checked": 2204,
       "unparsed": 0,
       "offenders": [],
       "n_offenders": 0
      },
      "text": {
-      "checked": 2351,
+      "checked": 2394,
       "hits": []
      },
      "status_words": [
@@ -713,7 +849,8 @@
      "grade_sentence": {
       "present": true,
       "note": "the Projects plate prints the sentence under its golden-runs table"
-     }
+     },
+     "full_page": "C:\\Users\\shedm\\aces-wt-uipolish\\src\\aces-console\\tests\\harness\\shots\\projects-golden-demo-390x844-full.png"
     }
    },
    "tabs": {
@@ -751,6 +888,11 @@
      {
       "focused": "ops",
       "selected": "ops",
+      "panel_visible": true
+     },
+     {
+      "focused": "plan",
+      "selected": "plan",
       "panel_visible": true
      }
     ],
@@ -759,17 +901,17 @@
    "stamp": "MODE SIM-LAB-4\nLIVE\nFIXTURE 2026-10-11",
    "fixture_stamped": true,
    "stream_state": "MODE SIM-LAB-4\nLIVE\nFIXTURE 2026-10-11",
-   "screenshot": "tests/harness/shots\\fabric-390x844.png"
+   "screenshot": "C:\\Users\\shedm\\aces-wt-uipolish\\src\\aces-console\\tests\\harness\\shots\\fabric-390x844.png"
   }
  ],
- "browser": "chromium 151.0.7922.34",
+ "browser": "chromium 156.0.8078.4",
  "polling_fallback": {
-  "url": "http://127.0.0.1:49956",
-  "stamp": "MODE SIM-LAB-4 \u00b7 DETECTED TRANSITION \u00b7 MANIFEST 17.1 H STALE \u00b7 POLLING \u00b7 FIXTURE 2026-10-11",
+  "url": "http://127.0.0.1:57804",
+  "stamp": "MODE SIM-LAB-4 \u00b7 DETECTED TRANSITION \u00b7 MANIFEST 12.0 H STALE \u00b7 POLLING \u00b7 FIXTURE 2026-10-11",
   "polling": true,
   "mode_rendered": true,
   "page_errors": [],
-  "title_says": "GRID CONTROL reports mode sim-lab-4 \u00b7 detected_mode transition \u00b7 fabric manifest C:\\Users\\shedm\\AppData\\Local\\Temp\\claude\\C--Users-shedm\\3c52762a-0b3b-4f55-9f39-96d315f13241\\scratchpad\\vm-work\\.config\\aces\\fabric.json \u00b7 event stream polling (stream refused by the server; polling the API at its TTLs) \u00b7 replaying captured fixtures; nothing here is live"
+  "title_says": "GRID CONTROL reports mode sim-lab-4 \u00b7 detected_mode transition \u00b7 fabric manifest C:\\Users\\shedm\\.config\\aces\\fabric.json \u00b7 event stream polling (stream refused by the server; polling the API at its TTLs) \u00b7 replaying captured fixtures; nothing here is live"
  },
  "fixture": "FIXTURE 2026-10-11"
 }
