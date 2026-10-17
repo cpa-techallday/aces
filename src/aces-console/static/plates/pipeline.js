@@ -339,7 +339,7 @@ function renderFoot() {
   const agel = (label, name) => { const r = R.res[name]; const a = r && r.meta && r.meta.fetched_utc ? format.age(r.meta.fetched_utc) : null; items.push(`${label} ${a === null ? (r && r.ok === false ? "unavailable" : "age not reported") : format.ago(a)}`); };
   agel("summary", "summary"); agel("experiments", "experiments");
   const w = R.whoami;
-  if (w) items.push(`simlab-mcp principal ${w.principal || "not reported"} · policy ${w.policy || "not reported"} · ${Array.isArray(w.tools) ? w.tools.length + " tools" : "tools not reported"} · submit, sweep and cancel from this console are deferred (spec 1)`);
+  if (w) items.push(`simlab-mcp principal ${w.principal || "not reported"} · policy ${w.policy || "not reported"} · ${Array.isArray(w.tools) ? w.tools.length + " tools" : "tools not reported"} · sweep and cancel from this console are deferred (spec 1); the Plan plate launches a stage via sim_submit`);
   else if (R.res.whoami) items.push(`simlab-mcp whoami: ${(R.res.whoami.meta && R.res.whoami.meta.error) || R.res.whoami.error || "not reported"}`);
   clear(R.b.foot); R.b.foot.append(dom.facts(items));
 }

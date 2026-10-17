@@ -526,7 +526,8 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/plan/status":
             return local_envelope({"planner": {"available": False, "mode": None,
                                                "detail": "the fixture devserver has no planner (the real backend answers planner-unavailable the same way when neither aces_engineering.playbooks.plan nor the aces golden plan CLI exists)"},
-                                   "launch": {"available": False, "reason": "job submit is deferred in this console (spec 1)"},
+                                   "launch": {"available": False, "mode": "simlab-mcp sim_submit",
+                                              "detail": "fixture devserver: a launch would submit to the rig; the real backend submits the plan's first runnable stage (sim_put_spec, sim_validate, sim_submit)"},
                                    "plans_stored": 0, "storage": "in memory; a console restart forgets them"},
                                   "console (fixture)", 30)
         if path == "/api/rig/status":

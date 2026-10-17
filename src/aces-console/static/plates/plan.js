@@ -3,8 +3,10 @@
 // or the `aces golden plan` CLI behind POST /api/plan) answers the plan: class chip and confidence, the ordered stage
 // cards with their solvers, gates and blocked gaps, and the spec sheet whose every edit re-validates against the
 // playbook targets live. When the planner is not importable the plate says so in words and keeps the composer usable;
-// it never fabricates a plan. Launch is disabled while this console has no job-submit path (spec 1 defers submit) and
-// the button says why. During a run the stage cards follow the golden.runs stamps for a run that names this plan_id.
+// it never fabricates a plan. Launch submits the plan's first runnable stage through simlab-mcp
+// (sim_put_spec → sim_validate → sim_submit, vram_gb 0 / cpu queue); blocked, solver-less, GPU-lane and
+// later stages each report their structured reason. During a run the stage cards follow the golden.runs
+// stamps for a run that names this plan_id.
 // Bindings: GET /api/plan/status, POST /api/plan, GET /api/plan/{id}, POST /api/plan/{id}/launch, /api/golden/runs;
 // stamp golden.runs (notice). Deep link ?plate=plan&plan=<id>.
 const PATHS = {
@@ -20,7 +22,7 @@ export async function mount(root, ctx) {
   const { el, block } = ctx.dom;
   R = {
     ctx, root, dead: false, busy: false,
-    status: null, statusRes: null, plan: null, planRes: null, runs: null, runsRes: null,
+    status: null, statusRes: null, plan: null, planRes: null, runs: null, runsRes: null, launchRes: null,
     attachments: [], briefText: "",
     b: {
       composer: el("div"), plan: el("div"), stages: el("div"), spec: el("div"), run: el("div"),
@@ -60,6 +62,7 @@ async function loadPlan(id) {
   if (!R || R.dead) return;
   R.planRes = r;
   R.plan = r.ok ? r.data : null;
+  R.launchRes = null;
   if (R.plan) history.replaceState(null, "", `?plate=plan&plan=${encodeURIComponent(R.plan.plan_id)}`);
   renderPlan(); renderStages(); renderSpec(); renderRun(); renderFoot();
 }
@@ -83,6 +86,7 @@ async function submitBrief() {
   R.busy = false;
   R.planRes = r;
   R.plan = r.ok ? r.data : null;
+  R.launchRes = null;
   if (R.plan) {
     const u = new URL(location.href); u.searchParams.set("plate", "plan"); u.searchParams.set("plan", R.plan.plan_id);
     history.replaceState(null, "", u);
@@ -326,19 +330,46 @@ function renderSpec() {
 }
 
 // ---------- run: the launch action (disabled with its reason) and stage progress ----------
+async function doLaunch() {
+  if (R.busy || !R.plan) return;
+  R.busy = true; renderRun();
+  const r = await R.ctx.api.post(PATHS.launch(R.plan.plan_id), {});
+  if (!R || R.dead) return;
+  R.busy = false;
+  R.launchRes = r;
+  renderRun(); renderFoot();
+}
+
 function renderRun() {
   const { dom } = R.ctx; const { el, clear, note, button } = dom;
   const box = R.b.run; clear(box);
   const p = R.plan;
-  const launch = R.status && R.status.launch ? R.status.launch : { available: false, reason: "launch capability not reported by this backend" };
+  const launch = R.status && R.status.launch ? R.status.launch : { available: false, detail: "launch capability not reported by this backend" };
   const nBlocked = p ? (Array.isArray(p.stages) ? p.stages : []).filter((s) => s.blocked).length : 0;
+  const launchable = !!(p && launch.available);
   const why = !p ? "generate a plan first"
-    : nBlocked ? `${nBlocked} stage${nBlocked === 1 ? " is" : "s are"} blocked: the missing solver${nBlocked === 1 ? "" : "s"} must land first`
-    : launch.reason;
-  box.append(el("div.actrow", [
-    button("Launch", { cls: "btn primary", disabled: true, id: "plan-launch", title: why }),
-    el("span.why", { text: why }),
-  ]));
+    : !launch.available ? (launch.detail || launch.reason || "launch not configured on this console")
+    : (nBlocked ? `${nBlocked} blocked stage${nBlocked === 1 ? "" : "s"} will be skipped; ` : "") + (launch.detail || "submits the first runnable stage via simlab-mcp");
+  const btn = button(R.busy ? "Launching…" : "Launch", { cls: "btn primary", disabled: !launchable || R.busy, id: "plan-launch", title: why });
+  if (launchable && !R.busy) btn.addEventListener("click", doLaunch);
+  box.append(el("div.actrow", [btn, el("span.why", { text: why })]));
+  if (R.launchRes) {
+    const r = R.launchRes;
+    if (!r.ok) {
+      box.append(dom.absence(r, "launch") || el("div.prose.dim", { text: `launch refused: ${r.error || "no detail"}` }));
+    } else {
+      const d = r.data || {};
+      const lines = (Array.isArray(d.stages) ? d.stages : []).map((s) => el("div.line", [
+        el("span.k", { text: `${s.id}${s.solver ? ` · ${s.solver}` : ""}` }),
+        el("b", { text: s.launched ? `queued: ${s.experiment || "?"} (${(s.jobs || []).length} job${(s.jobs || []).length === 1 ? "" : "s"})` : (s.reason || s.code || "not launched") }),
+      ]));
+      box.append(el("div", [
+        el("div.line", [el("span.k", { text: "launch" }), el("b", { text: d.launched ? "submitted to the rig" : "nothing submitted" })]),
+        ...lines,
+        d.note ? el("div.prose.dim", { text: d.note }) : "",
+      ]));
+    }
+  }
   if (!p) return;
   const rows = R.runs ? (Array.isArray(R.runs.runs) ? R.runs.runs : (Array.isArray(R.runs) ? R.runs : [])) : [];
   const linked = rows.filter((r) => r && r.plan_id === p.plan_id);

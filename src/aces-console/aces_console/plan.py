@@ -3,18 +3,25 @@
     GET  /api/plan/status            planner availability and how it would be reached, plus the launch capability
     POST /api/plan                   {brief, attachments?} -> the planner's plan JSON, normalised, stored, returned
     GET  /api/plan/{plan_id}         a stored plan; 404 when this server has never seen the id
-    POST /api/plan/{plan_id}/launch  an honest refusal while the console has no job-submit path (spec 1 defers submit)
+    POST /api/plan/{plan_id}/launch  submit the plan's first runnable stage to the rig via simlab-mcp
+                                     (sim_put_spec -> sim_validate -> sim_submit); every other stage answers a
+                                     structured reason (blocked, no solver, GPU lane, deferred)
 
 The planner is aces_engineering.playbooks.plan.plan_from_brief (a sibling package that may not be installed in this
 environment; a source tree is found beside this package). When the module is not importable the fallback is the CLI
 `aces golden plan --json`; when neither exists the answer is 503 planner-unavailable, never an exception and never a
 fabricated plan. Plans are kept in this server's memory only (a restart forgets them; the GET says so honestly).
 
-Subprocess output and planner exceptions are scrubbed of any configured token value (secrets.scrub, via run_capped).
+Launch honesty: a stage is submitted only when its solver is registered on the rig, the rig accepts the derived
+spec at sim_validate, and sim_submit answers with real job ids; any failure (network, validation, queue) is
+returned as the stage's reason, never hidden. CPU-lane stages are submitted with vram_gb 0 (the simlab cpu queue);
+a stage whose solver occupies the GPU lane is refused rather than submitted without a VRAM sizing. Subprocess
+output and planner exceptions are scrubbed of any configured token value (secrets.scrub, via run_capped).
 """
 from __future__ import annotations
 
 import json
+import re
 import sys
 import threading
 import time
@@ -22,7 +29,7 @@ from pathlib import Path
 from secrets import token_hex
 from typing import Any, Callable
 
-from . import secrets as tokens, server
+from . import secrets as tokens, server, sim
 from .server import Request, Response, error, ok
 from .system import aces_command, run_capped
 
@@ -31,8 +38,8 @@ ATTACH_MAX = 32
 ATTACH_REF_MAX = 300
 PLAN_TIMEOUT_S = 120.0
 PLAN_STORE_CAP = 100
-LAUNCH_REFUSAL = ("job submit is deferred in this console (spec 1): the console has no submit path to the queue, "
-                  "so a plan cannot be launched from here; run the plan from the CLI (aces golden run) instead")
+LAUNCH_NOTE = ("the first runnable stage is submitted through simlab-mcp (sim_put_spec, sim_validate, sim_submit) "
+               "with vram_gb 0 (cpu queue); later stages answer deferred — gates between stages are not wired")
 
 
 class PlanState:
@@ -225,7 +232,8 @@ def h_status(req: Request) -> Response:
     with st.lock:
         n = len(st.plans)
     return ok({"planner": {"available": available, "mode": mode, "detail": detail},
-               "launch": {"available": False, "reason": LAUNCH_REFUSAL},
+               "launch": {"available": bool(sim.mcp_url(app)), "mode": "simlab-mcp sim_submit",
+                          "detail": LAUNCH_NOTE if sim.mcp_url(app) else "not configured: server.simlab_mcp is unset"},
                "plans_stored": n, "storage": "in memory; a console restart forgets them"},
               source="console")
 
@@ -274,16 +282,121 @@ def h_get(req: Request) -> Response:
     return ok(plan, source="console")
 
 
+_EXP_ID_BAD = re.compile(r"[^A-Za-z0-9._-]")
+
+
+def _exp_id(plan_id: str, stage_id: str) -> str:
+    """A simlab-name-safe experiment id joining plan and stage (128 chars max, like aces.simlab.ID_RE)."""
+    raw = _EXP_ID_BAD.sub("-", f"{plan_id}-{stage_id}").strip("-.") or "plan-stage"
+    return raw[:128]
+
+
+def _registry_rows(result: Any) -> dict[str, dict[str, Any]]:
+    """The solver registry as {name: row}, tolerating the {name: row} mapping and a list of named rows."""
+    if isinstance(result, dict):
+        rows = result.get("solvers") if isinstance(result.get("solvers"), (dict, list)) else result
+    else:
+        rows = result
+    if isinstance(rows, dict):
+        return {str(k): v for k, v in rows.items() if isinstance(v, dict)}
+    if isinstance(rows, list):
+        return {str(r.get("name")): r for r in rows if isinstance(r, dict) and r.get("name")}
+    return {}
+
+
+def _solver_is_gpu_lane(row: dict[str, Any]) -> bool:
+    """True when the registry row puts any stage on the GPU (sim) queue, or names the sim queue outright."""
+    stages = row.get("stages")
+    if isinstance(stages, dict) and any(str(v) == "sim" for v in stages.values()):
+        return True
+    return str(row.get("queue") or "") == "sim"
+
+
+def _stage_outcome(stage: dict[str, Any], launched: bool, code: str, reason: str, **extra: Any) -> dict[str, Any]:
+    return {"id": stage["id"], "name": stage["name"], "solver": stage.get("solver"),
+            "launched": launched, "code": code, "reason": reason, **extra}
+
+
+def _submit_stage(app: server.App, plan: dict[str, Any], stage: dict[str, Any],
+                  rows: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """One real launch attempt: registry check, spec put, validate, submit. Never raises; every failure is the
+    stage's reason. The spec body is JSON (valid YAML) so the console needs no YAML writer."""
+    solver = stage.get("solver")
+    row = rows.get(str(solver))
+    if row is None:
+        return _stage_outcome(stage, False, "solver-unregistered",
+                              f"solver {solver!r} is not in the rig registry (sim_list_solvers); nothing submitted")
+    if _solver_is_gpu_lane(row):
+        return _stage_outcome(stage, False, "gpu-lane-unsized",
+                              f"solver {solver!r} runs on the GPU lane; the console launch does not size VRAM "
+                              "(declare vram_gb from the CLI instead); nothing submitted")
+    physics = row.get("physics")
+    physics = str(physics[0] if isinstance(physics, list) and physics else physics or "") or "unknown"
+    exp_id = _exp_id(plan["plan_id"], stage["id"])
+    spec = {"id": exp_id, "project": "aces-console", "owner": "aces-console", "physics": physics,
+            "solver": str(solver),
+            "description": str(stage.get("purpose") or f"plan {plan['plan_id']} stage {stage['id']}"),
+            "params": stage.get("params") or {}, "outputs": stage.get("evidence") or [],
+            "resources": {"precision": "float64", "vram_gb": 0.0},
+            "tags": {"origin": "aces-console", "plan_id": plan["plan_id"], "stage_id": stage["id"]}}
+    ok_, result, err, _info = sim.mcp_call(app, "sim_put_spec",
+                                           {"content": json.dumps(spec, indent=2), "name": exp_id + ".yaml"})
+    if not ok_:
+        return _stage_outcome(stage, False, "put-spec-failed", err or "sim_put_spec failed")
+    spec_path = result.get("spec_path") if isinstance(result, dict) else None
+    if not spec_path:
+        return _stage_outcome(stage, False, "put-spec-failed",
+                              f"sim_put_spec answered without a spec_path: {str(result)[:200]}")
+    warnings = [str(w) for w in (result.get("warnings") or [])] if isinstance(result, dict) else []
+    ok_, result, err, _info = sim.mcp_call(app, "sim_validate", {"spec_path": spec_path})
+    if not ok_:
+        return _stage_outcome(stage, False, "validate-failed",
+                              f"the rig refused the derived spec: {err or 'sim_validate failed'}", spec_path=spec_path)
+    ok_, result, err, _info = sim.mcp_call(app, "sim_submit", {"spec_path": spec_path, "docker": True})
+    if not ok_:
+        return _stage_outcome(stage, False, "submit-failed", err or "sim_submit failed", spec_path=spec_path)
+    res = result if isinstance(result, dict) else {}
+    return _stage_outcome(stage, True, "submitted",
+                          f"queued on the rig as {res.get('experiment') or exp_id}", spec_path=spec_path,
+                          experiment=res.get("experiment"), queue=res.get("queue"), jobs=res.get("jobs"),
+                          n_cases=res.get("n_cases"), warnings=warnings)
+
+
 def h_launch(req: Request) -> Response:
     if req.app.fixture:
         return error(503, "fixture mode: a launch would submit to the rig", "fixture")
     st = _state(req.app)
     plan_id = req.params.get("plan_id", "")
     with st.lock:
-        known = plan_id in st.plans
-    if not known:
+        plan = st.plans.get(plan_id)
+    if plan is None:
         return error(404, f"no plan {plan_id} on this console", "not-found", source="console")
-    return error(503, LAUNCH_REFUSAL, "launch-unavailable", source="console")
+    if not sim.mcp_url(req.app):
+        return error(503, "not configured: server.simlab_mcp is unset", "launch-unavailable", source="console")
+    stages = [_stage_outcome(s, False, "stage-blocked", f"blocked: {s['gap'] or 'no gap recorded'}")
+              if s["blocked"] else
+              _stage_outcome(s, False, "no-solver", "the stage names no solver; nothing to submit")
+              if not s.get("solver") else None
+              for s in plan["stages"]]
+    runnable = [s for s, o in zip(plan["stages"], stages) if o is None]
+    if not runnable:
+        return ok({"plan_id": plan_id, "launched": None, "stages": [o for o in stages if o],
+                   "note": "no runnable stage: every stage is blocked or names no solver"}, source="console")
+    ok_, result, err, _info = sim.mcp_call(req.app, "sim_list_solvers")
+    if not ok_:
+        return error(503, f"launch needs the rig solver registry: {err}", "launch-unavailable", source="simlab-mcp")
+    rows = _registry_rows(result)
+    first, rest = runnable[0], runnable[1:]
+    launched = _submit_stage(req.app, plan, first, rows)
+    deferred = [_stage_outcome(s, False, "deferred",
+                               "one stage per launch; re-launch once this stage's gate is met"
+                               if launched["launched"] else "behind the first runnable stage, which did not submit")
+                for s in rest]
+    by_id = {o["id"]: o for o in [launched, *deferred]}
+    outcomes = [by_id.get(s["id"]) or o for s, o in zip(plan["stages"], stages)]
+    return ok({"plan_id": plan_id, "launched": launched if launched["launched"] else None,
+               "stages": outcomes, "note": LAUNCH_NOTE},
+              source="simlab-mcp" if launched["launched"] else "console")
 
 
 def install(register) -> None:
