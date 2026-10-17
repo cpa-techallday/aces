@@ -60,6 +60,18 @@ def test_em_campaign_bad_structure(tmp_path, capsys):
     assert "unknown structure" in capsys.readouterr().out
 
 
+def test_em_campaign_cpu_lane_zero_vram(tmp_path):
+    """conformal-antenna SF-2: aces-tile-em (gprMax) is CPU/OpenMP — the emitted spec must
+    declare vram_gb 0 (simlab cpu queue) and carry the host-RAM request in params, never as VRAM."""
+    out = tmp_path / "exp.yaml"
+    ns = _parse(["em-campaign", "--id", "emcpu", "--structure", "tile_coupon",
+                 "--mem-gb", "6", "--out", str(out)])
+    assert ns.fn(ns) == 0
+    exp = yaml.safe_load(out.read_text(encoding="utf-8"))
+    assert exp["resources"]["vram_gb"] == 0.0
+    assert exp["params"]["mem_gb"] == 6
+
+
 def test_em_campaign_refuses_existing_out(tmp_path):
     out = tmp_path / "exp.yaml"
     out.write_text("x", encoding="utf-8")

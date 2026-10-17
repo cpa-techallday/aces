@@ -46,8 +46,9 @@ def experiment(
     geometry_units: str = "m",
     aces_record: str | None = None,
 ) -> dict[str, Any]:
-    if not 0 < vram_gb <= MAX_VRAM_GB:
-        raise ValueError(f"vram_gb must be in (0, {MAX_VRAM_GB}], got {vram_gb}")
+    if not 0 <= vram_gb <= MAX_VRAM_GB:
+        raise ValueError(f"vram_gb must be in [0, {MAX_VRAM_GB}], got {vram_gb} "
+                         "(0 declares a CPU-only case: it runs on the simlab cpu queue, no GPU lease)")
     if precision not in ("float64", "float32"):
         raise ValueError(f"precision must be float64 or float32, got {precision!r}")
     exp: dict[str, Any] = {

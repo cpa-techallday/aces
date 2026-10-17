@@ -918,19 +918,21 @@ def cmd_em_campaign(args) -> int:
         expected = "measurement.json rows (tile_insertion_loss_db) per case."
         outputs = ["loss_per_m_db", "er_eff_model", "resonance_hz"]
         kind = "calibration"
+    # conformal-antenna SF-2: aces-tile-em (gprMax 4.x) is CPU/OpenMP — vram_gb MUST be 0 so the
+    # case takes the simlab cpu queue; a nonzero value GPU-queues it and it deadlocks on a lease.
+    # The host-RAM request is recorded in params for the worker, not as VRAM.
     exp = simlab.experiment(
         exp_id=args.id, project=args.project, owner=args.owner, rd_activity=args.rd_activity,
         physics="em", solver="aces-tile-em", description=desc, hypothesis=hyp,
-        expected=expected, geometry_ref=None, params=params, outputs=outputs,
-        vram_gb=args.mem_gb,  # gprMax 4.x is CPU/OpenMP: this is host RAM, not VRAM
-        sweep=sweep, system="hx", kind=kind)
+        expected=expected, geometry_ref=None, params={**params, "mem_gb": args.mem_gb},
+        outputs=outputs, vram_gb=0.0, sweep=sweep, system="hx", kind=kind)
     exp["geometry"] = {"source": "parametric",
                        "note": "structures generate their own geometry; kicad_* cases take pcb/net"}
     simlab.write(exp, out)
     n_cases = 1
     for vls in sweep.values():
         n_cases *= len(vls)
-    print(f"Wrote {out}: {n_cases} case(s), {exp['resources']['vram_gb']} GB RAM each. "
+    print(f"Wrote {out}: {n_cases} case(s), cpu queue (vram_gb 0), {args.mem_gb} GB host RAM each. "
           f"Run `simlab validate` on the rig before submitting.")
     return 0
 
@@ -1113,7 +1115,7 @@ def build_parser() -> argparse.ArgumentParser:
                    help="time window, s (tile_coupon ring-down needs ~75 ns at these Qs)")
     s.add_argument("--timeout", type=int, default=2400, help="per-run wall clock, seconds")
     s.add_argument("--mem-gb", type=float, default=4.0,
-                   help="host RAM per case, GB (gprMax 4.x is CPU/OpenMP; recorded as the resource)")
+                   help="host RAM per case, GB (gprMax 4.x is CPU/OpenMP; recorded in params, vram_gb stays 0)")
     s.add_argument("--validation", action="store_true",
                    help="the documented verification suite (patch/coupon/multiport/wr90) instead")
     s.add_argument("--project", default="ACES-radar-calibration")
