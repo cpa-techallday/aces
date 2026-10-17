@@ -75,6 +75,15 @@ def test_simlab_export_rules():
         simlab.experiment(vram_gb=61, **common)
 
 
+def test_simlab_export_allows_cpu_lane_zero_vram():
+    """gyroid SF-9 / antenna SF-2: CPU-only solvers declare vram_gb 0 and must not be refused
+    or GPU-queued (simlab queue routes vram_gb > 0 to the GPU queue)."""
+    exp = simlab.experiment(vram_gb=0, **SIMLAB_COMMON)
+    assert exp["resources"]["vram_gb"] == 0
+    with pytest.raises(ValueError):
+        simlab.experiment(vram_gb=-1, **SIMLAB_COMMON)
+
+
 def test_verification_refuses_float32():
     """Rule 6 / audit L7: FP32 Jacobi-PCG falsely converges, so a verification solve is FP64."""
     with pytest.raises(ValueError, match="float64"):

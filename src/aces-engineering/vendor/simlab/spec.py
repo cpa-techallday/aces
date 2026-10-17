@@ -17,7 +17,9 @@ class Geometry(BaseModel):
 
 
 class Resources(BaseModel):
-    vram_gb: float = 8.0
+    # 0 = CPU-only: the case goes to the `cpu` queue (queue.py: needs_gpu = vram_gb > 0).
+    # A nonzero default here silently GPU-queued CPU jobs (gyroid SF-9, conformal-antenna SF-2).
+    vram_gb: float = 0.0
     cpu_threads: int = 8
     wall_h: float = 2.0
     precision: str = "float64"        # float64 on the rig, float32 on the workstation

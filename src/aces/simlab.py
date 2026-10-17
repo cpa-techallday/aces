@@ -9,7 +9,8 @@ before ``sim_submit``.
 House rules carried over from simlab:
   - precision defaults to float64 (FP32 PCG falsely converges on stiff problems), and a
     ``verification`` experiment refuses float32 (rule 6);
-  - every case declares ``vram_gb`` and anything over 60 GB is refused;
+  - every case declares ``vram_gb`` (0 = CPU-only, runs on the simlab ``cpu`` queue) and
+    anything over 60 GB is refused;
   - simlab's company vocabulary uses ``carbon`` for Carbon Project Australia;
   - the project, solver and experiment id become simlab names and file names, so they are
     plain names (``[A-Za-z0-9._-]``), never paths (audit L2);
@@ -63,8 +64,9 @@ def experiment(
     geometry_units: str = "m",
     aces_record: str | None = None,
 ) -> dict[str, Any]:
-    if not 0 < vram_gb <= MAX_VRAM_GB:
-        raise ValueError(f"vram_gb must be in (0, {MAX_VRAM_GB}], got {vram_gb}")
+    if not 0 <= vram_gb <= MAX_VRAM_GB:
+        raise ValueError(f"vram_gb must be in [0, {MAX_VRAM_GB}], got {vram_gb} "
+                         "(0 declares a CPU-only case: it runs on the simlab cpu queue, no GPU lease)")
     if precision not in ("float64", "float32"):
         raise ValueError(f"precision must be float64 or float32, got {precision!r}")
     if kind == "verification" and precision != "float64":
