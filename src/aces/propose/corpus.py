@@ -14,15 +14,26 @@ from typing import Any
 from ..domains.hx import calibrate as hxcal
 
 
-def build_corpus(measurements_path: str | Path, *, boundary: str = "uniform_heat_flux") -> list[dict[str, Any]]:
+def build_corpus(
+    measurements_path: str | Path, *, boundary: str | None = None
+) -> tuple[list[dict[str, Any]], list[str]]:
+    measurements = hxcal.load(measurements_path)
+    hxcal.thermal_boundary(measurements, boundary)
     rows: list[dict[str, Any]] = []
     skipped: list[str] = []
-    for m in hxcal.load(measurements_path):
+    for m in measurements:
         if not m.source:
             skipped.append(getattr(m, "source", None) or "(no source)")
             continue
+        if not m.evidence_sha256:
+            skipped.append(f"{m.source}: no evidence_sha256; not citable")
+            continue
+        row_boundary, no_boundary = hxcal.thermal_boundary([m], boundary)
+        if m.h_W_m2K is not None and row_boundary is None:
+            skipped.append(f"{m.source}: {no_boundary}")
+            continue
         try:
-            p = hxcal.reduce(m, boundary)
+            p = hxcal.reduce(m, row_boundary or "uniform_wall_temperature")
         except Exception as e:
             skipped.append(f"{m.source}: {e}")
             continue
@@ -34,10 +45,12 @@ def build_corpus(measurements_path: str | Path, *, boundary: str = "uniform_heat
             "fluid": m.fluid,
             "T_K": m.T_K,
             "p_Pa": m.p_Pa,
+            "mass_flux_kg_m2s": m.mass_flux_kg_m2s,
             "reynolds": p.re,
             "dpdx_Pa_m": m.dpdx_Pa_m,
             "h_W_m2K": m.h_W_m2K,
-            "thermal_boundary": boundary,
+            "thermal_boundary": row_boundary,
+            "evidence_sha256": m.evidence_sha256,
             "source": m.source,
             "licence": "internal-verified",
         })

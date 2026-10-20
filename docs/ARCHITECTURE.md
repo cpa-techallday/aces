@@ -160,7 +160,8 @@ is 22 % stiffer in torsion, for 5 kg more lattice.
    three. It takes the thermal boundary from the rows (CFD rows are H1, `uniform_heat_flux`) and refuses mixed
    or contradicted boundaries. It averages repeats of one operating condition first and needs 3 distinct
    conditions. It leaves out points where the baseline is not valid (the
-   2300–3000 transition). When the sample standard deviation of log(ratio) exceeds 0.15 it tries a power law in
-   Re, then an inertial-onset form, and refuses if neither fits.
+   2300–3000 transition). If constant-factor scatter exceeds 0.15, it tries a power law in Re, then an
+   inertial-onset form, and refuses if neither fits. If the constant is within the limit, a Re-dependent form is
+   selected only when it also fits within the limit and improves the small-sample-corrected AIC by at least 2.
 4. The next design run is calibrated. Factors used outside their fitted range raise warnings.
 5. Rig test results enter the same registry with test ids as sources.

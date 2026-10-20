@@ -89,10 +89,12 @@ def test_corpus_rows_carry_provenance(tmp_path):
         "source": "simlab:aces-cal-air-01:c000", "tpms": "gyroid", "cell_m": 0.004,
         "wall_ratio": 0.08, "fluid": "Air", "T_K": 320.0, "p_Pa": 200000.0,
         "mass_flux_kg_m2s": 0.0366, "dpdx_Pa_m": 20.39, "h_W_m2K": 76.57,
+        "boundary": "uniform_heat_flux", "evidence_sha256": "a" * 64,
     }, {
         "source": "simlab:aces-cal-air-01:c001", "tpms": "gyroid", "cell_m": 0.004,
         "wall_ratio": 0.08, "fluid": "Air", "T_K": 320.0, "p_Pa": 200000.0,
         "mass_flux_kg_m2s": 0.11, "dpdx_Pa_m": 81.93, "h_W_m2K": 79.84,
+        "boundary": "uniform_heat_flux", "evidence_sha256": "b" * 64,
     }]
     mp = tmp_path / "m.json"
     mp.write_text(json.dumps(rows))
@@ -111,9 +113,46 @@ def test_corpus_rows_carry_provenance(tmp_path):
     assert r["source"] == "simlab:aces-cal-air-01:c000"
     assert r["licence"] == "internal-verified"
     assert r["reynolds"] > 0
+    assert r["mass_flux_kg_m2s"] == rows[0]["mass_flux_kg_m2s"]
+    assert r["thermal_boundary"] == rows[0]["boundary"]
+    assert r["evidence_sha256"] == rows[0]["evidence_sha256"]
     out = tmp_path / "corpus.jsonl"
     corpus_mod.write_jsonl(built, out)
     assert len(out.read_text().strip().splitlines()) == 2
+
+
+def test_corpus_uses_row_boundaries_and_refuses_mixed_boundaries(tmp_path, capsys):
+    rows = [{
+        "source": "simlab:exp:c000", "tpms": "gyroid", "cell_m": 0.004, "wall_ratio": 0.08, "fluid": "Air",
+        "T_K": 320.0, "p_Pa": 200000.0, "mass_flux_kg_m2s": 0.0366, "dpdx_Pa_m": 20.39,
+        "h_W_m2K": 76.57, "boundary": "uniform_heat_flux", "evidence_sha256": "a" * 64,
+    }, {
+        "source": "simlab:exp:c001", "tpms": "gyroid", "cell_m": 0.004, "wall_ratio": 0.08, "fluid": "Air",
+        "T_K": 320.0, "p_Pa": 200000.0, "mass_flux_kg_m2s": 0.11, "dpdx_Pa_m": 81.93,
+        "h_W_m2K": 79.84, "boundary": "uniform_wall_temperature", "evidence_sha256": "b" * 64,
+    }]
+    path = tmp_path / "measurements.json"
+    path.write_text(json.dumps(rows))
+
+    rc = cli.main(["corpus", str(path), "--out", str(tmp_path / "corpus.jsonl")])
+    assert rc == 2
+    assert "REFUSED: measurement rows have mixed thermal boundaries" in capsys.readouterr().out
+
+
+def test_corpus_skips_rows_without_evidence_hash(tmp_path):
+    row = {
+        "source": "simlab:exp:c000", "tpms": "gyroid", "cell_m": 0.004, "wall_ratio": 0.08, "fluid": "Air",
+        "T_K": 320.0, "p_Pa": 200000.0, "mass_flux_kg_m2s": 0.0366, "dpdx_Pa_m": 20.39,
+        "h_W_m2K": 76.57, "boundary": "uniform_heat_flux",
+    }
+    path = tmp_path / "measurements.json"
+    path.write_text(json.dumps([row]))
+
+    from aces.propose import corpus as corpus_mod
+
+    built, skipped = corpus_mod.build_corpus(path)
+    assert built == []
+    assert skipped == ["simlab:exp:c000: no evidence_sha256; not citable"]
 
 
 def test_cli_propose_and_unknown_method(tmp_path, capsys):

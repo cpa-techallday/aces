@@ -1182,7 +1182,11 @@ def cmd_propose(args) -> int:
 
 def cmd_corpus(args) -> int:
     from .propose import corpus as corpus_mod
-    rows, skipped = corpus_mod.build_corpus(args.measurements, boundary=args.boundary)
+    try:
+        rows, skipped = corpus_mod.build_corpus(args.measurements, boundary=args.boundary)
+    except ValueError as e:
+        print(f"REFUSED: {e}")
+        return 2
     if not rows:
         print(f"no usable rows in {args.measurements} (skipped {len(skipped)})")
         return 1
@@ -1470,9 +1474,9 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("corpus", help="training corpus (JSONL, with provenance) from verified measurement rows")
     s.add_argument("measurements", help="measurement JSON from aces cfd-collect")
     s.add_argument("--out", required=True, help="corpus JSONL path")
-    s.add_argument("--boundary", default="uniform_heat_flux",
+    s.add_argument("--boundary", default=None,
                    choices=("uniform_wall_temperature", "uniform_heat_flux"),
-                   help="thermal boundary the rows were measured under")
+                   help="fallback boundary for legacy measurement rows without one; must match any declared boundaries")
     s.set_defaults(fn=cmd_corpus)
 
     s = sub.add_parser("voxel-measure", help="measure a voxelised solid (.npy) on ACES definitions "

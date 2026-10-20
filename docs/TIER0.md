@@ -39,12 +39,14 @@ It is also genuinely useful: a seeded, measured idea-list for design sprints.
 
 ## The corpus (`aces corpus`)
 
-`aces corpus measurements.json --out corpus.jsonl` turns verified measurement rows (from
-`aces cfd-collect`) into training rows with provenance (`source` run id, `internal-verified`
-licence tag, thermal boundary). Rows without a source never load — the gate is enforced by
-`aces.domains.hx.calibrate` itself (D18). First corpus: 17 rows from `aces-cal-air-01`
-(gyroid + diamond, Re 9.7–100, air 320 K), committed at `data/corpus/` is *not* done — corpora
-are regenerated from measurements, so the JSONL is a build artifact, not a repo file.
+`aces corpus measurements.json --out corpus.jsonl` turns evidence-backed measurement rows (from
+`aces cfd-collect`) into training rows carrying the `source` run id, evidence SHA-256, measured
+mass flux, and each row's thermal boundary. Rows without a source never load — the gate is
+enforced by `aces.domains.hx.calibrate` itself (D18); rows without evidence hashes are skipped,
+and mixed or contradicted boundaries are refused. `--boundary` is only a fallback for legacy rows
+that do not declare their boundary. The initial corpus had 17 rows from `aces-cal-air-01`; the
+later campaign corpus has 51 rows. Corpora are regenerated from measurements, so JSONL is a build
+artifact, not a repo file.
 
 ## Voxel measurement (`aces voxel-measure`)
 

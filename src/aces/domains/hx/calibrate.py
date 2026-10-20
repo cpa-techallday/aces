@@ -20,9 +20,11 @@ Dh and porosity are measured on the level set at the model's resolution (64 by
 default), which is recorded in each factor's basis.
 
 A constant factor is fitted as the geometric mean of the ratios, one value per
-operating condition (repeated rows of a condition are averaged first).  When the ratios
+operating condition (repeated rows of a condition are averaged first). When the ratios
 trend with Reynolds number (inertia in a tortuous core does that), a power law
-value * (Re / re_ref) ** b is fitted instead, if it brings the scatter within the limit.
+value * (Re / re_ref) ** b or an inertial-onset form is considered. A more complex
+form must reduce the small-sample-corrected AIC by at least 2 when the constant is
+already within the scatter limit; otherwise the constant is kept.
 Rules:
   * points where the baseline correlation is outside its validity (the 2300-3000
     transition blend, or above the turbulent fit's range) are excluded and listed;
@@ -161,6 +163,16 @@ def _fit(ratios: list[float]) -> tuple[float, float]:
     mean = sum(logs) / len(logs)
     sd = math.sqrt(sum((x - mean) ** 2 for x in logs) / (len(logs) - 1)) if len(logs) > 1 else 0.0
     return math.exp(mean), sd
+
+
+def _aicc(residual_sd: float, n: int, parameters: int) -> float:
+    """Small-sample corrected AIC for log residuals; ``residual_sd`` uses n - parameters dof."""
+    if n <= parameters + 1:
+        return math.inf
+    rss = residual_sd * residual_sd * (n - parameters)
+    if rss == 0.0:
+        return -math.inf
+    return n * math.log(rss / n) + 2 * parameters + 2 * parameters * (parameters + 1) / (n - parameters - 1)
 
 
 def _re_levels(re: list[float], spread: float = 1.25) -> int:
@@ -323,6 +335,21 @@ def fit(
                                    f"Narrow the range (Re, t/a) or add conditions.")
                     summary.append({**row, "status": "refused: scatter"})
                     continue
+            else:
+                constant_aicc = _aicc(sd, conditions, 1)
+                candidates = []
+                for name, fn, parameters in (("power", _fit_power, 2), ("onset", _fit_onset, 3)):
+                    q = fn(re_condition, per_condition)
+                    if q is None or q[3] > max_scatter:
+                        continue
+                    candidate_aicc = _aicc(q[3], conditions, parameters)
+                    if candidate_aicc <= constant_aicc - 2.0:
+                        candidates.append((candidate_aicc, name, q))
+                if candidates:
+                    _, form, q = min(candidates)
+                    value, exponent, re_ref, sd_q = q
+                    row.update({"value": value, "re_exponent": exponent, "re_ref": re_ref,
+                                f"scatter_sd_log_{form}": sd_q})
             row["form"] = form
             sources = tuple(sorted({p.m.source for p in use}))
             vr = {"reynolds": row["reynolds"], "wall_ratio": row["wall_ratio"]}

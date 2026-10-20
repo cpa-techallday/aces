@@ -132,8 +132,10 @@ The low-resolution sweeps also show how the ratios depend on Reynolds number (t/
 - **Nu ratio:** 1.28 at low Re, rising to 1.79 at Re 60.
 
 A constant factor cannot represent this. `aces calibrate` therefore tries a power law, then an inertial-onset form
-`value × (1 + (Re/Re_onset)^n)`, and keeps the simplest that fits. On that sweep, the onset form leaves a
-residual of 0.010 (sd of log) for friction and 0.002 for Nusselt.
+`value × (1 + (Re/Re_onset)^n)`, and keeps the simplest that fits. Even when a constant is within the scatter
+limit, a Re-dependent form is selected if it also fits within the limit and improves the small-sample-corrected
+AIC by at least 2. On that sweep, the onset form leaves a residual of 0.010 (sd of log) for friction and 0.002 for
+Nusselt.
 
 ## On the rig (2026-10-07)
 

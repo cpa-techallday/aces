@@ -226,6 +226,25 @@ def test_a_trend_in_re_is_fitted_as_a_power_law(tmp_path):
     assert back.re_exponent == pytest.approx(0.3, abs=1e-9) and back.re_ref == pytest.approx(fr.re_ref)
 
 
+def test_power_law_is_selected_when_constant_scatter_is_acceptable_but_trends():
+    rows = []
+    for i, (re, wall_ratio, noise) in enumerate(
+        (re, ratio, noise) for re in (10.0, 30.0, 100.0)
+        for ratio, noise in ((0.08, 0.95), (0.1, 1.0), (0.12, 1.05))
+    ):
+        nu_ratio = 1.45 * (re / 30.0) ** 0.11 * noise
+        rows.append(_row(re, None, nu_ratio, ratio=wall_ratio, source=f"test:nu-trend:{i}"))
+
+    factors, summary, refused = hxcal.fit(_meas(rows))
+
+    nu = next(f for f in factors if f.key == "hx.gyroid.nusselt")
+    row = next(r for r in summary if r["key"] == "hx.gyroid.nusselt")
+    assert not refused
+    assert row["scatter_sd_log"] < 0.15
+    assert nu.form == "power"
+    assert nu.re_exponent == pytest.approx(0.11, abs=0.01)
+
+
 def test_power_law_needs_a_fitted_re_range():
     with pytest.raises(ValueError, match="Re range"):
         Registry().set(Factor("hx.gyroid.friction", 2.0, ("test",), {"wall_ratio": (0.1, 0.12)}, "2026-10-07", "",
